@@ -373,6 +373,7 @@ func (d *Cloud189) newUpload(ctx context.Context, dstDir model.Obj, file model.F
 		log.Debugf("uploadData: %+v", uploadData)
 		requestURL := uploadData.RequestURL
 		uploadHeaders := strings.Split(decodeURIComponent(uploadData.RequestHeader), "&")
+
 		req, err := http.NewRequest(http.MethodPut, requestURL, driver.NewLimitedUploadStream(ctx, bytes.NewReader(byteData)))
 		if err != nil {
 			return err

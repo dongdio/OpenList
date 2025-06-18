@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
         platform: [ubuntu-latest]
-        target: 
+        target:
           - darwin-amd64
           - darwin-arm64
           - windows-amd64
@@ -48,11 +48,11 @@ jobs:
           musl-target-format: $os-$musl-$arch
           out-dir: build
           x-flags: |
-            github.com/OpenListTeam/OpenList/internal/conf.BuiltAt=$built_at
-            github.com/OpenListTeam/OpenList/internal/conf.GitAuthor=OpenList
-            github.com/OpenListTeam/OpenList/internal/conf.GitCommit=$git_commit
-            github.com/OpenListTeam/OpenList/internal/conf.Version=$tag
-            github.com/OpenListTeam/OpenList/internal/conf.WebVersion=dev
+            github.com/dongdio/OpenList/internal/conf.BuiltAt=$built_at
+            github.com/dongdio/OpenList/internal/conf.GitAuthor=OpenList
+            github.com/dongdio/OpenList/internal/conf.GitCommit=$git_commit
+            github.com/dongdio/OpenList/internal/conf.Version=$tag
+            github.com/dongdio/OpenList/internal/conf.WebVersion=dev
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
