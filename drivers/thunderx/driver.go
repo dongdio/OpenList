@@ -6,6 +6,12 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/errs"
@@ -14,11 +20,6 @@ import (
 	"github.com/OpenListTeam/OpenList/internal/stream"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
 	hash_extend "github.com/OpenListTeam/OpenList/pkg/utils/hash"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/go-resty/resty/v2"
 )
 
 type ThunderX struct {
@@ -279,7 +280,7 @@ func (xc *XunLeiXCommon) Link(ctx context.Context, file model.Obj, args model.Li
 	_, err := xc.Request(FILE_API_URL+"/{fileID}", http.MethodGet, func(r *resty.Request) {
 		r.SetContext(ctx)
 		r.SetPathParam("fileID", file.GetID())
-		//r.SetQueryParam("space", "")
+		// r.SetQueryParam("space", "")
 	}, &lFile)
 	if err != nil {
 		return nil, err

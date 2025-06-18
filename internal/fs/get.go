@@ -5,10 +5,11 @@ import (
 	stdpath "path"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/internal/op"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/pkg/errors"
 )
 
 func get(ctx context.Context, path string) (model.Obj, error) {

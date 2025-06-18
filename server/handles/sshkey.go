@@ -4,10 +4,11 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gin-gonic/gin"
+
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/internal/op"
 	"github.com/OpenListTeam/OpenList/server/common"
-	"github.com/gin-gonic/gin"
 )
 
 type SSHKeyAddReq struct {

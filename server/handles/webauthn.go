@@ -6,6 +6,10 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/gin-gonic/gin"
+	"github.com/go-webauthn/webauthn/protocol"
+	"github.com/go-webauthn/webauthn/webauthn"
+
 	"github.com/OpenListTeam/OpenList/internal/authn"
 	"github.com/OpenListTeam/OpenList/internal/conf"
 	"github.com/OpenListTeam/OpenList/internal/db"
@@ -13,9 +17,6 @@ import (
 	"github.com/OpenListTeam/OpenList/internal/op"
 	"github.com/OpenListTeam/OpenList/internal/setting"
 	"github.com/OpenListTeam/OpenList/server/common"
-	"github.com/gin-gonic/gin"
-	"github.com/go-webauthn/webauthn/protocol"
-	"github.com/go-webauthn/webauthn/webauthn"
 )
 
 func BeginAuthnLogin(c *gin.Context) {

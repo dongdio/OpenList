@@ -9,6 +9,9 @@ import (
 	"sync/atomic"
 	"time"
 
+	mapset "github.com/deckarep/golang-set/v2"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/OpenListTeam/OpenList/internal/conf"
 	"github.com/OpenListTeam/OpenList/internal/errs"
 	"github.com/OpenListTeam/OpenList/internal/fs"
@@ -18,8 +21,6 @@ import (
 	"github.com/OpenListTeam/OpenList/internal/setting"
 	"github.com/OpenListTeam/OpenList/pkg/mq"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	mapset "github.com/deckarep/golang-set/v2"
-	log "github.com/sirupsen/logrus"
 )
 
 var (

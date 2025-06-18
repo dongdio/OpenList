@@ -7,11 +7,12 @@ import (
 	"strings"
 	"time"
 
+	ftpserver "github.com/fclairamb/ftpserverlib"
+	"github.com/spf13/afero"
+
 	"github.com/OpenListTeam/OpenList/internal/errs"
 	"github.com/OpenListTeam/OpenList/internal/fs"
 	"github.com/OpenListTeam/OpenList/internal/model"
-	ftpserver "github.com/fclairamb/ftpserverlib"
-	"github.com/spf13/afero"
 )
 
 type AferoAdapter struct {

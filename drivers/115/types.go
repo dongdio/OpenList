@@ -3,9 +3,10 @@ package _115
 import (
 	"time"
 
+	"github.com/SheltonZhu/115driver/pkg/driver"
+
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/SheltonZhu/115driver/pkg/driver"
 )
 
 var _ model.Obj = (*FileObj)(nil)

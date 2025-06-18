@@ -5,12 +5,13 @@ import (
 	"os"
 	"path"
 
+	"github.com/pkg/sftp"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/errs"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/pkg/sftp"
-	log "github.com/sirupsen/logrus"
 )
 
 type SFTP struct {

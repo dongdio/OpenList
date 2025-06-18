@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/OpenListTeam/OpenList/internal/conf"
 	"github.com/gin-gonic/gin"
+
+	"github.com/OpenListTeam/OpenList/internal/conf"
 )
 
 func ForceHttps(c *gin.Context) {

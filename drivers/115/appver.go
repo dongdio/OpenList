@@ -1,9 +1,10 @@
 package _115
 
 import (
-	"github.com/OpenListTeam/OpenList/drivers/base"
 	driver115 "github.com/SheltonZhu/115driver/pkg/driver"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/OpenListTeam/OpenList/drivers/base"
 )
 
 var (
@@ -11,21 +12,20 @@ var (
 	appVer  = "27.0.5.7"
 )
 
-func (d *Pan115) getAppVersion() ([]driver115.AppVersion, error) {
+func (p *Pan115) getAppVersion() ([]driver115.AppVersion, error) {
 	result := driver115.VersionResp{}
 	resp, err := base.RestyClient.R().Get(driver115.ApiGetVersion)
 
-	err = driver115.CheckErr(err, &result, resp)
+	err = checkErr(err, &result, resp)
 	if err != nil {
 		return nil, err
 	}
-
 	return result.Data.GetAppVersions(), nil
 }
 
-func (d *Pan115) getAppVer() string {
+func (p *Pan115) getAppVer() string {
 	// todo add some cache？
-	vers, err := d.getAppVersion()
+	vers, err := p.getAppVersion()
 	if err != nil {
 		log.Warnf("[115] get app version failed: %v", err)
 		return appVer
@@ -38,6 +38,6 @@ func (d *Pan115) getAppVer() string {
 	return appVer
 }
 
-func (d *Pan115) initAppVer() {
-	appVer = d.getAppVer()
+func (p *Pan115) initAppVer() {
+	appVer = p.getAppVer()
 }

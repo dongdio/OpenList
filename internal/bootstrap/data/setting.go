@@ -3,6 +3,9 @@ package data
 import (
 	"strconv"
 
+	"github.com/pkg/errors"
+	"gorm.io/gorm"
+
 	"github.com/OpenListTeam/OpenList/cmd/flags"
 	"github.com/OpenListTeam/OpenList/internal/conf"
 	"github.com/OpenListTeam/OpenList/internal/db"
@@ -11,8 +14,6 @@ import (
 	"github.com/OpenListTeam/OpenList/internal/op"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
 	"github.com/OpenListTeam/OpenList/pkg/utils/random"
-	"github.com/pkg/errors"
-	"gorm.io/gorm"
 )
 
 var initialSettingItems []model.SettingItem
@@ -94,8 +95,8 @@ func InitialSettings() []model.SettingItem {
 	initialSettingItems = []model.SettingItem{
 		// site settings
 		{Key: conf.VERSION, Value: conf.Version, Type: conf.TypeString, Group: model.SITE, Flag: model.READONLY},
-		//{Key: conf.ApiUrl, Value: "", Type: conf.TypeString, Group: model.SITE},
-		//{Key: conf.BasePath, Value: "", Type: conf.TypeString, Group: model.SITE},
+		// {Key: conf.ApiUrl, Value: "", Type: conf.TypeString, Group: model.SITE},
+		// {Key: conf.BasePath, Value: "", Type: conf.TypeString, Group: model.SITE},
 		{Key: conf.SiteTitle, Value: "OpenList", Type: conf.TypeString, Group: model.SITE},
 		{Key: conf.Announcement, Value: "### repo\nhttps://github.com/OpenListTeam/OpenList", Type: conf.TypeText, Group: model.SITE},
 		{Key: "pagination_type", Value: "all", Type: conf.TypeSelect, Options: "all,pagination,load_more,auto_load_more", Group: model.SITE},
@@ -115,7 +116,7 @@ func InitialSettings() []model.SettingItem {
 		{Key: conf.AudioTypes, Value: "mp3,flac,ogg,m4a,wav,opus,wma", Type: conf.TypeText, Group: model.PREVIEW, Flag: model.PRIVATE},
 		{Key: conf.VideoTypes, Value: "mp4,mkv,avi,mov,rmvb,webm,flv,m3u8", Type: conf.TypeText, Group: model.PREVIEW, Flag: model.PRIVATE},
 		{Key: conf.ImageTypes, Value: "jpg,tiff,jpeg,png,gif,bmp,svg,ico,swf,webp", Type: conf.TypeText, Group: model.PREVIEW, Flag: model.PRIVATE},
-		//{Key: conf.OfficeTypes, Value: "doc,docx,xls,xlsx,ppt,pptx", Type: conf.TypeText, Group: model.PREVIEW, Flag: model.PRIVATE},
+		// {Key: conf.OfficeTypes, Value: "doc,docx,xls,xlsx,ppt,pptx", Type: conf.TypeText, Group: model.PREVIEW, Flag: model.PRIVATE},
 		{Key: conf.ProxyTypes, Value: "m3u8,url", Type: conf.TypeText, Group: model.PREVIEW, Flag: model.PRIVATE},
 		{Key: conf.ProxyIgnoreHeaders, Value: "authorization,referer", Type: conf.TypeText, Group: model.PREVIEW, Flag: model.PRIVATE},
 		{Key: "external_previews", Value: `{}`, Type: conf.TypeText, Group: model.PREVIEW},
@@ -134,10 +135,10 @@ func InitialSettings() []model.SettingItem {
 		//		{Key: conf.OfficeViewers, Value: `{
 		//	"Microsoft":"https://view.officeapps.live.com/op/view.aspx?src=$url",
 		//	"Google":"https://docs.google.com/gview?url=$url&embedded=true",
-		//}`, Type: conf.TypeText, Group: model.PREVIEW},
+		// }`, Type: conf.TypeText, Group: model.PREVIEW},
 		//		{Key: conf.PdfViewers, Value: `{
 		//	"pdf.js":"https://alist-org.github.io/pdf.js/web/viewer.html?file=$url"
-		//}`, Type: conf.TypeText, Group: model.PREVIEW},
+		// }`, Type: conf.TypeText, Group: model.PREVIEW},
 		{Key: "audio_cover", Value: "https://cdn.oplist.org/gh/OpenListTeam/Logo@main/OpenList.svg", Type: conf.TypeString, Group: model.PREVIEW},
 		{Key: conf.AudioAutoplay, Value: "true", Type: conf.TypeBool, Group: model.PREVIEW},
 		{Key: conf.VideoAutoplay, Value: "true", Type: conf.TypeBool, Group: model.PREVIEW},

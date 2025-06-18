@@ -5,18 +5,19 @@ import (
 	"net/http"
 	"strings"
 
+	log "github.com/sirupsen/logrus"
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/go-resty/resty/v2"
-	log "github.com/sirupsen/logrus"
 )
 
 type Cloud189 struct {
 	model.Storage
 	Addition
-	client     *resty.Client
+	header     map[string]string
 	rsa        Rsa
 	sessionKey string
 }
@@ -30,8 +31,9 @@ func (d *Cloud189) GetAddition() driver.Additional {
 }
 
 func (d *Cloud189) Init(ctx context.Context) error {
-	d.client = base.NewRestyClient().
-		SetHeader("Referer", "https://cloud.189.cn/")
+	d.header = map[string]string{
+		"Referer": "https://cloud.189.cn/",
+	}
 	return d.newLogin()
 }
 
@@ -46,28 +48,29 @@ func (d *Cloud189) List(ctx context.Context, dir model.Obj, args model.ListArgs)
 func (d *Cloud189) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	var resp DownResp
 	u := "https://cloud.189.cn/api/portal/getFileInfo.action"
+
 	_, err := d.request(u, http.MethodGet, func(req *resty.Request) {
 		req.SetQueryParam("fileId", file.GetID())
 	}, &resp)
+
 	if err != nil {
 		return nil, err
 	}
-	client := resty.NewWithClient(d.client.GetClient()).SetRedirectPolicy(
-		resty.RedirectPolicyFunc(func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		}))
-	res, err := client.R().SetHeader("User-Agent", base.UserAgent).Get("https:" + resp.FileDownloadUrl)
+	client := base.NoRedirectClient.R().
+		SetHeaders(d.header).
+		SetHeader("User-Agent", base.UserAgent)
+
+	res, err := client.Get("https:" + resp.FileDownloadUrl)
 	if err != nil {
 		return nil, err
 	}
-	log.Debugln(res.Status())
-	log.Debugln(res.String())
+	log.Debugln(res.Status(), res.String())
 	link := model.Link{}
 	log.Debugln("first url:", resp.FileDownloadUrl)
 	if res.StatusCode() == 302 {
 		link.URL = res.Header().Get("location")
 		log.Debugln("second url:", link.URL)
-		_, _ = client.R().Get(link.URL)
+		_, _ = client.Get(link.URL)
 		if res.StatusCode() == 302 {
 			link.URL = res.Header().Get("location")
 		}

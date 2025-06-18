@@ -6,9 +6,10 @@ import (
 
 	"github.com/OpenListTeam/OpenList/internal/errs"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	log "github.com/sirupsen/logrus"
 )
 
 // GetStorageAndActualPath Get the corresponding storage and actual path

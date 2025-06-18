@@ -4,8 +4,10 @@ import (
 	"errors"
 	"strconv"
 
-	"github.com/OpenListTeam/OpenList/pkg/utils"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/OpenListTeam/OpenList/drivers/base"
+	"github.com/OpenListTeam/OpenList/pkg/utils"
 )
 
 type AppConf struct {
@@ -44,7 +46,7 @@ type EncryptConf struct {
 
 func (d *Cloud189) newLogin() error {
 	url := "https://cloud.189.cn/api/portal/loginUrl.action?redirectURL=https%3A%2F%2Fcloud.189.cn%2Fmain.action"
-	res, err := d.client.R().Get(url)
+	res, err := base.RestyClient.R().SetHeaders(d.header).Get(url)
 	if err != nil {
 		return err
 	}
@@ -64,7 +66,7 @@ func (d *Cloud189) newLogin() error {
 	}
 	// get app Conf
 	var appConf AppConf
-	res, err = d.client.R().SetHeaders(headers).SetFormData(map[string]string{
+	res, err = base.RestyClient.R().SetHeaders(headers).SetFormData(map[string]string{
 		"version": "2.0",
 		"appKey":  appId,
 	}).SetResult(&appConf).Post("https://open.e.189.cn/api/logbox/oauth2/appConf.do")
@@ -77,13 +79,13 @@ func (d *Cloud189) newLogin() error {
 	}
 	// get encrypt conf
 	var encryptConf EncryptConf
-	res, err = d.client.R().SetHeaders(headers).SetFormData(map[string]string{
+	res, err = base.RestyClient.R().SetHeaders(headers).SetFormData(map[string]string{
 		"appId": appId,
 	}).Post("https://open.e.189.cn/api/logbox/config/encryptConf.do")
 	if err != nil {
 		return err
 	}
-	err = utils.Json.Unmarshal(res.Body(), &encryptConf)
+	err = utils.Json.Unmarshal(res.Bytes(), &encryptConf)
 	if err != nil {
 		return err
 	}
@@ -113,14 +115,14 @@ func (d *Cloud189) newLogin() error {
 		"state":           "",
 		"paramId":         appConf.Data.ParamId,
 	}
-	res, err = d.client.R().SetHeaders(headers).SetFormData(loginData).Post("https://open.e.189.cn/api/logbox/oauth2/loginSubmit.do")
+	res, err = base.RestyClient.R().SetHeaders(headers).SetFormData(loginData).Post("https://open.e.189.cn/api/logbox/oauth2/loginSubmit.do")
 	if err != nil {
 		return err
 	}
 	log.Debugf("189 login resp body: %s", res.String())
-	loginResult := utils.Json.Get(res.Body(), "result").ToInt()
+	loginResult := utils.Json.Get(res.Bytes(), "result").ToInt()
 	if loginResult != 0 {
-		return errors.New(utils.Json.Get(res.Body(), "msg").ToString())
+		return errors.New(utils.Json.Get(res.Bytes(), "msg").ToString())
 	}
 	return nil
 }

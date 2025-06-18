@@ -10,10 +10,11 @@ import (
 	"strconv"
 	"time"
 
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/op"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/go-resty/resty/v2"
 )
 
 const (
@@ -82,7 +83,7 @@ func (d *QuarkUCTV) request(ctx context.Context, pathname string, method string,
 	if e.Status >= 400 || e.Errno != 0 {
 		return nil, errors.New(e.ErrorInfo)
 	}
-	return res.Body(), nil
+	return res.Bytes(), nil
 }
 
 func (d *QuarkUCTV) getLoginCode(ctx context.Context) (string, error) {
@@ -191,7 +192,7 @@ func (d *QuarkUCTV) isLogin(ctx context.Context) (bool, error) {
 }
 
 func (d *QuarkUCTV) generateReqSign(method string, pathname string, key string) (string, string, string) {
-	//timestamp 13位时间戳
+	// timestamp 13位时间戳
 	timestamp := strconv.FormatInt(time.Now().UnixNano()/int64(time.Millisecond), 10)
 	deviceID := d.Addition.DeviceID
 	if deviceID == "" {

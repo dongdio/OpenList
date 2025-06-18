@@ -12,13 +12,14 @@ import (
 	"strings"
 	"time"
 
+	log "github.com/sirupsen/logrus"
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/internal/op"
 	"github.com/OpenListTeam/OpenList/pkg/cookie"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/go-resty/resty/v2"
-	log "github.com/sirupsen/logrus"
 )
 
 // do others that not defined in Driver interface
@@ -53,7 +54,7 @@ func (d *QuarkOrUC) request(pathname string, method string, callback base.ReqCal
 	if e.Status >= 400 || e.Code != 0 {
 		return nil, errors.New(e.Message)
 	}
-	return res.Body(), nil
+	return res.Bytes(), nil
 }
 
 func (d *QuarkOrUC) GetFiles(parent string) ([]File, error) {
@@ -97,7 +98,7 @@ func (d *QuarkOrUC) upPre(file model.FileStreamer, parentId string) (UpPreResp, 
 		"l_updated_at":    now.UnixMilli(),
 		"pdir_fid":        parentId,
 		"size":            file.GetSize(),
-		//"same_path_reuse": true,
+		// "same_path_reuse": true,
 	}
 	var resp UpPreResp
 	_, err := d.request("/file/upload/pre", http.MethodPost, func(req *resty.Request) {
@@ -121,7 +122,7 @@ func (d *QuarkOrUC) upHash(md5, sha1, taskId string) (bool, error) {
 }
 
 func (d *QuarkOrUC) upPart(ctx context.Context, pre UpPreResp, mineType string, partNumber int, bytes io.Reader) (string, error) {
-	//func (driver QuarkOrUC) UpPart(pre UpPreResp, mineType string, partNumber int, bytes []byte, account *model.Account, md5Str, sha1Str string) (string, error) {
+	// func (driver QuarkOrUC) UpPart(pre UpPreResp, mineType string, partNumber int, bytes []byte, account *model.Account, md5Str, sha1Str string) (string, error) {
 	timeStr := time.Now().UTC().Format(http.TimeFormat)
 	data := base.Json{
 		"auth_info": pre.Data.AuthInfo,
@@ -142,7 +143,7 @@ x-oss-user-agent:aliyun-sdk-js/6.6.1 Chrome 98.0.4758.80 on Windows 10 64-bit
 	if err != nil {
 		return "", err
 	}
-	//if partNumber == 1 {
+	// if partNumber == 1 {
 	//	finish, err := driver.UpHash(md5Str, sha1Str, pre.Data.TaskId, account)
 	//	if err != nil {
 	//		return "", err
@@ -150,7 +151,7 @@ x-oss-user-agent:aliyun-sdk-js/6.6.1 Chrome 98.0.4758.80 on Windows 10 64-bit
 	//	if finish {
 	//		return "finish", nil
 	//	}
-	//}
+	// }
 	u := fmt.Sprintf("https://%s.%s/%s", pre.Data.Bucket, pre.Data.UploadUrl[7:], pre.Data.ObjKey)
 	res, err := base.RestyClient.R().SetContext(ctx).
 		SetHeaders(map[string]string{

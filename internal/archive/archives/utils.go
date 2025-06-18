@@ -7,11 +7,12 @@ import (
 	stdpath "path"
 	"strings"
 
+	"github.com/mholt/archives"
+
 	"github.com/OpenListTeam/OpenList/internal/errs"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/internal/stream"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/mholt/archives"
 )
 
 func getFs(ss *stream.SeekableStream, args model.ArchiveArgs) (*archives.ArchiveFS, error) {

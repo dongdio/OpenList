@@ -10,10 +10,11 @@ import (
 
 	"github.com/OpenListTeam/OpenList/internal/stream"
 
+	"github.com/upyun/go-sdk/v3/upyun"
+
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/upyun/go-sdk/v3/upyun"
 )
 
 type USS struct {
@@ -75,7 +76,7 @@ func (d *USS) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]m
 func (d *USS) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	key := getKey(file.GetPath(), false)
 	host := d.Endpoint
-	if !strings.Contains(host, "://") { //判断是否包含协议头，否则https
+	if !strings.Contains(host, "://") { // 判断是否包含协议头，否则https
 		host = "https://" + host
 	}
 	u := fmt.Sprintf("%s/%s", host, key)

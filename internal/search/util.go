@@ -3,6 +3,8 @@ package search
 import (
 	"strings"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/drivers/openlist"
 	"github.com/OpenListTeam/OpenList/internal/conf"
@@ -11,7 +13,6 @@ import (
 	"github.com/OpenListTeam/OpenList/internal/op"
 	"github.com/OpenListTeam/OpenList/internal/setting"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	log "github.com/sirupsen/logrus"
 )
 
 func Progress() (*model.IndexProgress, error) {
@@ -53,7 +54,7 @@ func updateIgnorePaths(customIgnorePaths string) {
 					res, err := base.RestyClient.R().Get(url)
 					if err == nil {
 						log.Debugf("allow_indexed body: %+v", res.String())
-						allowIndexed = utils.Json.Get(res.Body(), "data", conf.AllowIndexed).ToString() == "true"
+						allowIndexed = utils.Json.Get(res.Bytes(), "data", conf.AllowIndexed).ToString() == "true"
 						v3Visited[addition.Address] = allowIndexed
 					}
 				}

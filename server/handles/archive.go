@@ -8,6 +8,10 @@ import (
 
 	"github.com/OpenListTeam/OpenList/internal/task"
 
+	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/OpenListTeam/OpenList/internal/archive/tool"
 	"github.com/OpenListTeam/OpenList/internal/conf"
 	"github.com/OpenListTeam/OpenList/internal/errs"
@@ -18,9 +22,6 @@ import (
 	"github.com/OpenListTeam/OpenList/internal/sign"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
 	"github.com/OpenListTeam/OpenList/server/common"
-	"github.com/gin-gonic/gin"
-	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
 )
 
 type ArchiveMetaReq struct {

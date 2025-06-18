@@ -8,10 +8,11 @@ import (
 	"strings"
 	"time"
 
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/go-resty/resty/v2"
 )
 
 type KodBox struct {
@@ -74,7 +75,7 @@ func (d *KodBox) List(ctx context.Context, dir model.Obj, args model.ListArgs) (
 				Size:     f.Size,
 				IsFolder: f.Type == "folder",
 			},
-			//Thumbnail: model.Thumbnail{},
+			// Thumbnail: model.Thumbnail{},
 		}, nil
 	})
 }

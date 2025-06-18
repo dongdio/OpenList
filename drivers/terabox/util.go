@@ -10,11 +10,12 @@ import (
 	"strings"
 	"time"
 
+	log "github.com/sirupsen/logrus"
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/go-resty/resty/v2"
-	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -80,7 +81,7 @@ func (d *Terabox) request(rurl string, method string, callback base.ReqCallback,
 	if err != nil {
 		return nil, err
 	}
-	errno := utils.Json.Get(res.Body(), "errno").ToInt()
+	errno := utils.Json.Get(res.Bytes(), "errno").ToInt()
 	if errno == 4000023 {
 		// reget jsToken
 		err = d.resetJsToken()
@@ -101,7 +102,7 @@ func (d *Terabox) request(rurl string, method string, callback base.ReqCallback,
 			return d.request(rurl, method, callback, resp, noRetry...)
 		}
 	}
-	return res.Body(), nil
+	return res.Bytes(), nil
 }
 
 func (d *Terabox) get(pathname string, params map[string]string, resp interface{}) ([]byte, error) {

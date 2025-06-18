@@ -5,10 +5,11 @@ import (
 	"path"
 	"strings"
 
+	"github.com/gin-gonic/gin"
+
 	"github.com/OpenListTeam/OpenList/internal/conf"
 	"github.com/OpenListTeam/OpenList/server/common"
 	"github.com/OpenListTeam/OpenList/server/s3"
-	"github.com/gin-gonic/gin"
 )
 
 func S3(g *gin.RouterGroup) {

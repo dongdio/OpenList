@@ -79,22 +79,22 @@ func (f File) Thumb() string {
 var _ model.Obj = (*File)(nil)
 var _ model.Thumb = (*File)(nil)
 
-//func (f File) Thumb() string {
+// func (f File) Thumb() string {
 //
-//}
-//var _ model.Thumb = (*File)(nil)
+// }
+// var _ model.Thumb = (*File)(nil)
 
 type Files struct {
-	//BaseResp
+	// BaseResp
 	Data struct {
 		InfoList []File `json:"InfoList"`
 		Next     string `json:"Next"`
 	} `json:"data"`
 }
 
-//type DownResp struct {
+// type DownResp struct {
 //	//BaseResp
 //	Data struct {
 //		DownloadUrl string `json:"DownloadUrl"`
 //	} `json:"data"`
-//}
+// }

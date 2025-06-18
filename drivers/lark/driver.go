@@ -10,13 +10,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/OpenListTeam/OpenList/internal/driver"
-	"github.com/OpenListTeam/OpenList/internal/errs"
-	"github.com/OpenListTeam/OpenList/internal/model"
 	lark "github.com/larksuite/oapi-sdk-go/v3"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 	larkdrive "github.com/larksuite/oapi-sdk-go/v3/service/drive/v1"
 	"golang.org/x/time/rate"
+
+	"github.com/OpenListTeam/OpenList/internal/driver"
+	"github.com/OpenListTeam/OpenList/internal/errs"
+	"github.com/OpenListTeam/OpenList/internal/model"
 )
 
 type Lark struct {
@@ -373,7 +374,7 @@ func (c *Lark) Put(ctx context.Context, dstDir model.Obj, stream model.FileStrea
 		up(float64(i) / float64(blockCount))
 	}
 
-	//close
+	// close
 	closeReq := larkdrive.NewUploadFinishFileReqBuilder().
 		Body(larkdrive.NewUploadFinishFileReqBodyBuilder().
 			UploadId(uploadId).
@@ -396,8 +397,8 @@ func (c *Lark) Put(ctx context.Context, dstDir model.Obj, stream model.FileStrea
 	}, nil
 }
 
-//func (d *Lark) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
+// func (d *Lark) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
 //	return nil, errs.NotSupport
-//}
+// }
 
 var _ driver.Driver = (*Lark)(nil)

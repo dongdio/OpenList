@@ -5,10 +5,11 @@ import (
 	"io"
 	"io/fs"
 
+	"github.com/bodgit/sevenzip"
+
 	"github.com/OpenListTeam/OpenList/internal/archive/tool"
 	"github.com/OpenListTeam/OpenList/internal/errs"
 	"github.com/OpenListTeam/OpenList/internal/stream"
-	"github.com/bodgit/sevenzip"
 )
 
 type WrapReader struct {

@@ -4,12 +4,13 @@ import (
 	"net/url"
 	stdpath "path"
 
+	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
+
 	"github.com/OpenListTeam/OpenList/internal/errs"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/internal/op"
 	"github.com/OpenListTeam/OpenList/server/common"
-	"github.com/gin-gonic/gin"
-	"github.com/pkg/errors"
 )
 
 func FsUp(c *gin.Context) {

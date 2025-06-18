@@ -9,6 +9,9 @@ import (
 	stdpath "path"
 	"time"
 
+	ftpserver "github.com/fclairamb/ftpserverlib"
+	"github.com/pkg/errors"
+
 	"github.com/OpenListTeam/OpenList/internal/conf"
 	"github.com/OpenListTeam/OpenList/internal/errs"
 	"github.com/OpenListTeam/OpenList/internal/fs"
@@ -16,8 +19,6 @@ import (
 	"github.com/OpenListTeam/OpenList/internal/op"
 	"github.com/OpenListTeam/OpenList/internal/stream"
 	"github.com/OpenListTeam/OpenList/server/common"
-	ftpserver "github.com/fclairamb/ftpserverlib"
-	"github.com/pkg/errors"
 )
 
 type FileUploadProxy struct {

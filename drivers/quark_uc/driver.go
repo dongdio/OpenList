@@ -9,14 +9,15 @@ import (
 	"net/http"
 	"time"
 
+	log "github.com/sirupsen/logrus"
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/errs"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	streamPkg "github.com/OpenListTeam/OpenList/internal/stream"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/go-resty/resty/v2"
-	log "github.com/sirupsen/logrus"
 )
 
 type QuarkOrUC struct {
@@ -203,7 +204,7 @@ func (d *QuarkOrUC) Put(ctx context.Context, dstDir model.Obj, stream model.File
 		log.Debugf("left: %d", left)
 		reader := driver.NewLimitedUploadStream(ctx, bytes.NewReader(part))
 		m, err := d.upPart(ctx, pre, stream.GetMimetype(), partNumber, reader)
-		//m, err := driver.UpPart(pre, file.GetMIMEType(), partNumber, bytes, account, md5Str, sha1Str)
+		// m, err := driver.UpPart(pre, file.GetMIMEType(), partNumber, bytes, account, md5Str, sha1Str)
 		if err != nil {
 			return err
 		}

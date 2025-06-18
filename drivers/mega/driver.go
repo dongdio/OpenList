@@ -7,16 +7,18 @@ import (
 	"io"
 	"time"
 
-	"github.com/OpenListTeam/OpenList/pkg/http_range"
 	"github.com/pquerna/otp/totp"
 	"github.com/rclone/rclone/lib/readers"
+
+	"github.com/OpenListTeam/OpenList/pkg/http_range"
+
+	log "github.com/sirupsen/logrus"
+	"github.com/t3rm1n4l/go-mega"
 
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/errs"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	log "github.com/sirupsen/logrus"
-	"github.com/t3rm1n4l/go-mega"
 )
 
 type Mega struct {
@@ -87,10 +89,10 @@ func (d *Mega) GetRoot(ctx context.Context) (model.Obj, error) {
 func (d *Mega) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	if node, ok := file.(*MegaNode); ok {
 
-		//down, err := d.c.NewDownload(n.Node)
-		//if err != nil {
+		// down, err := d.c.NewDownload(n.Node)
+		// if err != nil {
 		//	return nil, fmt.Errorf("open download file failed: %w", err)
-		//}
+		// }
 
 		size := file.GetSize()
 		resultRangeReader := func(ctx context.Context, httpRange http_range.Range) (io.ReadCloser, error) {
@@ -196,8 +198,8 @@ func (d *Mega) Put(ctx context.Context, dstDir model.Obj, stream model.FileStrea
 	return fmt.Errorf("unable to convert dir to mega n")
 }
 
-//func (d *Mega) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
+// func (d *Mega) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
 //	return nil, errs.NotSupport
-//}
+// }
 
 var _ driver.Driver = (*Mega)(nil)

@@ -11,15 +11,16 @@ import (
 	"strings"
 	"time"
 
+	"github.com/avast/retry-go"
+	log "github.com/sirupsen/logrus"
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	streamPkg "github.com/OpenListTeam/OpenList/internal/stream"
 	"github.com/OpenListTeam/OpenList/pkg/http_range"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/avast/retry-go"
-	"github.com/go-resty/resty/v2"
-	log "github.com/sirupsen/logrus"
 )
 
 func makePartInfos(size int) []base.Json {
@@ -222,7 +223,7 @@ func (d *AliyundriveOpen) upload(ctx context.Context, dstDir model.Obj, stream m
 
 		preTime := time.Now()
 		var offset, length int64 = 0, partSize
-		//var length
+		// var length
 		for i := 0; i < len(createResp.PartInfoList); i++ {
 			if utils.IsCanceled(ctx) {
 				return nil, ctx.Err()

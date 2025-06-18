@@ -12,15 +12,16 @@ import (
 	"strings"
 	"time"
 
+	"github.com/foxxorcat/mopan-sdk-go"
+	log "github.com/sirupsen/logrus"
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/errs"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/internal/stream"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/foxxorcat/mopan-sdk-go"
-	"github.com/go-resty/resty/v2"
-	log "github.com/sirupsen/logrus"
 )
 
 type ILanZou struct {
@@ -97,13 +98,13 @@ func (d *ILanZou) List(ctx context.Context, dir model.Obj, args model.ListArgs) 
 		}
 		obj := model.Object{
 			ID: strconv.FormatInt(f.FileId, 10),
-			//Path:     "",
+			// Path:     "",
 			Name:     f.FileName,
 			Size:     f.FileSize * 1024,
 			Modified: updTime,
 			Ctime:    updTime,
 			IsFolder: false,
-			//HashInfo: utils.HashInfo{},
+			// HashInfo: utils.HashInfo{},
 		}
 		if f.FileType == 2 {
 			obj.IsFolder = true
@@ -166,7 +167,7 @@ func (d *ILanZou) Link(ctx context.Context, file model.Obj, args model.LinkArgs)
 	if res.StatusCode() == 302 {
 		realURL = res.Header().Get("location")
 	} else {
-		return nil, fmt.Errorf("redirect failed, status: %d, msg: %s", res.StatusCode(), utils.Json.Get(res.Body(), "msg").ToString())
+		return nil, fmt.Errorf("redirect failed, status: %d, msg: %s", res.StatusCode(), utils.Json.Get(res.Bytes(), "msg").ToString())
 	}
 	link := model.Link{URL: realURL}
 	return &link, nil
@@ -185,13 +186,13 @@ func (d *ILanZou) MakeDir(ctx context.Context, parentDir model.Obj, dirName stri
 	}
 	return &model.Object{
 		ID: utils.Json.Get(res, "list", 0, "id").ToString(),
-		//Path:     "",
+		// Path:     "",
 		Name:     dirName,
 		Size:     0,
 		Modified: time.Now(),
 		Ctime:    time.Now(),
 		IsFolder: true,
-		//HashInfo: utils.HashInfo{},
+		// HashInfo: utils.HashInfo{},
 	}, nil
 }
 
@@ -239,7 +240,7 @@ func (d *ILanZou) Rename(ctx context.Context, srcObj model.Obj, newName string) 
 	}
 	return &model.Object{
 		ID: srcObj.GetID(),
-		//Path:     "",
+		// Path:     "",
 		Name:     newName,
 		Size:     srcObj.GetSize(),
 		Modified: time.Now(),
@@ -316,14 +317,14 @@ func (d *ILanZou) Put(ctx context.Context, dstDir model.Obj, s model.FileStreame
 		if err != nil {
 			return nil, err
 		}
-		token = utils.Json.Get(res.Body(), "token").ToString()
+		token = utils.Json.Get(res.Bytes(), "token").ToString()
 	} else {
 		keyBase64 := base64.URLEncoding.EncodeToString([]byte(key))
 		res, err := d.upClient.R().SetHeader("Authorization", "UpToken "+upToken).Post(fmt.Sprintf("https://upload.qiniup.com/buckets/%s/objects/%s/uploads", d.conf.bucket, keyBase64))
 		if err != nil {
 			return nil, err
 		}
-		uploadId := utils.Json.Get(res.Body(), "uploadId").ToString()
+		uploadId := utils.Json.Get(res.Bytes(), "uploadId").ToString()
 		parts := make([]Part, 0)
 		partNum := (s.GetSize() + DefaultPartSize - 1) / DefaultPartSize
 		for i := 1; i <= int(partNum); i++ {
@@ -332,7 +333,7 @@ func (d *ILanZou) Put(ctx context.Context, dstDir model.Obj, s model.FileStreame
 			if err != nil {
 				return nil, err
 			}
-			etag := utils.Json.Get(res.Body(), "etag").ToString()
+			etag := utils.Json.Get(res.Bytes(), "etag").ToString()
 			parts = append(parts, Part{
 				PartNumber: i,
 				ETag:       etag,
@@ -345,7 +346,7 @@ func (d *ILanZou) Put(ctx context.Context, dstDir model.Obj, s model.FileStreame
 		if err != nil {
 			return nil, err
 		}
-		token = utils.Json.Get(res.Body(), "token").ToString()
+		token = utils.Json.Get(res.Bytes(), "token").ToString()
 	}
 	// commit upload
 	var resp UploadResultResp
@@ -375,7 +376,7 @@ func (d *ILanZou) Put(ctx context.Context, dstDir model.Obj, s model.FileStreame
 	}
 	return &model.Object{
 		ID: strconv.FormatInt(file.FileId, 10),
-		//Path:     ,
+		// Path:     ,
 		Name:     file.FileName,
 		Size:     s.GetSize(),
 		Modified: s.ModTime(),
@@ -385,8 +386,8 @@ func (d *ILanZou) Put(ctx context.Context, dstDir model.Obj, s model.FileStreame
 	}, nil
 }
 
-//func (d *ILanZou) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
+// func (d *ILanZou) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
 //	return nil, errs.NotSupport
-//}
+// }
 
 var _ driver.Driver = (*ILanZou)(nil)

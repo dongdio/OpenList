@@ -11,9 +11,10 @@ import (
 	"strings"
 	"time"
 
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/go-resty/resty/v2"
 )
 
 const (
@@ -51,7 +52,7 @@ const (
 
 const (
 	UPLOAD_TYPE_UNKNOWN = "UPLOAD_TYPE_UNKNOWN"
-	//UPLOAD_TYPE_FORM      = "UPLOAD_TYPE_FORM"
+	// UPLOAD_TYPE_FORM      = "UPLOAD_TYPE_FORM"
 	UPLOAD_TYPE_RESUMABLE = "UPLOAD_TYPE_RESUMABLE"
 	UPLOAD_TYPE_URL       = "UPLOAD_TYPE_URL"
 )
@@ -204,12 +205,12 @@ func (c *Common) Request(url, method string, callback base.ReqCallback, resp int
 	}
 
 	var erron ErrResp
-	utils.Json.Unmarshal(res.Body(), &erron)
+	utils.Json.Unmarshal(res.Bytes(), &erron)
 	if erron.IsError() {
 		return nil, &erron
 	}
 
-	return res.Body(), nil
+	return res.Bytes(), nil
 }
 
 // 计算文件Gcid
@@ -294,7 +295,7 @@ func generateDeviceSign(deviceID, packageName string) string {
 }
 
 func BuildCustomUserAgent(deviceID, appName, sdkVersion, clientVersion, packageName string) string {
-	//deviceSign := generateDeviceSign(deviceID, packageName)
+	// deviceSign := generateDeviceSign(deviceID, packageName)
 	var sb strings.Builder
 
 	sb.WriteString(fmt.Sprintf("ANDROID-%s/%s ", appName, clientVersion))

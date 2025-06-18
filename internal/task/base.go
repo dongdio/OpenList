@@ -5,9 +5,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/xhofe/tache"
+
 	"github.com/OpenListTeam/OpenList/internal/conf"
 	"github.com/OpenListTeam/OpenList/internal/model"
-	"github.com/xhofe/tache"
 )
 
 type TaskExtension struct {

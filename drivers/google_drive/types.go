@@ -4,9 +4,10 @@ import (
 	"strconv"
 	"time"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	log "github.com/sirupsen/logrus"
 )
 
 type TokenError struct {

@@ -6,8 +6,9 @@ import (
 
 	"github.com/OpenListTeam/OpenList/internal/conf"
 
-	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/pkg/errors"
+
+	"github.com/OpenListTeam/OpenList/internal/driver"
 )
 
 type DriverConstructor func() driver.Driver

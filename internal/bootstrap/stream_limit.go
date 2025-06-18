@@ -3,11 +3,12 @@ package bootstrap
 import (
 	"context"
 
+	"golang.org/x/time/rate"
+
 	"github.com/OpenListTeam/OpenList/internal/conf"
 	"github.com/OpenListTeam/OpenList/internal/op"
 	"github.com/OpenListTeam/OpenList/internal/setting"
 	"github.com/OpenListTeam/OpenList/internal/stream"
-	"golang.org/x/time/rate"
 )
 
 type blockBurstLimiter struct {

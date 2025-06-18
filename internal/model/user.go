@@ -6,11 +6,12 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/go-webauthn/webauthn/webauthn"
+	"github.com/pkg/errors"
+
 	"github.com/OpenListTeam/OpenList/internal/errs"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
 	"github.com/OpenListTeam/OpenList/pkg/utils/random"
-	"github.com/go-webauthn/webauthn/webauthn"
-	"github.com/pkg/errors"
 )
 
 const (

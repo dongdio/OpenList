@@ -7,12 +7,13 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/OpenListTeam/OpenList/internal/db"
-	"github.com/OpenListTeam/OpenList/pkg/utils"
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/spf13/cobra"
+
+	"github.com/OpenListTeam/OpenList/internal/db"
+	"github.com/OpenListTeam/OpenList/pkg/utils"
 )
 
 // storageCmd represents the storage command
@@ -70,7 +71,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "q", "ctrl+c":
 			return m, tea.Quit
-			//case "enter":
+			// case "enter":
 			//	return m, tea.Batch(
 			//		tea.Printf("Let's go to %s!", m.table.SelectedRow()[1]),
 			//	)

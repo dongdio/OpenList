@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
-	"github.com/go-resty/resty/v2"
 )
 
 // do others that not defined in Driver interface
@@ -68,7 +69,7 @@ func (d *GooglePhoto) request(url string, method string, callback base.ReqCallba
 		}
 		return nil, fmt.Errorf("%s: %v", e.Error.Message, e.Error.Errors)
 	}
-	return res.Body(), nil
+	return res.Bytes(), nil
 }
 
 func (d *GooglePhoto) getFiles(id string) ([]MediaItem, error) {

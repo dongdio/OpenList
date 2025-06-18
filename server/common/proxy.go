@@ -4,19 +4,19 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
 	"net/url"
 	"os"
 	"strings"
 
-	"maps"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/internal/net"
 	"github.com/OpenListTeam/OpenList/internal/stream"
 	"github.com/OpenListTeam/OpenList/pkg/http_range"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	log "github.com/sirupsen/logrus"
 )
 
 func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.Obj) error {
@@ -70,7 +70,7 @@ func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.
 			Limiter:           stream.ServerDownloadLimit,
 		})
 	} else {
-		//transparent proxy
+		// transparent proxy
 		header := net.ProcessHeader(r.Header, link.Header)
 		res, err := net.RequestHttp(r.Context(), r.Method, header, link.URL)
 		if err != nil {

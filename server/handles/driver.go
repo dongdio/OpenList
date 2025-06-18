@@ -3,9 +3,10 @@ package handles
 import (
 	"fmt"
 
+	"github.com/gin-gonic/gin"
+
 	"github.com/OpenListTeam/OpenList/internal/op"
 	"github.com/OpenListTeam/OpenList/server/common"
-	"github.com/gin-gonic/gin"
 )
 
 func ListDriverInfo(c *gin.Context) {

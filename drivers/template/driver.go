@@ -23,7 +23,7 @@ func (d *Template) GetAddition() driver.Additional {
 
 func (d *Template) Init(ctx context.Context) error {
 	// TODO login / refresh token
-	//op.MustSaveDriverStorage(d)
+	// op.MustSaveDriverStorage(d)
 	return nil
 }
 
@@ -93,8 +93,8 @@ func (d *Template) ArchiveDecompress(ctx context.Context, srcObj, dstDir model.O
 	return nil, errs.NotImplement
 }
 
-//func (d *Template) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
+// func (d *Template) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
 //	return nil, errs.NotSupport
-//}
+// }
 
 var _ driver.Driver = (*Template)(nil)

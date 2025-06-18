@@ -4,10 +4,11 @@ import (
 	"context"
 	"strings"
 
+	_ "golang.org/x/image/webp"
+
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/errs"
 	"github.com/OpenListTeam/OpenList/internal/model"
-	_ "golang.org/x/image/webp"
 )
 
 type NeteaseMusic struct {

@@ -5,11 +5,12 @@ import (
 	"log"
 	"os"
 
+	"github.com/natefinch/lumberjack"
+	"github.com/sirupsen/logrus"
+
 	"github.com/OpenListTeam/OpenList/cmd/flags"
 	"github.com/OpenListTeam/OpenList/internal/conf"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/natefinch/lumberjack"
-	"github.com/sirupsen/logrus"
 )
 
 func init() {
@@ -43,7 +44,7 @@ func Log() {
 			Filename:   logConfig.Name,
 			MaxSize:    logConfig.MaxSize, // megabytes
 			MaxBackups: logConfig.MaxBackups,
-			MaxAge:     logConfig.MaxAge,   //days
+			MaxAge:     logConfig.MaxAge,   // days
 			Compress:   logConfig.Compress, // disabled by default
 		}
 		if flags.Debug || flags.Dev || flags.LogStd {

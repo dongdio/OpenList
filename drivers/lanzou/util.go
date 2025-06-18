@@ -12,12 +12,13 @@ import (
 	"sync/atomic"
 	"time"
 
+	log "github.com/sirupsen/logrus"
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/internal/op"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/go-resty/resty/v2"
-	log "github.com/sirupsen/logrus"
 )
 
 var upClient *resty.Client
@@ -62,8 +63,8 @@ func (d *LanZou) post(url string, callback base.ReqCallback, resp interface{}) (
 
 func (d *LanZou) _post(url string, callback base.ReqCallback, resp interface{}, up bool) ([]byte, error) {
 	data, err := d.request(url, http.MethodPost, func(req *resty.Request) {
-		req.AddRetryCondition(func(r *resty.Response, err error) bool {
-			if utils.Json.Get(r.Body(), "zt").ToInt() == 4 {
+		req.AddRetryConditions(func(r *resty.Response, err error) bool {
+			if utils.Json.Get(r.Bytes(), "zt").ToInt() == 4 {
 				time.Sleep(time.Second)
 				return true
 			}
@@ -80,7 +81,7 @@ func (d *LanZou) _post(url string, callback base.ReqCallback, resp interface{}, 
 	case 1, 2, 4:
 		if resp != nil {
 			// 返回类型不统一,忽略错误
-			utils.Json.Unmarshal(data, resp)
+			_ = utils.Json.Unmarshal(data, resp)
 		}
 		return data, nil
 	case 9: // 登录过期
@@ -123,11 +124,12 @@ func (d *LanZou) request(url string, method string, callback base.ReqCallback, u
 		return nil, err
 	}
 	log.Debugf("lanzou request: url=>%s ,stats=>%d ,body => %s\n", res.Request.URL, res.StatusCode(), res.String())
-	return res.Body(), err
+	return res.Bytes(), err
 }
 
 func (d *LanZou) Login() ([]*http.Cookie, error) {
-	resp, err := base.NewRestyClient().SetRedirectPolicy(resty.NoRedirectPolicy()).
+	resp, err := base.NewRestyClient().
+		SetRedirectPolicy(resty.NoRedirectPolicy()).
 		R().SetFormData(map[string]string{
 		"task":         "3",
 		"uid":          d.Account,
@@ -141,8 +143,8 @@ func (d *LanZou) Login() ([]*http.Cookie, error) {
 	if err != nil {
 		return nil, err
 	}
-	if utils.Json.Get(resp.Body(), "zt").ToInt() != 1 {
-		return nil, fmt.Errorf("login err: %s", resp.Body())
+	if utils.Json.Get(resp.Bytes(), "zt").ToInt() != 1 {
+		return nil, fmt.Errorf("login err: %s", resp.Bytes())
 	}
 	d.Cookie = CookieToString(resp.Cookies())
 	return resp.Cookies(), nil
@@ -329,7 +331,7 @@ func (d *LanZou) GetFileOrFolderByShareUrl(shareID, pwd string) ([]model.Obj, er
 	}
 }
 
-// 通过分享链接获取文件(下载链接也使用此方法)
+// GetFilesByShareUrl 通过分享链接获取文件(下载链接也使用此方法)
 // FileOrFolderByShareUrl 包含 pwd 和 url 字段
 // 参考 https://github.com/zaxtyson/LanZouCloud-API/blob/ab2e9ec715d1919bf432210fc16b91c6775fbb99/lanzou/api/core.py#L440
 func (d *LanZou) GetFilesByShareUrl(shareID, pwd string) (file *FileOrFolderByShareUrl, err error) {

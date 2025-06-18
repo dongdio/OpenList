@@ -3,12 +3,13 @@ package data
 import (
 	"context"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/OpenListTeam/OpenList/cmd/flags"
 	"github.com/OpenListTeam/OpenList/internal/db"
 	"github.com/OpenListTeam/OpenList/internal/message"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/internal/op"
-	log "github.com/sirupsen/logrus"
 )
 
 func initDevData() {

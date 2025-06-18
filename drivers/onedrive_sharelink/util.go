@@ -11,10 +11,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/OpenListTeam/OpenList/drivers/base"
-	"github.com/OpenListTeam/OpenList/internal/conf"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/html"
+
+	"github.com/OpenListTeam/OpenList/drivers/base"
+	"github.com/OpenListTeam/OpenList/internal/conf"
 )
 
 // NewNoRedirectClient creates an HTTP client that doesn't follow redirects

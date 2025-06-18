@@ -1,6 +1,8 @@
 package handles
 
 import (
+	"github.com/gin-gonic/gin"
+
 	_115 "github.com/OpenListTeam/OpenList/drivers/115"
 	"github.com/OpenListTeam/OpenList/drivers/pikpak"
 	"github.com/OpenListTeam/OpenList/drivers/thunder"
@@ -10,7 +12,6 @@ import (
 	"github.com/OpenListTeam/OpenList/internal/op"
 	"github.com/OpenListTeam/OpenList/internal/task"
 	"github.com/OpenListTeam/OpenList/server/common"
-	"github.com/gin-gonic/gin"
 )
 
 type SetAria2Req struct {

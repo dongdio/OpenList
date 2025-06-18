@@ -300,7 +300,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) (status i
 	if err := fs.Remove(ctx, reqPath); err != nil {
 		return http.StatusMethodNotAllowed, err
 	}
-	//fs.ClearCache(path.Dir(reqPath))
+	// fs.ClearCache(path.Dir(reqPath))
 	return http.StatusNoContent, nil
 }
 
@@ -385,7 +385,7 @@ func (h *Handler) handleMkcol(w http.ResponseWriter, r *http.Request) (status in
 	}
 
 	// RFC 4918 9.3.1
-	//405 (Method Not Allowed) - MKCOL can only be executed on an unmapped URL
+	// 405 (Method Not Allowed) - MKCOL can only be executed on an unmapped URL
 	if _, err := fs.Get(ctx, reqPath, &fs.GetArgs{}); err == nil {
 		return http.StatusMethodNotAllowed, err
 	}
@@ -564,8 +564,8 @@ func (h *Handler) handleLock(w http.ResponseWriter, r *http.Request) (retStatus 
 		}()
 
 		// ??? Why create resource here?
-		//// Create the resource if it didn't previously exist.
-		//if _, err := h.FileSystem.Stat(ctx, reqPath); err != nil {
+		// // Create the resource if it didn't previously exist.
+		// if _, err := h.FileSystem.Stat(ctx, reqPath); err != nil {
 		//	f, err := h.FileSystem.OpenFile(ctx, reqPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
 		//	if err != nil {
 		//		// TODO: detect missing intermediate dirs and return http.StatusConflict?
@@ -573,7 +573,7 @@ func (h *Handler) handleLock(w http.ResponseWriter, r *http.Request) (retStatus 
 		//	}
 		//	f.Close()
 		//	created = true
-		//}
+		// }
 
 		// http://www.webdav.org/specs/rfc4918.html#HEADER_Lock-Token says that the
 		// Lock-Token value is a Coded-URL. We add angle brackets.

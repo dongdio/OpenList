@@ -5,12 +5,13 @@ import (
 	"fmt"
 	stdpath "path"
 
+	"github.com/pkg/errors"
+
 	"github.com/OpenListTeam/OpenList/internal/errs"
 	"github.com/OpenListTeam/OpenList/internal/fs"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/internal/op"
 	"github.com/OpenListTeam/OpenList/server/common"
-	"github.com/pkg/errors"
 )
 
 func Mkdir(ctx context.Context, path string) error {

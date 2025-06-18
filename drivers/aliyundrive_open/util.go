@@ -9,12 +9,13 @@ import (
 	"strings"
 	"time"
 
+	log "github.com/sirupsen/logrus"
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/internal/op"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/go-resty/resty/v2"
-	log "github.com/sirupsen/logrus"
 )
 
 // do others that not defined in Driver interface
@@ -52,7 +53,7 @@ func (d *AliyundriveOpen) _refreshToken() (string, string, error) {
 	}
 	// 走原有的刷新逻辑
 	url := API_URL + "/oauth/access_token"
-	//var resp base.TokenResp
+	// var resp base.TokenResp
 	var e ErrResp
 	res, err := base.RestyClient.R().
 		//ForceContentType("application/json").
@@ -62,7 +63,7 @@ func (d *AliyundriveOpen) _refreshToken() (string, string, error) {
 			"grant_type":    "refresh_token",
 			"refresh_token": d.RefreshToken,
 		}).
-		//SetResult(&resp).
+		// SetResult(&resp).
 		SetError(&e).
 		Post(url)
 	if err != nil {
@@ -72,7 +73,7 @@ func (d *AliyundriveOpen) _refreshToken() (string, string, error) {
 	if e.Code != "" {
 		return "", "", fmt.Errorf("failed to refresh token: %s", e.Message)
 	}
-	refresh, access := utils.Json.Get(res.Body(), "refresh_token").ToString(), utils.Json.Get(res.Body(), "access_token").ToString()
+	refresh, access := utils.Json.Get(res.Bytes(), "refresh_token").ToString(), utils.Json.Get(res.Bytes(), "access_token").ToString()
 	if refresh == "" {
 		return "", "", fmt.Errorf("failed to refresh token: refresh token is empty, resp: %s", res.String())
 	}
@@ -159,7 +160,7 @@ func (d *AliyundriveOpen) requestReturnErrResp(uri, method string, callback base
 		}
 		return nil, fmt.Errorf("%s:%s", e.Code, e.Message), &e
 	}
-	return res.Body(), nil, nil
+	return res.Bytes(), nil, nil
 }
 
 func (d *AliyundriveOpen) list(ctx context.Context, data base.Json) (*Files, error) {
@@ -187,11 +188,11 @@ func (d *AliyundriveOpen) getFiles(ctx context.Context, fileId string) ([]File, 
 			"order_by":        d.OrderBy,
 			"order_direction": d.OrderDirection,
 			"parent_file_id":  fileId,
-			//"category":              "",
-			//"type":                  "",
-			//"video_thumbnail_time":  120000,
-			//"video_thumbnail_width": 480,
-			//"image_thumbnail_width": 480,
+			// "category":              "",
+			// "type":                  "",
+			// "video_thumbnail_time":  120000,
+			// "video_thumbnail_width": 480,
+			// "image_thumbnail_width": 480,
 		}
 		resp, err := d.limitList(ctx, data)
 		if err != nil {

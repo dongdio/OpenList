@@ -6,6 +6,10 @@ import (
 	"slices"
 	"time"
 
+	"github.com/Xhofe/go-cache"
+	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/errs"
 	"github.com/OpenListTeam/OpenList/internal/model"
@@ -13,9 +17,6 @@ import (
 	"github.com/OpenListTeam/OpenList/pkg/generic_sync"
 	"github.com/OpenListTeam/OpenList/pkg/singleflight"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/Xhofe/go-cache"
-	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
 )
 
 // In order to facilitate adding some other things before and after file op

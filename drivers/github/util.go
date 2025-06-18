@@ -9,11 +9,12 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/OpenListTeam/OpenList/internal/model"
-	"github.com/OpenListTeam/OpenList/pkg/utils"
 	"github.com/ProtonMail/go-crypto/openpgp"
 	"github.com/ProtonMail/go-crypto/openpgp/armor"
-	"github.com/go-resty/resty/v2"
+	"resty.dev/v3"
+
+	"github.com/OpenListTeam/OpenList/internal/model"
+	"github.com/OpenListTeam/OpenList/pkg/utils"
 )
 
 type MessageTemplateVars struct {
@@ -40,7 +41,7 @@ func calculateBase64Length(inputLength int64) int64 {
 
 func toErr(res *resty.Response) error {
 	var errMsg ErrResp
-	if err := utils.Json.Unmarshal(res.Body(), &errMsg); err != nil {
+	if err := utils.Json.Unmarshal(res.Bytes(), &errMsg); err != nil {
 		return errors.New(res.Status())
 	} else {
 		return fmt.Errorf("%s: %s", res.Status(), errMsg.Message)

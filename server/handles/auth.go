@@ -6,12 +6,13 @@ import (
 	"image/png"
 	"time"
 
-	"github.com/OpenListTeam/OpenList/internal/model"
-	"github.com/OpenListTeam/OpenList/internal/op"
-	"github.com/OpenListTeam/OpenList/server/common"
 	"github.com/Xhofe/go-cache"
 	"github.com/gin-gonic/gin"
 	"github.com/pquerna/otp/totp"
+
+	"github.com/OpenListTeam/OpenList/internal/model"
+	"github.com/OpenListTeam/OpenList/internal/op"
+	"github.com/OpenListTeam/OpenList/server/common"
 )
 
 var loginCache = cache.NewMemCache[int]()

@@ -4,11 +4,12 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/meilisearch/meilisearch-go"
+
 	"github.com/OpenListTeam/OpenList/internal/conf"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/internal/search/searcher"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/meilisearch/meilisearch-go"
 )
 
 var config = searcher.Config{
@@ -19,10 +20,7 @@ var config = searcher.Config{
 func init() {
 	searcher.RegisterSearcher(config, func() (searcher.Searcher, error) {
 		m := Meilisearch{
-			Client: meilisearch.NewClient(meilisearch.ClientConfig{
-				Host:   conf.Conf.Meilisearch.Host,
-				APIKey: conf.Conf.Meilisearch.APIKey,
-			}),
+			Client:               meilisearch.New(conf.Conf.Meilisearch.Host, meilisearch.WithAPIKey(conf.Conf.Meilisearch.APIKey)),
 			IndexUid:             conf.Conf.Meilisearch.IndexPrefix + "openlist",
 			FilterableAttributes: []string{"parent", "is_dir", "name"},
 			SearchableAttributes: []string{"name"},
@@ -40,7 +38,7 @@ func init() {
 				if err != nil {
 					return nil, err
 				}
-				forTask, err := m.Client.WaitForTask(task.TaskUID)
+				forTask, err := m.Client.WaitForTask(task.TaskUID, 0)
 				if err != nil {
 					return nil, err
 				}
@@ -78,7 +76,7 @@ func init() {
 			return nil, err
 		}
 		if pagination.MaxTotalHits != int64(model.MaxInt) {
-			_, err := m.Client.Index(m.IndexUid).UpdatePagination(&meilisearch.Pagination{
+			_, err = m.Client.Index(m.IndexUid).UpdatePagination(&meilisearch.Pagination{
 				MaxTotalHits: int64(model.MaxInt),
 			})
 			if err != nil {

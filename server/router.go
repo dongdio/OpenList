@@ -1,6 +1,9 @@
 package server
 
 import (
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+
 	"github.com/OpenListTeam/OpenList/cmd/flags"
 	"github.com/OpenListTeam/OpenList/internal/conf"
 	"github.com/OpenListTeam/OpenList/internal/message"
@@ -11,8 +14,6 @@ import (
 	"github.com/OpenListTeam/OpenList/server/handles"
 	"github.com/OpenListTeam/OpenList/server/middlewares"
 	"github.com/OpenListTeam/OpenList/server/static"
-	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
 )
 
 func Init(e *gin.Engine) {

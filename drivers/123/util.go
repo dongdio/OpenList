@@ -13,11 +13,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/OpenListTeam/OpenList/drivers/base"
-	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/go-resty/resty/v2"
 	jsoniter "github.com/json-iterator/go"
 	log "github.com/sirupsen/logrus"
+	"resty.dev/v3"
+
+	"github.com/OpenListTeam/OpenList/drivers/base"
+	"github.com/OpenListTeam/OpenList/pkg/utils"
 )
 
 // do others that not defined in Driver interface
@@ -43,7 +44,7 @@ const (
 	S3Auth           = MainApi + "/file/s3_upload_object/auth"
 	UploadCompleteV2 = MainApi + "/file/upload_complete/v2"
 	S3Complete       = MainApi + "/file/s3_complete_multipart_upload"
-	//AuthKeySalt      = "8-8D$sL8gPjom7bk#cY"
+	// AuthKeySalt      = "8-8D$sL8gPjom7bk#cY"
 )
 
 func signPath(path string, os string, version string) (k string, v string) {
@@ -69,7 +70,7 @@ func GetApi(rawUrl string) string {
 	return u.String()
 }
 
-//func GetApi(url string) string {
+// func GetApi(url string) string {
 //	vm := js.New()
 //	vm.Set("url", url[22:])
 //	r, err := vm.RunString(`
@@ -142,7 +143,7 @@ func GetApi(rawUrl string) string {
 //	}
 //	v, _ := r.Export().(string)
 //	return url + "?" + v
-//}
+// }
 
 func (d *Pan123) login() error {
 	var body base.Json
@@ -166,21 +167,21 @@ func (d *Pan123) login() error {
 			"user-agent":  "Dart/2.19(dart:io)-openlist",
 			"platform":    "web",
 			"app-version": "3",
-			//"user-agent":  base.UserAgent,
+			// "user-agent":  base.UserAgent,
 		}).
 		SetBody(body).Post(SignIn)
 	if err != nil {
 		return err
 	}
-	if utils.Json.Get(res.Body(), "code").ToInt() != 200 {
-		err = fmt.Errorf(utils.Json.Get(res.Body(), "message").ToString())
+	if utils.Json.Get(res.Bytes(), "code").ToInt() != 200 {
+		err = fmt.Errorf(utils.Json.Get(res.Bytes(), "message").ToString())
 	} else {
-		d.AccessToken = utils.Json.Get(res.Body(), "data", "token").ToString()
+		d.AccessToken = utils.Json.Get(res.Bytes(), "data", "token").ToString()
 	}
 	return err
 }
 
-//func authKey(reqUrl string) (*string, error) {
+// func authKey(reqUrl string) (*string, error) {
 //	reqURL, err := url.Parse(reqUrl)
 //	if err != nil {
 //		return nil, err
@@ -192,9 +193,9 @@ func (d *Pan123) login() error {
 //	p4 := fmt.Sprintf("%d|%d|%s|%s|%s|%s", nowUnix, random, reqURL.Path, "web", "3", AuthKeySalt)
 //	authKey := fmt.Sprintf("%d-%d-%x", nowUnix, random, md5.Sum([]byte(p4)))
 //	return &authKey, nil
-//}
+// }
 
-func (d *Pan123) Request(url string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+func (d *Pan123) Request(url string, method string, callback base.ReqCallback, resp any) ([]byte, error) {
 	isRetry := false
 do:
 	req := base.RestyClient.R()
@@ -205,7 +206,7 @@ do:
 		"user-agent":    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) openlist-client",
 		"platform":      "web",
 		"app-version":   "3",
-		//"user-agent":    base.UserAgent,
+		// "user-agent":    base.UserAgent,
 	})
 	if callback != nil {
 		callback(req)
@@ -213,16 +214,16 @@ do:
 	if resp != nil {
 		req.SetResult(resp)
 	}
-	//authKey, err := authKey(url)
-	//if err != nil {
+	// authKey, err := authKey(url)
+	// if err != nil {
 	//	return nil, err
-	//}
-	//req.SetQueryParam("auth-key", *authKey)
+	// }
+	// req.SetQueryParam("auth-key", *authKey)
 	res, err := req.Execute(method, GetApi(url))
 	if err != nil {
 		return nil, err
 	}
-	body := res.Body()
+	body := res.Bytes()
 	code := utils.Json.Get(body, "code").ToInt()
 	if code != 0 {
 		if !isRetry && code == 401 {
@@ -247,6 +248,7 @@ func (d *Pan123) getFiles(ctx context.Context, parentId string, name string) ([]
 		if err := d.APIRateLimit(ctx, FileList); err != nil {
 			return nil, err
 		}
+
 		var resp Files
 		query := map[string]string{
 			"driveId":              "0",

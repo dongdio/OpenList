@@ -3,8 +3,9 @@ package middlewares
 import (
 	"io"
 
-	"github.com/OpenListTeam/OpenList/internal/stream"
 	"github.com/gin-gonic/gin"
+
+	"github.com/OpenListTeam/OpenList/internal/stream"
 )
 
 func MaxAllowed(n int) gin.HandlerFunc {

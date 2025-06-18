@@ -10,11 +10,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/OpenListTeam/OpenList/drivers/base"
-	"github.com/OpenListTeam/OpenList/internal/driver"
-	"github.com/OpenListTeam/OpenList/internal/model"
-	"github.com/OpenListTeam/OpenList/internal/op"
-	"github.com/OpenListTeam/OpenList/pkg/http_range"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -24,6 +19,12 @@ import (
 	pubUserFile "github.com/city404/v6-public-rpc-proto/go/v6/userfile"
 	"github.com/rclone/rclone/lib/readers"
 	"github.com/zzzhr1990/go-common-entity/userfile"
+
+	"github.com/OpenListTeam/OpenList/drivers/base"
+	"github.com/OpenListTeam/OpenList/internal/driver"
+	"github.com/OpenListTeam/OpenList/internal/model"
+	"github.com/OpenListTeam/OpenList/internal/op"
+	"github.com/OpenListTeam/OpenList/pkg/http_range"
 )
 
 type HalalCloud struct {
@@ -349,9 +350,9 @@ func (d *HalalCloud) copy(ctx context.Context, obj model.Obj, dir model.Obj) (mo
 func (d *HalalCloud) remove(ctx context.Context, obj model.Obj) error {
 	id := obj.GetID()
 	newPath := userfile.NewFormattedPath(d.GetCurrentDir(obj)).GetPath()
-	//if len(id) > 0 {
+	// if len(id) > 0 {
 	//	newPath = ""
-	//}
+	// }
 	_, err := pubUserFile.NewPubUserFileClient(d.HalalCommon.serv.GetGrpcConnection()).Delete(ctx, &pubUserFile.BatchOperationRequest{
 		Source: []*pubUserFile.File{
 			{

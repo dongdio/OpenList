@@ -9,20 +9,21 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
+	"github.com/xhofe/tache"
+
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/internal/op"
 	"github.com/OpenListTeam/OpenList/internal/stream"
 	"github.com/OpenListTeam/OpenList/internal/task"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
-	"github.com/xhofe/tache"
 )
 
 type TransferTask struct {
 	task.TaskExtension
-	Status       string        `json:"-"` //don't save status to save space
+	Status       string        `json:"-"` // don't save status to save space
 	SrcObjPath   string        `json:"src_obj_path"`
 	DstDirPath   string        `json:"dst_dir_path"`
 	SrcStorage   driver.Driver `json:"-"`

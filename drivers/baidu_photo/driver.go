@@ -13,6 +13,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/avast/retry-go"
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/conf"
 	"github.com/OpenListTeam/OpenList/internal/driver"
@@ -20,8 +23,6 @@ import (
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/pkg/errgroup"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/avast/retry-go"
-	"github.com/go-resty/resty/v2"
 )
 
 type BaiduPhoto struct {
@@ -176,13 +177,13 @@ func (d *BaiduPhoto) Copy(ctx context.Context, srcObj, dstDir model.Obj) (model.
 	switch file := srcObj.(type) {
 	case *File:
 		if album, ok := dstDir.(*Album); ok {
-			//rootfile ->  album
+			// rootfile ->  album
 			return d.AddAlbumFile(ctx, album, file)
 		}
 	case *AlbumFile:
 		switch album := dstDir.(type) {
 		case *Root:
-			//albumfile -> root
+			// albumfile -> root
 			return d.CopyAlbumFile(ctx, file)
 		case *Album:
 			// albumfile -> root -> album
@@ -337,7 +338,7 @@ func (d *BaiduPhoto) Put(ctx context.Context, dstDir model.Obj, stream model.Fil
 	}
 
 	switch precreateResp.ReturnType {
-	case 1: //step.3 上传文件切片
+	case 1: // step.3 上传文件切片
 		threadG, upCtx := errgroup.NewGroupWithContext(ctx, d.uploadThread,
 			retry.Attempts(3),
 			retry.Delay(time.Second),
@@ -384,7 +385,7 @@ func (d *BaiduPhoto) Put(ctx context.Context, dstDir model.Obj, stream model.Fil
 			return nil, err
 		}
 		fallthrough
-	case 2: //step.4 创建文件
+	case 2: // step.4 创建文件
 		params["uploadid"] = precreateResp.UploadID
 		_, err = d.Post(FILE_API_URL_V1+"/create", func(r *resty.Request) {
 			r.SetContext(ctx)
@@ -395,7 +396,7 @@ func (d *BaiduPhoto) Put(ctx context.Context, dstDir model.Obj, stream model.Fil
 			return nil, err
 		}
 		fallthrough
-	case 3: //step.5 增加到相册
+	case 3: // step.5 增加到相册
 		rootfile := precreateResp.Data.toFile()
 		if album, ok := dstDir.(*Album); ok {
 			return d.AddAlbumFile(ctx, album, rootfile)

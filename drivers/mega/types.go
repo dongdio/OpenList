@@ -5,8 +5,9 @@ import (
 
 	"github.com/OpenListTeam/OpenList/pkg/utils"
 
-	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/t3rm1n4l/go-mega"
+
+	"github.com/OpenListTeam/OpenList/internal/model"
 )
 
 type MegaNode struct {
@@ -26,7 +27,7 @@ func (m *MegaNode) CreateTime() time.Time {
 }
 
 func (m *MegaNode) GetHash() utils.HashInfo {
-	//Meganz use md5, but can't get the original file hash, due to it's encrypted in the cloud
+	// Meganz use md5, but can't get the original file hash, due to it's encrypted in the cloud
 	return utils.HashInfo{}
 }
 

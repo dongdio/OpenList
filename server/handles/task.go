@@ -7,12 +7,13 @@ import (
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/internal/task"
 
+	"github.com/gin-gonic/gin"
+	"github.com/xhofe/tache"
+
 	"github.com/OpenListTeam/OpenList/internal/fs"
 	"github.com/OpenListTeam/OpenList/internal/offline_download/tool"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
 	"github.com/OpenListTeam/OpenList/server/common"
-	"github.com/gin-gonic/gin"
-	"github.com/xhofe/tache"
 )
 
 type TaskInfo struct {

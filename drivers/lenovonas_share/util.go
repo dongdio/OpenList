@@ -3,9 +3,10 @@ package LenovoNasShare
 import (
 	"errors"
 
+	jsoniter "github.com/json-iterator/go"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	jsoniter "github.com/json-iterator/go"
 )
 
 func (d *LenovoNasShare) request(url string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
@@ -27,7 +28,7 @@ func (d *LenovoNasShare) request(url string, method string, callback base.ReqCal
 	if err != nil {
 		return nil, err
 	}
-	body := res.Body()
+	body := res.Bytes()
 	result := utils.Json.Get(body, "result").ToBool()
 	if !result {
 		return nil, errors.New(jsoniter.Get(body, "error", "msg").ToString())

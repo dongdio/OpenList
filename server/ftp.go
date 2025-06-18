@@ -13,13 +13,14 @@ import (
 	"strings"
 	"sync"
 
+	ftpserver "github.com/fclairamb/ftpserverlib"
+
 	"github.com/OpenListTeam/OpenList/internal/conf"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/internal/op"
 	"github.com/OpenListTeam/OpenList/internal/setting"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
 	"github.com/OpenListTeam/OpenList/server/ftp"
-	ftpserver "github.com/fclairamb/ftpserverlib"
 )
 
 type FtpMainDriver struct {

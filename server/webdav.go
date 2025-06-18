@@ -10,13 +10,14 @@ import (
 	"github.com/OpenListTeam/OpenList/internal/stream"
 	"github.com/OpenListTeam/OpenList/server/middlewares"
 
+	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/OpenListTeam/OpenList/internal/conf"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/internal/op"
 	"github.com/OpenListTeam/OpenList/internal/setting"
 	"github.com/OpenListTeam/OpenList/server/webdav"
-	"github.com/gin-gonic/gin"
-	log "github.com/sirupsen/logrus"
 )
 
 var handler *webdav.Handler

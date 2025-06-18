@@ -9,6 +9,9 @@ import (
 	"path"
 	"strings"
 
+	log "github.com/sirupsen/logrus"
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/conf"
 	"github.com/OpenListTeam/OpenList/internal/driver"
@@ -16,8 +19,6 @@ import (
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
 	"github.com/OpenListTeam/OpenList/server/common"
-	"github.com/go-resty/resty/v2"
-	log "github.com/sirupsen/logrus"
 )
 
 type OpenList struct {
@@ -62,7 +63,7 @@ func (d *OpenList) Init(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		allowMounted := utils.Json.Get(res.Body(), "data", conf.AllowMounted).ToString() == "true"
+		allowMounted := utils.Json.Get(res.Bytes(), "data", conf.AllowMounted).ToString() == "true"
 		if !allowMounted {
 			return fmt.Errorf("the site does not allow mounted")
 		}
@@ -355,8 +356,8 @@ func (d *OpenList) ArchiveDecompress(ctx context.Context, srcObj, dstDir model.O
 	return err
 }
 
-//func (d *AList) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
+// func (d *AList) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
 //	return nil, errs.NotSupport
-//}
+// }
 
 var _ driver.Driver = (*OpenList)(nil)

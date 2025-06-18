@@ -17,8 +17,8 @@ type Addition struct {
 	AccessToken string `json:"AccessToken" required:"false"`
 
 	//  用户名+密码方式登录的AccessToken可以兼容
-	//Username string `json:"username" required:"false"`
-	//Password string `json:"password" required:"false"`
+	// Username string `json:"username" required:"false"`
+	// Password string `json:"password" required:"false"`
 
 	//  上传线程数
 	UploadThread int `json:"UploadThread" type:"number" default:"3" help:"the threads of upload"`

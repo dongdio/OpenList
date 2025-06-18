@@ -11,8 +11,9 @@ import (
 
 	"github.com/OpenListTeam/OpenList/internal/errs"
 
-	"github.com/OpenListTeam/OpenList/internal/conf"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/OpenListTeam/OpenList/internal/conf"
 )
 
 // CopyFile File copies a single file from src to dst

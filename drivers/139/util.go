@@ -12,14 +12,15 @@ import (
 	"strings"
 	"time"
 
+	jsoniter "github.com/json-iterator/go"
+	log "github.com/sirupsen/logrus"
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/internal/op"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
 	"github.com/OpenListTeam/OpenList/pkg/utils/random"
-	"github.com/go-resty/resty/v2"
-	jsoniter "github.com/json-iterator/go"
-	log "github.com/sirupsen/logrus"
 )
 
 // do others that not defined in Driver interface
@@ -85,14 +86,14 @@ func (d *Yun139) refreshToken() error {
 		return fmt.Errorf("authorization has expired")
 	}
 
-	url := "https://aas.caiyun.feixin.10086.cn:443/tellin/authTokenRefresh.do"
+	link := "https://aas.caiyun.feixin.10086.cn:443/tellin/authTokenRefresh.do"
 	var resp RefreshTokenResp
 	reqBody := "<root><token>" + splits[2] + "</token><account>" + splits[1] + "</account><clienttype>656</clienttype></root>"
 	_, err = base.RestyClient.R().
-		ForceContentType("application/xml").
+		SetForceResponseContentType("application/xml").
 		SetBody(reqBody).
 		SetResult(&resp).
-		Post(url)
+		Post(link)
 	if err != nil {
 		return err
 	}
@@ -105,7 +106,7 @@ func (d *Yun139) refreshToken() error {
 }
 
 func (d *Yun139) request(pathname string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
-	url := "https://yun.139.com" + pathname
+	link := "https://yun.139.com" + pathname
 	req := base.RestyClient.R()
 	randStr := random.String(16)
 	ts := time.Now().Format("2006-01-02 15:04:05")
@@ -127,9 +128,9 @@ func (d *Yun139) request(pathname string, method string, callback base.ReqCallba
 		"Authorization":  "Basic " + d.getAuthorization(),
 		"mcloud-channel": "1000101",
 		"mcloud-client":  "10701",
-		//"mcloud-route": "001",
+		// "mcloud-route": "001",
 		"mcloud-sign": fmt.Sprintf("%s,%s,%s", ts, randStr, sign),
-		//"mcloud-skey":"",
+		// "mcloud-skey":"",
 		"mcloud-version":         "7.14.0",
 		"Origin":                 "https://yun.139.com",
 		"Referer":                "https://yun.139.com/w/",
@@ -144,22 +145,25 @@ func (d *Yun139) request(pathname string, method string, callback base.ReqCallba
 
 	var e BaseResp
 	req.SetResult(&e)
-	res, err := req.Execute(method, url)
+	res, err := req.Execute(method, link)
+	if err != nil {
+		return nil, err
+	}
 	log.Debugln(res.String())
 	if !e.Success {
 		return nil, errors.New(e.Message)
 	}
 	if resp != nil {
-		err = utils.Json.Unmarshal(res.Body(), resp)
+		err = utils.Json.Unmarshal(res.Bytes(), resp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	return res.Body(), nil
+	return res.Bytes(), nil
 }
 
 func (d *Yun139) requestRoute(data interface{}, resp interface{}) ([]byte, error) {
-	url := "https://user-njs.yun.139.com/user/route/qryRoutePolicy"
+	link := "https://user-njs.yun.139.com/user/route/qryRoutePolicy"
 	req := base.RestyClient.R()
 	randStr := random.String(16)
 	ts := time.Now().Format("2006-01-02 15:04:05")
@@ -184,9 +188,9 @@ func (d *Yun139) requestRoute(data interface{}, resp interface{}) ([]byte, error
 		"Authorization":  "Basic " + d.getAuthorization(),
 		"mcloud-channel": "1000101",
 		"mcloud-client":  "10701",
-		//"mcloud-route": "001",
+		// "mcloud-route": "001",
 		"mcloud-sign": fmt.Sprintf("%s,%s,%s", ts, randStr, sign),
-		//"mcloud-skey":"",
+		// "mcloud-skey":"",
 		"mcloud-version":         "7.14.0",
 		"Origin":                 "https://yun.139.com",
 		"Referer":                "https://yun.139.com/w/",
@@ -201,18 +205,21 @@ func (d *Yun139) requestRoute(data interface{}, resp interface{}) ([]byte, error
 
 	var e BaseResp
 	req.SetResult(&e)
-	res, err := req.Execute(http.MethodPost, url)
+	res, err := req.Execute(http.MethodPost, link)
+	if err != nil {
+		return nil, err
+	}
 	log.Debugln(res.String())
 	if !e.Success {
 		return nil, errors.New(e.Message)
 	}
 	if resp != nil {
-		err = utils.Json.Unmarshal(res.Body(), resp)
+		err = utils.Json.Unmarshal(res.Bytes(), resp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	return res.Body(), nil
+	return res.Bytes(), nil
 }
 
 func (d *Yun139) post(pathname string, data interface{}, resp interface{}) ([]byte, error) {
@@ -265,7 +272,7 @@ func (d *Yun139) getFiles(catalogID string) ([]model.Obj, error) {
 					HashInfo: utils.NewHashInfo(utils.MD5, content.Digest),
 				},
 				Thumbnail: model.Thumbnail{Thumbnail: content.ThumbnailURL},
-				//Thumbnail: content.BigthumbnailURL,
+				// Thumbnail: content.BigthumbnailURL,
 			}
 			files = append(files, &f)
 		}
@@ -308,7 +315,7 @@ func (d *Yun139) familyGetFiles(catalogID string) ([]model.Obj, error) {
 		if err != nil {
 			return nil, err
 		}
-		path := resp.Data.Path
+		tmpPath := resp.Data.Path
 		for _, catalog := range resp.Data.CloudCatalogList {
 			f := model.Object{
 				ID:       catalog.CatalogID,
@@ -317,7 +324,7 @@ func (d *Yun139) familyGetFiles(catalogID string) ([]model.Obj, error) {
 				IsFolder: true,
 				Modified: getTime(catalog.LastUpdateTime),
 				Ctime:    getTime(catalog.CreateTime),
-				Path:     path, // 文件夹上一级的Path
+				Path:     tmpPath, // 文件夹上一级的Path
 			}
 			files = append(files, &f)
 		}
@@ -329,10 +336,10 @@ func (d *Yun139) familyGetFiles(catalogID string) ([]model.Obj, error) {
 					Size:     content.ContentSize,
 					Modified: getTime(content.LastUpdateTime),
 					Ctime:    getTime(content.CreateTime),
-					Path:     path, // 文件所在目录的Path
+					Path:     tmpPath, // 文件所在目录的Path
 				},
 				Thumbnail: model.Thumbnail{Thumbnail: content.ThumbnailURL},
-				//Thumbnail: content.BigthumbnailURL,
+				// Thumbnail: content.BigthumbnailURL,
 			}
 			files = append(files, &f)
 		}
@@ -363,7 +370,7 @@ func (d *Yun139) groupGetFiles(catalogID string) ([]model.Obj, error) {
 		if err != nil {
 			return nil, err
 		}
-		path := resp.Data.GetGroupContentResult.ParentCatalogID
+		tmpPath := resp.Data.GetGroupContentResult.ParentCatalogID
 		for _, catalog := range resp.Data.GetGroupContentResult.CatalogList {
 			f := model.Object{
 				ID:       catalog.CatalogID,
@@ -384,10 +391,10 @@ func (d *Yun139) groupGetFiles(catalogID string) ([]model.Obj, error) {
 					Size:     content.ContentSize,
 					Modified: getTime(content.UpdateTime),
 					Ctime:    getTime(content.CreateTime),
-					Path:     path, // 文件所在目录的Path
+					Path:     tmpPath, // 文件所在目录的Path
 				},
 				Thumbnail: model.Thumbnail{Thumbnail: content.ThumbnailURL},
-				//Thumbnail: content.BigthumbnailURL,
+				// Thumbnail: content.BigthumbnailURL,
 			}
 			files = append(files, &f)
 		}
@@ -449,10 +456,10 @@ func unicode(str string) string {
 }
 
 func (d *Yun139) personalRequest(pathname string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
-	url := d.getPersonalCloudHost() + pathname
+	link := d.getPersonalCloudHost() + pathname
 	req := base.RestyClient.R()
 	randStr := random.String(16)
-	ts := time.Now().Format("2006-01-02 15:04:05")
+	ts := time.Now().Format(time.DateTime)
 	if callback != nil {
 		callback(req)
 	}
@@ -491,7 +498,7 @@ func (d *Yun139) personalRequest(pathname string, method string, callback base.R
 
 	var e BaseResp
 	req.SetResult(&e)
-	res, err := req.Execute(method, url)
+	res, err := req.Execute(method, link)
 	if err != nil {
 		return nil, err
 	}
@@ -500,12 +507,12 @@ func (d *Yun139) personalRequest(pathname string, method string, callback base.R
 		return nil, errors.New(e.Message)
 	}
 	if resp != nil {
-		err = utils.Json.Unmarshal(res.Body(), resp)
+		err = utils.Json.Unmarshal(res.Bytes(), resp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	return res.Body(), nil
+	return res.Bytes(), nil
 }
 func (d *Yun139) personalPost(pathname string, data interface{}, resp interface{}) ([]byte, error) {
 	return d.personalRequest(pathname, http.MethodPost, func(req *resty.Request) {
@@ -542,7 +549,7 @@ func (d *Yun139) personalGetFiles(fileId string) ([]model.Obj, error) {
 		}
 		nextPageCursor = resp.Data.NextPageCursor
 		for _, item := range resp.Data.Items {
-			var isFolder = (item.Type == "folder")
+			var isFolder = item.Type == "folder"
 			var f model.Obj
 			if isFolder {
 				f = &model.Object{

@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/gin-gonic/gin"
+	"gopkg.in/ldap.v3"
+
 	"github.com/OpenListTeam/OpenList/internal/conf"
 	"github.com/OpenListTeam/OpenList/internal/db"
 	"github.com/OpenListTeam/OpenList/internal/model"
@@ -14,8 +17,6 @@ import (
 	"github.com/OpenListTeam/OpenList/pkg/utils"
 	"github.com/OpenListTeam/OpenList/pkg/utils/random"
 	"github.com/OpenListTeam/OpenList/server/common"
-	"github.com/gin-gonic/gin"
-	"gopkg.in/ldap.v3"
 )
 
 func LoginLdap(c *gin.Context) {

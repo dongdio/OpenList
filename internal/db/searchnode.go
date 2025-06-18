@@ -5,11 +5,12 @@ import (
 	stdpath "path"
 	"strings"
 
+	"github.com/pkg/errors"
+	"gorm.io/gorm"
+
 	"github.com/OpenListTeam/OpenList/internal/conf"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/pkg/errors"
-	"gorm.io/gorm"
 )
 
 func whereInParent(parent string) *gorm.DB {

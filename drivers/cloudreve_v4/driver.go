@@ -8,13 +8,14 @@ import (
 	"strings"
 	"time"
 
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/errs"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/internal/op"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/go-resty/resty/v2"
 )
 
 type CloudreveV4 struct {
@@ -298,8 +299,8 @@ func (d *CloudreveV4) ArchiveDecompress(ctx context.Context, srcObj, dstDir mode
 	return nil, errs.NotImplement
 }
 
-//func (d *CloudreveV4) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
+// func (d *CloudreveV4) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
 //	return nil, errs.NotSupport
-//}
+// }
 
 var _ driver.Driver = (*CloudreveV4)(nil)

@@ -12,15 +12,16 @@ import (
 	"io"
 	"iter"
 
-	"github.com/OpenListTeam/OpenList/internal/errs"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/OpenListTeam/OpenList/internal/errs"
 )
 
 func GetMD5EncodeStr(data string) string {
 	return HashData(MD5, []byte(data))
 }
 
-//inspired by "github.com/rclone/rclone/fs/hash"
+// inspired by "github.com/rclone/rclone/fs/hash"
 
 // ErrUnsupported should be returned by filesystem,
 // if it is requested to deliver an unsupported hash type.
@@ -44,11 +45,11 @@ func (ht *HashType) MarshalText() (text []byte, err error) {
 
 var (
 	_ json.Marshaler = (*HashType)(nil)
-	//_ json.Unmarshaler = (*HashType)(nil)
+	// _ json.Unmarshaler = (*HashType)(nil)
 
 	// read/write from/to json keys
 	_ encoding.TextMarshaler = (*HashType)(nil)
-	//_ encoding.TextUnmarshaler = (*HashType)(nil)
+	// _ encoding.TextUnmarshaler = (*HashType)(nil)
 )
 
 var (

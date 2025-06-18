@@ -6,9 +6,10 @@ import (
 	"net/http"
 	"strconv"
 
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/op"
-	"github.com/go-resty/resty/v2"
 )
 
 // do others that not defined in Driver interface
@@ -81,7 +82,7 @@ func (d *YandexDisk) request(pathname string, method string, callback base.ReqCa
 	if err != nil {
 		return nil, err
 	}
-	//log.Debug(res.String())
+	// log.Debug(res.String())
 	if e.Error != "" {
 		if e.Error == "UnauthorizedError" {
 			err = d.refreshToken()
@@ -92,7 +93,7 @@ func (d *YandexDisk) request(pathname string, method string, callback base.ReqCa
 		}
 		return nil, errors.New(e.Description)
 	}
-	return res.Body(), nil
+	return res.Bytes(), nil
 }
 
 func (d *YandexDisk) getFiles(path string) ([]File, error) {

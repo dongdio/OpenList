@@ -8,13 +8,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/errs"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/go-resty/resty/v2"
-	"github.com/google/uuid"
 )
 
 type Cloud189PC struct {
@@ -167,11 +168,13 @@ func (y *Cloud189PC) Link(ctx context.Context, file model.Obj, args model.LinkAr
 
 	// 重定向获取真实链接
 	downloadUrl.URL = strings.Replace(strings.ReplaceAll(downloadUrl.URL, "&amp;", "&"), "http://", "https://", 1)
-	res, err := base.NoRedirectClient.R().SetContext(ctx).SetDoNotParseResponse(true).Get(downloadUrl.URL)
+	res, err := base.NoRedirectClient.R().SetContext(ctx).
+		SetDoNotParseResponse(true).
+		Get(downloadUrl.URL)
 	if err != nil {
 		return nil, err
 	}
-	defer res.RawBody().Close()
+	defer res.Body.Close()
 	if res.StatusCode() == 302 {
 		downloadUrl.URL = res.Header().Get("location")
 	}

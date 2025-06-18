@@ -15,19 +15,20 @@ import (
 	"strings"
 	"time"
 
+	jsoniter "github.com/json-iterator/go"
+	log "github.com/sirupsen/logrus"
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
 	myrand "github.com/OpenListTeam/OpenList/pkg/utils/random"
-	"github.com/go-resty/resty/v2"
-	jsoniter "github.com/json-iterator/go"
-	log "github.com/sirupsen/logrus"
 )
 
 // do others that not defined in Driver interface
 
-//func (d *Cloud189) login() error {
+// func (d *Cloud189) login() error {
 //	url := "https://cloud.189.cn/api/portal/loginUrl.action?redirectURL=https%3A%2F%2Fcloud.189.cn%2Fmain.action"
 //	b := ""
 //	lt := ""
@@ -81,7 +82,7 @@ import (
 //		// Enter the verification code manually
 //		//err = message.GetMessenger().WaitSend(message.Message{
 //		//	Type:    "image",
-//		//	Content: "data:image/png;base64," + base64.StdEncoding.EncodeToString(imgRes.Body()),
+//		//	Content: "data:image/png;base64," + base64.StdEncoding.EncodeToString(imgres.Bytes()),
 //		//}, 10)
 //		//if err != nil {
 //		//	return err
@@ -89,15 +90,15 @@ import (
 //		//vCodeRS, err = message.GetMessenger().WaitReceive(30)
 //		// use ocr api
 //		vRes, err := base.RestyClient.R().SetMultipartField(
-//			"image", "validateCode.png", "image/png", bytes.NewReader(imgRes.Body())).
+//			"image", "validateCode.png", "image/png", bytes.NewReader(imgres.Bytes())).
 //			Post(setting.GetStr(conf.OcrApi))
 //		if err != nil {
 //			return err
 //		}
-//		if jsoniter.Get(vRes.Body(), "status").ToInt() != 200 {
-//			return errors.New("ocr error:" + jsoniter.Get(vRes.Body(), "msg").ToString())
+//		if jsoniter.Get(vres.Bytes(), "status").ToInt() != 200 {
+//			return errors.New("ocr error:" + jsoniter.Get(vres.Bytes(), "msg").ToString())
 //		}
-//		vCodeRS = jsoniter.Get(vRes.Body(), "result").ToString()
+//		vCodeRS = jsoniter.Get(vres.Bytes(), "result").ToString()
 //		log.Debugln("code: ", vCodeRS)
 //	}
 //	userRsa := RsaEncode([]byte(d.Username), jRsakey, true)
@@ -128,7 +129,7 @@ import (
 //	if err != nil {
 //		return err
 //	}
-//	err = utils.Json.Unmarshal(res.Body(), &loginResp)
+//	err = utils.Json.Unmarshal(res.Bytes(), &loginResp)
 //	if err != nil {
 //		log.Error(err.Error())
 //		return err
@@ -138,11 +139,13 @@ import (
 //	}
 //	_, err = d.client.R().Get(loginResp.ToUrl)
 //	return err
-//}
+// }
 
 func (d *Cloud189) request(url string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
 	var e Error
-	req := d.client.R().SetError(&e).
+	req := base.RestyClient.R().
+		SetError(&e).
+		SetHeaders(d.header).
 		SetHeader("Accept", "application/json;charset=UTF-8").
 		SetQueryParams(map[string]string{
 			"noCache": random(),
@@ -157,7 +160,7 @@ func (d *Cloud189) request(url string, method string, callback base.ReqCallback,
 	if err != nil {
 		return nil, err
 	}
-	//log.Debug(res.String())
+	// log.Debug(res.String())
 	if e.ErrorCode != "" {
 		if e.ErrorCode == "InvalidSessionKey" {
 			err = d.newLogin()
@@ -167,10 +170,10 @@ func (d *Cloud189) request(url string, method string, callback base.ReqCallback,
 			return d.request(url, method, callback, resp)
 		}
 	}
-	if jsoniter.Get(res.Body(), "res_code").ToInt() != 0 {
-		err = errors.New(jsoniter.Get(res.Body(), "res_message").ToString())
+	if jsoniter.Get(res.Bytes(), "res_code").ToInt() != 0 {
+		err = errors.New(jsoniter.Get(res.Bytes(), "res_message").ToString())
 	}
-	return res.Body(), err
+	return res.Bytes(), err
 }
 
 func (d *Cloud189) getFiles(fileId string) ([]model.Obj, error) {
@@ -180,14 +183,14 @@ func (d *Cloud189) getFiles(fileId string) ([]model.Obj, error) {
 		var resp Files
 		_, err := d.request("https://cloud.189.cn/api/open/file/listFiles.action", http.MethodGet, func(req *resty.Request) {
 			req.SetQueryParams(map[string]string{
-				//"noCache":    random(),
+				// "noCache":    random(),
 				"pageSize":   "60",
 				"pageNum":    strconv.Itoa(pageNum),
 				"mediaType":  "0",
 				"folderId":   fileId,
 				"iconOption": "5",
-				"orderBy":    "lastOpTime", //account.OrderBy
-				"descending": "true",       //account.OrderDirection
+				"orderBy":    "lastOpTime", // account.OrderBy
+				"descending": "true",       // account.OrderDirection
 			})
 		}, &resp)
 		if err != nil {
@@ -223,16 +226,19 @@ func (d *Cloud189) getFiles(fileId string) ([]model.Obj, error) {
 }
 
 func (d *Cloud189) oldUpload(dstDir model.Obj, file model.FileStreamer) error {
-	res, err := d.client.R().SetMultipartFormData(map[string]string{
-		"parentId":   dstDir.GetID(),
-		"sessionKey": "??",
-		"opertype":   "1",
-		"fname":      file.GetName(),
-	}).SetMultipartField("Filedata", file.GetName(), file.GetMimetype(), file).Post("https://hb02.upload.cloud.189.cn/v1/DCIWebUploadAction")
+	res, err := base.RestyClient.R().
+		SetHeaders(d.header).
+		SetMultipartFormData(map[string]string{
+			"parentId":   dstDir.GetID(),
+			"sessionKey": "??",
+			"opertype":   "1",
+			"fname":      file.GetName(),
+		}).SetMultipartField("Filedata", file.GetName(), file.GetMimetype(), file).
+		Post("https://hb02.upload.cloud.189.cn/v1/DCIWebUploadAction")
 	if err != nil {
 		return err
 	}
-	if utils.Json.Get(res.Body(), "MD5").ToString() != "" {
+	if utils.Json.Get(res.Bytes(), "MD5").ToString() != "" {
 		return nil
 	}
 	log.Debugf(res.String())
@@ -281,15 +287,17 @@ func (d *Cloud189) uploadRequest(uri string, form map[string]string, resp interf
 		return nil, err
 	}
 	b := RsaEncode([]byte(l), pubKey, false)
-	req := d.client.R().SetHeaders(map[string]string{
-		"accept":         "application/json;charset=UTF-8",
-		"SessionKey":     sessionKey,
-		"Signature":      signature,
-		"X-Request-Date": c,
-		"X-Request-ID":   r,
-		"EncryptionText": b,
-		"PkId":           pkId,
-	})
+	req := base.RestyClient.R().
+		SetHeaders(d.header).
+		SetHeaders(map[string]string{
+			"accept":         "application/json;charset=UTF-8",
+			"SessionKey":     sessionKey,
+			"Signature":      signature,
+			"X-Request-Date": c,
+			"X-Request-ID":   r,
+			"EncryptionText": b,
+			"PkId":           pkId,
+		})
 	if resp != nil {
 		req.SetResult(resp)
 	}
@@ -297,7 +305,7 @@ func (d *Cloud189) uploadRequest(uri string, form map[string]string, resp interf
 	if err != nil {
 		return nil, err
 	}
-	data = res.Body()
+	data = res.Bytes()
 	if utils.Json.Get(data, "code").ToString() != "SUCCESS" {
 		return nil, errors.New(uri + "---" + jsoniter.Get(data, "msg").ToString())
 	}
@@ -324,9 +332,9 @@ func (d *Cloud189) newUpload(ctx context.Context, dstDir model.Obj, file model.F
 		return err
 	}
 	uploadFileId := jsoniter.Get(res, "data", "uploadFileId").ToString()
-	//_, err = d.uploadRequest("/person/getUploadedPartsInfo", map[string]string{
+	// _, err = d.uploadRequest("/person/getUploadedPartsInfo", map[string]string{
 	//	"uploadFileId": uploadFileId,
-	//}, nil)
+	// }, nil)
 	var finish int64 = 0
 	var i int64
 	var byteSize int64
@@ -340,10 +348,10 @@ func (d *Cloud189) newUpload(ctx context.Context, dstDir model.Obj, file model.F
 		if DEFAULT < byteSize {
 			byteSize = DEFAULT
 		}
-		//log.Debugf("%d,%d", byteSize, finish)
+		// log.Debugf("%d,%d", byteSize, finish)
 		byteData := make([]byte, byteSize)
 		n, err := io.ReadFull(file, byteData)
-		//log.Debug(err, n)
+		// log.Debug(err, n)
 		if err != nil {
 			return err
 		}

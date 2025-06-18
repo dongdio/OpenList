@@ -3,9 +3,10 @@ package db
 import (
 	log "github.com/sirupsen/logrus"
 
+	"gorm.io/gorm"
+
 	"github.com/OpenListTeam/OpenList/internal/conf"
 	"github.com/OpenListTeam/OpenList/internal/model"
-	"gorm.io/gorm"
 )
 
 var db *gorm.DB

@@ -26,33 +26,33 @@ var _ model.Obj = (*FileOrFolderByShareUrl)(nil)
 
 type FileOrFolder struct {
 	Name string `json:"name"`
-	//Onof        string `json:"onof"` // 是否存在提取码
-	//IsLock      string `json:"is_lock"`
-	//IsCopyright int    `json:"is_copyright"`
+	// Onof        string `json:"onof"` // 是否存在提取码
+	// IsLock      string `json:"is_lock"`
+	// IsCopyright int    `json:"is_copyright"`
 
 	// 文件通用
 	ID      string `json:"id"`
 	NameAll string `json:"name_all"`
 	Size    string `json:"size"`
 	Time    string `json:"time"`
-	//Icon          string `json:"icon"`
-	//Downs         string `json:"downs"`
-	//Filelock      string `json:"filelock"`
-	//IsBakdownload int    `json:"is_bakdownload"`
-	//Bakdownload   string `json:"bakdownload"`
-	//IsDes         int    `json:"is_des"` // 是否存在描述
-	//IsIco         int    `json:"is_ico"`
+	// Icon          string `json:"icon"`
+	// Downs         string `json:"downs"`
+	// Filelock      string `json:"filelock"`
+	// IsBakdownload int    `json:"is_bakdownload"`
+	// Bakdownload   string `json:"bakdownload"`
+	// IsDes         int    `json:"is_des"` // 是否存在描述
+	// IsIco         int    `json:"is_ico"`
 
 	// 文件夹
 	FolID string `json:"fol_id"`
-	//Folderlock string `json:"folderlock"`
-	//FolderDes  string `json:"folder_des"`
+	// Folderlock string `json:"folderlock"`
+	// FolderDes  string `json:"folder_des"`
 
 	// 缓存字段
-	size       *int64     `json:"-"`
-	time       *time.Time `json:"-"`
-	repairFlag bool       `json:"-"`
-	shareInfo  *FileShare `json:"-"`
+	size       *int64
+	time       *time.Time
+	repairFlag bool
+	shareInfo  *FileShare
 }
 
 func (f *FileOrFolder) CreateTime() time.Time {
@@ -127,9 +127,9 @@ type FileOrFolderByShareUrl struct {
 	Duan string `json:"duan"`
 	Size string `json:"size"`
 	Time string `json:"time"`
-	//Icon          string `json:"icon"`
-	//PIco int `json:"p_ico"`
-	//T int `json:"t"`
+	// Icon          string `json:"icon"`
+	// PIco int `json:"p_ico"`
+	// T int `json:"t"`
 
 	// 文件夹特有
 	IsFloder bool `json:"-"`

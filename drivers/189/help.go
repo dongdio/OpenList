@@ -18,8 +18,9 @@ import (
 	"strconv"
 	"strings"
 
-	myrand "github.com/OpenListTeam/OpenList/pkg/utils/random"
 	log "github.com/sirupsen/logrus"
+
+	myrand "github.com/OpenListTeam/OpenList/pkg/utils/random"
 )
 
 func random() string {
@@ -90,11 +91,11 @@ func qs(form map[string]string) string {
 		f.Set(k, v)
 	}
 	return EncodeParam(f)
-	//strList := make([]string, 0)
-	//for k, v := range form {
+	// strList := make([]string, 0)
+	// for k, v := range form {
 	//	strList = append(strList, fmt.Sprintf("%s=%s", k, url.QueryEscape(v)))
-	//}
-	//return strings.Join(strList, "&")
+	// }
+	// return strings.Join(strList, "&")
 }
 
 func EncodeParam(v url.Values) string {
@@ -114,21 +115,21 @@ func EncodeParam(v url.Values) string {
 			}
 			buf.WriteString(k)
 			buf.WriteByte('=')
-			//if k == "fileName" {
+			// if k == "fileName" {
 			//	buf.WriteString(encode(v))
-			//} else {
+			// } else {
 			buf.WriteString(v)
-			//}
+			// }
 		}
 	}
 	return buf.String()
 }
 
 func encode(str string) string {
-	//str = strings.ReplaceAll(str, "%", "%25")
-	//str = strings.ReplaceAll(str, "&", "%26")
-	//str = strings.ReplaceAll(str, "+", "%2B")
-	//return str
+	// str = strings.ReplaceAll(str, "%", "%25")
+	// str = strings.ReplaceAll(str, "&", "%26")
+	// str = strings.ReplaceAll(str, "+", "%2B")
+	// return str
 	return url.QueryEscape(str)
 }
 
@@ -166,7 +167,7 @@ func getMd5(data []byte) []byte {
 
 func decodeURIComponent(str string) string {
 	r, _ := url.PathUnescape(str)
-	//r = strings.ReplaceAll(r, " ", "+")
+	// r = strings.ReplaceAll(r, " ", "+")
 	return r
 }
 

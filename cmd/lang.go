@@ -11,14 +11,15 @@ import (
 	"reflect"
 	"strings"
 
+	log "github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
+
 	_ "github.com/OpenListTeam/OpenList/drivers"
 	"github.com/OpenListTeam/OpenList/internal/bootstrap"
 	"github.com/OpenListTeam/OpenList/internal/bootstrap/data"
 	"github.com/OpenListTeam/OpenList/internal/conf"
 	"github.com/OpenListTeam/OpenList/internal/op"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	log "github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
 )
 
 type KV[V any] map[string]V
@@ -73,7 +74,7 @@ func writeFile(name string, data interface{}) {
 		log.Infof("%s.json no changed, skip", name)
 	} else {
 		log.Infof("%s.json changed, update file", name)
-		//log.Infof("old: %+v\nnew:%+v", oldData, data)
+		// log.Infof("old: %+v\nnew:%+v", oldData, data)
 		utils.WriteJsonToFile(fmt.Sprintf("lang/%s.json", name), newData, true)
 	}
 }
@@ -132,7 +133,7 @@ func generateSettingsJson() {
 		}
 	}
 	writeFile("settings", settingsLang)
-	//utils.WriteJsonToFile("lang/settings.json", settingsLang)
+	// utils.WriteJsonToFile("lang/settings.json", settingsLang)
 }
 
 // LangCmd represents the lang command

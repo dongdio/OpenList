@@ -5,11 +5,12 @@ import (
 	"os"
 	stdpath "path"
 
+	"github.com/kdomanski/iso9660"
+
 	"github.com/OpenListTeam/OpenList/internal/archive/tool"
 	"github.com/OpenListTeam/OpenList/internal/errs"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/internal/stream"
-	"github.com/kdomanski/iso9660"
 )
 
 type ISO9660 struct {

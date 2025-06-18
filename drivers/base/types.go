@@ -1,6 +1,6 @@
 package base
 
-import "github.com/go-resty/resty/v2"
+import "resty.dev/v3"
 
 type Json map[string]interface{}
 

@@ -1,12 +1,13 @@
 package github_releases
 
 import (
-	"encoding/json"
 	"strings"
 	"time"
 
+	"github.com/bytedance/sonic"
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/go-resty/resty/v2"
 )
 
 type MountPoint struct {
@@ -17,7 +18,7 @@ type MountPoint struct {
 	OtherFile *[]FileInfo // 仓库根目录下的其他文件
 }
 
-// 请求最新版本
+// RequestRelease 请求最新版本
 func (m *MountPoint) RequestRelease(get func(url string) (*resty.Response, error), refresh bool) {
 	if m.Repo == "" {
 		return
@@ -26,11 +27,11 @@ func (m *MountPoint) RequestRelease(get func(url string) (*resty.Response, error
 	if m.Release == nil || refresh {
 		resp, _ := get("https://api.github.com/repos/" + m.Repo + "/releases/latest")
 		m.Release = new(Release)
-		json.Unmarshal(resp.Body(), m.Release)
+		_ = sonic.ConfigDefault.Unmarshal(resp.Bytes(), m.Release)
 	}
 }
 
-// 请求所有版本
+// RequestReleases 请求所有版本
 func (m *MountPoint) RequestReleases(get func(url string) (*resty.Response, error), refresh bool) {
 	if m.Repo == "" {
 		return
@@ -39,7 +40,7 @@ func (m *MountPoint) RequestReleases(get func(url string) (*resty.Response, erro
 	if m.Releases == nil || refresh {
 		resp, _ := get("https://api.github.com/repos/" + m.Repo + "/releases")
 		m.Releases = new([]Release)
-		json.Unmarshal(resp.Body(), m.Releases)
+		_ = sonic.ConfigDefault.Unmarshal(resp.Bytes(), m.Releases)
 	}
 }
 
@@ -147,7 +148,7 @@ func (m *MountPoint) GetOtherFile(get func(url string) (*resty.Response, error),
 	if m.OtherFile == nil || refresh {
 		resp, _ := get("https://api.github.com/repos/" + m.Repo + "/contents")
 		m.OtherFile = new([]FileInfo)
-		json.Unmarshal(resp.Body(), m.OtherFile)
+		_ = sonic.ConfigDefault.Unmarshal(resp.Bytes(), m.OtherFile)
 	}
 
 	files := make([]File, 0)

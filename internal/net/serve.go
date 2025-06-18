@@ -15,19 +15,20 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/OpenListTeam/OpenList/internal/conf"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/pkg/http_range"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
 )
 
-//this file is inspired by GO_SDK net.http.ServeContent
+// this file is inspired by GO_SDK net.http.ServeContent
 
-//type RangeReadCloser struct {
+// type RangeReadCloser struct {
 //	GetReaderForRange RangeReaderFunc
-//}
+// }
 
 // ServeHTTP replies to the request using the content in the
 // provided RangeReadCloser. The main benefit of ServeHTTP over io.Copy

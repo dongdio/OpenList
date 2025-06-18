@@ -5,11 +5,12 @@ import (
 	"path/filepath"
 	"strconv"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/OpenListTeam/OpenList/internal/bootstrap"
 	"github.com/OpenListTeam/OpenList/internal/bootstrap/data"
 	"github.com/OpenListTeam/OpenList/internal/db"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	log "github.com/sirupsen/logrus"
 )
 
 func Init() {

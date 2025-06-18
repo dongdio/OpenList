@@ -7,11 +7,12 @@ import (
 	"net/http"
 	"strconv"
 
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/go-resty/resty/v2"
 )
 
 func (d *Pan123) getS3PreSignedUrls(ctx context.Context, upReq *UploadResp, start, end int) (*S3PreSignedURLs, error) {
@@ -131,7 +132,7 @@ func (d *Pan123) uploadS3Chunk(ctx context.Context, upReq *UploadResp, s3PreSign
 	}
 	req = req.WithContext(ctx)
 	req.ContentLength = curSize
-	//req.Header.Set("Content-Length", strconv.FormatInt(curSize, 10))
+	// req.Header.Set("Content-Length", strconv.FormatInt(curSize, 10))
 	res, err := base.HttpClient.Do(req)
 	if err != nil {
 		return err

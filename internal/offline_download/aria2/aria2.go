@@ -8,13 +8,14 @@ import (
 
 	"github.com/OpenListTeam/OpenList/internal/errs"
 
+	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/OpenListTeam/OpenList/internal/conf"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/internal/offline_download/tool"
 	"github.com/OpenListTeam/OpenList/internal/setting"
 	"github.com/OpenListTeam/OpenList/pkg/aria2/rpc"
-	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
 )
 
 var notify = NewNotify()

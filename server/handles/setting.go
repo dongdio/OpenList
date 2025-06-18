@@ -4,6 +4,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gin-gonic/gin"
+
 	"github.com/OpenListTeam/OpenList/internal/conf"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/internal/op"
@@ -11,7 +13,6 @@ import (
 	"github.com/OpenListTeam/OpenList/pkg/utils/random"
 	"github.com/OpenListTeam/OpenList/server/common"
 	"github.com/OpenListTeam/OpenList/server/static"
-	"github.com/gin-gonic/gin"
 )
 
 func ResetToken(c *gin.Context) {

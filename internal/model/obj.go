@@ -7,9 +7,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dlclark/regexp2"
+
 	"github.com/OpenListTeam/OpenList/pkg/http_range"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/dlclark/regexp2"
 
 	mapset "github.com/deckarep/golang-set/v2"
 
@@ -40,14 +41,14 @@ type FileStreamer interface {
 	io.Closer
 	Obj
 	GetMimetype() string
-	//SetReader(io.Reader)
+	// SetReader(io.Reader)
 	NeedStore() bool
 	IsForceStreamUpload() bool
 	GetExist() Obj
 	SetExist(Obj)
-	//for a non-seekable Stream, RangeRead supports peeking some data, and CacheFullInTempFile still works
+	// for a non-seekable Stream, RangeRead supports peeking some data, and CacheFullInTempFile still works
 	RangeRead(http_range.Range) (io.Reader, error)
-	//for a non-seekable Stream, if Read is called, this function won't work
+	// for a non-seekable Stream, if Read is called, this function won't work
 	CacheFullInTempFile() (File, error)
 	SetTmpFile(r *os.File)
 	GetFile() File

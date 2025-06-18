@@ -6,7 +6,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/go-resty/resty/v2"
+	"resty.dev/v3"
 
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/driver"

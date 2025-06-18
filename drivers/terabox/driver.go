@@ -11,12 +11,12 @@ import (
 	stdpath "path"
 	"strconv"
 
-	"github.com/OpenListTeam/OpenList/drivers/base"
-	"github.com/OpenListTeam/OpenList/pkg/utils"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/model"
+	"github.com/OpenListTeam/OpenList/pkg/utils"
 )
 
 type Terabox struct {
@@ -136,7 +136,7 @@ func (d *Terabox) Put(ctx context.Context, dstDir model.Obj, stream model.FileSt
 		return err
 	}
 	var locateupload_resp LocateUploadResp
-	err = utils.Json.Unmarshal(resp.Body(), &locateupload_resp)
+	err = utils.Json.Unmarshal(resp.Bytes(), &locateupload_resp)
 	if err != nil {
 		log.Debugln(resp)
 		return err
@@ -225,7 +225,7 @@ func (d *Terabox) Put(ctx context.Context, dstDir model.Obj, stream model.FileSt
 
 		u := "https://" + locateupload_resp.Host + "/rest/2.0/pcs/superfile2"
 		params["partseq"] = strconv.Itoa(partseq)
-		res, err := base.RestyClient.R().
+		resp, err = base.RestyClient.R().
 			SetContext(ctx).
 			SetQueryParams(params).
 			SetFileReader("file", stream.GetName(), driver.NewLimitedUploadStream(ctx, bytes.NewReader(byteData))).
@@ -234,7 +234,7 @@ func (d *Terabox) Put(ctx context.Context, dstDir model.Obj, stream model.FileSt
 		if err != nil {
 			return err
 		}
-		log.Debugln(res.String())
+		log.Debugln(resp.String())
 		if count > 0 {
 			up(float64(partseq) * 100 / float64(count))
 		}

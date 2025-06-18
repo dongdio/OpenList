@@ -30,10 +30,10 @@ import (
 	"github.com/OpenListTeam/OpenList/pkg/utils"
 
 	"github.com/avast/retry-go"
-	"github.com/go-resty/resty/v2"
 	"github.com/google/uuid"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/pkg/errors"
+	"resty.dev/v3"
 )
 
 const (
@@ -129,7 +129,7 @@ func (y *Cloud189PC) request(url, method string, callback base.ReqCallback, para
 	if erron.HasError() {
 		return nil, &erron
 	}
-	return res.Body(), nil
+	return res.Bytes(), nil
 }
 
 func (y *Cloud189PC) get(url string, callback base.ReqCallback, resp interface{}, isFamily ...bool) ([]byte, error) {
@@ -287,7 +287,8 @@ func (y *Cloud189PC) login() (err error) {
 	param := y.loginParam
 	var loginresp LoginResp
 	_, err = y.client.R().
-		ForceContentType("application/json;charset=UTF-8").SetResult(&loginresp).
+		SetForceResponseContentType("application/json;charset=UTF-8").
+		SetResult(&loginresp).
 		SetHeaders(map[string]string{
 			"REQID": param.ReqId,
 			"lt":    param.Lt,
@@ -370,7 +371,8 @@ func (y *Cloud189PC) initLoginParam() error {
 	// 获取rsa公钥
 	var encryptConf EncryptConfResp
 	_, err = y.client.R().
-		ForceContentType("application/json;charset=UTF-8").SetResult(&encryptConf).
+		SetForceResponseContentType("application/json;charset=UTF-8").
+		SetResult(&encryptConf).
 		SetFormData(map[string]string{"appId": APP_ID}).
 		Post(AUTH_URL + "/api/logbox/config/encryptConf.do")
 	if err != nil {
@@ -411,19 +413,19 @@ func (y *Cloud189PC) initLoginParam() error {
 	if imgRes.Size() > 20 {
 		if setting.GetStr(conf.OcrApi) != "" && !y.NoUseOcr {
 			vRes, err := base.RestyClient.R().
-				SetMultipartField("image", "validateCode.png", "image/png", bytes.NewReader(imgRes.Body())).
+				SetMultipartField("image", "validateCode.png", "image/png", bytes.NewReader(imgRes.Bytes())).
 				Post(setting.GetStr(conf.OcrApi))
 			if err != nil {
 				return err
 			}
-			if jsoniter.Get(vRes.Body(), "status").ToInt() == 200 {
-				y.VCode = jsoniter.Get(vRes.Body(), "result").ToString()
+			if jsoniter.Get(vRes.Bytes(), "status").ToInt() == 200 {
+				y.VCode = jsoniter.Get(vRes.Bytes(), "result").ToString()
 				return nil
 			}
 		}
 
 		// 返回验证码图片给前端
-		return fmt.Errorf(`need img validate code: <img src="data:image/png;base64,%s"/>`, base64.StdEncoding.EncodeToString(imgRes.Body()))
+		return fmt.Errorf(`need img validate code: <img src="data:image/png;base64,%s"/>`, base64.StdEncoding.EncodeToString(imgRes.Bytes()))
 	}
 	return nil
 }
@@ -487,7 +489,7 @@ func (y *Cloud189PC) StreamUpload(ctx context.Context, dstDir model.Obj, file mo
 		params.Set("familyId", y.FamilyID)
 		fullUrl += "/family"
 	} else {
-		//params.Set("extend", `{"opScene":"1","relativepath":"","rootfolderid":""}`)
+		// params.Set("extend", `{"opScene":"1","relativepath":"","rootfolderid":""}`)
 		fullUrl += "/person"
 	}
 
@@ -629,7 +631,7 @@ func (y *Cloud189PC) FastUpload(ctx context.Context, dstDir model.Obj, file mode
 		lastSliceSize = sliceSize
 	}
 
-	//step.1 优先计算所需信息
+	// step.1 优先计算所需信息
 	byteSize := sliceSize
 	fileMd5 := utils.MD5.NewFunc()
 	sliceMd5 := utils.MD5.NewFunc()
@@ -680,14 +682,14 @@ func (y *Cloud189PC) FastUpload(ctx context.Context, dstDir model.Obj, file mode
 	if isFamily {
 		fullUrl += "/family"
 	} else {
-		//params.Set("extend", `{"opScene":"1","relativepath":"","rootfolderid":""}`)
+		// params.Set("extend", `{"opScene":"1","relativepath":"","rootfolderid":""}`)
 		fullUrl += "/person"
 	}
 
 	// 尝试恢复进度
 	uploadProgress, ok := base.GetUploadProgress[*UploadProgress](y, y.getTokenInfo().SessionKey, fileMd5Hex)
 	if !ok {
-		//step.2 预上传
+		// step.2 预上传
 		params := Params{
 			"parentFolderId": dstDir.GetID(),
 			"fileName":       url.QueryEscape(file.GetName()),

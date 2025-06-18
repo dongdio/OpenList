@@ -11,10 +11,11 @@ import (
 	"strings"
 	"time"
 
+	log "github.com/sirupsen/logrus"
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/model"
-	"github.com/go-resty/resty/v2"
-	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -73,7 +74,7 @@ func (d *DoubaoShare) request(path string, method string, callback base.ReqCallb
 		return nil, err
 	}
 
-	body := res.Body()
+	body := res.Bytes()
 	// 先解析为通用响应
 	if err = json.Unmarshal(body, &commonResp); err != nil {
 		return nil, err

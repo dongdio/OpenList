@@ -11,9 +11,10 @@ import (
 	"regexp"
 	"time"
 
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/go-resty/resty/v2"
 )
 
 const (
@@ -32,7 +33,7 @@ const (
 
 const (
 	UPLOAD_TYPE_UNKNOWN = "UPLOAD_TYPE_UNKNOWN"
-	//UPLOAD_TYPE_FORM      = "UPLOAD_TYPE_FORM"
+	// UPLOAD_TYPE_FORM      = "UPLOAD_TYPE_FORM"
 	UPLOAD_TYPE_RESUMABLE = "UPLOAD_TYPE_RESUMABLE"
 	UPLOAD_TYPE_URL       = "UPLOAD_TYPE_URL"
 )
@@ -186,7 +187,7 @@ func (c *Common) Request(url, method string, callback base.ReqCallback, resp int
 	}
 
 	var erron ErrResp
-	utils.Json.Unmarshal(res.Body(), &erron)
+	utils.Json.Unmarshal(res.Bytes(), &erron)
 	if erron.IsError() {
 		// review_panel 表示需要短信验证码进行验证
 		if erron.ErrorMsg == "review_panel" {
@@ -196,7 +197,7 @@ func (c *Common) Request(url, method string, callback base.ReqCallback, resp int
 		return nil, &erron
 	}
 
-	return res.Body(), nil
+	return res.Bytes(), nil
 }
 
 // 获取验证所需内容
@@ -204,7 +205,7 @@ func (c *Common) getReviewData(res *resty.Response) error {
 	var reviewResp LoginReviewResp
 	var reviewData ReviewData
 
-	if err := utils.Json.Unmarshal(res.Body(), &reviewResp); err != nil {
+	if err := utils.Json.Unmarshal(res.Bytes(), &reviewResp); err != nil {
 		return err
 	}
 
@@ -219,7 +220,7 @@ func (c *Common) getReviewData(res *resty.Response) error {
 
 	// 将reviewData转为JSON字符串
 	reviewDataJSON, _ := json.MarshalIndent(reviewData, "", "  ")
-	//reviewDataJSON, _ := json.Marshal(reviewData)
+	// reviewDataJSON, _ := json.Marshal(reviewData)
 
 	return fmt.Errorf(`
 <div style="font-family: Arial, sans-serif; padding: 15px; border-radius: 5px; border: 1px solid #e0e0e0;>

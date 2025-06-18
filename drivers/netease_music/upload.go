@@ -11,9 +11,10 @@ import (
 
 	"github.com/OpenListTeam/OpenList/internal/driver"
 
+	"github.com/dhowden/tag"
+
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/dhowden/tag"
 )
 
 type token struct {

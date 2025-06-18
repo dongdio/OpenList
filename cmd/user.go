@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"time"
 
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/internal/conf"
 	"github.com/OpenListTeam/OpenList/internal/op"
 	"github.com/OpenListTeam/OpenList/internal/setting"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/go-resty/resty/v2"
 )
 
 func DelAdminCacheOnline() {
@@ -42,8 +43,8 @@ func DelUserCacheOnline(username string) {
 		utils.Log.Warnf("[del_user_cache_online] failed: %+v", res.String())
 		return
 	}
-	code := utils.Json.Get(res.Body(), "code").ToInt()
-	msg := utils.Json.Get(res.Body(), "message").ToString()
+	code := utils.Json.Get(res.Bytes(), "code").ToInt()
+	msg := utils.Json.Get(res.Bytes(), "message").ToString()
 	if code != 200 {
 		utils.Log.Errorf("[del_user_cache_online] error: %s", msg)
 		return

@@ -5,10 +5,11 @@ import (
 	"io"
 	"time"
 
+	"golang.org/x/time/rate"
+
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/pkg/http_range"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"golang.org/x/time/rate"
 )
 
 type Limiter interface {

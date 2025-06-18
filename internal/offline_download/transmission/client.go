@@ -9,15 +9,16 @@ import (
 	"net/url"
 	"strconv"
 
+	"github.com/hekmon/transmissionrpc/v3"
+	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/OpenListTeam/OpenList/internal/conf"
 	"github.com/OpenListTeam/OpenList/internal/errs"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/internal/offline_download/tool"
 	"github.com/OpenListTeam/OpenList/internal/setting"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/hekmon/transmissionrpc/v3"
-	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
 )
 
 type Transmission struct {

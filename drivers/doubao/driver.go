@@ -8,13 +8,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/errs"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/go-resty/resty/v2"
-	"github.com/google/uuid"
 )
 
 type Doubao struct {
@@ -35,7 +36,7 @@ func (d *Doubao) GetAddition() driver.Additional {
 
 func (d *Doubao) Init(ctx context.Context) error {
 	// TODO login / refresh token
-	//op.MustSaveDriverStorage(d)
+	// op.MustSaveDriverStorage(d)
 	uploadThread, err := strconv.Atoi(d.UploadThread)
 	if err != nil || uploadThread < 1 {
 		d.uploadThread, d.UploadThread = 3, "3" // Set default value
@@ -264,8 +265,8 @@ func (d *Doubao) ArchiveDecompress(ctx context.Context, srcObj, dstDir model.Obj
 	return nil, errs.NotImplement
 }
 
-//func (d *Doubao) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
+// func (d *Doubao) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
 //	return nil, errs.NotSupport
-//}
+// }
 
 var _ driver.Driver = (*Doubao)(nil)

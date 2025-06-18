@@ -4,11 +4,12 @@ import (
 	"context"
 	"strings"
 
+	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
+
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/internal/op"
 	"github.com/OpenListTeam/OpenList/server/common"
-	"github.com/gin-gonic/gin"
-	"github.com/pkg/errors"
 )
 
 func link(ctx context.Context, path string, args model.LinkArgs) (*model.Link, model.Obj, error) {

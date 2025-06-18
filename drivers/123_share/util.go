@@ -13,10 +13,11 @@ import (
 	"strings"
 	"time"
 
+	jsoniter "github.com/json-iterator/go"
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/go-resty/resty/v2"
-	jsoniter "github.com/json-iterator/go"
 )
 
 const (
@@ -26,7 +27,7 @@ const (
 	MainApi      = BApi
 	FileList     = MainApi + "/share/get"
 	DownloadInfo = MainApi + "/share/download/info"
-	//AuthKeySalt      = "8-8D$sL8gPjom7bk#cY"
+	// AuthKeySalt      = "8-8D$sL8gPjom7bk#cY"
 )
 
 func signPath(path string, os string, version string) (k string, v string) {
@@ -64,7 +65,7 @@ func (d *Pan123Share) request(url string, method string, callback base.ReqCallba
 		"user-agent":    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) opnelist-client",
 		"platform":      "web",
 		"app-version":   "3",
-		//"user-agent":    base.UserAgent,
+		// "user-agent":    base.UserAgent,
 	})
 	if callback != nil {
 		callback(req)
@@ -76,7 +77,7 @@ func (d *Pan123Share) request(url string, method string, callback base.ReqCallba
 	if err != nil {
 		return nil, err
 	}
-	body := res.Body()
+	body := res.Bytes()
 	code := utils.Json.Get(body, "code").ToInt()
 	if code != 0 {
 		return nil, errors.New(jsoniter.Get(body, "message").ToString())

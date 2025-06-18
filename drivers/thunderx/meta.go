@@ -38,11 +38,11 @@ type ExpertAddition struct {
 	ClientVersion string `json:"client_version"  required:"true" default:"1.06.0.2132"`
 	PackageName   string `json:"package_name"  required:"true" default:"com.thunder.downloader"`
 
-	////不影响登录,影响下载速度
+	// //不影响登录,影响下载速度
 	UserAgent         string `json:"user_agent"  required:"false" default:""`
 	DownloadUserAgent string `json:"download_user_agent"  required:"false" default:""`
 
-	//优先使用视频链接代替下载链接
+	// 优先使用视频链接代替下载链接
 	UseVideoUrl bool `json:"use_video_url"`
 }
 

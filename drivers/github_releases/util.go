@@ -5,9 +5,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/OpenListTeam/OpenList/drivers/base"
-	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
+	"resty.dev/v3"
+
+	"github.com/OpenListTeam/OpenList/drivers/base"
 )
 
 // 发送 GET 请求

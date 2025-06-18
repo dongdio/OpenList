@@ -7,14 +7,15 @@ import (
 	"os"
 	"time"
 
+	ftpserver "github.com/fclairamb/ftpserverlib"
+	"github.com/pkg/errors"
+
 	"github.com/OpenListTeam/OpenList/internal/errs"
 	"github.com/OpenListTeam/OpenList/internal/fs"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/internal/op"
 	"github.com/OpenListTeam/OpenList/internal/stream"
 	"github.com/OpenListTeam/OpenList/server/common"
-	ftpserver "github.com/fclairamb/ftpserverlib"
-	"github.com/pkg/errors"
 )
 
 type FileDownloadProxy struct {

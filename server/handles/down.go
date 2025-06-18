@@ -8,6 +8,11 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gin-gonic/gin"
+	"github.com/microcosm-cc/bluemonday"
+	log "github.com/sirupsen/logrus"
+	"github.com/yuin/goldmark"
+
 	"github.com/OpenListTeam/OpenList/internal/conf"
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/fs"
@@ -16,10 +21,6 @@ import (
 	"github.com/OpenListTeam/OpenList/internal/sign"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
 	"github.com/OpenListTeam/OpenList/server/common"
-	"github.com/gin-gonic/gin"
-	"github.com/microcosm-cc/bluemonday"
-	log "github.com/sirupsen/logrus"
-	"github.com/yuin/goldmark"
 )
 
 func Down(c *gin.Context) {
@@ -130,7 +131,7 @@ func localProxy(c *gin.Context, link *model.Link, file model.Obj, proxyRange boo
 	}
 	Writer := &common.WrittenResponseWriter{ResponseWriter: c.Writer}
 
-	//优先处理md文件
+	// 优先处理md文件
 	if utils.Ext(file.GetName()) == "md" && setting.GetBool(conf.FilterReadMeScripts) {
 		buf := bytes.NewBuffer(make([]byte, 0, file.GetSize()))
 		w := &common.InterceptResponseWriter{ResponseWriter: Writer, Writer: buf}

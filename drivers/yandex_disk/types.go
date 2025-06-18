@@ -18,28 +18,28 @@ type ErrResp struct {
 }
 
 type File struct {
-	//AntivirusStatus string `json:"antivirus_status"`
+	// AntivirusStatus string `json:"antivirus_status"`
 	Size int64 `json:"size"`
-	//CommentIds      struct {
+	// CommentIds      struct {
 	//	PrivateResource string `json:"private_resource"`
 	//	PublicResource  string `json:"public_resource"`
-	//} `json:"comment_ids"`
+	// } `json:"comment_ids"`
 	Name string `json:"name"`
-	//Exif struct {
+	// Exif struct {
 	//	DateTime time.Time `json:"date_time"`
-	//} `json:"exif"`
-	//Created    time.Time `json:"created"`
-	//ResourceId string    `json:"resource_id"`
+	// } `json:"exif"`
+	// Created    time.Time `json:"created"`
+	// ResourceId string    `json:"resource_id"`
 	Modified time.Time `json:"modified"`
-	//MimeType   string    `json:"mime_type"`
+	// MimeType   string    `json:"mime_type"`
 	File string `json:"file"`
-	//MediaType  string    `json:"media_type"`
+	// MediaType  string    `json:"media_type"`
 	Preview string `json:"preview"`
 	Path    string `json:"path"`
-	//Sha256     string    `json:"sha256"`
+	// Sha256     string    `json:"sha256"`
 	Type string `json:"type"`
-	//Md5        string    `json:"md5"`
-	//Revision   int64     `json:"revision"`
+	// Md5        string    `json:"md5"`
+	// Revision   int64     `json:"revision"`
 }
 
 func fileToObj(f File) model.Obj {

@@ -10,16 +10,17 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/OpenListTeam/OpenList/drivers/base"
-	"github.com/OpenListTeam/OpenList/internal/driver"
-	"github.com/OpenListTeam/OpenList/internal/model"
-	"github.com/OpenListTeam/OpenList/pkg/utils"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
+	"resty.dev/v3"
+
+	"github.com/OpenListTeam/OpenList/drivers/base"
+	"github.com/OpenListTeam/OpenList/internal/driver"
+	"github.com/OpenListTeam/OpenList/internal/model"
+	"github.com/OpenListTeam/OpenList/pkg/utils"
 )
 
 // do others that not defined in Driver interface
@@ -50,7 +51,7 @@ func (d *Teambition) request(pathname string, method string, callback base.ReqCa
 	if e.Name != "" {
 		return nil, errors.New(e.Message)
 	}
-	return res.Body(), nil
+	return res.Bytes(), nil
 }
 
 func (d *Teambition) getFiles(parentId string) ([]model.Obj, error) {

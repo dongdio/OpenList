@@ -9,8 +9,8 @@ import (
 type Driver interface {
 	Meta
 	Reader
-	//Writer
-	//Other
+	// Writer
+	// Other
 }
 
 type Meta interface {
@@ -47,14 +47,14 @@ type Getter interface {
 	Get(ctx context.Context, path string) (model.Obj, error)
 }
 
-//type Writer interface {
+// type Writer interface {
 //	Mkdir
 //	Move
 //	Rename
 //	Copy
 //	Remove
 //	Put
-//}
+// }
 
 type Mkdir interface {
 	MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error
@@ -110,14 +110,14 @@ type PutURL interface {
 	PutURL(ctx context.Context, dstDir model.Obj, name, url string) error
 }
 
-//type WriteResult interface {
+// type WriteResult interface {
 //	MkdirResult
 //	MoveResult
 //	RenameResult
 //	CopyResult
 //	PutResult
 //	Remove
-//}
+// }
 
 type MkdirResult interface {
 	MakeDir(ctx context.Context, parentDir model.Obj, dirName string) (model.Obj, error)

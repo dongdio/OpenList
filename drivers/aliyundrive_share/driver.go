@@ -6,15 +6,16 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Xhofe/rateg"
+	log "github.com/sirupsen/logrus"
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/errs"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/pkg/cron"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/Xhofe/rateg"
-	"github.com/go-resty/resty/v2"
-	log "github.com/sirupsen/logrus"
 )
 
 type AliyundriveShare struct {

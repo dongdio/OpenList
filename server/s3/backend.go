@@ -14,6 +14,10 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/alist-org/gofakes3"
+	"github.com/ncw/swift/v2"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/OpenListTeam/OpenList/internal/errs"
 	"github.com/OpenListTeam/OpenList/internal/fs"
 	"github.com/OpenListTeam/OpenList/internal/model"
@@ -21,9 +25,6 @@ import (
 	"github.com/OpenListTeam/OpenList/internal/stream"
 	"github.com/OpenListTeam/OpenList/pkg/http_range"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/alist-org/gofakes3"
-	"github.com/ncw/swift/v2"
-	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -237,7 +238,7 @@ func (b *s3Backend) GetObject(ctx context.Context, bucketName, objectName string
 
 // TouchObject creates or updates meta on specified object.
 func (b *s3Backend) TouchObject(ctx context.Context, fp string, meta map[string]string) (result gofakes3.PutObjectResult, err error) {
-	//TODO: implement
+	// TODO: implement
 	return result, gofakes3.ErrNotImplemented
 }
 
@@ -396,7 +397,7 @@ func (b *s3Backend) BucketExists(ctx context.Context, name string) (exists bool,
 // CopyObject copy specified object from srcKey to dstKey.
 func (b *s3Backend) CopyObject(ctx context.Context, srcBucket, srcKey, dstBucket, dstKey string, meta map[string]string) (result gofakes3.CopyObjectResult, err error) {
 	if srcBucket == dstBucket && srcKey == dstKey {
-		//TODO: update meta
+		// TODO: update meta
 		return result, nil
 	}
 

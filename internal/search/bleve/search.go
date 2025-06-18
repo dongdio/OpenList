@@ -6,15 +6,16 @@ import (
 
 	query2 "github.com/blevesearch/bleve/v2/search/query"
 
+	"github.com/blevesearch/bleve/v2"
+	search2 "github.com/blevesearch/bleve/v2/search"
+	"github.com/google/uuid"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/OpenListTeam/OpenList/internal/conf"
 	"github.com/OpenListTeam/OpenList/internal/errs"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/internal/search/searcher"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/blevesearch/bleve/v2"
-	search2 "github.com/blevesearch/bleve/v2/search"
-	"github.com/google/uuid"
-	log "github.com/sirupsen/logrus"
 )
 
 type Bleve struct {

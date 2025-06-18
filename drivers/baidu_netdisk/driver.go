@@ -12,6 +12,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/avast/retry-go"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/conf"
 	"github.com/OpenListTeam/OpenList/internal/driver"
@@ -19,8 +22,6 @@ import (
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/pkg/errgroup"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/avast/retry-go"
-	log "github.com/sirupsen/logrus"
 )
 
 type BaiduNetdisk struct {
@@ -211,7 +212,7 @@ func (d *BaiduNetdisk) Put(ctx context.Context, dstDir model.Obj, stream model.F
 		lastBlockSize = sliceSize
 	}
 
-	//cal md5 for first 256k data
+	// cal md5 for first 256k data
 	const SliceSize int64 = 256 * utils.KB
 	// cal md5
 	blockList := make([]string, 0, count)
@@ -283,7 +284,7 @@ func (d *BaiduNetdisk) Put(ctx context.Context, dstDir model.Obj, stream model.F
 		}
 		log.Debugf("%+v", precreateResp)
 		if precreateResp.ReturnType == 2 {
-			//rapid upload, since got md5 match from baidu server
+			// rapid upload, since got md5 match from baidu server
 			// 修复时间，具体原因见 Put 方法注释的 **注意**
 			precreateResp.File.Ctime = ctime
 			precreateResp.File.Mtime = mtime
@@ -356,8 +357,8 @@ func (d *BaiduNetdisk) uploadSlice(ctx context.Context, params map[string]string
 		return err
 	}
 	log.Debugln(res.RawResponse.Status + res.String())
-	errCode := utils.Json.Get(res.Body(), "error_code").ToInt()
-	errNo := utils.Json.Get(res.Body(), "errno").ToInt()
+	errCode := utils.Json.Get(res.Bytes(), "error_code").ToInt()
+	errNo := utils.Json.Get(res.Bytes(), "errno").ToInt()
 	if errCode != 0 || errNo != 0 {
 		return errs.NewErr(errs.StreamIncomplete, "error in uploading to baidu, will retry. response=%s", res.String())
 	}

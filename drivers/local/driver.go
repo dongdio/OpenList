@@ -14,6 +14,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/alist-org/times"
+	cp "github.com/otiai10/copy"
+	log "github.com/sirupsen/logrus"
+	_ "golang.org/x/image/webp"
+
 	"github.com/OpenListTeam/OpenList/internal/conf"
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/errs"
@@ -21,10 +26,6 @@ import (
 	"github.com/OpenListTeam/OpenList/internal/sign"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
 	"github.com/OpenListTeam/OpenList/server/common"
-	"github.com/alist-org/times"
-	cp "github.com/otiai10/copy"
-	log "github.com/sirupsen/logrus"
-	_ "golang.org/x/image/webp"
 )
 
 type Local struct {
@@ -178,10 +179,10 @@ func (d *Local) GetMeta(ctx context.Context, path string) (model.Obj, error) {
 		return nil, err
 	}
 	file := d.FileInfoToObj(ctx, f, path, path)
-	//h := "123123"
-	//if s, ok := f.(model.SetHash); ok && file.GetHash() == ("","")  {
+	// h := "123123"
+	// if s, ok := f.(model.SetHash); ok && file.GetHash() == ("","")  {
 	//	s.SetHash(h,"SHA1")
-	//}
+	// }
 	return file, nil
 
 }
@@ -243,7 +244,7 @@ func (d *Local) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 			link.MFile = open
 		} else {
 			link.MFile = model.NewNopMFile(bytes.NewReader(buf.Bytes()))
-			//link.Header.Set("Content-Length", strconv.Itoa(buf.Len()))
+			// link.Header.Set("Content-Length", strconv.Itoa(buf.Len()))
 		}
 	} else {
 		open, err := os.Open(fullPath)

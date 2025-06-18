@@ -5,36 +5,38 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"github.com/OpenListTeam/OpenList/internal/op"
 	"net/http"
 	"os"
 	"regexp"
 	"strconv"
 	"time"
 
+	"github.com/OpenListTeam/OpenList/internal/op"
+
+	"github.com/golang-jwt/jwt/v4"
+	log "github.com/sirupsen/logrus"
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/pkg/http_range"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/go-resty/resty/v2"
-	"github.com/golang-jwt/jwt/v4"
-	log "github.com/sirupsen/logrus"
 )
 
 // do others that not defined in Driver interface
 
 type googleDriveServiceAccount struct {
-	//Type                    string `json:"type"`
-	//ProjectID               string `json:"project_id"`
-	//PrivateKeyID            string `json:"private_key_id"`
+	// Type                    string `json:"type"`
+	// ProjectID               string `json:"project_id"`
+	// PrivateKeyID            string `json:"private_key_id"`
 	PrivateKey  string `json:"private_key"`
 	ClientEMail string `json:"client_email"`
-	//ClientID                string `json:"client_id"`
-	//AuthURI                 string `json:"auth_uri"`
+	// ClientID                string `json:"client_id"`
+	// AuthURI                 string `json:"auth_uri"`
 	TokenURI string `json:"token_uri"`
-	//AuthProviderX509CertURL string `json:"auth_provider_x509_cert_url"`
-	//ClientX509CertURL       string `json:"client_x509_cert_url"`
+	// AuthProviderX509CertURL string `json:"auth_provider_x509_cert_url"`
+	// ClientX509CertURL       string `json:"client_x509_cert_url"`
 }
 
 func (d *GoogleDrive) refreshToken() error {
@@ -210,7 +212,7 @@ func (d *GoogleDrive) request(url string, method string, callback base.ReqCallba
 		}
 		return nil, fmt.Errorf("%s: %v", e.Error.Message, e.Error.Errors)
 	}
-	return res.Body(), nil
+	return res.Bytes(), nil
 }
 
 func (d *GoogleDrive) getFiles(id string) ([]File, error) {
@@ -230,8 +232,8 @@ func (d *GoogleDrive) getFiles(id string) ([]File, error) {
 			"fields":   "files(id,name,mimeType,size,modifiedTime,createdTime,thumbnailLink,shortcutDetails,md5Checksum,sha1Checksum,sha256Checksum),nextPageToken",
 			"pageSize": "1000",
 			"q":        fmt.Sprintf("'%s' in parents and trashed = false", id),
-			//"includeItemsFromAllDrives": "true",
-			//"supportsAllDrives":         "true",
+			// "includeItemsFromAllDrives": "true",
+			// "supportsAllDrives":         "true",
 			"pageToken": pageToken,
 		}
 		_, err := d.request("https://www.googleapis.com/drive/v3/files", http.MethodGet, func(req *resty.Request) {

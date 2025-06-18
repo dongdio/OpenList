@@ -8,14 +8,15 @@ import (
 	"strconv"
 	"strings"
 
+	log "github.com/sirupsen/logrus"
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/internal/op"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
 	hash_extend "github.com/OpenListTeam/OpenList/pkg/utils/hash"
-	"github.com/go-resty/resty/v2"
-	log "github.com/sirupsen/logrus"
 )
 
 type PikPak struct {
@@ -249,7 +250,7 @@ func (d *PikPak) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 	}
 
 	params := resp.Resumable.Params
-	//endpoint := strings.Join(strings.Split(params.Endpoint, ".")[1:], ".")
+	// endpoint := strings.Join(strings.Split(params.Endpoint, ".")[1:], ".")
 	// web 端上传 返回的endpoint 为 `mypikpak.net` | android 端上传 返回的endpoint 为 `vip-lixian-07.mypikpak.net`·
 	if d.Addition.Platform == "android" {
 		params.Endpoint = "mypikpak.net"

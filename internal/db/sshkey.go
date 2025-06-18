@@ -1,8 +1,9 @@
 package db
 
 import (
-	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/pkg/errors"
+
+	"github.com/OpenListTeam/OpenList/internal/model"
 )
 
 func GetSSHPublicKeyByUserId(userId uint, pageIndex, pageSize int) (keys []model.SSHPublicKey, count int64, err error) {

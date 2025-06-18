@@ -4,12 +4,13 @@ import (
 	"context"
 	"net/http"
 
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/errs"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/go-resty/resty/v2"
 )
 
 type LanZou struct {
@@ -35,7 +36,7 @@ func (d *LanZou) Init(ctx context.Context) (err error) {
 	}
 	switch d.Type {
 	case "account":
-		_, err := d.Login()
+		_, err = d.Login()
 		if err != nil {
 			return err
 		}
@@ -68,16 +69,16 @@ func (d *LanZou) Link(ctx context.Context, file model.Obj, args model.LinkArgs) 
 		err   error
 		dfile *FileOrFolderByShareUrl
 	)
-	switch file := file.(type) {
+	switch fileTmp := file.(type) {
 	case *FileOrFolder:
 		// 先获取分享链接
-		sfile := file.GetShareInfo()
+		sfile := fileTmp.GetShareInfo()
 		if sfile == nil {
-			sfile, err = d.getFileShareUrlByID(file.GetID())
+			sfile, err = d.getFileShareUrlByID(fileTmp.GetID())
 			if err != nil {
 				return nil, err
 			}
-			file.SetShareInfo(sfile)
+			fileTmp.SetShareInfo(sfile)
 		}
 
 		// 然后获取下载链接
@@ -86,30 +87,30 @@ func (d *LanZou) Link(ctx context.Context, file model.Obj, args model.LinkArgs) 
 			return nil, err
 		}
 		// 修复文件大小
-		if d.RepairFileInfo && !file.repairFlag {
+		if d.RepairFileInfo && !fileTmp.repairFlag {
 			size, time := d.getFileRealInfo(dfile.Url)
 			if size != nil {
-				file.size = size
-				file.repairFlag = true
+				fileTmp.size = size
+				fileTmp.repairFlag = true
 			}
-			if file.time != nil {
-				file.time = time
+			if fileTmp.time != nil {
+				fileTmp.time = time
 			}
 		}
 	case *FileOrFolderByShareUrl:
-		dfile, err = d.GetFilesByShareUrl(file.GetID(), file.Pwd)
+		dfile, err = d.GetFilesByShareUrl(fileTmp.GetID(), fileTmp.Pwd)
 		if err != nil {
 			return nil, err
 		}
 		// 修复文件大小
-		if d.RepairFileInfo && !file.repairFlag {
+		if d.RepairFileInfo && !fileTmp.repairFlag {
 			size, time := d.getFileRealInfo(dfile.Url)
 			if size != nil {
-				file.size = size
-				file.repairFlag = true
+				fileTmp.size = size
+				fileTmp.repairFlag = true
 			}
-			if file.time != nil {
-				file.time = time
+			if fileTmp.time != nil {
+				fileTmp.time = time
 			}
 		}
 	}

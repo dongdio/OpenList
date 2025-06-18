@@ -16,8 +16,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/OpenListTeam/OpenList/internal/model"
-	"github.com/OpenListTeam/OpenList/pkg/utils"
 	pbPublicUser "github.com/city404/v6-public-rpc-proto/go/v6/user"
 	pubUserFile "github.com/city404/v6-public-rpc-proto/go/v6/userfile"
 	"github.com/google/uuid"
@@ -27,6 +25,9 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+
+	"github.com/OpenListTeam/OpenList/internal/model"
+	"github.com/OpenListTeam/OpenList/pkg/utils"
 )
 
 const (
@@ -307,7 +308,7 @@ func (oo *openObject) Read(p []byte) (n int, err error) {
 	}
 	// Skip data at the start if requested
 	for oo.skip > 0 {
-		//size := 1024 * 1024
+		// size := 1024 * 1024
 		_, size, err := oo.ChunkLocation(oo.id)
 		if err != nil {
 			return 0, err

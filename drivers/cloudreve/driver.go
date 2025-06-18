@@ -7,12 +7,13 @@ import (
 	"path"
 	"strings"
 
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/errs"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/go-resty/resty/v2"
 )
 
 type Cloudreve struct {
@@ -203,8 +204,8 @@ func (d *Cloudreve) create(ctx context.Context, dir model.Obj, file model.Obj) e
 	}, nil)
 }
 
-//func (d *Cloudreve) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
+// func (d *Cloudreve) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
 //	return nil, errs.NotSupport
-//}
+// }
 
 var _ driver.Driver = (*Cloudreve)(nil)

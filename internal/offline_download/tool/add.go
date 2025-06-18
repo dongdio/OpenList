@@ -6,6 +6,9 @@ import (
 	stdpath "path"
 	"path/filepath"
 
+	"github.com/google/uuid"
+	"github.com/pkg/errors"
+
 	_115 "github.com/OpenListTeam/OpenList/drivers/115"
 	"github.com/OpenListTeam/OpenList/drivers/pikpak"
 	"github.com/OpenListTeam/OpenList/drivers/thunder"
@@ -16,8 +19,6 @@ import (
 	"github.com/OpenListTeam/OpenList/internal/op"
 	"github.com/OpenListTeam/OpenList/internal/setting"
 	"github.com/OpenListTeam/OpenList/internal/task"
-	"github.com/google/uuid"
-	"github.com/pkg/errors"
 )
 
 type DeletePolicy string

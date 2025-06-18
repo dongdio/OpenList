@@ -28,7 +28,7 @@ func (d *AListV2) Init(ctx context.Context) error {
 		d.Addition.Address = d.Addition.Address[0 : len(d.Addition.Address)-1]
 	}
 	// TODO login / refresh token
-	//op.MustSaveDriverStorage(d)
+	// op.MustSaveDriverStorage(d)
 	return nil
 }
 
@@ -111,8 +111,8 @@ func (d *AListV2) Put(ctx context.Context, dstDir model.Obj, stream model.FileSt
 	return errs.NotImplement
 }
 
-//func (d *AList) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
+// func (d *AList) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
 //	return nil, errs.NotSupport
-//}
+// }
 
 var _ driver.Driver = (*AListV2)(nil)

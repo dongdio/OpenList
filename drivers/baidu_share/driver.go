@@ -10,10 +10,11 @@ import (
 	"path"
 	"time"
 
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/errs"
 	"github.com/OpenListTeam/OpenList/internal/model"
-	"github.com/go-resty/resty/v2"
 )
 
 type BaiduShare struct {
@@ -38,7 +39,7 @@ func (d *BaiduShare) GetAddition() driver.Additional {
 
 func (d *BaiduShare) Init(ctx context.Context) error {
 	// TODO login / refresh token
-	//op.MustSaveDriverStorage(d)
+	// op.MustSaveDriverStorage(d)
 	d.client = resty.New().
 		SetBaseURL("https://pan.baidu.com").
 		SetHeader("User-Agent", "netdisk").
@@ -70,7 +71,7 @@ func (d *BaiduShare) Init(ctx context.Context) error {
 			d.info.Shareid = respJson.Data.Shareid.String()
 			d.info.Uk = respJson.Data.Uk.String()
 		} else {
-			err = fmt.Errorf(" %s; %s; ", resp.Status(), resp.Body())
+			err = fmt.Errorf(" %s; %s; ", resp.Status(), resp.Bytes())
 		}
 	}
 	return err
@@ -139,7 +140,7 @@ func (d *BaiduShare) List(ctx context.Context, dir model.Obj, args model.ListArg
 					})
 				}
 			} else {
-				err = fmt.Errorf(" %s; %s; ", resp.Status(), resp.Body())
+				err = fmt.Errorf(" %s; %s; ", resp.Status(), resp.Bytes())
 			}
 		}
 	}
@@ -148,7 +149,7 @@ func (d *BaiduShare) List(ctx context.Context, dir model.Obj, args model.ListArg
 
 func (d *BaiduShare) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	// TODO return link of file, required
-	link := model.Link{Header: d.client.Header}
+	link := model.Link{Header: d.client.Header()}
 	sign := ""
 	stamp := ""
 	signJson := struct {
@@ -167,7 +168,7 @@ func (d *BaiduShare) Link(ctx context.Context, file model.Obj, args model.LinkAr
 			stamp = signJson.Data.Stamp.String()
 			sign = signJson.Data.Sign
 		} else {
-			err = fmt.Errorf(" %s; %s; ", resp.Status(), resp.Body())
+			err = fmt.Errorf(" %s; %s; ", resp.Status(), resp.Bytes())
 		}
 	}
 	if err == nil {
@@ -195,7 +196,7 @@ func (d *BaiduShare) Link(ctx context.Context, file model.Obj, args model.LinkAr
 			if resp.IsSuccess() && respJson.Errno == 0 && respJson.List[0].Dlink != "" {
 				link.URL = respJson.List[0].Dlink
 			} else {
-				err = fmt.Errorf(" %s; %s; ", resp.Status(), resp.Body())
+				err = fmt.Errorf(" %s; %s; ", resp.Status(), resp.Bytes())
 			}
 		}
 		if err == nil {
@@ -203,9 +204,9 @@ func (d *BaiduShare) Link(ctx context.Context, file model.Obj, args model.LinkAr
 				SetDoNotParseResponse(true).
 				Get(link.URL)
 			if err == nil {
-				defer resp.RawBody().Close()
+				defer resp.Body.Close()
 				if resp.IsError() {
-					byt, _ := io.ReadAll(resp.RawBody())
+					byt, _ := io.ReadAll(resp.Body)
 					err = fmt.Errorf(" %s; %s; ", resp.Status(), byt)
 				}
 			}
@@ -244,8 +245,8 @@ func (d *BaiduShare) Put(ctx context.Context, dstDir model.Obj, stream model.Fil
 	return errs.NotSupport
 }
 
-//func (d *Template) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
+// func (d *Template) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
 //	return nil, errs.NotSupport
-//}
+// }
 
 var _ driver.Driver = (*BaiduShare)(nil)

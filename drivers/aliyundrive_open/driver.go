@@ -8,14 +8,15 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/Xhofe/rateg"
+	log "github.com/sirupsen/logrus"
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/errs"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/Xhofe/rateg"
-	"github.com/go-resty/resty/v2"
-	log "github.com/sirupsen/logrus"
 )
 
 type AliyundriveOpen struct {
@@ -174,7 +175,7 @@ func (d *AliyundriveOpen) Move(ctx context.Context, srcObj, dstDir model.Obj) (m
 			"file_id":           srcObj.GetID(),
 			"to_parent_file_id": dstDir.GetID(),
 			"check_name_mode":   "ignore", // optional:ignore,auto_rename,refuse
-			//"new_name":          "newName", // The new name to use when a file of the same name exists
+			// "new_name":          "newName", // The new name to use when a file of the same name exists
 		}).SetResult(&resp)
 	})
 	if err != nil {

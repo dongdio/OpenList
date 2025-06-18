@@ -3,9 +3,10 @@ package mopan
 import (
 	"time"
 
+	"github.com/foxxorcat/mopan-sdk-go"
+
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/foxxorcat/mopan-sdk-go"
 )
 
 func fileToObj(f mopan.File) model.Obj {

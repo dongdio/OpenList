@@ -7,13 +7,14 @@ import (
 	"strconv"
 	"time"
 
+	log "github.com/sirupsen/logrus"
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/op"
-	"github.com/go-resty/resty/v2"
-	log "github.com/sirupsen/logrus"
 )
 
-var ( //不同情况下获取的AccessTokenQPS限制不同 如下模块化易于拓展
+var ( // 不同情况下获取的AccessTokenQPS限制不同 如下模块化易于拓展
 	Api = "https://open-api.123pan.com"
 
 	AccessToken    = InitApiInfo(Api+"/api/v1/access_token", 1)
@@ -56,7 +57,7 @@ func (d *Open123) Request(apiInfo *ApiInfo, method string, callback base.ReqCall
 		if err != nil {
 			return nil, err
 		}
-		body := res.Body()
+		body := res.Bytes()
 
 		// 解析为通用响应
 		var baseResp BaseResp

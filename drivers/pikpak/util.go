@@ -16,15 +16,16 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/aliyun/aliyun-oss-go-sdk/oss"
+	jsoniter "github.com/json-iterator/go"
+	"github.com/pkg/errors"
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/internal/op"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/aliyun/aliyun-oss-go-sdk/oss"
-	"github.com/go-resty/resty/v2"
-	jsoniter "github.com/json-iterator/go"
-	"github.com/pkg/errors"
 )
 
 var AndroidAlgorithms = []string{
@@ -121,7 +122,7 @@ func (d *PikPak) login() error {
 	if e.ErrorCode != 0 {
 		return &e
 	}
-	data := res.Body()
+	data := res.Bytes()
 	d.RefreshToken = jsoniter.Get(data, "refresh_token").ToString()
 	d.AccessToken = jsoniter.Get(data, "access_token").ToString()
 	d.Common.SetUserID(jsoniter.Get(data, "sub").ToString())
@@ -157,7 +158,7 @@ func (d *PikPak) refreshToken(refreshToken string) error {
 		op.MustSaveDriverStorage(d)
 		return errors.New(e.Error())
 	}
-	data := res.Body()
+	data := res.Bytes()
 	d.Status = "work"
 	d.RefreshToken = jsoniter.Get(data, "refresh_token").ToString()
 	d.AccessToken = jsoniter.Get(data, "access_token").ToString()
@@ -170,7 +171,7 @@ func (d *PikPak) refreshToken(refreshToken string) error {
 func (d *PikPak) request(url string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
 	req := base.RestyClient.R()
 	req.SetHeaders(map[string]string{
-		//"Authorization":   "Bearer " + d.AccessToken,
+		// "Authorization":   "Bearer " + d.AccessToken,
 		"User-Agent":      d.GetUserAgent(),
 		"X-Device-ID":     d.GetDeviceID(),
 		"X-Captcha-Token": d.GetCaptchaToken(),
@@ -194,7 +195,7 @@ func (d *PikPak) request(url string, method string, callback base.ReqCallback, r
 
 	switch e.ErrorCode {
 	case 0:
-		return res.Body(), nil
+		return res.Bytes(), nil
 	case 4122, 4121, 16:
 		// access_token 过期
 		if err1 := d.refreshToken(d.RefreshToken); err1 != nil {

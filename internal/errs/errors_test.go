@@ -2,8 +2,9 @@ package errs
 
 import (
 	"errors"
-	pkgerr "github.com/pkg/errors"
 	"testing"
+
+	pkgerr "github.com/pkg/errors"
 )
 
 func TestErrs(t *testing.T) {

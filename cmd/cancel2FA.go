@@ -4,9 +4,10 @@ Copyright © 2022 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"github.com/spf13/cobra"
+
 	"github.com/OpenListTeam/OpenList/internal/op"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/spf13/cobra"
 )
 
 // Cancel2FACmd represents the delete2fa command

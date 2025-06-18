@@ -7,8 +7,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/OpenListTeam/OpenList/pkg/utils"
 	"github.com/t3rm1n4l/go-mega"
+
+	"github.com/OpenListTeam/OpenList/pkg/utils"
 )
 
 // do others that not defined in Driver interface

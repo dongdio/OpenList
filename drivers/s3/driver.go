@@ -10,15 +10,16 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/internal/stream"
 	"github.com/OpenListTeam/OpenList/pkg/cron"
 	"github.com/OpenListTeam/OpenList/server/common"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	log "github.com/sirupsen/logrus"
 )
 
 type S3 struct {
@@ -89,7 +90,7 @@ func (d *S3) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*mo
 	input := &s3.GetObjectInput{
 		Bucket: &d.Bucket,
 		Key:    &path,
-		//ResponseContentDisposition: &disposition,
+		// ResponseContentDisposition: &disposition,
 	}
 	if d.CustomHost == "" {
 		input.ResponseContentDisposition = &disposition

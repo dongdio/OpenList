@@ -3,8 +3,9 @@ package db
 import (
 	"fmt"
 
-	"github.com/OpenListTeam/OpenList/internal/conf"
 	"gorm.io/gorm"
+
+	"github.com/OpenListTeam/OpenList/internal/conf"
 )
 
 func columnName(name string) string {

@@ -7,10 +7,11 @@ import (
 
 	"github.com/OpenListTeam/OpenList/pkg/utils"
 
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/model"
-	"github.com/go-resty/resty/v2"
 )
 
 type Teambition struct {
@@ -152,7 +153,7 @@ func (d *Teambition) Put(ctx context.Context, dstDir model.Obj, stream model.Fil
 		newFile, err = d.upload(ctx, stream, token, up)
 	} else {
 		// chunk upload
-		//err = base.ErrNotImplement
+		// err = base.ErrNotImplement
 		newFile, err = d.chunkUpload(ctx, stream, token, up)
 	}
 	if err != nil {

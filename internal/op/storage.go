@@ -8,15 +8,16 @@ import (
 	"strings"
 	"time"
 
+	mapset "github.com/deckarep/golang-set/v2"
+	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/OpenListTeam/OpenList/internal/db"
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/errs"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/pkg/generic_sync"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	mapset "github.com/deckarep/golang-set/v2"
-	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
 )
 
 // Although the driver type is stored,

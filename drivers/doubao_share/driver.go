@@ -5,11 +5,12 @@ import (
 	"errors"
 	"net/http"
 
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/errs"
 	"github.com/OpenListTeam/OpenList/internal/model"
-	"github.com/go-resty/resty/v2"
 )
 
 type DoubaoShare struct {
@@ -171,8 +172,8 @@ func (d *DoubaoShare) ArchiveDecompress(ctx context.Context, srcObj, dstDir mode
 	return nil, errs.NotImplement
 }
 
-//func (d *DoubaoShare) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
+// func (d *DoubaoShare) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
 //	return nil, errs.NotSupport
-//}
+// }
 
 var _ driver.Driver = (*DoubaoShare)(nil)

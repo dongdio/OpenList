@@ -10,15 +10,16 @@ import (
 	"strings"
 	"time"
 
+	"github.com/avast/retry-go"
+	"github.com/foxxorcat/mopan-sdk-go"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/internal/op"
 	"github.com/OpenListTeam/OpenList/pkg/errgroup"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/avast/retry-go"
-	"github.com/foxxorcat/mopan-sdk-go"
-	log "github.com/sirupsen/logrus"
 )
 
 type MoPan struct {
@@ -75,8 +76,8 @@ func (d *MoPan) Init(ctx context.Context) error {
 		}
 		return nil
 	}
-	d.client = mopan.NewMoClientWithRestyClient(base.NewRestyClient()).
-		SetRestyClient(base.RestyClient).
+	d.client = mopan.NewMoClient().
+		SetClient(base.NewRestyClient().Client()).
 		SetOnAuthorizationExpired(func(_ error) error {
 			err := login()
 			if err != nil {
@@ -139,17 +140,13 @@ func (d *MoPan) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 	}
 
 	data.DownloadUrl = strings.Replace(strings.ReplaceAll(data.DownloadUrl, "&amp;", "&"), "http://", "https://", 1)
-	res, err := base.NoRedirectClient.R().SetDoNotParseResponse(true).SetContext(ctx).Get(data.DownloadUrl)
+	res, err := base.NoRedirectClient.R().SetContext(ctx).Get(data.DownloadUrl)
 	if err != nil {
 		return nil, err
 	}
-	defer func() {
-		_ = res.RawBody().Close()
-	}()
 	if res.StatusCode() == 302 {
 		data.DownloadUrl = res.Header().Get("location")
 	}
-
 	return &model.Link{
 		URL: data.DownloadUrl,
 	}, nil
@@ -344,7 +341,7 @@ func (d *MoPan) Put(ctx context.Context, dstDir model.Obj, stream model.FileStre
 			return nil, err
 		}
 	}
-	//step.5
+	// step.5
 	uFile, err := d.client.CommitMultiUploadFile(initUpdload.UploadFileID, nil)
 	if err != nil {
 		return nil, err

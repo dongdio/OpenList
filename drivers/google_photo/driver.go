@@ -7,12 +7,13 @@ import (
 	"strconv"
 	"strings"
 
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/errs"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/go-resty/resty/v2"
 )
 
 type GooglePhoto struct {
@@ -115,9 +116,9 @@ func (d *GooglePhoto) Put(ctx context.Context, dstDir model.Obj, stream model.Fi
 		return fmt.Errorf("%s: %v", e.Error.Message, e.Error.Errors)
 	}
 
-	//Upload to the Google Photo
+	// Upload to the Google Photo
 	postUrl := res.Header().Get("X-Goog-Upload-URL")
-	//chunkSize := res.Header().Get("X-Goog-Upload-Chunk-Granularity")
+	// chunkSize := res.Header().Get("X-Goog-Upload-Chunk-Granularity")
 	postHeaders = map[string]string{
 		"X-Goog-Upload-Command": "upload, finalize",
 		"X-Goog-Upload-Offset":  "0",
@@ -130,7 +131,7 @@ func (d *GooglePhoto) Put(ctx context.Context, dstDir model.Obj, stream model.Fi
 	if err != nil {
 		return err
 	}
-	//Create MediaItem
+	// Create MediaItem
 	createItemUrl := "https://photoslibrary.googleapis.com/v1/mediaItems:batchCreate"
 
 	postHeaders = map[string]string{

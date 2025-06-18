@@ -3,10 +3,11 @@ package fs
 import (
 	"context"
 
+	"github.com/pkg/errors"
+
 	"github.com/OpenListTeam/OpenList/internal/errs"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/internal/op"
-	"github.com/pkg/errors"
 )
 
 func makeDir(ctx context.Context, path string, lazyCache ...bool) error {

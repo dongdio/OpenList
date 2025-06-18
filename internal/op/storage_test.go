@@ -4,14 +4,15 @@ import (
 	"context"
 	"testing"
 
+	mapset "github.com/deckarep/golang-set/v2"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+
 	"github.com/OpenListTeam/OpenList/internal/conf"
 	"github.com/OpenListTeam/OpenList/internal/db"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/internal/op"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	mapset "github.com/deckarep/golang-set/v2"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 )
 
 func init() {

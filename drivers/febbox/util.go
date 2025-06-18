@@ -7,9 +7,10 @@ import (
 	"net/http"
 	"strconv"
 
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/op"
-	"github.com/go-resty/resty/v2"
 )
 
 func (d *FebBox) refreshTokenByOAuth2() error {
@@ -48,9 +49,9 @@ func (d *FebBox) request(url string, method string, callback base.ReqCallback, r
 
 	switch e.ErrorCode {
 	case 0:
-		return res.Body(), nil
+		return res.Bytes(), nil
 	case 1:
-		return res.Body(), nil
+		return res.Bytes(), nil
 	case -10001:
 		if e.ServerName != "" {
 			// access_token 过期

@@ -21,15 +21,16 @@ import (
 	"sync"
 	"time"
 
+	"github.com/avast/retry-go"
+	"github.com/google/uuid"
+	log "github.com/sirupsen/logrus"
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/pkg/errgroup"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/avast/retry-go"
-	"github.com/go-resty/resty/v2"
-	"github.com/google/uuid"
-	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -78,12 +79,12 @@ func (d *Doubao) request(path string, method string, callback base.ReqCallback, 
 	var commonResp CommonResp
 
 	res, err := req.Execute(method, reqUrl)
-	log.Debugln(res.String())
 	if err != nil {
 		return nil, err
 	}
+	log.Debugln(res.String())
 
-	body := res.Body()
+	body := res.Bytes()
 	// 先解析为通用响应
 	if err = json.Unmarshal(body, &commonResp); err != nil {
 		return nil, err
@@ -205,7 +206,7 @@ func (d *Doubao) signRequest(req *resty.Request, method, tokenType, uploadUrl st
 	}
 
 	// 查询参数按照字母顺序排序
-	canonicalQueryString := getCanonicalQueryString(req.QueryParam)
+	canonicalQueryString := getCanonicalQueryString(req.QueryParams)
 	// 规范请求头
 	canonicalHeaders, signedHeaders := getCanonicalHeadersFromMap(req.Header)
 	canonicalRequest := method + "\n" +
@@ -270,7 +271,7 @@ func (d *Doubao) requestApi(url, method, tokenType string, callback base.ReqCall
 		return nil, err
 	}
 
-	return res.Body(), nil
+	return res.Bytes(), nil
 }
 
 func (d *Doubao) initUploadToken() (*UploadToken, error) {
@@ -656,7 +657,7 @@ func (d *Doubao) uploadRequest(uploadUrl string, method string, storeInfo StoreI
 		return nil, fmt.Errorf("upload request failed: %w", err)
 	}
 
-	return res.Body(), nil
+	return res.Bytes(), nil
 }
 
 // 初始化分片上传

@@ -1,9 +1,10 @@
 package ftp
 
 import (
+	"github.com/axgle/mahonia"
+
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/op"
-	"github.com/axgle/mahonia"
 )
 
 func encode(str string, encoding string) string {

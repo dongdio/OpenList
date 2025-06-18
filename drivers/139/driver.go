@@ -10,6 +10,8 @@ import (
 	"strconv"
 	"time"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/errs"
@@ -18,7 +20,6 @@ import (
 	"github.com/OpenListTeam/OpenList/pkg/cron"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
 	"github.com/OpenListTeam/OpenList/pkg/utils/random"
-	log "github.com/sirupsen/logrus"
 )
 
 type Yun139 struct {
@@ -764,7 +765,7 @@ func (d *Yun139) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 				"manualRename": 2,
 				"operation":    0,
 				"path":         path.Join(dstDir.GetPath(), dstDir.GetID()),
-				"seqNo":        random.String(32), //序列号不能为空
+				"seqNo":        random.String(32), // 序列号不能为空
 				"totalSize":    reportSize,
 				"uploadContentList": []base.Json{{
 					"contentName": stream.GetName(),

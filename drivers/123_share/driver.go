@@ -11,14 +11,15 @@ import (
 
 	"golang.org/x/time/rate"
 
+	log "github.com/sirupsen/logrus"
+	"resty.dev/v3"
+
 	_123 "github.com/OpenListTeam/OpenList/drivers/123"
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/errs"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/go-resty/resty/v2"
-	log "github.com/sirupsen/logrus"
 )
 
 type Pan123Share struct {
@@ -38,7 +39,7 @@ func (d *Pan123Share) GetAddition() driver.Additional {
 
 func (d *Pan123Share) Init(ctx context.Context) error {
 	// TODO login / refresh token
-	//op.MustSaveDriverStorage(d)
+	// op.MustSaveDriverStorage(d)
 	return nil
 }
 
@@ -70,11 +71,11 @@ func (d *Pan123Share) List(ctx context.Context, dir model.Obj, args model.ListAr
 func (d *Pan123Share) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	// TODO return link of file, required
 	if f, ok := file.(File); ok {
-		//var resp DownResp
+		// var resp DownResp
 		var headers map[string]string
 		if !utils.IsLocalIPAddr(args.IP) {
 			headers = map[string]string{
-				//"X-Real-IP":       "1.1.1.1",
+				// "X-Real-IP":       "1.1.1.1",
 				"X-Forwarded-For": args.IP,
 			}
 		}
@@ -119,7 +120,7 @@ func (d *Pan123Share) Link(ctx context.Context, file model.Obj, args model.LinkA
 		if res.StatusCode() == 302 {
 			link.URL = res.Header().Get("location")
 		} else if res.StatusCode() < 300 {
-			link.URL = utils.Json.Get(res.Body(), "data", "redirect_url").ToString()
+			link.URL = utils.Json.Get(res.Bytes(), "data", "redirect_url").ToString()
 		}
 		link.Header = http.Header{
 			"Referer": []string{"https://www.123pan.com/"},
@@ -159,9 +160,9 @@ func (d *Pan123Share) Put(ctx context.Context, dstDir model.Obj, stream model.Fi
 	return errs.NotSupport
 }
 
-//func (d *Pan123Share) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
+// func (d *Pan123Share) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
 //	return nil, errs.NotSupport
-//}
+// }
 
 func (d *Pan123Share) APIRateLimit(ctx context.Context, api string) error {
 	value, _ := d.apiRateLimit.LoadOrStore(api,

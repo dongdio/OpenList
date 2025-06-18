@@ -11,6 +11,11 @@ import (
 	"time"
 
 	"github.com/Xhofe/go-cache"
+	"github.com/coreos/go-oidc"
+	"github.com/gin-gonic/gin"
+	"golang.org/x/oauth2"
+	"gorm.io/gorm"
+	"resty.dev/v3"
 
 	"github.com/OpenListTeam/OpenList/internal/conf"
 	"github.com/OpenListTeam/OpenList/internal/db"
@@ -19,11 +24,6 @@ import (
 	"github.com/OpenListTeam/OpenList/pkg/utils"
 	"github.com/OpenListTeam/OpenList/pkg/utils/random"
 	"github.com/OpenListTeam/OpenList/server/common"
-	"github.com/coreos/go-oidc"
-	"github.com/gin-gonic/gin"
-	"github.com/go-resty/resty/v2"
-	"golang.org/x/oauth2"
-	"gorm.io/gorm"
 )
 
 const stateLength = 16
@@ -382,11 +382,11 @@ func SSOLoginCallback(c *gin.Context) {
 		return
 	}
 	if platform == "Dingtalk" {
-		accessToken := utils.Json.Get(resp.Body(), "accessToken").ToString()
+		accessToken := utils.Json.Get(resp.Bytes(), "accessToken").ToString()
 		resp, err = ssoClient.R().SetHeader("x-acs-dingtalk-access-token", accessToken).
 			Get(userUrl)
 	} else {
-		accessToken := utils.Json.Get(resp.Body(), "access_token").ToString()
+		accessToken := utils.Json.Get(resp.Bytes(), "access_token").ToString()
 		resp, err = ssoClient.R().SetHeader("Authorization", "Bearer "+accessToken).
 			Get(userUrl)
 	}
@@ -394,7 +394,7 @@ func SSOLoginCallback(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	userID := utils.Json.Get(resp.Body(), idField).ToString()
+	userID := utils.Json.Get(resp.Bytes(), idField).ToString()
 	if utils.SliceContains([]string{"", "0"}, userID) {
 		common.ErrorResp(c, errors.New("error occurred"), 400)
 		return
@@ -415,7 +415,7 @@ func SSOLoginCallback(c *gin.Context) {
 		c.Data(200, "text/html; charset=utf-8", []byte(html))
 		return
 	}
-	username := utils.Json.Get(resp.Body(), usernameField).ToString()
+	username := utils.Json.Get(resp.Bytes(), usernameField).ToString()
 	user, err := db.GetUserBySSOID(userID)
 	if err != nil {
 		user, err = autoRegister(username, userID, err)

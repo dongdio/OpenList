@@ -8,6 +8,11 @@ import (
 	"regexp"
 	"strings"
 
+	rcCrypt "github.com/rclone/rclone/backend/crypt"
+	"github.com/rclone/rclone/fs/config/configmap"
+	"github.com/rclone/rclone/fs/config/obscure"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/errs"
 	"github.com/OpenListTeam/OpenList/internal/fs"
@@ -18,10 +23,6 @@ import (
 	"github.com/OpenListTeam/OpenList/pkg/http_range"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
 	"github.com/OpenListTeam/OpenList/server/common"
-	rcCrypt "github.com/rclone/rclone/backend/crypt"
-	"github.com/rclone/rclone/fs/config/configmap"
-	"github.com/rclone/rclone/fs/config/obscure"
-	log "github.com/sirupsen/logrus"
 )
 
 type Crypt struct {
@@ -42,7 +43,7 @@ func (d *Crypt) GetAddition() driver.Additional {
 }
 
 func (d *Crypt) Init(ctx context.Context) error {
-	//obfuscate credentials if it's updated or just created
+	// obfuscate credentials if it's updated or just created
 	err := d.updateObfusParm(&d.Password)
 	if err != nil {
 		return fmt.Errorf("failed to obfuscate password: %w", err)
@@ -61,7 +62,7 @@ func (d *Crypt) Init(ctx context.Context) error {
 
 	op.MustSaveDriverStorage(d)
 
-	//need remote storage exist
+	// need remote storage exist
 	storage, err := fs.GetStorage(d.RemotePath, &fs.GetStoragesArgs{})
 	if err != nil {
 		return fmt.Errorf("can't find remote storage: %w", err)
@@ -107,8 +108,8 @@ func (d *Crypt) Drop(ctx context.Context) error {
 
 func (d *Crypt) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
 	path := dir.GetPath()
-	//return d.list(ctx, d.RemotePath, path)
-	//remoteFull
+	// return d.list(ctx, d.RemotePath, path)
+	// remoteFull
 
 	objs, err := fs.List(ctx, d.getPathForRemote(path, true), &fs.ListArgs{NoLog: true})
 	// the obj must implement the model.SetPath interface
@@ -122,7 +123,7 @@ func (d *Crypt) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([
 		if obj.IsDir() {
 			name, err := d.cipher.DecryptDirName(obj.GetName())
 			if err != nil {
-				//filter illegal files
+				// filter illegal files
 				continue
 			}
 			if !d.ShowHidden && strings.HasPrefix(name, ".") {
@@ -141,12 +142,12 @@ func (d *Crypt) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([
 			thumb, ok := model.GetThumb(obj)
 			size, err := d.cipher.DecryptedSize(obj.GetSize())
 			if err != nil {
-				//filter illegal files
+				// filter illegal files
 				continue
 			}
 			name, err := d.cipher.DecryptFileName(obj.GetName())
 			if err != nil {
-				//filter illegal files
+				// filter illegal files
 				continue
 			}
 			if !d.ShowHidden && strings.HasPrefix(name, ".") {
@@ -200,7 +201,7 @@ func (d *Crypt) Get(ctx context.Context, path string) (model.Obj, error) {
 	remoteObj, err = fs.Get(ctx, remoteFullPath, &fs.GetArgs{NoLog: true})
 	if err != nil {
 		if errs.IsObjectNotFound(err) && secondTry {
-			//try the opposite
+			// try the opposite
 			remoteFullPath = d.getPathForRemote(path, !firstTryIsFolder)
 			remoteObj, err2 = fs.Get(ctx, remoteFullPath, &fs.GetArgs{NoLog: true})
 			if err2 != nil {
@@ -238,7 +239,7 @@ func (d *Crypt) Get(ctx context.Context, path string) (model.Obj, error) {
 		IsFolder: remoteObj.IsDir(),
 	}
 	return obj, nil
-	//return nil, errs.ObjectNotFound
+	// return nil, errs.ObjectNotFound
 }
 
 func (d *Crypt) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
@@ -282,7 +283,7 @@ func (d *Crypt) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 			if err != nil {
 				return nil, err
 			}
-			//keep reuse same MFile and close at last.
+			// keep reuse same MFile and close at last.
 			remoteClosers.Add(remoteLink.MFile)
 			return io.NopCloser(remoteLink.MFile), nil
 		}
@@ -399,8 +400,8 @@ func (d *Crypt) Put(ctx context.Context, dstDir model.Obj, streamer model.FileSt
 	return nil
 }
 
-//func (d *Safe) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
+// func (d *Safe) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
 //	return nil, errs.NotSupport
-//}
+// }
 
 var _ driver.Driver = (*Crypt)(nil)

@@ -4,10 +4,11 @@ import (
 	"context"
 	stdpath "path"
 
+	"github.com/jlaffaye/ftp"
+
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/errs"
 	"github.com/OpenListTeam/OpenList/internal/model"
-	"github.com/jlaffaye/ftp"
 )
 
 type FTP struct {

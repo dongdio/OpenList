@@ -5,11 +5,12 @@ import (
 	stdpath "path"
 	"strings"
 
+	"github.com/kdomanski/iso9660"
+
 	"github.com/OpenListTeam/OpenList/internal/errs"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/internal/stream"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/kdomanski/iso9660"
 )
 
 func getImage(ss *stream.SeekableStream) (*iso9660.Image, error) {

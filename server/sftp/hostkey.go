@@ -9,9 +9,10 @@ import (
 	"os"
 	"path/filepath"
 
+	"golang.org/x/crypto/ssh"
+
 	"github.com/OpenListTeam/OpenList/cmd/flags"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"golang.org/x/crypto/ssh"
 )
 
 var SSHSigners []ssh.Signer

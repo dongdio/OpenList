@@ -1,8 +1,9 @@
 package bootstrap
 
 import (
-	"github.com/OpenListTeam/OpenList/internal/search"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/OpenListTeam/OpenList/internal/search"
 )
 
 func InitIndex() {

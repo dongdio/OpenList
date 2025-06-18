@@ -193,8 +193,8 @@ func (d *SMB) Put(ctx context.Context, dstDir model.Obj, stream model.FileStream
 	return nil
 }
 
-//func (d *SMB) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
+// func (d *SMB) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
 //	return nil, errs.NotSupport
-//}
+// }
 
 var _ driver.Driver = (*SMB)(nil)

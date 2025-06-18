@@ -3,12 +3,13 @@ package _115_share
 import (
 	"context"
 
+	driver115 "github.com/SheltonZhu/115driver/pkg/driver"
+	"golang.org/x/time/rate"
+
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/errs"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	driver115 "github.com/SheltonZhu/115driver/pkg/driver"
-	"golang.org/x/time/rate"
 )
 
 type Pan115Share struct {

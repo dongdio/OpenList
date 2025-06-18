@@ -9,14 +9,15 @@ import (
 	"strings"
 	"time"
 
+	sdk "github.com/xhofe/115-sdk-go"
+	"golang.org/x/time/rate"
+
 	"github.com/OpenListTeam/OpenList/cmd/flags"
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/internal/op"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	sdk "github.com/xhofe/115-sdk-go"
-	"golang.org/x/time/rate"
 )
 
 type Open115 struct {
@@ -256,7 +257,7 @@ func (d *Open115) Put(ctx context.Context, dstDir model.Obj, file model.FileStre
 	}
 	// 2. two way verify
 	if utils.SliceContains([]int{6, 7, 8}, resp.Status) {
-		signCheck := strings.Split(resp.SignCheck, "-") //"sign_check": "2392148-2392298" 取2392148-2392298之间的内容(包含2392148、2392298)的sha1
+		signCheck := strings.Split(resp.SignCheck, "-") // "sign_check": "2392148-2392298" 取2392148-2392298之间的内容(包含2392148、2392298)的sha1
 		start, err := strconv.ParseInt(signCheck[0], 10, 64)
 		if err != nil {
 			return err
@@ -328,8 +329,8 @@ func (d *Open115) Put(ctx context.Context, dstDir model.Obj, file model.FileStre
 // 	return nil, errs.NotImplement
 // }
 
-//func (d *Template) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
+// func (d *Template) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
 //	return nil, errs.NotSupport
-//}
+// }
 
 var _ driver.Driver = (*Open115)(nil)

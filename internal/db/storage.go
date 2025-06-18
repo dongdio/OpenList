@@ -3,8 +3,9 @@ package db
 import (
 	"fmt"
 
-	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/pkg/errors"
+
+	"github.com/OpenListTeam/OpenList/internal/model"
 )
 
 // why don't need `cache` for storage?

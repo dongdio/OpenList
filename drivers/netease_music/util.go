@@ -79,7 +79,7 @@ func (d *NeteaseMusic) request(url, method string, opt ReqOption) ([]byte, error
 		if err != nil {
 			return nil, err
 		}
-		return res.Body(), nil
+		return res.Bytes(), nil
 	}
 
 	if method == http.MethodGet {
@@ -87,7 +87,7 @@ func (d *NeteaseMusic) request(url, method string, opt ReqOption) ([]byte, error
 		if err != nil {
 			return nil, err
 		}
-		return res.Body(), nil
+		return res.Bytes(), nil
 	}
 
 	return nil, errs.NotImplement

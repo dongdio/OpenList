@@ -6,13 +6,14 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/caarlos0/env/v9"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/OpenListTeam/OpenList/cmd/flags"
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/conf"
 	"github.com/OpenListTeam/OpenList/internal/net"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/caarlos0/env/v9"
-	log "github.com/sirupsen/logrus"
 )
 
 func InitConfig() {

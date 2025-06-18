@@ -6,9 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/OpenListTeam/OpenList/cmd/flags"
-	"github.com/OpenListTeam/OpenList/internal/conf"
-	"github.com/OpenListTeam/OpenList/internal/db"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
@@ -16,6 +13,10 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
+
+	"github.com/OpenListTeam/OpenList/cmd/flags"
+	"github.com/OpenListTeam/OpenList/internal/conf"
+	"github.com/OpenListTeam/OpenList/internal/db"
 )
 
 func InitDB() {
@@ -58,7 +59,7 @@ func InitDB() {
 			{
 				dsn := database.DSN
 				if dsn == "" {
-					//[username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]
+					// [username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]
 					dsn = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local&tls=%s",
 						database.User, database.Password, database.Host, database.Port, database.Name, database.SSLMode)
 				}

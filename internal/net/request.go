@@ -13,9 +13,10 @@ import (
 
 	"github.com/OpenListTeam/OpenList/pkg/utils"
 
-	"github.com/OpenListTeam/OpenList/pkg/http_range"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/OpenListTeam/OpenList/pkg/http_range"
 )
 
 // DefaultDownloadPartSize is the default range of bytes to get at a time when
@@ -43,7 +44,7 @@ type Downloader struct {
 	// Concurrency of 1 will download the parts sequentially.
 	Concurrency int
 
-	//RequestParam        HttpRequestParams
+	// RequestParam        HttpRequestParams
 	HttpClient HttpRequestFunc
 
 	*ConcurrencyLimit
@@ -51,7 +52,7 @@ type Downloader struct {
 type HttpRequestFunc func(ctx context.Context, params *HttpRequestParams) (*http.Response, error)
 
 func NewDownloader(options ...func(*Downloader)) *Downloader {
-	d := &Downloader{ //允许不设置的选项
+	d := &Downloader{ // 允许不设置的选项
 		PartBodyMaxRetries: DefaultPartBodyMaxRetries,
 		ConcurrencyLimit:   DefaultConcurrencyLimit,
 	}
@@ -95,19 +96,19 @@ type downloader struct {
 	cancel context.CancelCauseFunc
 	cfg    Downloader
 
-	params       *HttpRequestParams //http request params
-	chunkChannel chan chunk         //chunk chanel
+	params       *HttpRequestParams // http request params
+	chunkChannel chan chunk         // chunk chanel
 
-	//wg sync.WaitGroup
+	// wg sync.WaitGroup
 	m sync.Mutex
 
-	nextChunk int //next chunk id
+	nextChunk int // next chunk id
 	bufs      []*Buf
-	written   int64 //total bytes of file downloaded from remote
+	written   int64 // total bytes of file downloaded from remote
 	err       error
 
-	concurrency int //剩余的并发数，递减。到0时停止并发
-	maxPart     int //有多少个分片
+	concurrency int // 剩余的并发数，递减。到0时停止并发
+	maxPart     int // 有多少个分片
 	pos         int64
 	maxPos      int64
 	m2          sync.Mutex
@@ -298,7 +299,7 @@ func (d *downloader) finishBuf(id int) (isLast bool, nextBuf *Buf) {
 // downloadPart is an individual goroutine worker reading from the ch channel
 // and performing Http request on the data with a given byte range.
 func (d *downloader) downloadPart() {
-	//defer d.wg.Done()
+	// defer d.wg.Done()
 	for {
 		c, ok := <-d.chunkChannel
 		if !ok {
@@ -386,7 +387,7 @@ func (d *downloader) tryDownloadChunk(params *HttpRequestParams, ch *chunk) (int
 		if resp.StatusCode == http.StatusRequestedRangeNotSatisfiable {
 			return 0, err
 		}
-		if ch.id == 0 { //第1个任务 有限的重试，超过重试就会结束请求
+		if ch.id == 0 { // 第1个任务 有限的重试，超过重试就会结束请求
 			switch resp.StatusCode {
 			default:
 				return 0, err
@@ -417,7 +418,7 @@ func (d *downloader) tryDownloadChunk(params *HttpRequestParams, ch *chunk) (int
 			return 0, errCancelConcurrency
 		}
 		d.m.Unlock()
-		if ch.id != d.readingID { //正在被读取的优先重试
+		if ch.id != d.readingID { // 正在被读取的优先重试
 			d.m2.Lock()
 			defer d.m2.Unlock()
 			<-time.After(time.Millisecond * 200)
@@ -425,7 +426,7 @@ func (d *downloader) tryDownloadChunk(params *HttpRequestParams, ch *chunk) (int
 		return 0, errInfiniteRetry
 	}
 	defer resp.Body.Close()
-	//only check file size on the first task
+	// only check file size on the first task
 	if ch.id == 0 {
 		err = d.checkTotalBytes(resp)
 		if err != nil {
@@ -544,10 +545,10 @@ func DefaultHttpRequestFunc(ctx context.Context, params *HttpRequestParams) (*ht
 
 type HttpRequestParams struct {
 	URL string
-	//only want data within this range
+	// only want data within this range
 	Range     http_range.Range
 	HeaderRef http.Header
-	//total file size
+	// total file size
 	Size int64
 }
 type errNeedRetry struct {
@@ -569,7 +570,7 @@ type MultiReadCloser struct {
 }
 
 type cfg struct {
-	rPos   int //current reader position, start from 0
+	rPos   int // current reader position, start from 0
 	curBuf *Buf
 }
 
@@ -586,7 +587,7 @@ func (mr MultiReadCloser) Read(p []byte) (n int, err error) {
 		return 0, io.EOF
 	}
 	n, err = mr.cfg.curBuf.Read(p)
-	//log.Debugf("read_%d read current buffer, n=%d ,err=%+v", mr.cfg.rPos, n, err)
+	// log.Debugf("read_%d read current buffer, n=%d ,err=%+v", mr.cfg.rPos, n, err)
 	if err == io.EOF {
 		log.Debugf("read_%d finished current buffer", mr.cfg.rPos)
 
@@ -611,7 +612,7 @@ func (mr MultiReadCloser) Close() error {
 
 type Buf struct {
 	buffer *bytes.Buffer
-	size   int //expected size
+	size   int // expected size
 	ctx    context.Context
 	off    int
 	rw     sync.Mutex

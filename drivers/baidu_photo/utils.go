@@ -9,10 +9,11 @@ import (
 	"strings"
 	"unicode"
 
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/go-resty/resty/v2"
 )
 
 const (
@@ -38,7 +39,7 @@ func (d *BaiduPhoto) Request(client *resty.Client, furl string, method string, c
 		return nil, err
 	}
 
-	erron := utils.Json.Get(res.Body(), "errno").ToInt()
+	erron := utils.Json.Get(res.Bytes(), "errno").ToInt()
 	switch erron {
 	case 0:
 		break
@@ -58,13 +59,13 @@ func (d *BaiduPhoto) Request(client *resty.Client, furl string, method string, c
 	return res, nil
 }
 
-//func (d *BaiduPhoto) Request(furl string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+// func (d *BaiduPhoto) Request(furl string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
 //	res, err := d.request(furl, method, callback, resp)
 //	if err != nil {
 //		return nil, err
 //	}
-//	return res.Body(), nil
-//}
+//	return res.Bytes(), nil
+// }
 
 // func (d *BaiduPhoto) refreshToken() error {
 // 	u := "https://openapi.baidu.com/oauth/2.0/token"

@@ -12,8 +12,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/OpenListTeam/OpenList/drivers/base"
 	"golang.org/x/net/publicsuffix"
+
+	"github.com/OpenListTeam/OpenList/drivers/base"
 )
 
 // CookieAuth hold the authentication information

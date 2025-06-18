@@ -10,6 +10,9 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/avast/retry-go"
+	weiyunsdkgo "github.com/foxxorcat/weiyun-sdk-go"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/errs"
@@ -18,8 +21,6 @@ import (
 	"github.com/OpenListTeam/OpenList/pkg/cron"
 	"github.com/OpenListTeam/OpenList/pkg/errgroup"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/avast/retry-go"
-	weiyunsdkgo "github.com/foxxorcat/weiyun-sdk-go"
 )
 
 type WeiYun struct {
@@ -48,7 +49,8 @@ func (d *WeiYun) Init(ctx context.Context) error {
 		d.uploadThread, d.UploadThread = 4, "4"
 	}
 
-	d.client = weiyunsdkgo.NewWeiYunClientWithRestyClient(base.NewRestyClient())
+	d.client = weiyunsdkgo.NewWeiYunClient().
+		SetClient(base.NewRestyClient().Client())
 	err := d.client.SetCookiesStr(d.Cookies).RefreshCtoken()
 	if err != nil {
 		return err
@@ -203,40 +205,40 @@ func (d *WeiYun) MakeDir(ctx context.Context, parentDir model.Obj, dirName strin
 
 func (d *WeiYun) Move(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj, error) {
 	// TODO: 默认策略为重命名，使用缓存可能出现冲突。微云app也有这个冲突，不知道腾讯怎么搞的
-	if dstDir, ok := dstDir.(*Folder); ok {
+	if dstDirFolder, ok := dstDir.(*Folder); ok {
 		dstParam := weiyunsdkgo.FolderParam{
-			PdirKey: dstDir.GetPKey(),
-			DirKey:  dstDir.GetID(),
-			DirName: dstDir.GetName(),
+			PdirKey: dstDirFolder.GetPKey(),
+			DirKey:  dstDirFolder.GetID(),
+			DirName: dstDirFolder.GetName(),
 		}
-		switch srcObj := srcObj.(type) {
+		switch srcObjValue := srcObj.(type) {
 		case *File:
 			err := d.client.DiskFileMove(weiyunsdkgo.FileParam{
-				PPdirKey: srcObj.PFolder.GetPKey(),
-				PdirKey:  srcObj.GetPKey(),
-				FileID:   srcObj.GetID(),
-				FileName: srcObj.GetName(),
+				PPdirKey: srcObjValue.PFolder.GetPKey(),
+				PdirKey:  srcObjValue.GetPKey(),
+				FileID:   srcObjValue.GetID(),
+				FileName: srcObjValue.GetName(),
 			}, dstParam)
 			if err != nil {
 				return nil, err
 			}
 			return &File{
-				PFolder: dstDir,
-				File:    srcObj.File,
+				PFolder: dstDirFolder,
+				File:    srcObjValue.File,
 			}, nil
 		case *Folder:
 			err := d.client.DiskDirMove(weiyunsdkgo.FolderParam{
-				PPdirKey: srcObj.PFolder.GetPKey(),
-				PdirKey:  srcObj.GetPKey(),
-				DirKey:   srcObj.GetID(),
-				DirName:  srcObj.GetName(),
+				PPdirKey: srcObjValue.PFolder.GetPKey(),
+				PdirKey:  srcObjValue.GetPKey(),
+				DirKey:   srcObjValue.GetID(),
+				DirName:  srcObjValue.GetName(),
 			}, dstParam)
 			if err != nil {
 				return nil, err
 			}
 			return &Folder{
-				PFolder: dstDir,
-				Folder:  srcObj.Folder,
+				PFolder: dstDirFolder,
+				Folder:  srcObjValue.Folder,
 			}, nil
 		}
 	}
@@ -244,40 +246,40 @@ func (d *WeiYun) Move(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj,
 }
 
 func (d *WeiYun) Rename(ctx context.Context, srcObj model.Obj, newName string) (model.Obj, error) {
-	switch srcObj := srcObj.(type) {
+	switch srcObjValue := srcObj.(type) {
 	case *File:
 		err := d.client.DiskFileRename(weiyunsdkgo.FileParam{
-			PPdirKey: srcObj.PFolder.GetPKey(),
-			PdirKey:  srcObj.GetPKey(),
-			FileID:   srcObj.GetID(),
-			FileName: srcObj.GetName(),
+			PPdirKey: srcObjValue.PFolder.GetPKey(),
+			PdirKey:  srcObjValue.GetPKey(),
+			FileID:   srcObjValue.GetID(),
+			FileName: srcObjValue.GetName(),
 		}, newName)
 		if err != nil {
 			return nil, err
 		}
-		newFile := srcObj.File
+		newFile := srcObjValue.File
 		newFile.FileName = newName
 		newFile.FileCtime = weiyunsdkgo.TimeStamp(time.Now())
 		return &File{
-			PFolder: srcObj.PFolder,
+			PFolder: srcObjValue.PFolder,
 			File:    newFile,
 		}, nil
 	case *Folder:
 		err := d.client.DiskDirAttrModify(weiyunsdkgo.FolderParam{
-			PPdirKey: srcObj.PFolder.GetPKey(),
-			PdirKey:  srcObj.GetPKey(),
-			DirKey:   srcObj.GetID(),
-			DirName:  srcObj.GetName(),
+			PPdirKey: srcObjValue.PFolder.GetPKey(),
+			PdirKey:  srcObjValue.GetPKey(),
+			DirKey:   srcObjValue.GetID(),
+			DirName:  srcObjValue.GetName(),
 		}, newName)
 		if err != nil {
 			return nil, err
 		}
 
-		newFolder := srcObj.Folder
+		newFolder := srcObjValue.Folder
 		newFolder.DirName = newName
 		newFolder.DirCtime = weiyunsdkgo.TimeStamp(time.Now())
 		return &Folder{
-			PFolder: srcObj.PFolder,
+			PFolder: srcObjValue.PFolder,
 			Folder:  newFolder,
 		}, nil
 	}
@@ -289,20 +291,20 @@ func (d *WeiYun) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 }
 
 func (d *WeiYun) Remove(ctx context.Context, obj model.Obj) error {
-	switch obj := obj.(type) {
+	switch objValue := obj.(type) {
 	case *File:
 		return d.client.DiskFileDelete(weiyunsdkgo.FileParam{
-			PPdirKey: obj.PFolder.GetPKey(),
-			PdirKey:  obj.GetPKey(),
-			FileID:   obj.GetID(),
-			FileName: obj.GetName(),
+			PPdirKey: objValue.PFolder.GetPKey(),
+			PdirKey:  objValue.GetPKey(),
+			FileID:   objValue.GetID(),
+			FileName: objValue.GetName(),
 		})
 	case *Folder:
 		return d.client.DiskDirDelete(weiyunsdkgo.FolderParam{
-			PPdirKey: obj.PFolder.GetPKey(),
-			PdirKey:  obj.GetPKey(),
-			DirKey:   obj.GetID(),
-			DirName:  obj.GetName(),
+			PPdirKey: objValue.PFolder.GetPKey(),
+			PdirKey:  objValue.GetPKey(),
+			DirKey:   objValue.GetID(),
+			DirName:  objValue.GetName(),
 		})
 	}
 	return errs.NotSupport

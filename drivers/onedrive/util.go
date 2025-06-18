@@ -10,14 +10,15 @@ import (
 	stdpath "path"
 	"time"
 
+	jsoniter "github.com/json-iterator/go"
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/errs"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/internal/op"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/go-resty/resty/v2"
-	jsoniter "github.com/json-iterator/go"
 )
 
 var onedriveHostMap = map[string]Host{
@@ -152,7 +153,7 @@ func (d *Onedrive) Request(url string, method string, callback base.ReqCallback,
 		}
 		return nil, errors.New(e.Error.Message)
 	}
-	return res.Body(), nil
+	return res.Bytes(), nil
 }
 
 func (d *Onedrive) getFiles(path string) ([]File, error) {

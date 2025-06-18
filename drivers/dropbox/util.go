@@ -7,11 +7,12 @@ import (
 	"net/http"
 	"strings"
 
+	log "github.com/sirupsen/logrus"
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/op"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/go-resty/resty/v2"
-	log "github.com/sirupsen/logrus"
 )
 
 func (d *Dropbox) refreshToken() error {
@@ -84,7 +85,7 @@ func (d *Dropbox) request(uri, method string, callback base.ReqCallback, retry .
 		}
 		return nil, fmt.Errorf("%s:%s", e.Error, e.ErrorSummary)
 	}
-	return res.Body(), nil
+	return res.Bytes(), nil
 }
 
 func (d *Dropbox) list(ctx context.Context, data base.Json, isContinue bool) (*ListResp, error) {

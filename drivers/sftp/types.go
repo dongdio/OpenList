@@ -5,8 +5,9 @@ import (
 	stdpath "path"
 	"strings"
 
-	"github.com/OpenListTeam/OpenList/internal/model"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/OpenListTeam/OpenList/internal/model"
 )
 
 func (d *SFTP) fileToObj(f os.FileInfo, dir string) (model.Obj, error) {

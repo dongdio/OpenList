@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/pkg/errors"
+	"github.com/xhofe/tache"
+
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/errs"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/internal/op"
 	"github.com/OpenListTeam/OpenList/internal/task"
-	"github.com/pkg/errors"
-	"github.com/xhofe/tache"
 )
 
 type UploadTask struct {
@@ -52,8 +53,8 @@ func putAsTask(ctx context.Context, dstDirPath string, file model.FileStreamer) 
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to create temp file")
 		}
-		//file.SetReader(tempFile)
-		//file.SetTmpFile(tempFile)
+		// file.SetReader(tempFile)
+		// file.SetTmpFile(tempFile)
 	}
 	taskCreator, _ := ctx.Value("user").(*model.User) // taskCreator is nil when convert failed
 	t := &UploadTask{

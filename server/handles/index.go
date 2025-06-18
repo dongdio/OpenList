@@ -3,19 +3,20 @@ package handles
 import (
 	"context"
 
+	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/OpenListTeam/OpenList/internal/conf"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/internal/search"
 	"github.com/OpenListTeam/OpenList/internal/setting"
 	"github.com/OpenListTeam/OpenList/server/common"
-	"github.com/gin-gonic/gin"
-	log "github.com/sirupsen/logrus"
 )
 
 type UpdateIndexReq struct {
 	Paths    []string `json:"paths"`
 	MaxDepth int      `json:"max_depth"`
-	//IgnorePaths []string `json:"ignore_paths"`
+	// IgnorePaths []string `json:"ignore_paths"`
 }
 
 func BuildIndex(c *gin.Context) {

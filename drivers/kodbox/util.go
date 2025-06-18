@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"strings"
 
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/go-resty/resty/v2"
 )
 
 func (d *KodBox) getToken() error {
@@ -62,7 +63,7 @@ func (d *KodBox) request(method string, pathname string, callback base.ReqCallba
 			return nil, err
 		}
 
-		err := utils.Json.Unmarshal(res.Body(), &commonResp)
+		err := utils.Json.Unmarshal(res.Bytes(), &commonResp)
 		if err != nil {
 			return nil, err
 		}
@@ -83,5 +84,5 @@ func (d *KodBox) request(method string, pathname string, callback base.ReqCallba
 	if commonResp.Code.(bool) == false {
 		return nil, fmt.Errorf("request failed: %s", commonResp.Data)
 	}
-	return res.Body(), nil
+	return res.Bytes(), nil
 }

@@ -5,6 +5,10 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/OpenListTeam/sftpd-openlist"
+	"github.com/pkg/errors"
+	"golang.org/x/crypto/ssh"
+
 	"github.com/OpenListTeam/OpenList/internal/conf"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/internal/op"
@@ -12,9 +16,6 @@ import (
 	"github.com/OpenListTeam/OpenList/pkg/utils"
 	"github.com/OpenListTeam/OpenList/server/ftp"
 	"github.com/OpenListTeam/OpenList/server/sftp"
-	"github.com/OpenListTeam/sftpd-openlist"
-	"github.com/pkg/errors"
-	"golang.org/x/crypto/ssh"
 )
 
 type SftpDriver struct {
@@ -50,7 +51,7 @@ func (d *SftpDriver) GetConfig() *sftpd.Config {
 		ServerConfig: serverConfig,
 		HostPort:     conf.Conf.SFTP.Listen,
 		ErrorLogFunc: utils.Log.Error,
-		//DebugLogFunc: utils.Log.Debugf,
+		// DebugLogFunc: utils.Log.Debugf,
 	}
 	return d.config
 }

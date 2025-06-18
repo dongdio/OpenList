@@ -13,8 +13,9 @@ import (
 
 	"github.com/OpenListTeam/OpenList/pkg/utils"
 
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
-	"github.com/go-resty/resty/v2"
 )
 
 var AndroidAlgorithms = []string{
@@ -100,7 +101,7 @@ func (d *PikPakShare) request(url string, method string, callback base.ReqCallba
 	}
 	switch e.ErrorCode {
 	case 0:
-		return res.Body(), nil
+		return res.Bytes(), nil
 	case 9: // 验证码token过期
 		if err = d.RefreshCaptchaToken(GetAction(method, url), ""); err != nil {
 			return nil, err
@@ -318,9 +319,9 @@ func (d *PikPakShare) refreshCaptchaToken(action string, metas map[string]string
 		return errors.New(e.Error())
 	}
 
-	//if resp.Url != "" {
+	// if resp.Url != "" {
 	//	return fmt.Errorf(`need verify: <a target="_blank" href="%s">Click Here</a>`, resp.Url)
-	//}
+	// }
 
 	if d.Common.RefreshCTokenCk != nil {
 		d.Common.RefreshCTokenCk(resp.CaptchaToken)

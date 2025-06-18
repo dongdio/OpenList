@@ -10,14 +10,15 @@ import (
 	"time"
 	"unicode"
 
+	"github.com/avast/retry-go"
+	log "github.com/sirupsen/logrus"
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/errs"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/internal/op"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/avast/retry-go"
-	"github.com/go-resty/resty/v2"
-	log "github.com/sirupsen/logrus"
 )
 
 // do others that not defined in Driver interface
@@ -105,7 +106,7 @@ func (d *BaiduNetdisk) request(furl string, method string, callback base.ReqCall
 			return err
 		}
 		log.Debugf("[baidu_netdisk] req: %s, resp: %s", furl, res.String())
-		errno := utils.Json.Get(res.Body(), "errno").ToInt()
+		errno := utils.Json.Get(res.Bytes(), "errno").ToInt()
 		if errno != 0 {
 			if utils.SliceContains([]int{111, -6}, errno) {
 				log.Info("refreshing baidu_netdisk token.")
@@ -116,13 +117,13 @@ func (d *BaiduNetdisk) request(furl string, method string, callback base.ReqCall
 			}
 
 			if 31023 == errno && d.DownloadAPI == "crack_video" {
-				result = res.Body()
+				result = res.Bytes()
 				return nil
 			}
 
 			return fmt.Errorf("req: [%s] ,errno: %d, refer to https://pan.baidu.com/union/doc/", furl, errno)
 		}
-		result = res.Body()
+		result = res.Bytes()
 		return nil
 	},
 		retry.LastErrorOnly(true),
@@ -202,9 +203,9 @@ func (d *BaiduNetdisk) linkOfficial(file model.Obj, _ model.LinkArgs) (*model.Li
 	if err != nil {
 		return nil, err
 	}
-	//if res.StatusCode() == 302 {
+	// if res.StatusCode() == 302 {
 	u = res.Header().Get("location")
-	//}
+	// }
 
 	return &model.Link{
 		URL: u,

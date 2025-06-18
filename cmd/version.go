@@ -8,8 +8,9 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/OpenListTeam/OpenList/internal/conf"
 	"github.com/spf13/cobra"
+
+	"github.com/OpenListTeam/OpenList/internal/conf"
 )
 
 // VersionCmd represents the version command

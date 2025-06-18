@@ -15,6 +15,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
+	"github.com/xhofe/tache"
+
 	"github.com/OpenListTeam/OpenList/internal/conf"
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/errs"
@@ -22,9 +26,6 @@ import (
 	"github.com/OpenListTeam/OpenList/internal/op"
 	"github.com/OpenListTeam/OpenList/internal/stream"
 	"github.com/OpenListTeam/OpenList/internal/task"
-	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
-	"github.com/xhofe/tache"
 )
 
 type ArchiveDownloadTask struct {

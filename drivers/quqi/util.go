@@ -12,14 +12,15 @@ import (
 	"strings"
 	"time"
 
+	"github.com/minio/sio"
+	"resty.dev/v3"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/errs"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/internal/stream"
 	"github.com/OpenListTeam/OpenList/pkg/http_range"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/go-resty/resty/v2"
-	"github.com/minio/sio"
 )
 
 // do others that not defined in Driver interface
@@ -55,7 +56,7 @@ func (d *Quqi) request(host string, path string, method string, callback base.Re
 		return nil, err
 	}
 	// resty.Request.SetResult cannot parse result correctly sometimes
-	err = utils.Json.Unmarshal(res.Body(), &result)
+	err = utils.Json.Unmarshal(res.Bytes(), &result)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +64,7 @@ func (d *Quqi) request(host string, path string, method string, callback base.Re
 		return nil, errors.New(result.Message)
 	}
 	if resp != nil {
-		err = utils.Json.Unmarshal(res.Body(), resp)
+		err = utils.Json.Unmarshal(res.Bytes(), resp)
 		if err != nil {
 			return nil, err
 		}
@@ -255,9 +256,9 @@ func (d *Quqi) linkFromCDN(id string) (*model.Link, error) {
 				encryptedLength = -1
 			}
 		}
-		//log.Debugf("size: %d\tencrypted_size: %d", urlExchangeResp.Data.Size, urlExchangeResp.Data.EncryptedSize)
-		//log.Debugf("http range offset: %d, length: %d", httpRange.Start, httpRange.Length)
-		//log.Debugf("encrypted offset: %d, length: %d, decrypted offset: %d", encryptedOffset, encryptedLength, decryptedOffset)
+		// log.Debugf("size: %d\tencrypted_size: %d", urlExchangeResp.Data.Size, urlExchangeResp.Data.EncryptedSize)
+		// log.Debugf("http range offset: %d, length: %d", httpRange.Start, httpRange.Length)
+		// log.Debugf("encrypted offset: %d, length: %d, decrypted offset: %d", encryptedOffset, encryptedLength, decryptedOffset)
 
 		rrc, err := stream.GetRangeReadCloserFromLink(urlExchangeResp.Data.EncryptedSize, &model.Link{
 			URL: urlExchangeResp.Data.Url,

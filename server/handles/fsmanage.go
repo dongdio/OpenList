@@ -7,6 +7,10 @@ import (
 
 	"github.com/OpenListTeam/OpenList/internal/task"
 
+	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/OpenListTeam/OpenList/internal/errs"
 	"github.com/OpenListTeam/OpenList/internal/fs"
 	"github.com/OpenListTeam/OpenList/internal/model"
@@ -15,9 +19,6 @@ import (
 	"github.com/OpenListTeam/OpenList/pkg/generic"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
 	"github.com/OpenListTeam/OpenList/server/common"
-	"github.com/gin-gonic/gin"
-	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
 )
 
 type MkdirOrLinkReq struct {
@@ -225,7 +226,7 @@ func FsRemove(c *gin.Context) {
 			return
 		}
 	}
-	//fs.ClearCache(req.Dir)
+	// fs.ClearCache(req.Dir)
 	common.SuccessResp(c)
 }
 
@@ -335,8 +336,8 @@ func Link(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	//user := c.MustGet("user").(*model.User)
-	//rawPath := stdpath.Join(user.BasePath, req.Path)
+	// user := c.MustGet("user").(*model.User)
+	// rawPath := stdpath.Join(user.BasePath, req.Path)
 	// why need not join base_path? because it's always the full path
 	rawPath := req.Path
 	storage, err := fs.GetStorage(rawPath, &fs.GetStoragesArgs{})

@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
+	"github.com/xhofe/tache"
+
 	"github.com/OpenListTeam/OpenList/internal/conf"
 	"github.com/OpenListTeam/OpenList/internal/errs"
 	"github.com/OpenListTeam/OpenList/internal/setting"
 	"github.com/OpenListTeam/OpenList/internal/task"
-	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
-	"github.com/xhofe/tache"
 )
 
 type DownloadTask struct {

@@ -4,9 +4,10 @@ import (
 	"errors"
 	"fmt"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/op"
-	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -90,7 +91,7 @@ func (d *AliyundriveShare) request(url, method string, callback base.ReqCallback
 			return nil, errors.New(e.Code + ": " + e.Message)
 		}
 	}
-	return resp.Body(), nil
+	return resp.Bytes(), nil
 }
 
 func (d *AliyundriveShare) getFiles(fileId string) ([]File, error) {

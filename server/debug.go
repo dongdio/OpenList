@@ -5,10 +5,11 @@ import (
 	_ "net/http/pprof"
 	"runtime"
 
+	"github.com/gin-gonic/gin"
+
 	"github.com/OpenListTeam/OpenList/internal/sign"
 	"github.com/OpenListTeam/OpenList/server/common"
 	"github.com/OpenListTeam/OpenList/server/middlewares"
-	"github.com/gin-gonic/gin"
 )
 
 func _pprof(g *gin.RouterGroup) {

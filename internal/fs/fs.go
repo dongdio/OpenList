@@ -6,12 +6,13 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	"github.com/pkg/errors"
+
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/errs"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/internal/op"
 	"github.com/OpenListTeam/OpenList/internal/task"
-	"github.com/pkg/errors"
 )
 
 // the param named path of functions in this package is a mount path

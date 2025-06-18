@@ -1,8 +1,9 @@
 package db
 
 import (
-	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/pkg/errors"
+
+	"github.com/OpenListTeam/OpenList/internal/model"
 )
 
 func GetMetaByPath(path string) (*model.Meta, error) {
