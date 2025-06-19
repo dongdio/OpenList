@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -78,11 +77,11 @@ func (d *CloudreveV4) request(method string, path string, callback base.ReqCallb
 
 	if out != nil && r.Data != nil {
 		var marshal []byte
-		marshal, err = json.Marshal(r.Data)
+		marshal, err = sonic.ConfigDefault.Marshal(r.Data)
 		if err != nil {
 			return err
 		}
-		err = json.Unmarshal(marshal, out)
+		err = sonic.ConfigDefault.Unmarshal(marshal, out)
 		if err != nil {
 			return err
 		}
@@ -299,7 +298,7 @@ func (d *CloudreveV4) upRemote(ctx context.Context, file model.FileStreamer, u F
 				return err
 			}
 			var up Resp
-			err = json.Unmarshal(body, &up)
+			err = sonic.ConfigDefault.Unmarshal(body, &up)
 			if err != nil {
 				return err
 			}

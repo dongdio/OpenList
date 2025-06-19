@@ -3,7 +3,6 @@ package chaoxing
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -13,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bytedance/sonic"
 	"google.golang.org/appengine/log"
 	"resty.dev/v3"
 
@@ -256,6 +256,7 @@ func (d *ChaoXing) Put(ctx context.Context, dstDir model.Obj, file model.FileStr
 		},
 		UpdateProgress: up,
 	})
+
 	req, err := http.NewRequestWithContext(ctx, "POST", "https://pan-yz.chaoxing.com/upload", r)
 	if err != nil {
 		return err
@@ -272,7 +273,7 @@ func (d *ChaoXing) Put(ctx context.Context, dstDir model.Obj, file model.FileStr
 		return err
 	}
 	var fileRsp UploadFileDataRsp
-	err = json.Unmarshal(bodys, &fileRsp)
+	err = sonic.ConfigDefault.Unmarshal(bodys, &fileRsp)
 	if err != nil {
 		return err
 	}
@@ -280,7 +281,7 @@ func (d *ChaoXing) Put(ctx context.Context, dstDir model.Obj, file model.FileStr
 		return errors.New(fileRsp.Msg)
 	}
 	uploadDoneParam := UploadDoneParam{Key: fileRsp.ObjectID, Cataid: "100000019", Param: fileRsp.Data}
-	params, err := json.Marshal(uploadDoneParam)
+	params, err := sonic.ConfigDefault.Marshal(uploadDoneParam)
 	if err != nil {
 		return err
 	}

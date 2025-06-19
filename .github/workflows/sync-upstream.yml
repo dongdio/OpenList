@@ -24,7 +24,7 @@ jobs:
       - name: Add upstream and fetch
         run: |
           git remote add upstream https://github.com/OpenListTeam/OpenList.git
-          git fetch upstream
+          git fetch --all --tags
 
       - name: Check if upstream is ahead
         id: check_diff
@@ -43,7 +43,13 @@ jobs:
       - name: Merge upstream into fork
         if: steps.check_diff.outputs.needs_sync == 'true'
         run: |
-          git merge upstream/main --allow-unrelated-histories -m "Sync from upstream"
+          set -e
+          echo "🔁 Attempting to merge upstream..."
+          git merge upstream/main --no-edit || {
+              echo "❌ Merge conflict detected. Please resolve manually."
+              git status
+              exit 1
+          }
 
       - name: Push changes back to your fork
         if: steps.check_diff.outputs.needs_sync == 'true'

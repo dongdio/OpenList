@@ -4,13 +4,13 @@ import (
 	"crypto/md5"
 	"crypto/sha1"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"regexp"
 	"time"
 
+	"github.com/bytedance/sonic"
 	"resty.dev/v3"
 
 	"github.com/OpenListTeam/OpenList/drivers/base"
@@ -219,8 +219,8 @@ func (c *Common) getReviewData(res *resty.Response) error {
 	}
 
 	// 将reviewData转为JSON字符串
-	reviewDataJSON, _ := json.MarshalIndent(reviewData, "", "  ")
-	// reviewDataJSON, _ := json.Marshal(reviewData)
+	reviewDataJSON, _ := sonic.ConfigDefault.MarshalIndent(reviewData, "", "  ")
+	// reviewDataJSON, _ := sonic.ConfigDefault.Marshal(reviewData)
 
 	return fmt.Errorf(`
 <div style="font-family: Arial, sans-serif; padding: 15px; border-radius: 5px; border: 1px solid #e0e0e0;>

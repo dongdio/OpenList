@@ -1,8 +1,9 @@
 package LenovoNasShare
 
 import (
-	"encoding/json"
 	"time"
+
+	"github.com/bytedance/sonic"
 
 	"github.com/OpenListTeam/OpenList/pkg/utils"
 
@@ -19,7 +20,7 @@ func (f *File) UnmarshalJSON(data []byte) error {
 		Alias: (*Alias)(f),
 	}
 
-	if err := json.Unmarshal(data, aux); err != nil {
+	if err := sonic.ConfigDefault.Unmarshal(data, aux); err != nil {
 		return err
 	}
 

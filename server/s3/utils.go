@@ -4,10 +4,10 @@ package s3
 
 import (
 	"context"
-	"encoding/json"
 	"strings"
 
 	"github.com/alist-org/gofakes3"
+	"github.com/bytedance/sonic"
 
 	"github.com/OpenListTeam/OpenList/internal/conf"
 	"github.com/OpenListTeam/OpenList/internal/errs"
@@ -24,7 +24,7 @@ type Bucket struct {
 
 func getAndParseBuckets() ([]Bucket, error) {
 	var res []Bucket
-	err := json.Unmarshal([]byte(setting.GetStr(conf.S3Buckets)), &res)
+	err := sonic.ConfigDefault.Unmarshal([]byte(setting.GetStr(conf.S3Buckets)), &res)
 	return res, err
 }
 

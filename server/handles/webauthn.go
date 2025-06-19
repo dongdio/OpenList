@@ -3,9 +3,9 @@ package handles
 import (
 	"encoding/base64"
 	"encoding/binary"
-	"encoding/json"
 	"fmt"
 
+	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
@@ -49,7 +49,7 @@ func BeginAuthnLogin(c *gin.Context) {
 		return
 	}
 
-	val, err := json.Marshal(sessionData)
+	val, err := sonic.ConfigDefault.Marshal(sessionData)
 	if err != nil {
 		common.ErrorResp(c, err, 400)
 		return
@@ -80,7 +80,7 @@ func FinishAuthnLogin(c *gin.Context) {
 	}
 
 	var sessionData webauthn.SessionData
-	if err := json.Unmarshal(sessionDataBytes, &sessionData); err != nil {
+	if err = sonic.ConfigDefault.Unmarshal(sessionDataBytes, &sessionData); err != nil {
 		common.ErrorResp(c, err, 400)
 		return
 	}
@@ -139,7 +139,7 @@ func BeginAuthnRegistration(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 	}
 
-	val, err := json.Marshal(sessionData)
+	val, err := sonic.ConfigDefault.Marshal(sessionData)
 	if err != nil {
 		common.ErrorResp(c, err, 400)
 	}
@@ -172,7 +172,7 @@ func FinishAuthnRegistration(c *gin.Context) {
 	}
 
 	var sessionData webauthn.SessionData
-	if err := json.Unmarshal(sessionDataBytes, &sessionData); err != nil {
+	if err = sonic.ConfigDefault.Unmarshal(sessionDataBytes, &sessionData); err != nil {
 		common.ErrorResp(c, err, 400)
 		return
 	}

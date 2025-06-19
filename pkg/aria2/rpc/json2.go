@@ -12,6 +12,8 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+
+	"github.com/bytedance/sonic"
 )
 
 // ----------------------------------------------------------------------------
@@ -51,7 +53,7 @@ func EncodeClientRequest(method string, args interface{}) (*bytes.Buffer, error)
 		Params:  args,
 		Id:      reqid(),
 	}
-	if err := json.NewEncoder(&buf).Encode(c); err != nil {
+	if err := sonic.ConfigDefault.NewEncoder(&buf).Encode(c); err != nil {
 		return nil, err
 	}
 	return &buf, nil
@@ -60,7 +62,7 @@ func EncodeClientRequest(method string, args interface{}) (*bytes.Buffer, error)
 func (c clientResponse) decode(reply interface{}) error {
 	if c.Error != nil {
 		jsonErr := &Error{}
-		if err := json.Unmarshal(*c.Error, jsonErr); err != nil {
+		if err := sonic.ConfigDefault.Unmarshal(*c.Error, jsonErr); err != nil {
 			return &Error{
 				Code:    E_SERVER,
 				Message: string(*c.Error),
@@ -73,14 +75,14 @@ func (c clientResponse) decode(reply interface{}) error {
 		return ErrNullResult
 	}
 
-	return json.Unmarshal(*c.Result, reply)
+	return sonic.ConfigDefault.Unmarshal(*c.Result, reply)
 }
 
 // DecodeClientResponse decodes the response body of a client request into
 // the interface reply.
 func DecodeClientResponse(r io.Reader, reply interface{}) error {
 	var c clientResponse
-	if err := json.NewDecoder(r).Decode(&c); err != nil {
+	if err := sonic.ConfigDefault.NewDecoder(r).Decode(&c); err != nil {
 		return err
 	}
 	return c.decode(reply)

@@ -6,10 +6,8 @@ import (
 	"crypto/md5"
 	"crypto/tls"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"io"
-	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
@@ -17,19 +15,21 @@ import (
 	"sync/atomic"
 	"time"
 
+	cipher "github.com/SheltonZhu/115driver/pkg/crypto/ec115"
+	crypto "github.com/SheltonZhu/115driver/pkg/crypto/m115"
+	driver115 "github.com/SheltonZhu/115driver/pkg/driver"
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
+	"github.com/bytedance/sonic"
+	"github.com/pkg/errors"
+	"github.com/tidwall/gjson"
 	"resty.dev/v3"
 
+	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/conf"
 	"github.com/OpenListTeam/OpenList/internal/driver"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/pkg/http_range"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-
-	cipher "github.com/SheltonZhu/115driver/pkg/crypto/ec115"
-	crypto "github.com/SheltonZhu/115driver/pkg/crypto/m115"
-	driver115 "github.com/SheltonZhu/115driver/pkg/driver"
-	"github.com/pkg/errors"
 )
 
 // var UserAgent = driver115.UA115Browser
@@ -93,7 +93,7 @@ func (p *Pan115) getNewFileByPickCode(pickCode string) (*FileObj, error) {
 		ForceContentType("application/json;charset=UTF-8").
 		SetResult(&result)
 	resp, err := req.Get(driver115.ApiFileInfo)
-	if err := driver115.CheckErr(err, &result, resp); err != nil {
+	if err = driver115.CheckErr(err, &result, resp); err != nil {
 		return nil, err
 	}
 	if len(result.Files) == 0 {
@@ -119,48 +119,28 @@ func (p *Pan115) DownloadWithUA(pickCode, ua string) (*driver115.DownloadInfo, e
 	}
 
 	data := crypto.Encode(params, key)
-
-	bodyReader := strings.NewReader(url.Values{"data": []string{data}}.Encode())
-	reqUrl := fmt.Sprintf("%s?t=%s", driver115.AndroidApiDownloadGetUrl, driver115.Now().String())
-	req, _ := http.NewRequest(http.MethodPost, reqUrl, bodyReader)
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("Cookie", p.Cookie)
-	req.Header.Set("User-Agent", ua)
-
-	resp, err := p.client.Client.GetClient().Do(req)
+	reqUrl := driver115.AndroidApiDownloadGetUrl + "?t=" + driver115.Now().String()
+	resp, err := base.RestyClient.R().
+		SetHeader("Content-Type", "application/x-www-form-urlencoded").
+		SetHeader("Cookie", p.Cookie).
+		SetHeader("User-Agent", ua).
+		SetFormDataFromValues(url.Values{"data": []string{data}}).
+		SetResult(&result).
+		Post(reqUrl)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
+	if err = result.Err(resp.String()); err != nil {
 		return nil, err
 	}
-	if err := utils.Json.Unmarshal(body, &result); err != nil {
-		return nil, err
-	}
-
-	if err = result.Err(string(body)); err != nil {
-		return nil, err
-	}
-
 	b, err := crypto.Decode(string(result.EncodedData), key)
 	if err != nil {
 		return nil, err
 	}
-
-	downloadInfo := struct {
-		Url string `json:"url"`
-	}{}
-	if err := utils.Json.Unmarshal(b, &downloadInfo); err != nil {
-		return nil, err
-	}
-
 	info := &driver115.DownloadInfo{}
 	info.PickCode = pickCode
 	info.Header = resp.Request.Header
-	info.Url.Url = downloadInfo.Url
+	info.Url.Url = gjson.GetBytes(b, "url").String()
 	return info, nil
 }
 
@@ -179,7 +159,6 @@ func (p *Pan115) rapidUpload(fileSize int64, fileName, dirID, preID, fileID stri
 		encodedToken string
 		err          error
 		target       = "U_1_" + dirID
-		bodyBytes    []byte
 		result       = driver115.UploadInitResp{}
 		fileSizeStr  = strconv.FormatInt(fileSize, 10)
 	)
@@ -223,21 +202,16 @@ func (p *Pan115) rapidUpload(fileSize int64, fileName, dirID, preID, fileID stri
 		req := p.client.NewRequest().
 			SetQueryParams(params).
 			SetBody(encrypted).
-			SetHeaderVerbatim("Content-Type", "application/x-www-form-urlencoded").
-			SetDoNotParseResponse(true)
-		resp, err := req.Post(driver115.ApiUploadInit)
-		if err != nil {
+			SetHeaderVerbatim("Content-Type", "application/x-www-form-urlencoded")
+
+		resp, er := req.Post(driver115.ApiUploadInit)
+		if er != nil {
+			return nil, er
+		}
+		if decrypted, err = ecdhCipher.Decrypt(resp.Body()); err != nil {
 			return nil, err
 		}
-		data := resp.RawBody()
-		defer data.Close()
-		if bodyBytes, err = io.ReadAll(data); err != nil {
-			return nil, err
-		}
-		if decrypted, err = ecdhCipher.Decrypt(bodyBytes); err != nil {
-			return nil, err
-		}
-		if err = driver115.CheckErr(json.Unmarshal(decrypted, &result), &result, resp); err != nil {
+		if err = driver115.CheckErr(sonic.ConfigDefault.Unmarshal(decrypted, &result), &result, resp); err != nil {
 			return nil, err
 		}
 		if result.Status == 7 {
@@ -303,7 +277,7 @@ func (p *Pan115) UploadByOSS(ctx context.Context, params *driver115.UploadOSSPar
 	}
 
 	var uploadResult UploadResult
-	if err = json.Unmarshal(bodyBytes, &uploadResult); err != nil {
+	if err = sonic.ConfigDefault.Unmarshal(bodyBytes, &uploadResult); err != nil {
 		return nil, err
 	}
 	return &uploadResult, uploadResult.Err(string(bodyBytes))
@@ -448,7 +422,7 @@ LOOP:
 
 	// 不知道啥原因，oss那边分片上传不计算sha1，导致115服务器校验错误
 	// params.Callback.Callback = strings.ReplaceAll(params.Callback.Callback, "${sha1}", params.SHA1)
-	if _, err := bucket.CompleteMultipartUpload(imur, parts, append(
+	if _, err = bucket.CompleteMultipartUpload(imur, parts, append(
 		driver115.OssOption(params, ossToken),
 		oss.CallbackResult(&bodyBytes),
 	)...); err != nil {
@@ -456,7 +430,7 @@ LOOP:
 	}
 
 	var uploadResult UploadResult
-	if err = json.Unmarshal(bodyBytes, &uploadResult); err != nil {
+	if err = sonic.ConfigDefault.Unmarshal(bodyBytes, &uploadResult); err != nil {
 		return nil, err
 	}
 	return &uploadResult, uploadResult.Err(string(bodyBytes))

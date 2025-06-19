@@ -5,6 +5,7 @@ on:
     branches: [ 'main' ]
   pull_request:
     branches: [ 'main' ]
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -40,9 +41,11 @@ jobs:
 
       - name: Setup web
         run: bash build.sh dev web
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build
-        uses: OpenListTeam/cgo-actions@v1.1.1
+        uses: OpenListTeam/cgo-actions@v1.1.2
         with:
           targets: ${{ matrix.target }}
           musl-target-format: $os-$musl-$arch

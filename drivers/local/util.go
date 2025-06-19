@@ -2,7 +2,6 @@ package local
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io/fs"
 	"os"
@@ -11,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/bytedance/sonic"
 	"github.com/disintegration/imaging"
 	ffmpeg "github.com/u2takey/ffmpeg-go"
 
@@ -52,7 +52,7 @@ func (d *Local) GetSnapshot(videoPath string) (imgData *bytes.Buffer, err error)
 		Format probeFormat `json:"format"`
 	}
 	var probe probeData
-	err = json.Unmarshal([]byte(jsonOutput), &probe)
+	err = sonic.ConfigDefault.Unmarshal([]byte(jsonOutput), &probe)
 	if err != nil {
 		return nil, err
 	}

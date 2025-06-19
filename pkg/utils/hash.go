@@ -12,6 +12,7 @@ import (
 	"io"
 	"iter"
 
+	"github.com/bytedance/sonic"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/OpenListTeam/OpenList/internal/errs"
@@ -183,7 +184,7 @@ func (m *MultiHasher) Size() int64 {
 
 // A HashInfo contains hash string for one or more hashType
 type HashInfo struct {
-	h map[*HashType]string `json:"hashInfo"`
+	h map[*HashType]string
 }
 
 func NewHashInfoByMap(h map[*HashType]string) HashInfo {
@@ -199,7 +200,7 @@ func NewHashInfo(ht *HashType, str string) HashInfo {
 }
 
 func (hi HashInfo) String() string {
-	result, err := json.Marshal(hi.h)
+	result, err := sonic.ConfigDefault.Marshal(hi.h)
 	if err != nil {
 		return ""
 	}
@@ -208,7 +209,7 @@ func (hi HashInfo) String() string {
 func FromString(str string) HashInfo {
 	hi := NewHashInfo(nil, "")
 	var tmp map[string]string
-	err := json.Unmarshal([]byte(str), &tmp)
+	err := sonic.ConfigDefault.Unmarshal([]byte(str), &tmp)
 	if err != nil {
 		log.Warnf("failed to unmarsh HashInfo from string=%s", str)
 	} else {

@@ -2,12 +2,13 @@ package trainbit
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/bytedance/sonic"
 
 	"github.com/OpenListTeam/OpenList/drivers/base"
 	"github.com/OpenListTeam/OpenList/internal/driver"
@@ -58,7 +59,7 @@ func (d *Trainbit) List(ctx context.Context, dir model.Obj, args model.ListArgs)
 		return nil, err
 	}
 	var jsonData any
-	err = json.Unmarshal(data, &jsonData)
+	err = sonic.ConfigDefault.Unmarshal(data, &jsonData)
 	if err != nil {
 		return nil, err
 	}

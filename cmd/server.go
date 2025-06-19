@@ -27,6 +27,7 @@ import (
 	"github.com/OpenListTeam/OpenList/internal/fs"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
 	"github.com/OpenListTeam/OpenList/server"
+	"github.com/OpenListTeam/OpenList/server/middlewares"
 )
 
 // ServerCmd represents the server command
@@ -48,6 +49,7 @@ the address is defined in config file`,
 			gin.SetMode(gin.ReleaseMode)
 		}
 		r := gin.New()
+		r.Use(middlewares.ErrorLogging())
 		r.Use(gin.LoggerWithWriter(log.StandardLogger().Out), gin.RecoveryWithWriter(log.StandardLogger().Out))
 		server.Init(r)
 		var httpHandler http.Handler = r

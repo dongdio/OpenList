@@ -1,12 +1,12 @@
 package _123_open
 
 import (
-	"encoding/json"
 	"errors"
 	"net/http"
 	"strconv"
 	"time"
 
+	"github.com/bytedance/sonic"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
 
@@ -61,7 +61,7 @@ func (d *Open123) Request(apiInfo *ApiInfo, method string, callback base.ReqCall
 
 		// 解析为通用响应
 		var baseResp BaseResp
-		if err = json.Unmarshal(body, &baseResp); err != nil {
+		if err = sonic.ConfigDefault.Unmarshal(body, &baseResp); err != nil {
 			return nil, err
 		}
 
@@ -69,7 +69,7 @@ func (d *Open123) Request(apiInfo *ApiInfo, method string, callback base.ReqCall
 			return body, nil
 		} else if baseResp.Code == 401 && retryToken {
 			retryToken = false
-			if err := d.flushAccessToken(); err != nil {
+			if err = d.flushAccessToken(); err != nil {
 				return nil, err
 			}
 		} else if baseResp.Code == 429 {

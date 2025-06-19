@@ -1,13 +1,11 @@
 package handles
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/url"
 	stdpath "path"
 
-	"github.com/OpenListTeam/OpenList/internal/task"
-
+	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -20,6 +18,7 @@ import (
 	"github.com/OpenListTeam/OpenList/internal/op"
 	"github.com/OpenListTeam/OpenList/internal/setting"
 	"github.com/OpenListTeam/OpenList/internal/sign"
+	"github.com/OpenListTeam/OpenList/internal/task"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
 	"github.com/OpenListTeam/OpenList/server/common"
 )
@@ -215,12 +214,12 @@ type StringOrArray []string
 
 func (s *StringOrArray) UnmarshalJSON(data []byte) error {
 	var value string
-	if err := json.Unmarshal(data, &value); err == nil {
+	if err := sonic.ConfigDefault.Unmarshal(data, &value); err == nil {
 		*s = []string{value}
 		return nil
 	}
 	var sliceValue []string
-	if err := json.Unmarshal(data, &sliceValue); err != nil {
+	if err := sonic.ConfigDefault.Unmarshal(data, &sliceValue); err != nil {
 		return err
 	}
 	*s = sliceValue

@@ -2,12 +2,12 @@ package pikpak
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 
+	"github.com/bytedance/sonic"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
 
@@ -315,7 +315,7 @@ func (d *PikPak) OfflineList(ctx context.Context, nextPageToken string, phase []
 				"in": strings.Join(phase, ","),
 			},
 		}
-		filtersJSON, err := json.Marshal(filters)
+		filtersJSON, err := sonic.ConfigDefault.Marshal(filters)
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal filters: %w", err)
 		}

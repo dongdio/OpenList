@@ -4,10 +4,11 @@ import (
 	"crypto/hmac"
 	"crypto/sha1"
 	"encoding/hex"
-	"encoding/json"
-	"io"
-	"net/http"
-	"strings"
+
+	"github.com/bytedance/sonic"
+	"resty.dev/v3"
+
+	"github.com/OpenListTeam/OpenList/drivers/base"
 )
 
 type TmpTokenResponse struct {
@@ -15,10 +16,12 @@ type TmpTokenResponse struct {
 	Msg  string               `json:"msg"`
 	Data TmpTokenResponseData `json:"data,omitempty"`
 }
+
 type TmpTokenResponseData struct {
 	Credentials Credentials `json:"Credentials"`
 	ExpiredAt   int         `json:"ExpiredAt"`
 }
+
 type Credentials struct {
 	AccessKeyId     string `json:"accessKeyId,omitempty"`
 	SecretAccessKey string `json:"secretAccessKey,omitempty"`
@@ -27,9 +30,10 @@ type Credentials struct {
 
 func getCredentials(AccessKey, SecretKey string) (rst Credentials, err error) {
 	apiPath := "/auth/tmp_token.json"
-	reqBody, err := json.Marshal(map[string]interface{}{"channel": "OSS_FULL", "scopes": []string{"*"}})
+	var reqBody []byte
+	reqBody, err = sonic.ConfigDefault.Marshal(map[string]interface{}{"channel": "OSS_FULL", "scopes": []string{"*"}})
 	if err != nil {
-		return rst, err
+		return
 	}
 
 	signStr := apiPath + "\n" + string(reqBody)
@@ -38,26 +42,21 @@ func getCredentials(AccessKey, SecretKey string) (rst Credentials, err error) {
 	sign := hex.EncodeToString(hmacObj.Sum(nil))
 	Authorization := "TOKEN " + AccessKey + ":" + sign
 
-	req, err := http.NewRequest("POST", "https://api.dogecloud.com"+apiPath, strings.NewReader(string(reqBody)))
+	var resp *resty.Response
+	resp, err = base.NoRedirectClient.R().
+		SetHeader("Authorization", Authorization).
+		SetHeader("Content-Type", "application/json").
+		SetBody(reqBody).
+		Post("https://api.dogecloud.com" + apiPath)
 	if err != nil {
-		return rst, err
+		return
 	}
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Authorization", Authorization)
-	client := http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return rst, err
-	}
-	defer resp.Body.Close()
-	ret, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return rst, err
-	}
+
 	var tmpTokenResp TmpTokenResponse
-	err = json.Unmarshal(ret, &tmpTokenResp)
+	err = sonic.ConfigDefault.Unmarshal(resp.Bytes(), &tmpTokenResp)
 	if err != nil {
 		return rst, err
 	}
+
 	return tmpTokenResp.Data.Credentials, nil
 }

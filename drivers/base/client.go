@@ -25,6 +25,10 @@ const DefaultTimeout = time.Second * 30
 
 func InitClient() {
 	NoRedirectClient = resty.New().
+		SetRetryCount(3).
+		SetTimeout(DefaultTimeout).
+		SetRetryWaitTime(2 * time.Second).
+		SetRetryMaxWaitTime(3 * time.Second).
 		SetRedirectPolicy(resty.NoRedirectPolicy()).
 		SetTLSClientConfig(&tls.Config{InsecureSkipVerify: conf.Conf.TlsInsecureSkipVerify})
 	NoRedirectClient.SetHeader("User-Agent", UserAgent)

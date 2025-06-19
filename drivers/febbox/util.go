@@ -1,12 +1,12 @@
 package febbox
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
 
+	"github.com/bytedance/sonic"
 	"resty.dev/v3"
 
 	"github.com/OpenListTeam/OpenList/drivers/base"
@@ -113,7 +113,7 @@ func (d *FebBox) getFiles(dirID string, page, pageLimit int64) (*[]File, error) 
 		return nil, err
 	}
 
-	if err = json.Unmarshal(res, &fileList); err != nil {
+	if err = sonic.ConfigDefault.Unmarshal(res, &fileList); err != nil {
 		return nil, err
 	}
 
@@ -135,7 +135,7 @@ func (d *FebBox) getDownloadLink(id string, ip string) (string, error) {
 		return "", err
 	}
 
-	if err = json.Unmarshal(res, &fileDownloadResp); err != nil {
+	if err = sonic.ConfigDefault.Unmarshal(res, &fileDownloadResp); err != nil {
 		return "", err
 	}
 	if len(fileDownloadResp.Data) == 0 {

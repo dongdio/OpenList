@@ -5,7 +5,6 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"hash/crc32"
@@ -22,6 +21,7 @@ import (
 	"time"
 
 	"github.com/avast/retry-go"
+	"github.com/bytedance/sonic"
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
@@ -86,7 +86,7 @@ func (d *Doubao) request(path string, method string, callback base.ReqCallback, 
 
 	body := res.Bytes()
 	// 先解析为通用响应
-	if err = json.Unmarshal(body, &commonResp); err != nil {
+	if err = sonic.ConfigDefault.Unmarshal(body, &commonResp); err != nil {
 		return nil, err
 	}
 	// 检查响应是否成功
@@ -95,7 +95,7 @@ func (d *Doubao) request(path string, method string, callback base.ReqCallback, 
 	}
 
 	if resp != nil {
-		if err = json.Unmarshal(body, resp); err != nil {
+		if err = sonic.ConfigDefault.Unmarshal(body, resp); err != nil {
 			return body, err
 		}
 	}
@@ -535,11 +535,10 @@ func (d *Doubao) UploadByMultipart(ctx context.Context, config *UploadConfig, fi
 
 	var partsMutex sync.Mutex
 	// 并行上传所有分片
-	for partIndex := int64(0); partIndex < totalParts; partIndex++ {
+	for partIndex := range totalParts {
 		if utils.IsCanceled(uploadCtx) {
 			break
 		}
-		partIndex := partIndex
 		partNumber := partIndex + 1 // 分片编号从1开始
 
 		threadG.Go(func(ctx context.Context) error {
@@ -604,7 +603,6 @@ func (d *Doubao) UploadByMultipart(ctx context.Context, config *UploadConfig, fi
 	var uploadNodeResp UploadNodeResp
 
 	if err = d._retryOperation("Upload node", func() error {
-		var err error
 		uploadNodeResp, err = d.uploadNode(config, dstDir, file, dataType)
 		return err
 	}); err != nil {
@@ -765,7 +763,7 @@ func (d *Doubao) commitMultipartUpload(uploadConfig *UploadConfig) error {
 
 	videoCommitUploadResp := VideoCommitUploadResp{}
 
-	jsonBytes, err := json.Marshal(base.Json{
+	jsonBytes, err := sonic.ConfigDefault.Marshal(map[string]any{
 		"SessionKey": uploadConfig.InnerUploadAddress.UploadNodes[0].SessionKey,
 		"Functions":  []base.Json{},
 	})
