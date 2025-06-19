@@ -4,18 +4,17 @@ import (
 	"context"
 	"os"
 
-	query2 "github.com/blevesearch/bleve/v2/search/query"
-
 	"github.com/blevesearch/bleve/v2"
 	search2 "github.com/blevesearch/bleve/v2/search"
+	query2 "github.com/blevesearch/bleve/v2/search/query"
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/OpenListTeam/OpenList/internal/conf"
-	"github.com/OpenListTeam/OpenList/internal/errs"
-	"github.com/OpenListTeam/OpenList/internal/model"
-	"github.com/OpenListTeam/OpenList/internal/search/searcher"
-	"github.com/OpenListTeam/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/internal/errs"
+	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/internal/search/searcher"
+	"github.com/dongdio/OpenList/pkg/utils"
 )
 
 type Bleve struct {

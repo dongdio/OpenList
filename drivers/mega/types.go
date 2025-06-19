@@ -3,11 +3,11 @@ package mega
 import (
 	"time"
 
-	"github.com/OpenListTeam/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/pkg/utils"
 
 	"github.com/t3rm1n4l/go-mega"
 
-	"github.com/OpenListTeam/OpenList/internal/model"
+	"github.com/dongdio/OpenList/internal/model"
 )
 
 type MegaNode struct {

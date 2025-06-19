@@ -19,13 +19,13 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/xhofe/tache"
 
-	"github.com/OpenListTeam/OpenList/internal/conf"
-	"github.com/OpenListTeam/OpenList/internal/driver"
-	"github.com/OpenListTeam/OpenList/internal/errs"
-	"github.com/OpenListTeam/OpenList/internal/model"
-	"github.com/OpenListTeam/OpenList/internal/op"
-	"github.com/OpenListTeam/OpenList/internal/stream"
-	"github.com/OpenListTeam/OpenList/internal/task"
+	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/internal/driver"
+	"github.com/dongdio/OpenList/internal/errs"
+	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/internal/op"
+	"github.com/dongdio/OpenList/internal/stream"
+	"github.com/dongdio/OpenList/internal/task"
 )
 
 type ArchiveDownloadTask struct {

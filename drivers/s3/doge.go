@@ -8,7 +8,7 @@ import (
 	"github.com/bytedance/sonic"
 	"resty.dev/v3"
 
-	"github.com/OpenListTeam/OpenList/drivers/base"
+	"github.com/dongdio/OpenList/drivers/base"
 )
 
 type TmpTokenResponse struct {

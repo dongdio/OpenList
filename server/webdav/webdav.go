@@ -16,14 +16,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/OpenListTeam/OpenList/internal/stream"
+	"github.com/dongdio/OpenList/internal/stream"
 
-	"github.com/OpenListTeam/OpenList/internal/errs"
-	"github.com/OpenListTeam/OpenList/internal/fs"
-	"github.com/OpenListTeam/OpenList/internal/model"
-	"github.com/OpenListTeam/OpenList/internal/sign"
-	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/OpenListTeam/OpenList/server/common"
+	"github.com/dongdio/OpenList/internal/errs"
+	"github.com/dongdio/OpenList/internal/fs"
+	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/internal/sign"
+	"github.com/dongdio/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/server/common"
 )
 
 type Handler struct {

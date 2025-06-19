@@ -7,7 +7,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/OpenListTeam/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/pkg/utils"
 )
 
 func TestTask_Manager(t *testing.T) {

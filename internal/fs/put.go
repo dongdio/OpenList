@@ -8,11 +8,11 @@ import (
 	"github.com/pkg/errors"
 	"github.com/xhofe/tache"
 
-	"github.com/OpenListTeam/OpenList/internal/driver"
-	"github.com/OpenListTeam/OpenList/internal/errs"
-	"github.com/OpenListTeam/OpenList/internal/model"
-	"github.com/OpenListTeam/OpenList/internal/op"
-	"github.com/OpenListTeam/OpenList/internal/task"
+	"github.com/dongdio/OpenList/internal/driver"
+	"github.com/dongdio/OpenList/internal/errs"
+	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/internal/op"
+	"github.com/dongdio/OpenList/internal/task"
 )
 
 type UploadTask struct {

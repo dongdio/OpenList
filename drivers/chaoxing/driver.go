@@ -16,12 +16,12 @@ import (
 	"google.golang.org/appengine/log"
 	"resty.dev/v3"
 
-	"github.com/OpenListTeam/OpenList/internal/driver"
-	"github.com/OpenListTeam/OpenList/internal/errs"
-	"github.com/OpenListTeam/OpenList/internal/model"
-	"github.com/OpenListTeam/OpenList/internal/op"
-	"github.com/OpenListTeam/OpenList/pkg/cron"
-	"github.com/OpenListTeam/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/internal/driver"
+	"github.com/dongdio/OpenList/internal/errs"
+	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/internal/op"
+	"github.com/dongdio/OpenList/pkg/cron"
+	"github.com/dongdio/OpenList/pkg/utils"
 )
 
 type ChaoXing struct {

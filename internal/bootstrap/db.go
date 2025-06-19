@@ -14,9 +14,9 @@ import (
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
 
-	"github.com/OpenListTeam/OpenList/cmd/flags"
-	"github.com/OpenListTeam/OpenList/internal/conf"
-	"github.com/OpenListTeam/OpenList/internal/db"
+	"github.com/dongdio/OpenList/cmd/flags"
+	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/internal/db"
 )
 
 func InitDB() {

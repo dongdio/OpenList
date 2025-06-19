@@ -11,12 +11,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/OpenListTeam/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/pkg/utils"
 
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/OpenListTeam/OpenList/pkg/http_range"
+	"github.com/dongdio/OpenList/pkg/http_range"
 )
 
 // DefaultDownloadPartSize is the default range of bytes to get at a time when

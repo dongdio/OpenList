@@ -6,14 +6,14 @@ import (
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 
-	"github.com/OpenListTeam/OpenList/cmd/flags"
-	"github.com/OpenListTeam/OpenList/internal/conf"
-	"github.com/OpenListTeam/OpenList/internal/db"
-	"github.com/OpenListTeam/OpenList/internal/model"
-	"github.com/OpenListTeam/OpenList/internal/offline_download/tool"
-	"github.com/OpenListTeam/OpenList/internal/op"
-	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/OpenListTeam/OpenList/pkg/utils/random"
+	"github.com/dongdio/OpenList/cmd/flags"
+	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/internal/db"
+	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/internal/offline_download/tool"
+	"github.com/dongdio/OpenList/internal/op"
+	"github.com/dongdio/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/pkg/utils/random"
 )
 
 var initialSettingItems []model.SettingItem
@@ -98,7 +98,7 @@ func InitialSettings() []model.SettingItem {
 		// {Key: conf.ApiUrl, Value: "", Type: conf.TypeString, Group: model.SITE},
 		// {Key: conf.BasePath, Value: "", Type: conf.TypeString, Group: model.SITE},
 		{Key: conf.SiteTitle, Value: "OpenList", Type: conf.TypeString, Group: model.SITE},
-		{Key: conf.Announcement, Value: "### repo\nhttps://github.com/OpenListTeam/OpenList", Type: conf.TypeText, Group: model.SITE},
+		{Key: conf.Announcement, Value: "### repo\nhttps://github.com/dongdio/OpenList", Type: conf.TypeText, Group: model.SITE},
 		{Key: "pagination_type", Value: "all", Type: conf.TypeSelect, Options: "all,pagination,load_more,auto_load_more", Group: model.SITE},
 		{Key: "default_page_size", Value: "30", Type: conf.TypeNumber, Group: model.SITE},
 		{Key: conf.AllowIndexed, Value: "false", Type: conf.TypeBool, Group: model.SITE},
@@ -126,11 +126,11 @@ func InitialSettings() []model.SettingItem {
 				"Google":"https://docs.google.com/gview?url=$e_url&embedded=true"
 			},
 			"pdf": {
-				"PDF.js":https://mozilla.github.io/pdf.js/web/viewer.html?url=$e_url" 
+				"PDF.js": "//res.oplist.org/pdf.js/web/viewer.html?url=$e_url" 
 			},
-			// "epub": {
-			// 	"EPUB.js":"https://alist-org.github.io/static/epub.js/viewer.html?url=$e_url"
-			// }
+			"epub": {
+				"EPUB.js":"//res.oplist.org/epub.js/viewer.html?url=$e_url"
+			}
 		}`, Type: conf.TypeText, Group: model.PREVIEW},
 		//		{Key: conf.OfficeViewers, Value: `{
 		//	"Microsoft":"https://view.officeapps.live.com/op/view.aspx?src=$url",

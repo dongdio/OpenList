@@ -5,7 +5,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/OpenListTeam/OpenList/internal/model"
+	"github.com/dongdio/OpenList/internal/model"
 )
 
 func GetSettingItems() ([]model.SettingItem, error) {

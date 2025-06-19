@@ -6,13 +6,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/OpenListTeam/OpenList/internal/conf"
-	"github.com/OpenListTeam/OpenList/internal/model"
-	"github.com/OpenListTeam/OpenList/internal/op"
-	"github.com/OpenListTeam/OpenList/internal/sign"
-	"github.com/OpenListTeam/OpenList/pkg/utils/random"
-	"github.com/OpenListTeam/OpenList/server/common"
-	"github.com/OpenListTeam/OpenList/server/static"
+	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/internal/op"
+	"github.com/dongdio/OpenList/internal/sign"
+	"github.com/dongdio/OpenList/pkg/utils/random"
+	"github.com/dongdio/OpenList/server/common"
+	"github.com/dongdio/OpenList/server/static"
 )
 
 func ResetToken(c *gin.Context) {

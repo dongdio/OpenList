@@ -1,8 +1,8 @@
 package aria2
 
 import (
-	"github.com/OpenListTeam/OpenList/pkg/aria2/rpc"
-	"github.com/OpenListTeam/OpenList/pkg/generic_sync"
+	"github.com/dongdio/OpenList/pkg/aria2/rpc"
+	"github.com/dongdio/OpenList/pkg/generic_sync"
 )
 
 const (

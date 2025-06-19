@@ -9,9 +9,9 @@ import (
 	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/pkg/errors"
 
-	"github.com/OpenListTeam/OpenList/internal/errs"
-	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/OpenListTeam/OpenList/pkg/utils/random"
+	"github.com/dongdio/OpenList/internal/errs"
+	"github.com/dongdio/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/pkg/utils/random"
 )
 
 const (

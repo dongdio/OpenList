@@ -20,11 +20,11 @@ import (
 	"github.com/rclone/rclone/lib/readers"
 	"github.com/zzzhr1990/go-common-entity/userfile"
 
-	"github.com/OpenListTeam/OpenList/drivers/base"
-	"github.com/OpenListTeam/OpenList/internal/driver"
-	"github.com/OpenListTeam/OpenList/internal/model"
-	"github.com/OpenListTeam/OpenList/internal/op"
-	"github.com/OpenListTeam/OpenList/pkg/http_range"
+	"github.com/dongdio/OpenList/drivers/base"
+	"github.com/dongdio/OpenList/internal/driver"
+	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/internal/op"
+	"github.com/dongdio/OpenList/pkg/http_range"
 )
 
 type HalalCloud struct {

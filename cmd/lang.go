@@ -14,12 +14,12 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
-	_ "github.com/OpenListTeam/OpenList/drivers"
-	"github.com/OpenListTeam/OpenList/internal/bootstrap"
-	"github.com/OpenListTeam/OpenList/internal/bootstrap/data"
-	"github.com/OpenListTeam/OpenList/internal/conf"
-	"github.com/OpenListTeam/OpenList/internal/op"
-	"github.com/OpenListTeam/OpenList/pkg/utils"
+	_ "github.com/dongdio/OpenList/drivers"
+	"github.com/dongdio/OpenList/internal/bootstrap"
+	"github.com/dongdio/OpenList/internal/bootstrap/data"
+	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/internal/op"
+	"github.com/dongdio/OpenList/pkg/utils"
 )
 
 type KV[V any] map[string]V

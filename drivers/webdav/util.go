@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 
-	"github.com/OpenListTeam/OpenList/drivers/webdav/odrvcookie"
-	"github.com/OpenListTeam/OpenList/internal/model"
-	"github.com/OpenListTeam/OpenList/pkg/gowebdav"
+	"github.com/dongdio/OpenList/drivers/webdav/odrvcookie"
+	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/pkg/gowebdav"
 )
 
 // do others that not defined in Driver interface

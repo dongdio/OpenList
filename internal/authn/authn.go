@@ -7,9 +7,9 @@ import (
 
 	"github.com/go-webauthn/webauthn/webauthn"
 
-	"github.com/OpenListTeam/OpenList/internal/conf"
-	"github.com/OpenListTeam/OpenList/internal/setting"
-	"github.com/OpenListTeam/OpenList/server/common"
+	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/internal/setting"
+	"github.com/dongdio/OpenList/server/common"
 )
 
 func NewAuthnInstance(r *http.Request) (*webauthn.WebAuthn, error) {

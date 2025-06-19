@@ -8,8 +8,8 @@ import (
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/OpenListTeam/OpenList/cmd/flags"
-	"github.com/OpenListTeam/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/cmd/flags"
+	"github.com/dongdio/OpenList/internal/conf"
 )
 
 func hidePrivacy(msg string) string {

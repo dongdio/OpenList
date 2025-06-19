@@ -7,7 +7,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/OpenListTeam/OpenList/internal/model"
+	"github.com/dongdio/OpenList/internal/model"
 )
 
 func (d *SFTP) fileToObj(f os.FileInfo, dir string) (model.Obj, error) {

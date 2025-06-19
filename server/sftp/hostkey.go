@@ -11,8 +11,8 @@ import (
 
 	"golang.org/x/crypto/ssh"
 
-	"github.com/OpenListTeam/OpenList/cmd/flags"
-	"github.com/OpenListTeam/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/cmd/flags"
+	"github.com/dongdio/OpenList/pkg/utils"
 )
 
 var SSHSigners []ssh.Signer

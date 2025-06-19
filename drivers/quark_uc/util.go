@@ -15,11 +15,11 @@ import (
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
 
-	"github.com/OpenListTeam/OpenList/drivers/base"
-	"github.com/OpenListTeam/OpenList/internal/model"
-	"github.com/OpenListTeam/OpenList/internal/op"
-	"github.com/OpenListTeam/OpenList/pkg/cookie"
-	"github.com/OpenListTeam/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/drivers/base"
+	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/internal/op"
+	"github.com/dongdio/OpenList/pkg/cookie"
+	"github.com/dongdio/OpenList/pkg/utils"
 )
 
 // do others that not defined in Driver interface

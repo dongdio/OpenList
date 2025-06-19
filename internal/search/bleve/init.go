@@ -1,11 +1,13 @@
 package bleve
 
 import (
+	"errors"
+
 	"github.com/blevesearch/bleve/v2"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/OpenListTeam/OpenList/internal/conf"
-	"github.com/OpenListTeam/OpenList/internal/search/searcher"
+	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/internal/search/searcher"
 )
 
 var config = searcher.Config{
@@ -15,7 +17,7 @@ var config = searcher.Config{
 func Init(indexPath *string) (bleve.Index, error) {
 	log.Debugf("bleve path: %s", *indexPath)
 	fileIndex, err := bleve.Open(*indexPath)
-	if err == bleve.ErrorIndexPathDoesNotExist {
+	if errors.Is(err, bleve.ErrorIndexPathDoesNotExist) {
 		log.Infof("Creating new index...")
 		indexMapping := bleve.NewIndexMapping()
 		searchNodeMapping := bleve.NewDocumentMapping()

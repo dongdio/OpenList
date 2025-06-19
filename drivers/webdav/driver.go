@@ -7,11 +7,11 @@ import (
 	"path"
 	"time"
 
-	"github.com/OpenListTeam/OpenList/internal/driver"
-	"github.com/OpenListTeam/OpenList/internal/model"
-	"github.com/OpenListTeam/OpenList/pkg/cron"
-	"github.com/OpenListTeam/OpenList/pkg/gowebdav"
-	"github.com/OpenListTeam/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/internal/driver"
+	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/pkg/cron"
+	"github.com/dongdio/OpenList/pkg/gowebdav"
+	"github.com/dongdio/OpenList/pkg/utils"
 )
 
 type WebDav struct {

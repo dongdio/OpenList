@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/OpenListTeam/OpenList/internal/stream"
+	"github.com/dongdio/OpenList/internal/stream"
 )
 
 func MaxAllowed(n int) gin.HandlerFunc {

@@ -2,24 +2,24 @@
   <img width="100px" alt="logo" src="https://raw.githubusercontent.com/OpenListTeam/Logo/main/OpenList.svg"/></a>
   <p><em>🗂複数のストレージをサポートするファイルリストプログラムで、Gin と SolidJS を使用し、AList プロジェクトをフォークして開発されました。</em></p>
 <div>
-  <a href="https://goreportcard.com/report/github.com/OpenListTeam/OpenList/v3">
-    <img src="https://goreportcard.com/badge/github.com/OpenListTeam/OpenList/v3" alt="latest version" />
+  <a href="https://goreportcard.com/report/github.com/dongdio/OpenList/v3">
+    <img src="https://goreportcard.com/badge/github.com/dongdio/OpenList/v3" alt="latest version" />
   </a>
-  <a href="https://github.com/OpenListTeam/OpenList/blob/main/LICENSE">
+  <a href="https://github.com/dongdio/OpenList/blob/main/LICENSE">
     <img src="https://img.shields.io/github/license/OpenListTeam/OpenList" alt="License" />
   </a>
-  <a href="https://github.com/OpenListTeam/OpenList/actions?query=workflow%3ABuild">
+  <a href="https://github.com/dongdio/OpenList/actions?query=workflow%3ABuild">
     <img src="https://img.shields.io/github/actions/workflow/status/OpenListTeam/OpenList/build.yml?branch=main" alt="Build status" />
   </a>
-  <a href="https://github.com/OpenListTeam/OpenList/releases">
+  <a href="https://github.com/dongdio/OpenList/releases">
     <img src="https://img.shields.io/github/release/OpenListTeam/OpenList" alt="latest version" />
   </a>
 </div>
 <div>
-  <a href="https://github.com/OpenListTeam/OpenList/discussions">
+  <a href="https://github.com/dongdio/OpenList/discussions">
     <img src="https://img.shields.io/github/discussions/OpenListTeam/OpenList?color=%23ED8936" alt="discussions" />
   </a>
-  <a href="https://github.com/OpenListTeam/OpenList/releases">
+  <a href="https://github.com/dongdio/OpenList/releases">
     <img src="https://img.shields.io/github/downloads/OpenListTeam/OpenList/total?color=%239F7AEA&logo=github" alt="Downloads" />
   </a>
 </div>
@@ -33,7 +33,7 @@
 >
 > 元のプロジェクト [AlistGo/alist](https://github.com/AlistGo/alist) の作者 [Xhofe](https://github.com/Xhofe) および他のすべての貢献者に心から感謝いたします。
 >
-> このForkはまだ安定していません。具体的な移行の進捗状況は [OpenList 移行作業のまとめ](https://github.com/OpenListTeam/OpenList/issues/6) でご確認いただけます。
+> このForkはまだ安定していません。具体的な移行の進捗状況は [OpenList 移行作業のまとめ](https://github.com/dongdio/OpenList/issues/6) でご確認いただけます。
 
 [English](./README.md) | [中文](./README_cn.md) | 日本語 | [Contributing](./CONTRIBUTING.md) | [CODE OF CONDUCT](./CODE_OF_CONDUCT.md)
 
@@ -102,13 +102,13 @@ N/A （再構築中）
 
 ## ディスカッション
 
-一般的なご質問は [*Discussions*](https://github.com/OpenListTeam/OpenList/discussions) をご利用ください。***Issues* はバグ報告と機能リクエストに限定されています。**
+一般的なご質問は [*Discussions*](https://github.com/dongdio/OpenList/discussions) をご利用ください。***Issues* はバグ報告と機能リクエストに限定されています。**
 
 ## コントリビューター
 
 これらの素晴らしい人々に感謝します:
 
-[![Contributors](https://contrib.rocks/image?repo=openlistteam/openlist)](https://github.com/OpenListTeam/OpenList/graphs/contributors)
+[![Contributors](https://contrib.rocks/image?repo=openlistteam/openlist)](https://github.com/dongdio/OpenList/graphs/contributors)
 
 ## ライセンス
 

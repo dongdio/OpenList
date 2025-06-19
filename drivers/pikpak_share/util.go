@@ -11,11 +11,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/OpenListTeam/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/pkg/utils"
 
 	"resty.dev/v3"
 
-	"github.com/OpenListTeam/OpenList/drivers/base"
+	"github.com/dongdio/OpenList/drivers/base"
 )
 
 var AndroidAlgorithms = []string{

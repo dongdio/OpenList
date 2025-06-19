@@ -13,14 +13,14 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"resty.dev/v3"
 
-	"github.com/OpenListTeam/OpenList/drivers/base"
-	"github.com/OpenListTeam/OpenList/internal/driver"
-	"github.com/OpenListTeam/OpenList/internal/errs"
-	"github.com/OpenListTeam/OpenList/internal/model"
-	"github.com/OpenListTeam/OpenList/internal/op"
-	"github.com/OpenListTeam/OpenList/internal/stream"
-	"github.com/OpenListTeam/OpenList/pkg/utils"
-	hash_extend "github.com/OpenListTeam/OpenList/pkg/utils/hash"
+	"github.com/dongdio/OpenList/drivers/base"
+	"github.com/dongdio/OpenList/internal/driver"
+	"github.com/dongdio/OpenList/internal/errs"
+	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/internal/op"
+	"github.com/dongdio/OpenList/internal/stream"
+	"github.com/dongdio/OpenList/pkg/utils"
+	hash_extend "github.com/dongdio/OpenList/pkg/utils/hash"
 )
 
 type Thunder struct {

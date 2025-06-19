@@ -3,7 +3,7 @@ package db
 import (
 	"github.com/pkg/errors"
 
-	"github.com/OpenListTeam/OpenList/internal/model"
+	"github.com/dongdio/OpenList/internal/model"
 )
 
 func GetMetaByPath(path string) (*model.Meta, error) {

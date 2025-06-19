@@ -10,9 +10,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/meilisearch/meilisearch-go"
 
-	"github.com/OpenListTeam/OpenList/internal/model"
-	"github.com/OpenListTeam/OpenList/internal/search/searcher"
-	"github.com/OpenListTeam/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/internal/search/searcher"
+	"github.com/dongdio/OpenList/pkg/utils"
 )
 
 type searchDocument struct {

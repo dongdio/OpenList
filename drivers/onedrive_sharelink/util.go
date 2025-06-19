@@ -14,8 +14,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/html"
 
-	"github.com/OpenListTeam/OpenList/drivers/base"
-	"github.com/OpenListTeam/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/drivers/base"
+	"github.com/dongdio/OpenList/internal/conf"
 )
 
 // NewNoRedirectClient creates an HTTP client that doesn't follow redirects

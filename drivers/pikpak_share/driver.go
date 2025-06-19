@@ -5,13 +5,13 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/OpenListTeam/OpenList/internal/op"
+	"github.com/dongdio/OpenList/internal/op"
 
 	"resty.dev/v3"
 
-	"github.com/OpenListTeam/OpenList/internal/driver"
-	"github.com/OpenListTeam/OpenList/internal/model"
-	"github.com/OpenListTeam/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/internal/driver"
+	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/pkg/utils"
 )
 
 type PikPakShare struct {

@@ -6,10 +6,10 @@ import (
 
 	"github.com/meilisearch/meilisearch-go"
 
-	"github.com/OpenListTeam/OpenList/internal/conf"
-	"github.com/OpenListTeam/OpenList/internal/model"
-	"github.com/OpenListTeam/OpenList/internal/search/searcher"
-	"github.com/OpenListTeam/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/internal/search/searcher"
+	"github.com/dongdio/OpenList/pkg/utils"
 )
 
 var config = searcher.Config{

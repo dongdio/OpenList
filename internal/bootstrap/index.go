@@ -3,7 +3,7 @@ package bootstrap
 import (
 	log "github.com/sirupsen/logrus"
 
-	"github.com/OpenListTeam/OpenList/internal/search"
+	"github.com/dongdio/OpenList/internal/search"
 )
 
 func InitIndex() {

@@ -9,10 +9,10 @@ import (
 
 	"github.com/mholt/archives"
 
-	"github.com/OpenListTeam/OpenList/internal/errs"
-	"github.com/OpenListTeam/OpenList/internal/model"
-	"github.com/OpenListTeam/OpenList/internal/stream"
-	"github.com/OpenListTeam/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/internal/errs"
+	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/internal/stream"
+	"github.com/dongdio/OpenList/pkg/utils"
 )
 
 func getFs(ss *stream.SeekableStream, args model.ArchiveArgs) (*archives.ArchiveFS, error) {

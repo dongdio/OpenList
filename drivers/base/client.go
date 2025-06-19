@@ -10,8 +10,8 @@ import (
 	"github.com/klauspost/compress/zstd"
 	"resty.dev/v3"
 
-	"github.com/OpenListTeam/OpenList/internal/conf"
-	"github.com/OpenListTeam/OpenList/internal/net"
+	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/internal/net"
 )
 
 var (

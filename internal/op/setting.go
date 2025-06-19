@@ -9,10 +9,10 @@ import (
 	"github.com/Xhofe/go-cache"
 	"github.com/pkg/errors"
 
-	"github.com/OpenListTeam/OpenList/internal/db"
-	"github.com/OpenListTeam/OpenList/internal/model"
-	"github.com/OpenListTeam/OpenList/pkg/singleflight"
-	"github.com/OpenListTeam/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/internal/db"
+	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/pkg/singleflight"
+	"github.com/dongdio/OpenList/pkg/utils"
 )
 
 var settingCache = cache.NewMemCache(cache.WithShards[*model.SettingItem](4))
@@ -184,7 +184,7 @@ func SaveSettingItems(items []model.SettingItem) error {
 
 func SaveSettingItem(item *model.SettingItem) (err error) {
 	// hook
-	if _, err := HandleSettingItemHook(item); err != nil {
+	if _, err = HandleSettingItemHook(item); err != nil {
 		return err
 	}
 	// update

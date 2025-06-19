@@ -8,13 +8,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/OpenListTeam/OpenList/internal/driver"
-	"github.com/OpenListTeam/OpenList/internal/model"
-	"github.com/OpenListTeam/OpenList/internal/sign"
-	"github.com/OpenListTeam/OpenList/pkg/http_range"
-	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/OpenListTeam/OpenList/pkg/utils/random"
-	"github.com/OpenListTeam/OpenList/server/common"
+	"github.com/dongdio/OpenList/internal/driver"
+	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/internal/sign"
+	"github.com/dongdio/OpenList/pkg/http_range"
+	"github.com/dongdio/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/pkg/utils/random"
+	"github.com/dongdio/OpenList/server/common"
 )
 
 type HostsResp struct {

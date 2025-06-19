@@ -11,12 +11,12 @@ import (
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
 
-	"github.com/OpenListTeam/OpenList/drivers/base"
-	"github.com/OpenListTeam/OpenList/internal/driver"
-	"github.com/OpenListTeam/OpenList/internal/model"
-	"github.com/OpenListTeam/OpenList/internal/op"
-	"github.com/OpenListTeam/OpenList/pkg/utils"
-	hash_extend "github.com/OpenListTeam/OpenList/pkg/utils/hash"
+	"github.com/dongdio/OpenList/drivers/base"
+	"github.com/dongdio/OpenList/internal/driver"
+	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/internal/op"
+	"github.com/dongdio/OpenList/pkg/utils"
+	hash_extend "github.com/dongdio/OpenList/pkg/utils/hash"
 )
 
 type PikPak struct {

@@ -10,8 +10,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
 
-	"github.com/OpenListTeam/OpenList/drivers/base"
-	"github.com/OpenListTeam/OpenList/internal/op"
+	"github.com/dongdio/OpenList/drivers/base"
+	"github.com/dongdio/OpenList/internal/op"
 )
 
 var ( // 不同情况下获取的AccessTokenQPS限制不同 如下模块化易于拓展

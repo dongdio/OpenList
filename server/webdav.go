@@ -7,17 +7,17 @@ import (
 	"path"
 	"strings"
 
-	"github.com/OpenListTeam/OpenList/internal/stream"
-	"github.com/OpenListTeam/OpenList/server/middlewares"
+	"github.com/dongdio/OpenList/internal/stream"
+	"github.com/dongdio/OpenList/server/middlewares"
 
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/OpenListTeam/OpenList/internal/conf"
-	"github.com/OpenListTeam/OpenList/internal/model"
-	"github.com/OpenListTeam/OpenList/internal/op"
-	"github.com/OpenListTeam/OpenList/internal/setting"
-	"github.com/OpenListTeam/OpenList/server/webdav"
+	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/internal/op"
+	"github.com/dongdio/OpenList/internal/setting"
+	"github.com/dongdio/OpenList/server/webdav"
 )
 
 var handler *webdav.Handler

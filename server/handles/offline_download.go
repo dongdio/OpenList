@@ -3,15 +3,15 @@ package handles
 import (
 	"github.com/gin-gonic/gin"
 
-	_115 "github.com/OpenListTeam/OpenList/drivers/115"
-	"github.com/OpenListTeam/OpenList/drivers/pikpak"
-	"github.com/OpenListTeam/OpenList/drivers/thunder"
-	"github.com/OpenListTeam/OpenList/internal/conf"
-	"github.com/OpenListTeam/OpenList/internal/model"
-	"github.com/OpenListTeam/OpenList/internal/offline_download/tool"
-	"github.com/OpenListTeam/OpenList/internal/op"
-	"github.com/OpenListTeam/OpenList/internal/task"
-	"github.com/OpenListTeam/OpenList/server/common"
+	_115 "github.com/dongdio/OpenList/drivers/115"
+	"github.com/dongdio/OpenList/drivers/pikpak"
+	"github.com/dongdio/OpenList/drivers/thunder"
+	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/internal/offline_download/tool"
+	"github.com/dongdio/OpenList/internal/op"
+	"github.com/dongdio/OpenList/internal/task"
+	"github.com/dongdio/OpenList/server/common"
 )
 
 type SetAria2Req struct {

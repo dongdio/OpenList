@@ -8,8 +8,8 @@ import (
 	driver115 "github.com/SheltonZhu/115driver/pkg/driver"
 	"github.com/pkg/errors"
 
-	"github.com/OpenListTeam/OpenList/internal/model"
-	"github.com/OpenListTeam/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/pkg/utils"
 )
 
 var _ model.Obj = (*FileObj)(nil)

@@ -7,10 +7,10 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/OpenListTeam/OpenList/internal/bootstrap"
-	"github.com/OpenListTeam/OpenList/internal/bootstrap/data"
-	"github.com/OpenListTeam/OpenList/internal/db"
-	"github.com/OpenListTeam/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/internal/bootstrap"
+	"github.com/dongdio/OpenList/internal/bootstrap/data"
+	"github.com/dongdio/OpenList/internal/db"
+	"github.com/dongdio/OpenList/pkg/utils"
 )
 
 func Init() {

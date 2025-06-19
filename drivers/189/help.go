@@ -20,7 +20,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	myrand "github.com/OpenListTeam/OpenList/pkg/utils/random"
+	myrand "github.com/dongdio/OpenList/pkg/utils/random"
 )
 
 func random() string {

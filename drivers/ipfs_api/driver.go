@@ -8,8 +8,8 @@ import (
 
 	shell "github.com/ipfs/go-ipfs-api"
 
-	"github.com/OpenListTeam/OpenList/internal/driver"
-	"github.com/OpenListTeam/OpenList/internal/model"
+	"github.com/dongdio/OpenList/internal/driver"
+	"github.com/dongdio/OpenList/internal/model"
 )
 
 type IPFS struct {

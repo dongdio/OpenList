@@ -7,7 +7,7 @@ import (
 	"github.com/bytedance/sonic"
 	"resty.dev/v3"
 
-	"github.com/OpenListTeam/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/pkg/utils"
 )
 
 type MountPoint struct {

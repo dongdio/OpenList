@@ -10,13 +10,13 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/OpenListTeam/OpenList/internal/driver"
-	"github.com/OpenListTeam/OpenList/internal/errs"
-	"github.com/OpenListTeam/OpenList/internal/model"
-	"github.com/OpenListTeam/OpenList/internal/stream"
-	"github.com/OpenListTeam/OpenList/pkg/generic_sync"
-	"github.com/OpenListTeam/OpenList/pkg/singleflight"
-	"github.com/OpenListTeam/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/internal/driver"
+	"github.com/dongdio/OpenList/internal/errs"
+	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/internal/stream"
+	"github.com/dongdio/OpenList/pkg/generic_sync"
+	"github.com/dongdio/OpenList/pkg/singleflight"
+	"github.com/dongdio/OpenList/pkg/utils"
 )
 
 // In order to facilitate adding some other things before and after file op
@@ -584,13 +584,13 @@ func Put(ctx context.Context, storage driver.Driver, dstDirPath string, file mod
 	if storage.Config().NoOverwriteUpload && fi != nil && fi.GetSize() > 0 {
 		if err != nil {
 			// upload failed, recover old obj
-			err := Rename(ctx, storage, tempPath, file.GetName())
+			err = Rename(ctx, storage, tempPath, file.GetName())
 			if err != nil {
 				log.Errorf("failed recover old obj: %+v", err)
 			}
 		} else {
 			// upload success, remove old obj
-			err := Remove(ctx, storage, tempPath)
+			err = Remove(ctx, storage, tempPath)
 			if err != nil {
 				return err
 			} else {

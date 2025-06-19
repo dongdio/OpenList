@@ -5,11 +5,11 @@ import (
 
 	"github.com/Xhofe/go-cache"
 
-	"github.com/OpenListTeam/OpenList/internal/db"
-	"github.com/OpenListTeam/OpenList/internal/errs"
-	"github.com/OpenListTeam/OpenList/internal/model"
-	"github.com/OpenListTeam/OpenList/pkg/singleflight"
-	"github.com/OpenListTeam/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/internal/db"
+	"github.com/dongdio/OpenList/internal/errs"
+	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/pkg/singleflight"
+	"github.com/dongdio/OpenList/pkg/utils"
 )
 
 var userCache = cache.NewMemCache(cache.WithShards[*model.User](2))

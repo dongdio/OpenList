@@ -7,9 +7,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/OpenListTeam/OpenList/internal/conf"
-	"github.com/OpenListTeam/OpenList/server/common"
-	"github.com/OpenListTeam/OpenList/server/s3"
+	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/server/common"
+	"github.com/dongdio/OpenList/server/s3"
 )
 
 func S3(g *gin.RouterGroup) {

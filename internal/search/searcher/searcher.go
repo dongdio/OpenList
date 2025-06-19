@@ -3,7 +3,7 @@ package searcher
 import (
 	"context"
 
-	"github.com/OpenListTeam/OpenList/internal/model"
+	"github.com/dongdio/OpenList/internal/model"
 )
 
 type Config struct {

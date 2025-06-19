@@ -5,8 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/OpenListTeam/OpenList/internal/op"
-	"github.com/OpenListTeam/OpenList/server/common"
+	"github.com/dongdio/OpenList/internal/op"
+	"github.com/dongdio/OpenList/server/common"
 )
 
 func ListDriverInfo(c *gin.Context) {

@@ -7,10 +7,10 @@ import (
 
 	"github.com/kdomanski/iso9660"
 
-	"github.com/OpenListTeam/OpenList/internal/archive/tool"
-	"github.com/OpenListTeam/OpenList/internal/errs"
-	"github.com/OpenListTeam/OpenList/internal/model"
-	"github.com/OpenListTeam/OpenList/internal/stream"
+	"github.com/dongdio/OpenList/internal/archive/tool"
+	"github.com/dongdio/OpenList/internal/errs"
+	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/internal/stream"
 )
 
 type ISO9660 struct {

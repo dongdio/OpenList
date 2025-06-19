@@ -3,8 +3,8 @@ package op_test
 import (
 	"testing"
 
-	_ "github.com/OpenListTeam/OpenList/drivers"
-	"github.com/OpenListTeam/OpenList/internal/op"
+	_ "github.com/dongdio/OpenList/drivers"
+	"github.com/dongdio/OpenList/internal/op"
 )
 
 func TestDriverItemsMap(t *testing.T) {

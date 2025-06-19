@@ -23,7 +23,7 @@ jobs:
 
       - name: Add upstream and fetch
         run: |
-          git remote add upstream https://github.com/OpenListTeam/OpenList.git
+          git remote add upstream https://github.com/dongdio/OpenList.git
           git fetch --all --tags
 
       - name: Check if upstream is ahead

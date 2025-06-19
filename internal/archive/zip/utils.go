@@ -19,9 +19,9 @@ import (
 	"golang.org/x/text/encoding/unicode/utf32"
 	"golang.org/x/text/transform"
 
-	"github.com/OpenListTeam/OpenList/internal/archive/tool"
-	"github.com/OpenListTeam/OpenList/internal/errs"
-	"github.com/OpenListTeam/OpenList/internal/stream"
+	"github.com/dongdio/OpenList/internal/archive/tool"
+	"github.com/dongdio/OpenList/internal/errs"
+	"github.com/dongdio/OpenList/internal/stream"
 )
 
 type WrapReader struct {

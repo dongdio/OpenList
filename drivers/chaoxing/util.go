@@ -13,7 +13,7 @@ import (
 
 	"resty.dev/v3"
 
-	"github.com/OpenListTeam/OpenList/drivers/base"
+	"github.com/dongdio/OpenList/drivers/base"
 )
 
 func (d *ChaoXing) requestDownload(pathname string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {

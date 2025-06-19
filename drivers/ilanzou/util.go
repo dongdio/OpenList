@@ -13,8 +13,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
 
-	"github.com/OpenListTeam/OpenList/drivers/base"
-	"github.com/OpenListTeam/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/drivers/base"
+	"github.com/dongdio/OpenList/pkg/utils"
 )
 
 func (d *ILanZou) login() error {

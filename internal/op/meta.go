@@ -8,11 +8,11 @@ import (
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 
-	"github.com/OpenListTeam/OpenList/internal/db"
-	"github.com/OpenListTeam/OpenList/internal/errs"
-	"github.com/OpenListTeam/OpenList/internal/model"
-	"github.com/OpenListTeam/OpenList/pkg/singleflight"
-	"github.com/OpenListTeam/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/internal/db"
+	"github.com/dongdio/OpenList/internal/errs"
+	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/pkg/singleflight"
+	"github.com/dongdio/OpenList/pkg/utils"
 )
 
 var metaCache = cache.NewMemCache(cache.WithShards[*model.Meta](2))
@@ -28,7 +28,7 @@ func getNearestMeta(path string) (*model.Meta, error) {
 	if err == nil {
 		return meta, nil
 	}
-	if errors.Cause(err) != errs.MetaNotFound {
+	if !errors.Is(errors.Cause(err), errs.MetaNotFound) {
 		return nil, err
 	}
 	if path == "/" {

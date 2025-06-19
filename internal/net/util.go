@@ -10,11 +10,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/OpenListTeam/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/pkg/utils"
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/OpenListTeam/OpenList/pkg/http_range"
+	"github.com/dongdio/OpenList/pkg/http_range"
 )
 
 // scanETag determines if a syntactically valid ETag is present at s. If so,

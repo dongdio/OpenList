@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/OpenListTeam/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/internal/conf"
 )
 
 func ForceHttps(c *gin.Context) {

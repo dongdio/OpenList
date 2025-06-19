@@ -6,10 +6,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/OpenListTeam/OpenList/cmd/flags"
-	_ "github.com/OpenListTeam/OpenList/drivers"
-	_ "github.com/OpenListTeam/OpenList/internal/archive"
-	_ "github.com/OpenListTeam/OpenList/internal/offline_download"
+	"github.com/dongdio/OpenList/cmd/flags"
+	_ "github.com/dongdio/OpenList/drivers"
+	_ "github.com/dongdio/OpenList/internal/archive"
+	_ "github.com/dongdio/OpenList/internal/offline_download"
 )
 
 var RootCmd = &cobra.Command{

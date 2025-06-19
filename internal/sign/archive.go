@@ -4,9 +4,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/OpenListTeam/OpenList/internal/conf"
-	"github.com/OpenListTeam/OpenList/internal/setting"
-	"github.com/OpenListTeam/OpenList/pkg/sign"
+	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/internal/setting"
+	"github.com/dongdio/OpenList/pkg/sign"
 )
 
 var onceArchive sync.Once

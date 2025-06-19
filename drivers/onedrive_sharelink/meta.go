@@ -3,8 +3,8 @@ package onedrive_sharelink
 import (
 	"net/http"
 
-	"github.com/OpenListTeam/OpenList/internal/driver"
-	"github.com/OpenListTeam/OpenList/internal/op"
+	"github.com/dongdio/OpenList/internal/driver"
+	"github.com/dongdio/OpenList/internal/op"
 )
 
 type Addition struct {

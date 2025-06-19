@@ -1,7 +1,7 @@
 package tool
 
 import (
-	"github.com/OpenListTeam/OpenList/internal/errs"
+	"github.com/dongdio/OpenList/internal/errs"
 )
 
 var (

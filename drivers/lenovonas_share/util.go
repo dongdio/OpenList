@@ -5,8 +5,8 @@ import (
 
 	jsoniter "github.com/json-iterator/go"
 
-	"github.com/OpenListTeam/OpenList/drivers/base"
-	"github.com/OpenListTeam/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/drivers/base"
+	"github.com/dongdio/OpenList/pkg/utils"
 )
 
 func (d *LenovoNasShare) request(url string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {

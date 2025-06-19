@@ -7,9 +7,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/OpenListTeam/OpenList/internal/sign"
-	"github.com/OpenListTeam/OpenList/server/common"
-	"github.com/OpenListTeam/OpenList/server/middlewares"
+	"github.com/dongdio/OpenList/internal/sign"
+	"github.com/dongdio/OpenList/server/common"
+	"github.com/dongdio/OpenList/server/middlewares"
 )
 
 func _pprof(g *gin.RouterGroup) {

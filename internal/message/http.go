@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 
-	"github.com/OpenListTeam/OpenList/server/common"
+	"github.com/dongdio/OpenList/server/common"
 )
 
 type Http struct {

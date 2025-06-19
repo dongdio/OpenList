@@ -15,7 +15,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"golang.org/x/exp/slices"
 
-	"github.com/OpenListTeam/OpenList/pkg/http_range"
+	"github.com/dongdio/OpenList/pkg/http_range"
 )
 
 var buf22MB = make([]byte, 1024*1024*22)

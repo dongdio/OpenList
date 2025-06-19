@@ -5,9 +5,9 @@ import (
 
 	"github.com/bytedance/sonic"
 
-	"github.com/OpenListTeam/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/pkg/utils"
 
-	_ "github.com/OpenListTeam/OpenList/internal/model"
+	_ "github.com/dongdio/OpenList/internal/model"
 )
 
 func (f *File) UnmarshalJSON(data []byte) error {

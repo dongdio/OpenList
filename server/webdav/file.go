@@ -6,14 +6,15 @@ package webdav
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"path"
 	"path/filepath"
 
-	"github.com/OpenListTeam/OpenList/internal/conf"
-	"github.com/OpenListTeam/OpenList/internal/fs"
-	"github.com/OpenListTeam/OpenList/internal/model"
-	"github.com/OpenListTeam/OpenList/internal/op"
+	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/internal/fs"
+	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/internal/op"
 )
 
 // slashClean is equivalent to but slightly more efficient than
@@ -107,13 +108,13 @@ func walkFS(ctx context.Context, depth int, name string, info model.Obj, walkFn 
 	for _, fileInfo := range objs {
 		filename := path.Join(name, fileInfo.GetName())
 		if err != nil {
-			if err := walkFn(filename, fileInfo, err); err != nil && err != filepath.SkipDir {
+			if err = walkFn(filename, fileInfo, err); err != nil && !errors.Is(err, filepath.SkipDir) {
 				return err
 			}
 		} else {
 			err = walkFS(ctx, depth, filename, fileInfo, walkFn)
 			if err != nil {
-				if !fileInfo.IsDir() || err != filepath.SkipDir {
+				if !fileInfo.IsDir() || !errors.Is(err, filepath.SkipDir) {
 					return err
 				}
 			}

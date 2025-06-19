@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/OpenListTeam/OpenList/internal/model"
+	"github.com/dongdio/OpenList/internal/model"
 )
 
 type File struct {

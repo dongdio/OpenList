@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/OpenListTeam/OpenList/internal/model"
+	"github.com/dongdio/OpenList/internal/model"
 )
 
 var (

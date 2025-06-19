@@ -14,8 +14,8 @@ Prerequisites:
 Clone `OpenList` and `OpenList-Frontend` anywhere:
 
 ```shell
-$ git clone https://github.com/OpenListTeam/OpenList.git
-$ git clone --recurse-submodules https://github.com/OpenListTeam/OpenList-Frontend.git
+$ git clone https://github.com/dongdio/OpenList.git
+$ git clone --recurse-submodules https://github.com/dongdio/OpenList-Frontend.git
 ```
 You should switch to the `main` branch for development.
 

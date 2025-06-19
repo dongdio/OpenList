@@ -3,7 +3,7 @@ package db
 import (
 	"github.com/pkg/errors"
 
-	"github.com/OpenListTeam/OpenList/internal/model"
+	"github.com/dongdio/OpenList/internal/model"
 )
 
 func GetTaskDataByType(type_s string) (*model.TaskItem, error) {

@@ -15,7 +15,7 @@ import (
 	"github.com/bytedance/sonic"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/OpenListTeam/OpenList/internal/errs"
+	"github.com/dongdio/OpenList/internal/errs"
 )
 
 func GetMD5EncodeStr(data string) string {

@@ -3,10 +3,10 @@ package common
 import (
 	stdpath "path"
 
-	"github.com/OpenListTeam/OpenList/internal/conf"
-	"github.com/OpenListTeam/OpenList/internal/model"
-	"github.com/OpenListTeam/OpenList/internal/setting"
-	"github.com/OpenListTeam/OpenList/internal/sign"
+	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/internal/setting"
+	"github.com/dongdio/OpenList/internal/sign"
 )
 
 func Sign(obj model.Obj, parent string, encrypt bool) string {

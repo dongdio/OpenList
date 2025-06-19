@@ -3,7 +3,7 @@ package cloudreve_v4
 import (
 	"time"
 
-	"github.com/OpenListTeam/OpenList/internal/model"
+	"github.com/dongdio/OpenList/internal/model"
 )
 
 type Object struct {

@@ -15,9 +15,9 @@ import (
 	larkdrive "github.com/larksuite/oapi-sdk-go/v3/service/drive/v1"
 	"golang.org/x/time/rate"
 
-	"github.com/OpenListTeam/OpenList/internal/driver"
-	"github.com/OpenListTeam/OpenList/internal/errs"
-	"github.com/OpenListTeam/OpenList/internal/model"
+	"github.com/dongdio/OpenList/internal/driver"
+	"github.com/dongdio/OpenList/internal/errs"
+	"github.com/dongdio/OpenList/internal/model"
 )
 
 type Lark struct {

@@ -17,8 +17,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/OpenListTeam/OpenList/internal/model"
-	"github.com/OpenListTeam/OpenList/server/common"
+	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/server/common"
 )
 
 // Proppatch describes a property update instruction as defined in RFC 4918.

@@ -5,8 +5,8 @@ import (
 
 	sdk "github.com/xhofe/115-sdk-go"
 
-	"github.com/OpenListTeam/OpenList/internal/model"
-	"github.com/OpenListTeam/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/pkg/utils"
 )
 
 type Obj sdk.GetFilesResp_File

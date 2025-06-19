@@ -10,7 +10,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/OpenListTeam/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/internal/conf"
 )
 
 // VersionCmd represents the version command

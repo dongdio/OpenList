@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/OpenListTeam/OpenList/internal/model"
+	"github.com/dongdio/OpenList/internal/model"
 )
 
 type TokenError struct {

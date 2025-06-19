@@ -9,8 +9,8 @@ import (
 	"github.com/bytedance/sonic"
 	"resty.dev/v3"
 
-	"github.com/OpenListTeam/OpenList/drivers/base"
-	"github.com/OpenListTeam/OpenList/internal/op"
+	"github.com/dongdio/OpenList/drivers/base"
+	"github.com/dongdio/OpenList/internal/op"
 )
 
 func (d *FebBox) refreshTokenByOAuth2() error {

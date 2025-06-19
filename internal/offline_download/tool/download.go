@@ -8,10 +8,10 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/xhofe/tache"
 
-	"github.com/OpenListTeam/OpenList/internal/conf"
-	"github.com/OpenListTeam/OpenList/internal/errs"
-	"github.com/OpenListTeam/OpenList/internal/setting"
-	"github.com/OpenListTeam/OpenList/internal/task"
+	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/internal/errs"
+	"github.com/dongdio/OpenList/internal/setting"
+	"github.com/dongdio/OpenList/internal/task"
 )
 
 type DownloadTask struct {

@@ -4,8 +4,8 @@ import (
 	"context"
 	"io"
 
-	"github.com/OpenListTeam/OpenList/internal/model"
-	"github.com/OpenListTeam/OpenList/internal/stream"
+	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/internal/stream"
 )
 
 type UpdateProgress = model.UpdateProgress

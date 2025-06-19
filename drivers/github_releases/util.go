@@ -8,7 +8,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
 
-	"github.com/OpenListTeam/OpenList/drivers/base"
+	"github.com/dongdio/OpenList/drivers/base"
 )
 
 // 发送 GET 请求

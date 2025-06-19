@@ -4,11 +4,11 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/OpenListTeam/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/internal/conf"
 
 	"github.com/pkg/errors"
 
-	"github.com/OpenListTeam/OpenList/internal/driver"
+	"github.com/dongdio/OpenList/internal/driver"
 )
 
 type DriverConstructor func() driver.Driver

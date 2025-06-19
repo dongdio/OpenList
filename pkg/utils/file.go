@@ -9,11 +9,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/OpenListTeam/OpenList/internal/errs"
+	"github.com/dongdio/OpenList/internal/errs"
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/OpenListTeam/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/internal/conf"
 )
 
 // CopyFile File copies a single file from src to dst

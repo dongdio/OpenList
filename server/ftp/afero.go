@@ -10,9 +10,9 @@ import (
 	ftpserver "github.com/fclairamb/ftpserverlib"
 	"github.com/spf13/afero"
 
-	"github.com/OpenListTeam/OpenList/internal/errs"
-	"github.com/OpenListTeam/OpenList/internal/fs"
-	"github.com/OpenListTeam/OpenList/internal/model"
+	"github.com/dongdio/OpenList/internal/errs"
+	"github.com/dongdio/OpenList/internal/fs"
+	"github.com/dongdio/OpenList/internal/model"
 )
 
 type AferoAdapter struct {

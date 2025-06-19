@@ -3,7 +3,7 @@ package weiyun
 import (
 	"time"
 
-	"github.com/OpenListTeam/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/pkg/utils"
 
 	weiyunsdkgo "github.com/foxxorcat/weiyun-sdk-go"
 )
