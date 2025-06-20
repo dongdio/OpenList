@@ -36,7 +36,7 @@ func initUser() {
 				// 0(can see hidden) - 7(can remove) & 12(can read archives) - 13(can decompress archives)
 				Permission: 0x30FF,
 			}
-			if err := op.CreateUser(admin); err != nil {
+			if err = op.CreateUser(admin); err != nil {
 				panic(err)
 			} else {
 				utils.Log.Infof("Successfully created the admin user and the initial password is: %s", adminPassword)

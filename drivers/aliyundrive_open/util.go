@@ -10,6 +10,7 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
+	"github.com/tidwall/gjson"
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/drivers/base"
@@ -21,12 +22,12 @@ import (
 // do others that not defined in Driver interface
 
 func (d *AliyundriveOpen) _refreshToken() (string, string, error) {
-	// 使用在线API刷新Token，无需ClientID和ClientSecret
 	if d.UseOnlineAPI && len(d.APIAddress) > 0 {
 		u := d.APIAddress
 		var resp struct {
 			RefreshToken string `json:"refresh_token"`
 			AccessToken  string `json:"access_token"`
+			ErrorMessage string `json:"text"`
 		}
 		_, err := base.RestyClient.R().
 			SetResult(&resp).
@@ -40,23 +41,20 @@ func (d *AliyundriveOpen) _refreshToken() (string, string, error) {
 			return "", "", err
 		}
 		if resp.RefreshToken == "" || resp.AccessToken == "" {
+			if resp.ErrorMessage != "" {
+				return "", "", fmt.Errorf("failed to refresh token: %s", resp.ErrorMessage)
+			}
 			return "", "", fmt.Errorf("empty token returned from official API")
 		}
-		d.AccessToken = resp.AccessToken
-		d.RefreshToken = resp.RefreshToken
-		op.MustSaveDriverStorage(d)
-		return "", "", nil
+		return resp.AccessToken, resp.RefreshToken, nil
 	}
-	// 使用本地客户端的情况下检查是否为空
+	// 本地刷新逻辑必须要求client_id和client_secret
 	if d.ClientID == "" || d.ClientSecret == "" {
 		return "", "", fmt.Errorf("empty ClientID or ClientSecret")
 	}
-	// 走原有的刷新逻辑
 	url := API_URL + "/oauth/access_token"
-	// var resp base.TokenResp
 	var e ErrResp
 	res, err := base.RestyClient.R().
-		//ForceContentType("application/json").
 		SetBody(base.Json{
 			"client_id":     d.ClientID,
 			"client_secret": d.ClientSecret,
@@ -73,7 +71,7 @@ func (d *AliyundriveOpen) _refreshToken() (string, string, error) {
 	if e.Code != "" {
 		return "", "", fmt.Errorf("failed to refresh token: %s", e.Message)
 	}
-	refresh, access := utils.Json.Get(res.Bytes(), "refresh_token").ToString(), utils.Json.Get(res.Bytes(), "access_token").ToString()
+	refresh, access := gjson.GetBytes(res.Bytes(), "refresh_token").String(), gjson.GetBytes(res.Bytes(), "access_token").String()
 	if refresh == "" {
 		return "", "", fmt.Errorf("failed to refresh token: refresh token is empty, resp: %s", res.String())
 	}
