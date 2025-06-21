@@ -3,6 +3,7 @@ package net
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -351,10 +352,11 @@ func (d *downloader) downloadChunk(ch *chunk) error {
 		// Check if the returned error is an errNeedRetry.
 		// If this occurs we unwrap the err to set the underlying error
 		// and attempt any remaining retries.
-		if e, ok := err.(*errNeedRetry); ok {
+		var e *errNeedRetry
+		if errors.As(err, &e) {
 			err = e.Unwrap()
 			if n > 0 {
-				// 测试：下载时 断开 alist向云盘发起的下载连接
+				// 测试：下载时 断开 openlist 向云盘发起的下载连接
 				// 校验：下载完后校验文件哈希值 一致
 				d.incrWritten(n)
 				ch.start += n
@@ -364,11 +366,6 @@ func (d *downloader) downloadChunk(ch *chunk) error {
 			}
 			log.Warnf("err chunk_%d, object part download error %s, retrying attempt %d. %v",
 				ch.id, params.URL, retry, err)
-		} else if err == errInfiniteRetry {
-			retry--
-			continue
-		} else {
-			break
 		}
 	}
 
@@ -433,9 +430,11 @@ func (d *downloader) tryDownloadChunk(params *HttpRequestParams, ch *chunk) (int
 			return 0, err
 		}
 	}
-	d.sendChunkTask(true)
+	err = d.sendChunkTask(true)
+	if err != nil {
+		return 0, err
+	}
 	n, err := utils.CopyWithBuffer(ch.buf, resp.Body)
-
 	if err != nil {
 		return n, &errNeedRetry{err: err}
 	}

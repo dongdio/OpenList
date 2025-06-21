@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/alist-org/times"
+	"github.com/OpenListTeam/times"
 	cp "github.com/otiai10/copy"
 	log "github.com/sirupsen/logrus"
 	_ "golang.org/x/image/webp"

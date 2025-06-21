@@ -1,12 +1,12 @@
 // Credits: https://pkg.go.dev/github.com/rclone/rclone@v1.65.2/cmd/serve/s3
-// Package s3 implements a fake s3 server for alist
+// Package s3 implements a fake s3 server for OpenList
 package s3
 
 import (
 	"context"
 	"strings"
 
-	"github.com/alist-org/gofakes3"
+	"github.com/OpenListTeam/gofakes3"
 	"github.com/bytedance/sonic"
 
 	"github.com/dongdio/OpenList/internal/conf"

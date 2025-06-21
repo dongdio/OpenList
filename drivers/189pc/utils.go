@@ -506,7 +506,6 @@ func (y *Cloud189PC) StreamUpload(ctx context.Context, dstDir model.Obj, file mo
 		retry.Attempts(3),
 		retry.Delay(time.Second),
 		retry.DelayType(retry.BackOffDelay))
-	threadG.SetLimit(3)
 
 	count := int(size / sliceSize)
 	lastPartSize := size % sliceSize
@@ -530,7 +529,7 @@ func (y *Cloud189PC) StreamUpload(ctx context.Context, dstDir model.Obj, file mo
 		byteData := make([]byte, byteSize)
 		// 读取块
 		silceMd5.Reset()
-		if _, err := io.ReadFull(teeReader, byteData); err != io.EOF && err != nil {
+		if _, err = io.ReadFull(teeReader, byteData); err != io.EOF && err != nil {
 			return nil, err
 		}
 

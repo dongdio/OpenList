@@ -5,13 +5,13 @@ go 1.24.4
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.18.0
 	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.6.1
+	github.com/OpenListTeam/gofakes3 v0.7.0
 	github.com/OpenListTeam/sftpd-openlist v1.0.1
+	github.com/OpenListTeam/times v0.1.0
 	github.com/ProtonMail/go-crypto v1.3.0
 	github.com/SheltonZhu/115driver v1.0.37
 	github.com/Xhofe/go-cache v0.0.0-20240804043513-b1a71927bc21
 	github.com/Xhofe/rateg v0.1.0
-	github.com/alist-org/gofakes3 v0.0.7
-	github.com/alist-org/times v0.0.0-20240721124654-efa0c7d3ad92
 	github.com/aliyun/aliyun-oss-go-sdk v3.0.2+incompatible
 	github.com/andybalholm/brotli v1.1.2-0.20250424173009-453214e765f3
 	github.com/avast/retry-go v3.0.0+incompatible
@@ -61,7 +61,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/pkg/sftp v1.13.9
 	github.com/pquerna/otp v1.5.0
-	github.com/rclone/rclone v1.70.0
+	github.com/rclone/rclone v1.70.1
 	github.com/saintfish/chardet v0.0.0-20230101081208-5e3ef4b5456d
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/afero v1.14.0
@@ -79,7 +79,7 @@ require (
 	github.com/zzzhr1990/go-common-entity v0.0.0-20250202070650-1a200048f0d3
 	go4.org v0.0.0-20230225012048-214862532bf5
 	golang.org/x/crypto v0.39.0
-	golang.org/x/exp v0.0.0-20250606033433-dcc06ee1d476
+	golang.org/x/exp v0.0.0-20250620022241-b7579e27df2b
 	golang.org/x/image v0.28.0
 	golang.org/x/net v0.41.0
 	golang.org/x/oauth2 v0.30.0
