@@ -3,7 +3,6 @@ package net
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -12,12 +11,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dongdio/OpenList/pkg/utils"
-
 	"github.com/aws/aws-sdk-go/aws/awsutil"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/dongdio/OpenList/pkg/http_range"
+	"github.com/dongdio/OpenList/pkg/utils"
 )
 
 // DefaultDownloadPartSize is the default range of bytes to get at a time when
@@ -315,10 +314,10 @@ func (d *downloader) downloadPart() {
 			break
 		}
 		if err := d.downloadChunk(&c); err != nil {
-			if err == errCancelConcurrency {
+			if errors.Is(err, errCancelConcurrency) {
 				break
 			}
-			if err == context.Canceled {
+			if errors.Is(err, context.Canceled) {
 				if e := context.Cause(d.ctx); e != nil {
 					err = e
 				}

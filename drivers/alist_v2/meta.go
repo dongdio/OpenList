@@ -21,6 +21,6 @@ var config = driver.Config{
 
 func init() {
 	op.RegisterDriver(func() driver.Driver {
-		return &AListV2{}
+		return new(AListV2)
 	})
 }

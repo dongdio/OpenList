@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/dongdio/OpenList/cmd/flags"
+	"github.com/dongdio/OpenList/global"
 	"github.com/dongdio/OpenList/internal/conf"
 )
 
@@ -42,7 +42,7 @@ func ErrorResp(c *gin.Context, err error, code int, l ...bool) {
 
 func ErrorWithDataResp(c *gin.Context, err error, code int, data any, l ...bool) {
 	if len(l) > 0 && l[0] {
-		if flags.Debug || flags.Dev {
+		if global.Debug || global.Dev {
 			log.Errorf("%+v", err)
 		} else {
 			log.Errorf("%v", err)

@@ -1,6 +1,4 @@
-/*
-Copyright © 2022 NAME HERE <EMAIL ADDRESS>
-*/
+// Package cmd implements command-line functionality for OpenList
 package cmd
 
 import (
@@ -13,89 +11,115 @@ import (
 	"github.com/dongdio/OpenList/pkg/utils/random"
 )
 
-// AdminCmd represents the password command
+// Constants for admin-related functionality
+const (
+	// DefaultRandomPasswordLength defines the length of auto-generated passwords
+	DefaultRandomPasswordLength = 12
+
+	// AdminInfoMessage is displayed when showing admin information
+	AdminInfoMessage = `Admin Information:
+- Username: %s
+- Password is stored as a hash value and cannot be reversed
+- Reset password with: openlist admin random
+- Set new password with: openlist admin set NEW_PASSWORD
+`
+)
+
+// AdminCmd represents the admin command for managing administrator accounts
 var AdminCmd = &cobra.Command{
 	Use:     "admin",
 	Aliases: []string{"password"},
-	Short:   "Show admin user's info and some operations about admin user's password",
+	Short:   "Show and manage admin user information",
+	Long:    "Display admin user information and perform operations related to the admin password",
 	Run: func(cmd *cobra.Command, args []string) {
 		Init()
 		defer Release()
+
 		admin, err := op.GetAdmin()
 		if err != nil {
-			utils.Log.Errorf("failed get admin user: %+v", err)
-		} else {
-			utils.Log.Infof("Admin user's username: %s", admin.Username)
-			utils.Log.Infof("The password can only be output at the first startup, and then stored as a hash value, which cannot be reversed")
-			utils.Log.Infof("You can reset the password with a random string by running [openlist admin random]")
-			utils.Log.Infof("You can also set a new password by running [openlist admin set NEW_PASSWORD]")
+			utils.Log.Errorf("Failed to get admin user: %+v", err)
+			return
 		}
+
+		utils.Log.Infof(AdminInfoMessage, admin.Username)
 	},
 }
 
+// RandomPasswordCmd generates a random password for the admin user
 var RandomPasswordCmd = &cobra.Command{
 	Use:   "random",
 	Short: "Reset admin user's password to a random string",
+	Long:  "Generate a secure random password and set it for the admin user",
 	Run: func(cmd *cobra.Command, args []string) {
-		newPwd := random.String(8)
-		setAdminPassword(newPwd)
+		// Generate a random password with improved length for better security
+		newPassword := random.String(DefaultRandomPasswordLength)
+		setAdminPassword(newPassword)
 	},
 }
 
+// SetPasswordCmd sets a specific password for the admin user
 var SetPasswordCmd = &cobra.Command{
-	Use:   "set",
+	Use:   "set NEW_PASSWORD",
 	Short: "Set admin user's password",
+	Long:  "Set a specific password for the admin user",
+	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) == 0 {
-			utils.Log.Errorf("Please enter the new password")
-			return
-		}
 		setAdminPassword(args[0])
 	},
 }
 
+// ShowTokenCmd displays the admin authentication token
 var ShowTokenCmd = &cobra.Command{
 	Use:   "token",
 	Short: "Show admin token",
+	Long:  "Display the authentication token used for admin API access",
 	Run: func(cmd *cobra.Command, args []string) {
 		Init()
 		defer Release()
+
 		token := setting.GetStr(conf.Token)
 		utils.Log.Infof("Admin token: %s", token)
 	},
 }
 
-func setAdminPassword(pwd string) {
+// setAdminPassword updates the admin user's password
+// It initializes the application, updates the password, and clears the admin cache
+func setAdminPassword(password string) {
 	Init()
 	defer Release()
+
+	// Get the admin user
 	admin, err := op.GetAdmin()
 	if err != nil {
-		utils.Log.Errorf("failed get admin user: %+v", err)
+		utils.Log.Errorf("Failed to get admin user: %+v", err)
 		return
 	}
-	admin.SetPassword(pwd)
+
+	// Set the new password
+	admin.SetPassword(password)
+
+	// Update the user in the database
 	if err = op.UpdateUser(admin); err != nil {
-		utils.Log.Errorf("failed update admin user: %+v", err)
+		utils.Log.Errorf("Failed to update admin user: %+v", err)
 		return
 	}
-	utils.Log.Infof("admin user has been updated:")
-	utils.Log.Infof("username: %s", admin.Username)
-	utils.Log.Infof("password: %s", pwd)
+
+	// Log success information
+	utils.Log.Infof("Admin user has been updated successfully:")
+	utils.Log.Infof("Username: %s", admin.Username)
+	utils.Log.Infof("Password: %s", password)
+
+	// Clear the admin cache to ensure the new password takes effect immediately
 	DelAdminCacheOnline()
 }
 
+// init registers the admin commands with the root command
 func init() {
+	// Add admin command to root command
 	RootCmd.AddCommand(AdminCmd)
+
+	// Add subcommands to admin command
 	AdminCmd.AddCommand(RandomPasswordCmd)
 	AdminCmd.AddCommand(SetPasswordCmd)
 	AdminCmd.AddCommand(ShowTokenCmd)
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// passwordCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// passwordCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

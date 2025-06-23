@@ -1,15 +1,13 @@
-package bootstrap
+package initialize
 
 import (
 	"fmt"
 	"strings"
 
-	"github.com/dongdio/OpenList/internal/bootstrap/patch"
 	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/internal/patch"
 	"github.com/dongdio/OpenList/pkg/utils"
 )
-
-var LastLaunchedVersion = ""
 
 func safeCall(v string, i int, f func()) {
 	defer func() {
@@ -17,7 +15,6 @@ func safeCall(v string, i int, f func()) {
 			utils.Log.Errorf("Recovered from patch (version: %s, index: %d) panic: %v", v, i, r)
 		}
 	}()
-
 	f()
 }
 
@@ -39,7 +36,7 @@ func compareVersion(majorA, minorA, patchNumA, majorB, minorB, patchNumB int) bo
 	return true
 }
 
-func InitUpgradePatch() {
+func initUpgradePatch() {
 	if !strings.HasPrefix(conf.Version, "v") {
 		for _, vp := range patch.UpgradePatches {
 			for i, p := range vp.Patches {

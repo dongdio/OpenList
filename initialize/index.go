@@ -1,4 +1,4 @@
-package bootstrap
+package initialize
 
 import (
 	log "github.com/sirupsen/logrus"
@@ -6,7 +6,7 @@ import (
 	"github.com/dongdio/OpenList/internal/search"
 )
 
-func InitIndex() {
+func initIndex() {
 	progress, err := search.Progress()
 	if err != nil {
 		log.Errorf("init index error: %+v", err)

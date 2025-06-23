@@ -1,4 +1,4 @@
-package bootstrap
+package initialize
 
 import (
 	"github.com/xhofe/tache"
@@ -18,7 +18,7 @@ func taskFilterNegative(num int) int64 {
 	return int64(num)
 }
 
-func InitTaskManager() {
+func initTaskManager() {
 	fs.UploadTaskManager = tache.NewManager[*fs.UploadTask](tache.WithWorks(setting.GetInt(conf.TaskUploadThreadsNum, conf.Conf.Tasks.Upload.Workers)), tache.WithMaxRetry(conf.Conf.Tasks.Upload.MaxRetry)) // upload will not support persist
 	op.RegisterSettingChangingCallback(func() {
 		fs.UploadTaskManager.SetWorkersNumActive(taskFilterNegative(setting.GetInt(conf.TaskUploadThreadsNum, conf.Conf.Tasks.Upload.Workers)))

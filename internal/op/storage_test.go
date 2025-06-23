@@ -15,63 +15,103 @@ import (
 	"github.com/dongdio/OpenList/pkg/utils"
 )
 
+// Initialize the testing environment with an in-memory SQLite database
 func init() {
+	// Set up in-memory database for testing
 	dB, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect database")
 	}
+
+	// Use default configuration for testing
 	conf.Conf = conf.DefaultConfig()
+
+	// Initialize database
 	db.Init(dB)
 }
 
+// TestCreateStorage tests storage creation functionality
 func TestCreateStorage(t *testing.T) {
-	var storages = []struct {
+	var testCases = []struct {
+		name    string
 		storage model.Storage
-		isErr   bool
+		wantErr bool
 	}{
-		{storage: model.Storage{Driver: "Local", MountPath: "/local", Addition: `{"root_folder_path":"."}`}, isErr: false},
-		{storage: model.Storage{Driver: "Local", MountPath: "/local", Addition: `{"root_folder_path":"."}`}, isErr: true},
-		{storage: model.Storage{Driver: "None", MountPath: "/none", Addition: `{"root_folder_path":"."}`}, isErr: true},
+		{
+			name:    "valid storage",
+			storage: model.Storage{Driver: "Local", MountPath: "/local", Addition: `{"root_folder_path":"."}`},
+			wantErr: false,
+		},
+		{
+			name:    "duplicate mount path",
+			storage: model.Storage{Driver: "Local", MountPath: "/local", Addition: `{"root_folder_path":"."}`},
+			wantErr: true,
+		},
+		{
+			name:    "invalid driver",
+			storage: model.Storage{Driver: "None", MountPath: "/none", Addition: `{"root_folder_path":"."}`},
+			wantErr: true,
+		},
 	}
-	for _, storage := range storages {
-		_, err := op.CreateStorage(context.Background(), storage.storage)
-		if err != nil {
-			if !storage.isErr {
-				t.Errorf("failed to create storage: %+v", err)
-			} else {
-				t.Logf("expect failed to create storage: %+v", err)
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := op.CreateStorage(context.Background(), tc.storage)
+			if (err != nil) != tc.wantErr {
+				t.Errorf("CreateStorage() error = %v, wantErr %v", err, tc.wantErr)
+			} else if err != nil && tc.wantErr {
+				t.Logf("Expected error received: %v", err)
 			}
-		}
+		})
 	}
 }
 
+// TestGetStorageVirtualFilesByPath tests the retrieval of virtual files
 func TestGetStorageVirtualFilesByPath(t *testing.T) {
+	// Set up test storage entries
 	setupStorages(t)
+
+	// Get virtual files at path /a
 	virtualFiles := op.GetStorageVirtualFilesByPath("/a")
-	var names []string
+
+	// Extract file names for comparison
+	var actualNames []string
 	for _, virtualFile := range virtualFiles {
-		names = append(names, virtualFile.GetName())
+		actualNames = append(actualNames, virtualFile.GetName())
 	}
-	var expectedNames = []string{"b", "c", "d"}
-	if utils.SliceEqual(names, expectedNames) {
-		t.Logf("passed")
+
+	// Expected directory names under /a
+	expectedNames := []string{"b", "c", "d"}
+
+	// Compare results
+	if utils.SliceEqual(actualNames, expectedNames) {
+		t.Logf("Virtual files test passed")
 	} else {
-		t.Errorf("expected: %+v, got: %+v", expectedNames, names)
+		t.Errorf("Expected virtual files: %v, got: %v", expectedNames, actualNames)
 	}
 }
 
+// TestGetBalancedStorage tests the load balancing functionality
 func TestGetBalancedStorage(t *testing.T) {
-	set := mapset.NewSet[string]()
+	// Create a set to collect mount paths returned by the balancer
+	storageSet := mapset.NewSet[string]()
+
+	// Call the balancer multiple times and collect the results
 	for i := 0; i < 5; i++ {
 		storage := op.GetBalancedStorage("/a/d/e1")
-		set.Add(storage.GetStorage().MountPath)
+		storageSet.Add(storage.GetStorage().MountPath)
 	}
-	expected := mapset.NewSet([]string{"/a/d/e1", "/a/d/e1.balance"}...)
-	if !expected.Equal(set) {
-		t.Errorf("expected: %+v, got: %+v", expected, set)
+
+	// We expect to see both the primary and balance storage paths
+	expectedSet := mapset.NewSet([]string{"/a/d/e1", "/a/d/e1.balance"}...)
+
+	// Compare results
+	if !expectedSet.Equal(storageSet) {
+		t.Errorf("Expected balanced storage paths: %v, got: %v", expectedSet, storageSet)
 	}
 }
 
+// setupStorages creates a set of test storages with specific paths
 func setupStorages(t *testing.T) {
 	var storages = []model.Storage{
 		{Driver: "Local", MountPath: "/a/b", Order: 0, Addition: `{"root_folder_path":"."}`},
@@ -82,10 +122,11 @@ func setupStorages(t *testing.T) {
 		{Driver: "Local", MountPath: "/a/d/e", Order: 4, Addition: `{"root_folder_path":"."}`},
 		{Driver: "Local", MountPath: "/a/d/e1.balance", Order: 4, Addition: `{"root_folder_path":"."}`},
 	}
+
 	for _, storage := range storages {
 		_, err := op.CreateStorage(context.Background(), storage)
 		if err != nil {
-			t.Fatalf("failed to create storage: %+v", err)
+			t.Fatalf("Failed to create test storage: %v", err)
 		}
 	}
 }

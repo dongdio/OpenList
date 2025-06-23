@@ -1,3 +1,4 @@
+// Package cmd implements command-line functionality for OpenList
 package cmd
 
 import (
@@ -6,32 +7,82 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/dongdio/OpenList/cmd/flags"
+	// Import required packages to register their initialization functions
 	_ "github.com/dongdio/OpenList/drivers"
+	"github.com/dongdio/OpenList/global"
 	_ "github.com/dongdio/OpenList/internal/archive"
 	_ "github.com/dongdio/OpenList/internal/offline_download"
 )
 
+// Default CLI descriptions
+const (
+	// ShortDescription is the short description shown in help text
+	ShortDescription = "A file list program that supports multiple storage."
+
+	// LongDescription is the long description shown in help text
+	LongDescription = `A file list program that supports multiple storage,
+built with love by Xhofe and friends in Go/Solid.js.
+Complete documentation is available at https://docs.openlist.team/`
+)
+
+// RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
 	Use:   "openlist",
-	Short: "A file list program that supports multiple storage.",
-	Long: `A file list program that supports multiple storage,
-built with love by Xhofe and friends in Go/Solid.js.
-Complete documentation is available at https://docs.openlist.team/`,
+	Short: ShortDescription,
+	Long:  LongDescription,
 }
 
+// Execute adds all child commands to the root command and sets flags appropriately.
+// This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	if err := RootCmd.Execute(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		_, _ = fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }
 
+// init registers command line flags for the root command
 func init() {
-	RootCmd.PersistentFlags().StringVar(&flags.DataDir, "data", "data", "data folder")
-	RootCmd.PersistentFlags().BoolVar(&flags.Debug, "debug", false, "start with debug mode")
-	RootCmd.PersistentFlags().BoolVar(&flags.NoPrefix, "no-prefix", false, "disable env prefix")
-	RootCmd.PersistentFlags().BoolVar(&flags.Dev, "dev", false, "start with dev mode")
-	RootCmd.PersistentFlags().BoolVar(&flags.ForceBinDir, "force-bin-dir", false, "Force to use the directory where the binary file is located as data directory")
-	RootCmd.PersistentFlags().BoolVar(&flags.LogStd, "log-std", false, "Force to log to std")
+	// Define persistent flags that will be available to all subcommands
+	RootCmd.PersistentFlags().StringVar(
+		&global.DataDir,
+		"data",
+		"data",
+		"Specify the data directory for configuration and storage",
+	)
+
+	RootCmd.PersistentFlags().BoolVar(
+		&global.Debug,
+		"debug",
+		false,
+		"Enable debug mode with additional logging",
+	)
+
+	RootCmd.PersistentFlags().BoolVar(
+		&global.NoPrefix,
+		"no-prefix",
+		false,
+		"Disable environment variable prefix (OPENLIST_)",
+	)
+
+	RootCmd.PersistentFlags().BoolVar(
+		&global.Dev,
+		"dev",
+		false,
+		"Enable development mode with in-memory database",
+	)
+
+	RootCmd.PersistentFlags().BoolVar(
+		&global.ForceBinDir,
+		"force-bin-dir",
+		false,
+		"Force using the binary location directory as the data directory",
+	)
+
+	RootCmd.PersistentFlags().BoolVar(
+		&global.LogStd,
+		"log-std",
+		false,
+		"Force logging to standard output instead of file",
+	)
 }

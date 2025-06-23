@@ -1,4 +1,4 @@
-package data
+package initialize
 
 import (
 	"github.com/dongdio/OpenList/internal/db"

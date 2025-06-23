@@ -47,15 +47,6 @@ type Getter interface {
 	Get(ctx context.Context, path string) (model.Obj, error)
 }
 
-// type Writer interface {
-//	Mkdir
-//	Move
-//	Rename
-//	Copy
-//	Remove
-//	Put
-// }
-
 type Mkdir interface {
 	MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error
 }

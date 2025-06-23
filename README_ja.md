@@ -31,18 +31,23 @@
 >
 > より信頼性が高く、持続可能なAListのオープンソース代替案で、将来起こりうる非公開化、ブラックボックス化、または信頼できない変更から保護します。
 >
-> 元のプロジェクト [AlistGo/alist](https://github.com/AlistGo/alist) の作者 [Xhofe](https://github.com/Xhofe) および他のすべての貢献者に心から感謝いたします。
+> 元のプロジェクト [AlistGo/alist](https://github.com/AlistGo/alist) の作者 [Xhofe](https://github.com/Xhofe)
+> および他のすべての貢献者に心から感謝いたします。
 >
-> このForkはまだ安定していません。具体的な移行の進捗状況は [OpenList 移行作業のまとめ](https://github.com/dongdio/OpenList/issues/6) でご確認いただけます。
+>
+このForkはまだ安定していません。具体的な移行の進捗状況は [OpenList 移行作業のまとめ](https://github.com/dongdio/OpenList/issues/6)
+でご確認いただけます。
 
-[English](./README.md) | [中文](./README_cn.md) | 日本語 | [Contributing](./CONTRIBUTING.md) | [CODE OF CONDUCT](./CODE_OF_CONDUCT.md)
+[English](./README.md) | [中文](./README_cn.md) |
+日本語 | [Contributing](./CONTRIBUTING.md) | [CODE OF CONDUCT](./CODE_OF_CONDUCT.md)
 
 ## 特徴
 
 - [x] マルチストレージ
     - [x] ローカルストレージ
     - [x] [Aliyundrive](https://www.alipan.com/)
-    - [x] OneDrive / Sharepoint ([グローバル](https://www.office.com/), [cn](https://portal.partner.microsoftonline.cn),de,us)
+    - [x] OneDrive / Sharepoint ([グローバル](https://www.office.com/), [cn](https://portal.partner.microsoftonline.cn)
+      ,de,us)
     - [x] [189cloud](https://cloud.189.cn) (Personal, Family)
     - [x] [GoogleDrive](https://drive.google.com/)
     - [x] [123pan](https://www.123pan.com/)
@@ -103,7 +108,8 @@ N/A （再構築中）
 
 ## ディスカッション
 
-一般的なご質問は [*Discussions*](https://github.com/dongdio/OpenList/discussions) をご利用ください。***Issues* はバグ報告と機能リクエストに限定されています。**
+一般的なご質問は [*Discussions*](https://github.com/dongdio/OpenList/discussions) をご利用ください。***Issues*
+はバグ報告と機能リクエストに限定されています。**
 
 ## ライセンス
 
@@ -111,7 +117,8 @@ N/A （再構築中）
 
 ## 免責事項
 
-- このプログラムはフリーでオープンソースのプロジェクトです。ネットワークディスク上でファイルを共有するように設計されており、golang のダウンロードや学習に便利です。利用にあたっては関連法規を遵守し、悪用しないようお願いします;
+- このプログラムはフリーでオープンソースのプロジェクトです。ネットワークディスク上でファイルを共有するように設計されており、golang
+  のダウンロードや学習に便利です。利用にあたっては関連法規を遵守し、悪用しないようお願いします;
 - このプログラムは、公式インターフェースの動作を破壊することなく、公式 sdk/インターフェースを呼び出すことで実装されています;
 - このプログラムは、302リダイレクト/トラフィック転送のみを行い、いかなるユーザーデータも傍受、保存、改ざんしません;
 - このプログラムを使用する前に、アカウントの禁止、ダウンロード速度の制限など、対応するリスクを理解し、負担する必要があります;

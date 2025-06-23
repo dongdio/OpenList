@@ -384,7 +384,7 @@ func ArchiveInternalExtract(c *gin.Context) {
 		return
 	}
 	defer func() {
-		if err := rc.Close(); err != nil {
+		if err = rc.Close(); err != nil {
 			log.Errorf("failed to close file streamer, %v", err)
 		}
 	}()

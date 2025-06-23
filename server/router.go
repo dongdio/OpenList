@@ -4,7 +4,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 
-	"github.com/dongdio/OpenList/cmd/flags"
+	"github.com/dongdio/OpenList/global"
 	"github.com/dongdio/OpenList/internal/conf"
 	"github.com/dongdio/OpenList/internal/message"
 	"github.com/dongdio/OpenList/internal/sign"
@@ -94,7 +94,7 @@ func Init(e *gin.Engine) {
 	_fs(auth.Group("/fs"))
 	_task(auth.Group("/task", middlewares.AuthNotGuest))
 	admin(auth.Group("/admin", middlewares.AuthAdmin))
-	if flags.Debug || flags.Dev {
+	if global.Debug || global.Dev {
 		debug(g.Group("/debug"))
 	}
 	static.Static(g, func(handlers ...gin.HandlerFunc) {

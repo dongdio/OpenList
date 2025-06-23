@@ -5,11 +5,10 @@ import (
 	stdpath "path"
 	"strings"
 
-	"github.com/dongdio/OpenList/internal/errs"
-
 	log "github.com/sirupsen/logrus"
 
 	"github.com/dongdio/OpenList/internal/driver"
+	"github.com/dongdio/OpenList/internal/errs"
 	"github.com/dongdio/OpenList/pkg/utils"
 )
 

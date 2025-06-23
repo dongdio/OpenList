@@ -71,7 +71,6 @@ require (
 	github.com/tidwall/gjson v1.18.0
 	github.com/u2takey/ffmpeg-go v0.5.0
 	github.com/upyun/go-sdk/v3 v3.0.4
-	github.com/winfsp/cgofuse v1.6.0
 	github.com/xhofe/115-sdk-go v0.1.5
 	github.com/xhofe/tache v0.1.5
 	github.com/yeka/zip v0.0.0-20231116150916-03d6312748a9

@@ -1,4 +1,4 @@
-package bootstrap
+package initialize
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 	"github.com/dongdio/OpenList/pkg/utils"
 )
 
-func LoadStorages() {
+func initLoadStorages() {
 	storages, err := db.GetEnabledStorages()
 	if err != nil {
 		utils.Log.Fatalf("failed get enabled storages: %+v", err)

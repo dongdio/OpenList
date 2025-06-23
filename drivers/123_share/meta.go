@@ -30,6 +30,6 @@ var config = driver.Config{
 
 func init() {
 	op.RegisterDriver(func() driver.Driver {
-		return &Pan123Share{}
+		return new(Pan123Share)
 	})
 }

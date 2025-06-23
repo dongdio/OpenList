@@ -1,4 +1,4 @@
-package data
+package initialize
 
 import (
 	"strconv"
@@ -6,7 +6,7 @@ import (
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 
-	"github.com/dongdio/OpenList/cmd/flags"
+	"github.com/dongdio/OpenList/global"
 	"github.com/dongdio/OpenList/internal/conf"
 	"github.com/dongdio/OpenList/internal/db"
 	"github.com/dongdio/OpenList/internal/model"
@@ -87,7 +87,7 @@ func isActive(key string) bool {
 
 func InitialSettings() []model.SettingItem {
 	var token string
-	if flags.Dev {
+	if global.Dev {
 		token = "dev_token"
 	} else {
 		token = random.Token()
@@ -126,10 +126,10 @@ func InitialSettings() []model.SettingItem {
 				"Google":"https://docs.google.com/gview?url=$e_url&embedded=true"
 			},
 			"pdf": {
-				"PDF.js": "//res.oplist.org/pdf.js/web/viewer.html?url=$e_url" 
+				"PDF.js": "https://res.oplist.org/pdf.js/web/viewer.html?file=$e_url" 
 			},
 			"epub": {
-				"EPUB.js":"//res.oplist.org/epub.js/viewer.html?url=$e_url"
+				"EPUB.js":"https://res.oplist.org/epub.js/viewer.html?url=$e_url"
 			}
 		}`, Type: conf.TypeText, Group: model.PREVIEW},
 		//		{Key: conf.OfficeViewers, Value: `{
@@ -225,7 +225,7 @@ func InitialSettings() []model.SettingItem {
 		{Key: conf.StreamMaxServerUploadSpeed, Value: "-1", Type: conf.TypeNumber, Group: model.TRAFFIC, Flag: model.PRIVATE},
 	}
 	initialSettingItems = append(initialSettingItems, tool.Tools.Items()...)
-	if flags.Dev {
+	if global.Dev {
 		initialSettingItems = append(initialSettingItems, []model.SettingItem{
 			{Key: "test_deprecated", Value: "test_value", Type: conf.TypeString, Flag: model.DEPRECATED},
 			{Key: "test_options", Value: "a", Type: conf.TypeSelect, Options: "a,b,c"},

@@ -1,4 +1,4 @@
-package bootstrap
+package initialize
 
 import (
 	"context"
@@ -47,7 +47,7 @@ func initLimiter(limiter *stream.Limiter, s string) {
 	})
 }
 
-func InitStreamLimit() {
+func initStreamLimit() {
 	initLimiter(&stream.ClientDownloadLimit, conf.StreamMaxClientDownloadSpeed)
 	initLimiter(&stream.ClientUploadLimit, conf.StreamMaxClientUploadSpeed)
 	initLimiter(&stream.ServerDownloadLimit, conf.StreamMaxServerDownloadSpeed)

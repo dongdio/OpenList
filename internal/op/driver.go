@@ -52,7 +52,7 @@ func RegisterDriver(constructor DriverConstructor) {
 func GetDriver(name string) (DriverConstructor, error) {
 	constructor, ok := driverMap[name]
 	if !ok {
-		return nil, errors.Errorf("no driver named: %s", name)
+		return nil, errors.Errorf("driver not found: %s", name)
 	}
 	return constructor, nil
 }
@@ -77,14 +77,14 @@ func registerDriverItems(config driver.Config, addition driver.Additional) {
 	log.Debugf("processing addition for %s: %+v", config.Name, addition)
 
 	// Get the underlying type of the addition
-	tAddition := reflect.TypeOf(addition)
-	for tAddition.Kind() == reflect.Pointer {
-		tAddition = tAddition.Elem()
+	additionType := reflect.TypeOf(addition)
+	for additionType.Kind() == reflect.Pointer {
+		additionType = additionType.Elem()
 	}
 
 	// Generate driver items
 	mainItems := getMainItems(config)
-	additionalItems := getAdditionalItems(tAddition, config.DefaultRoot)
+	additionalItems := getAdditionalItems(additionType, config.DefaultRoot)
 
 	// Store driver info
 	driverInfoMap[config.Name] = driver.Info{
@@ -108,11 +108,12 @@ func getMainItems(config driver.Config) []driver.Item {
 		{
 			Name: "order",
 			Type: conf.TypeNumber,
-			Help: "use to sort",
+			Help: "Used to sort storages",
 		},
 		{
 			Name: "remark",
 			Type: conf.TypeText,
+			Help: "Optional notes about this storage",
 		},
 	}
 
@@ -123,7 +124,7 @@ func getMainItems(config driver.Config) []driver.Item {
 			Type:     conf.TypeNumber,
 			Default:  "30",
 			Required: true,
-			Help:     "The cache expiration time for this storage",
+			Help:     "The cache expiration time in minutes for this storage",
 		})
 	}
 
@@ -133,6 +134,7 @@ func getMainItems(config driver.Config) []driver.Item {
 			{
 				Name: "web_proxy",
 				Type: conf.TypeBool,
+				Help: "Enable web proxy for this storage",
 			},
 			{
 				Name:     "webdav_policy",
@@ -140,6 +142,7 @@ func getMainItems(config driver.Config) []driver.Item {
 				Options:  "302_redirect,use_proxy_url,native_proxy",
 				Default:  "302_redirect",
 				Required: true,
+				Help:     "WebDAV access policy for this storage",
 			},
 		}...)
 
@@ -148,7 +151,7 @@ func getMainItems(config driver.Config) []driver.Item {
 			item := driver.Item{
 				Name: "proxy_range",
 				Type: conf.TypeBool,
-				Help: "Need to enable proxy",
+				Help: "Enable range requests via proxy (requires web_proxy to be enabled)",
 			}
 			if config.Name == "139Yun" {
 				item.Default = "true"
@@ -163,6 +166,7 @@ func getMainItems(config driver.Config) []driver.Item {
 			Default:  "native_proxy",
 			Options:  "use_proxy_url,native_proxy",
 			Required: true,
+			Help:     "WebDAV access policy for this storage",
 		})
 	}
 
@@ -170,6 +174,7 @@ func getMainItems(config driver.Config) []driver.Item {
 	items = append(items, driver.Item{
 		Name: "down_proxy_url",
 		Type: conf.TypeText,
+		Help: "Optional proxy URL for downloads",
 	})
 
 	// Add sorting options if supported
@@ -179,11 +184,13 @@ func getMainItems(config driver.Config) []driver.Item {
 				Name:    "order_by",
 				Type:    conf.TypeSelect,
 				Options: "name,size,modified",
+				Help:    "Field to sort items by",
 			},
 			{
 				Name:    "order_direction",
 				Type:    conf.TypeSelect,
 				Options: "asc,desc",
+				Help:    "Sort direction (ascending or descending)",
 			},
 		}...)
 	}
@@ -193,6 +200,7 @@ func getMainItems(config driver.Config) []driver.Item {
 		Name:    "extract_folder",
 		Type:    conf.TypeSelect,
 		Options: "front,back",
+		Help:    "Where to place folders when listing (front or back)",
 	})
 
 	// Add index and sign options
@@ -201,6 +209,7 @@ func getMainItems(config driver.Config) []driver.Item {
 		Type:     conf.TypeBool,
 		Default:  "false",
 		Required: true,
+		Help:     "Disable indexing for this storage",
 	})
 
 	items = append(items, driver.Item{
@@ -208,6 +217,7 @@ func getMainItems(config driver.Config) []driver.Item {
 		Type:     conf.TypeBool,
 		Default:  "false",
 		Required: true,
+		Help:     "Enable request signing for this storage",
 	})
 
 	return items

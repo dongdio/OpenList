@@ -1,11 +1,11 @@
-package bootstrap
+package initialize
 
 import (
 	"github.com/dongdio/OpenList/internal/offline_download/tool"
 	"github.com/dongdio/OpenList/pkg/utils"
 )
 
-func InitOfflineDownloadTools() {
+func initOfflineDownloadTools() {
 	for k, v := range tool.Tools {
 		res, err := v.Init()
 		if err != nil {

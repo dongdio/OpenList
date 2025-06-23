@@ -18,7 +18,7 @@ var config = searcher.Config{
 
 func init() {
 	searcher.RegisterSearcher(config, func() (searcher.Searcher, error) {
-		db := db.GetDb()
+		db := db.GetDB()
 		switch conf.Conf.Database.Type {
 		case "mysql":
 			tableName := fmt.Sprintf("%ssearch_nodes", conf.Conf.Database.TablePrefix)

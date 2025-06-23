@@ -1,4 +1,4 @@
-package bootstrap
+package initialize
 
 import (
 	"io"
@@ -8,7 +8,7 @@ import (
 	"github.com/natefinch/lumberjack"
 	"github.com/sirupsen/logrus"
 
-	"github.com/dongdio/OpenList/cmd/flags"
+	"github.com/dongdio/OpenList/global"
 	"github.com/dongdio/OpenList/internal/conf"
 	"github.com/dongdio/OpenList/pkg/utils"
 )
@@ -22,11 +22,10 @@ func init() {
 	}
 	logrus.SetFormatter(&formatter)
 	utils.Log.SetFormatter(&formatter)
-	// logrus.SetLevel(logrus.DebugLevel)
 }
 
 func setLog(l *logrus.Logger) {
-	if flags.Debug || flags.Dev {
+	if global.Debug || global.Dev {
 		l.SetLevel(logrus.DebugLevel)
 		l.SetReportCaller(true)
 	} else {
@@ -35,7 +34,7 @@ func setLog(l *logrus.Logger) {
 	}
 }
 
-func Log() {
+func initLog() {
 	setLog(logrus.StandardLogger())
 	setLog(utils.Log)
 	logConfig := conf.Conf.Log
@@ -47,7 +46,7 @@ func Log() {
 			MaxAge:     logConfig.MaxAge,   // days
 			Compress:   logConfig.Compress, // disabled by default
 		}
-		if flags.Debug || flags.Dev || flags.LogStd {
+		if global.Debug || global.Dev || global.LogStd {
 			w = io.MultiWriter(os.Stdout, w)
 		}
 		logrus.SetOutput(w)

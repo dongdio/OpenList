@@ -11,7 +11,7 @@ import (
 
 	"golang.org/x/crypto/ssh"
 
-	"github.com/dongdio/OpenList/cmd/flags"
+	"github.com/dongdio/OpenList/global"
 	"github.com/dongdio/OpenList/pkg/utils"
 )
 
@@ -21,7 +21,7 @@ func InitHostKey() {
 	if SSHSigners != nil {
 		return
 	}
-	sshPath := filepath.Join(flags.DataDir, "ssh")
+	sshPath := filepath.Join(global.DataDir, "ssh")
 	if !utils.Exists(sshPath) {
 		err := utils.CreateNestedDirectory(sshPath)
 		if err != nil {

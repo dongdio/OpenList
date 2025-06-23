@@ -72,8 +72,8 @@ func getMetaByPath(path string) (*model.Meta, error) {
 	}
 
 	// Use singleflight to prevent duplicate database queries
-	meta, err, _ := metaG.Do(path, func() (*model.Meta, error) {
-		meta, err := db.GetMetaByPath(path)
+	metaRes, err, _ := metaG.Do(path, func() (*model.Meta, error) {
+		metaTmp, err := db.GetMetaByPath(path)
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				// Cache negative results to avoid repeated DB queries
@@ -84,11 +84,11 @@ func getMetaByPath(path string) (*model.Meta, error) {
 		}
 
 		// Cache positive results with expiration
-		metaCache.Set(path, meta, cache.WithEx[*model.Meta](metaCacheExpiration))
-		return meta, nil
+		metaCache.Set(path, metaTmp, cache.WithEx[*model.Meta](metaCacheExpiration))
+		return metaTmp, nil
 	})
 
-	return meta, err
+	return metaRes, err
 }
 
 // DeleteMetaById deletes metadata by its ID and removes it from cache

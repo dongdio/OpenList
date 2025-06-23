@@ -2,6 +2,7 @@ package fs
 
 import (
 	"context"
+	"errors"
 	"path"
 	"path/filepath"
 
@@ -18,7 +19,7 @@ func WalkFS(ctx context.Context, depth int, name string, info model.Obj, walkFn 
 	// This implementation is based on Walk's code in the standard path/path package.
 	walkFnErr := walkFn(name, info)
 	if walkFnErr != nil {
-		if info.IsDir() && walkFnErr == filepath.SkipDir {
+		if info.IsDir() && errors.Is(walkFnErr, filepath.SkipDir) {
 			return nil
 		}
 		return walkFnErr
@@ -34,8 +35,8 @@ func WalkFS(ctx context.Context, depth int, name string, info model.Obj, walkFn 
 	}
 	for _, fileInfo := range objs {
 		filename := path.Join(name, fileInfo.GetName())
-		if err := WalkFS(ctx, depth-1, filename, fileInfo, walkFn); err != nil {
-			if err == filepath.SkipDir {
+		if err = WalkFS(ctx, depth-1, filename, fileInfo, walkFn); err != nil {
+			if errors.Is(err, filepath.SkipDir) {
 				break
 			}
 			return err

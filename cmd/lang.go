@@ -15,8 +15,7 @@ import (
 	"github.com/spf13/cobra"
 
 	_ "github.com/dongdio/OpenList/drivers"
-	"github.com/dongdio/OpenList/internal/bootstrap"
-	"github.com/dongdio/OpenList/internal/bootstrap/data"
+	"github.com/dongdio/OpenList/initialize"
 	"github.com/dongdio/OpenList/internal/conf"
 	"github.com/dongdio/OpenList/internal/op"
 	"github.com/dongdio/OpenList/pkg/utils"
@@ -116,7 +115,7 @@ func generateDriversJson() {
 }
 
 func generateSettingsJson() {
-	settings := data.InitialSettings()
+	settings := initialize.InitialSettings()
 	settingsLang := make(KV[any])
 	for _, setting := range settings {
 		settingsLang[setting.Key] = convert(setting.Key)
@@ -142,7 +141,7 @@ var LangCmd = &cobra.Command{
 	Short: "Generate language json file",
 	Run: func(cmd *cobra.Command, args []string) {
 		frontendPath, _ = cmd.Flags().GetString("frontend-path")
-		bootstrap.InitConfig()
+		initialize.InitConfig()
 		err := os.MkdirAll("lang", 0777)
 		if err != nil {
 			utils.Log.Fatalf("failed create folder: %s", err.Error())

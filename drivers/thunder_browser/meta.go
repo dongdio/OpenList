@@ -100,9 +100,9 @@ var configExpert = driver.Config{
 
 func init() {
 	op.RegisterDriver(func() driver.Driver {
-		return &ThunderBrowser{}
+		return new(ThunderBrowser)
 	})
 	op.RegisterDriver(func() driver.Driver {
-		return &ThunderBrowserExpert{}
+		return new(ThunderBrowserExpert)
 	})
 }

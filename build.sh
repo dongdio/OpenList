@@ -294,32 +294,64 @@ MakeRelease() {
   if [ -d compress ]; then
     rm -rv compress
   fi
-  mkdir compress
+  mkdir -p compress
+  
+  echo "===== Making release packages ====="
+  echo "Current directory: $(pwd)"
+  echo "Files to compress:"
+  find . -type f -name "$appName-*" | sort
+  
+  # Linux packages
+  echo "Creating Linux packages..."
   for i in $(find . -type f -name "$appName-linux-*"); do
+    echo "Packaging $i"
     cp "$i" "$appName"
     tar -czvf compress/"$i".tar.gz "$appName"
     rm -f "$appName"
   done
-    for i in $(find . -type f -name "$appName-android-*"); do
+  
+  # Android packages
+  echo "Creating Android packages..."
+  for i in $(find . -type f -name "$appName-android-*"); do
+    echo "Packaging $i"
     cp "$i" "$appName"
     tar -czvf compress/"$i".tar.gz "$appName"
     rm -f "$appName"
   done
+  
+  # macOS packages
+  echo "Creating macOS packages..."
   for i in $(find . -type f -name "$appName-darwin-*"); do
+    echo "Packaging $i"
     cp "$i" "$appName"
     tar -czvf compress/"$i".tar.gz "$appName"
     rm -f "$appName"
   done
+  
+  # FreeBSD packages
+  echo "Creating FreeBSD packages..."
   for i in $(find . -type f -name "$appName-freebsd-*"); do
+    echo "Packaging $i"
     cp "$i" "$appName"
     tar -czvf compress/"$i".tar.gz "$appName"
     rm -f "$appName"
   done
+  
+  # Windows packages
+  echo "Creating Windows packages..."
   for i in $(find . -type f -name "$appName-windows-*"); do
+    echo "Packaging $i"
     cp "$i" "$appName".exe
     zip compress/$(echo $i | sed 's/\.[^.]*$//').zip "$appName".exe
     rm -f "$appName".exe
   done
+  
+  echo "===== Release packages created ====="
+  echo "Compressed files:"
+  find compress -type f | sort
+  
+  # Create checksums
+  echo "Creating checksums file: $1"
   cd compress
   find . -type f -print0 | xargs -0 md5sum >"$1"
   cat "$1"

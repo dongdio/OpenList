@@ -31,18 +31,21 @@
 >
 > 一个更可信、可持续的 AList 开源替代方案，防范未来可能的闭源、黑箱或不可信变更。
 >
-> 我们诚挚地感谢原项目 [AlistGo/alist](https://github.com/AlistGo/alist) 的作者 [Xhofe](https://github.com/Xhofe) 以及其他所有贡献者。
+> 我们诚挚地感谢原项目 [AlistGo/alist](https://github.com/AlistGo/alist) 的作者 [Xhofe](https://github.com/Xhofe)
+> 以及其他所有贡献者。
 >
 > 本 Fork 尚未稳定, 具体迁移进度可在 [OpenList 迁移工作总结](https://github.com/dongdio/OpenList/issues/6) 中查看。
 
-[English](./README.md) | 中文 | [日本語](./README_ja.md) | [Contributing](./CONTRIBUTING.md) | [CODE OF CONDUCT](./CODE_OF_CONDUCT.md)
+[English](./README.md) |
+中文 | [日本語](./README_ja.md) | [Contributing](./CONTRIBUTING.md) | [CODE OF CONDUCT](./CODE_OF_CONDUCT.md)
 
 ## 功能
 
 - [x] 多种存储
     - [x] 本地存储
     - [x] [阿里云盘](https://www.alipan.com/)
-    - [x] OneDrive / Sharepoint（[国际版](https://www.office.com/), [世纪互联](https://portal.partner.microsoftonline.cn),de,us）
+    - [x] OneDrive / Sharepoint（[国际版](https://www.office.com/), [世纪互联](https://portal.partner.microsoftonline.cn)
+      ,de,us）
     - [x] [天翼云盘](https://cloud.189.cn) (个人云, 家庭云)
     - [x] [GoogleDrive](https://drive.google.com/)
     - [x] [123云盘](https://www.123pan.com/)
@@ -102,7 +105,8 @@ N/A（重建中）
 
 ## 讨论
 
-一般问题请到 [*Discussions*](https://github.com/dongdio/OpenList/discussions) 讨论，***Issues* 仅针对错误报告和功能请求。**
+一般问题请到 [*Discussions*](https://github.com/dongdio/OpenList/discussions) 讨论，***Issues* 仅针对错误报告和功能请求。
+**
 
 ## 许可
 

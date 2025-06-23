@@ -34,6 +34,6 @@ var config = driver.Config{
 
 func init() {
 	op.RegisterDriver(func() driver.Driver {
-		return &Open123{}
+		return new(Open123)
 	})
 }

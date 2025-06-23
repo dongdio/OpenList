@@ -5,9 +5,11 @@ on:
     tags:
       - 'v*'
 
+permissions: write-all
+
 jobs:
   changelog:
-    name: Create Release
+    name: Create Release Changelog
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -15,10 +17,23 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Delete beta tag
-        run: git tag -d beta
+      - name: Delete beta tag if exists
+        run: git tag -d beta || echo "Beta tag not found, continuing..."
         continue-on-error: true
 
-      - run: npx changelogithub # or changelogithub@0.12 if ensure the stable result
+      - name: Generate changelog
+        id: changelog
+        run: |
+          echo "Generating changelog for tag: ${{ github.ref_name }}"
+          echo "Current branch: $(git branch --show-current)"
+          echo "All tags: $(git tag -l)"
+
+      - name: Create/Update changelog
+        run: npx changelogithub
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
+      - name: Verify changelog generation
+        run: |
+          echo "Changelog generation completed"
+          echo "Release URL: https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}"

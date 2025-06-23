@@ -1,4 +1,4 @@
-package flags
+package global
 
 var (
 	DataDir     string

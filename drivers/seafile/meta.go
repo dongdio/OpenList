@@ -23,6 +23,6 @@ var config = driver.Config{
 
 func init() {
 	op.RegisterDriver(func() driver.Driver {
-		return &Seafile{}
+		return new(Seafile)
 	})
 }

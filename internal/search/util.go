@@ -45,26 +45,27 @@ func updateIgnorePaths(customIgnorePaths string) {
 	var skipDrivers = []string{"OpenList", "Virtual"}
 	v3Visited := make(map[string]bool)
 	for _, storage := range storages {
-		if utils.SliceContains(skipDrivers, storage.Config().Name) {
-			if storage.Config().Name == "OpenList" {
-				addition := storage.GetAddition().(*openlist.Addition)
-				allowIndexed, visited := v3Visited[addition.Address]
-				if !visited {
-					url := addition.Address + "/api/public/settings"
-					res, err := base.RestyClient.R().Get(url)
-					if err == nil {
-						log.Debugf("allow_indexed body: %+v", res.String())
-						allowIndexed = utils.Json.Get(res.Bytes(), "data", conf.AllowIndexed).ToString() == "true"
-						v3Visited[addition.Address] = allowIndexed
-					}
-				}
-				log.Debugf("%s allow_indexed: %v", addition.Address, allowIndexed)
-				if !allowIndexed {
-					ignorePaths = append(ignorePaths, storage.GetStorage().MountPath)
-				}
-			} else {
-				ignorePaths = append(ignorePaths, storage.GetStorage().MountPath)
+		if !utils.SliceContains(skipDrivers, storage.Config().Name) {
+			continue
+		}
+		if storage.Config().Name != "OpenList" {
+			ignorePaths = append(ignorePaths, storage.GetStorage().MountPath)
+			continue
+		}
+		addition := storage.GetAddition().(*openlist.Addition)
+		allowIndexed, visited := v3Visited[addition.Address]
+		if !visited {
+			url := addition.Address + "/api/public/settings"
+			res, err := base.RestyClient.R().Get(url)
+			if err == nil {
+				log.Debugf("allow_indexed body: %+v", res.String())
+				allowIndexed = utils.Json.Get(res.Bytes(), "data", conf.AllowIndexed).ToString() == "true"
+				v3Visited[addition.Address] = allowIndexed
 			}
+		}
+		log.Debugf("%s allow_indexed: %v", addition.Address, allowIndexed)
+		if !allowIndexed {
+			ignorePaths = append(ignorePaths, storage.GetStorage().MountPath)
 		}
 	}
 	if customIgnorePaths != "" {

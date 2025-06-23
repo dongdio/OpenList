@@ -2,29 +2,31 @@ name: release
 
 on:
   release:
-    types: [ published ]
+    types: [published]
 
 permissions: write-all
 
 jobs:
-  release:
-    strategy:
-      matrix:
-        platform: [ ubuntu-latest ]
-        go-version: [ '1.21' ]
-    name: Release
-    runs-on: ${{ matrix.platform }}
+  prepare_release:
+    runs-on: ubuntu-latest
+    outputs:
+      release_id: ${{ github.event.release.id }}
     steps:
+      - name: Set release as prerelease during build
+        uses: irongut/EditRelease@v1.2.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          id: ${{ github.event.release.id }}
+          prerelease: true
 
-      - name: Free Disk Space (Ubuntu)
+  build_main:
+    needs: prepare_release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Free Disk Space
         uses: jlumbroso/free-disk-space@main
         with:
-          # this might remove tools that are actually needed,
-          # if set to "true" but frees about 6 GB
           tool-cache: false
-          
-          # all of these default to true, but feel free to set to
-          # "false" if necessary for your workflow
           android: true
           dotnet: true
           haskell: true
@@ -32,17 +34,10 @@ jobs:
           docker-images: true
           swap-storage: true
 
-      - name: Prerelease
-        uses: irongut/EditRelease@v1.2.0
-        with:
-          token: ${{ secrets.GITHUB_TOKEN  }}
-          id: ${{ github.event.release.id }}
-          prerelease: true
-
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: ${{ matrix.go-version }}
+          go-version: '1.24.4'
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -56,9 +51,40 @@ jobs:
           go install github.com/crazy-max/xgo@latest
           sudo apt install upx
 
-      - name: Build
+      - name: Build main targets
+        id: build_main
         run: |
-          bash build.sh release
+          # 创建构建日志
+          touch build_log.txt
+
+          # 运行构建并捕获输出
+          bash build.sh release | tee build_log.txt
+
+          # 检查构建是否成功
+          if [ $? -ne 0 ]; then
+            echo "::error::Build script failed. See log for details."
+            exit 1
+          fi
+
+          # 检查输出目录
+          echo "=== Build output directories ==="
+          find build -type d | sort
+
+          # 检查压缩文件
+          echo "=== Compress files ==="
+          find build/compress -type f | sort
+
+          # 检查压缩文件是否存在
+          if [ ! -d "build/compress" ] || [ -z "$(ls -A build/compress 2>/dev/null)" ]; then
+            echo "::warning::No files found in build/compress directory"
+            # 尝试查找构建产物并移动
+            mkdir -p build/compress
+            find build -name "*.zip" -o -name "*.tar.gz" | xargs -I{} cp {} build/compress/ || true
+          fi
+
+          # 再次检查
+          echo "=== Final compress files ==="
+          find build/compress -type f | sort
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -67,10 +93,19 @@ jobs:
         with:
           files: build/compress/*
           prerelease: false
+          fail_on_unmatched_files: false
 
+      - name: Upload build logs as artifact (for debugging)
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs
+          path: |
+            build_log.txt
+            build/
+          retention-days: 7
 
-  # TODO: We do not have desktop clients right now. We may need a better way to 
-  # trigger the build of desktop client when we actually have it.     
+  # TODO: We do not have desktop clients right now. We may need a better way to
+  # trigger the build of desktop client when we actually have it.
   # release_desktop:
   #   needs: release
   #   name: Release desktop

@@ -29,11 +29,14 @@
 
 > [!IMPORTANT]
 >
-> Drop-in replacement for AList with long-term governance, no hidden risks, and full transparency, built to defend open source against trust-based attacks.
+> Drop-in replacement for AList with long-term governance, no hidden risks, and full transparency, built to defend open
+> source against trust-based attacks.
 >
-> We sincerely thank the author [Xhofe](https://github.com/Xhofe) of the original project [AlistGo/alist](https://github.com/AlistGo/alist) and all other contributors.
+> We sincerely thank the author [Xhofe](https://github.com/Xhofe) of the original
+> project [AlistGo/alist](https://github.com/AlistGo/alist) and all other contributors.
 >
-> This fork is not yet stable, specific migration progress can be viewed in [OpenList Migration Work Summary](https://github.com/dongdio/OpenList/issues/6).
+> This fork is not yet stable, specific migration progress can be viewed
+> in [OpenList Migration Work Summary](https://github.com/dongdio/OpenList/issues/6).
 
 English | [中文](./README_cn.md) | [日本語](./README_ja.md) | [Contributing](./CONTRIBUTING.md) | [CODE OF CONDUCT](./CODE_OF_CONDUCT.md)
 
@@ -42,7 +45,8 @@ English | [中文](./README_cn.md) | [日本語](./README_ja.md) | [Contributing
 - [x] Multiple storages
     - [x] Local storage
     - [x] [Aliyundrive](https://www.alipan.com/)
-    - [x] OneDrive / Sharepoint ([global](https://www.office.com/), [cn](https://portal.partner.microsoftonline.cn),de,us)
+    - [x] OneDrive / Sharepoint ([global](https://www.office.com/), [cn](https://portal.partner.microsoftonline.cn)
+      ,de,us)
     - [x] [189cloud](https://cloud.189.cn) (Personal, Family)
     - [x] [GoogleDrive](https://drive.google.com/)
     - [x] [123pan](https://www.123pan.com/)
@@ -104,7 +108,8 @@ N/A (to be rebuilt)
 
 ## Discussion
 
-Please refer to [*Discussions*](https://github.com/dongdio/OpenList/discussions) for raising general questions, ***Issues* is for bug reports and feature requests only.**
+Please refer to [*Discussions*](https://github.com/dongdio/OpenList/discussions) for raising general questions, *
+**Issues* is for bug reports and feature requests only.**
 
 ## License
 
@@ -112,11 +117,14 @@ The `OpenList` is open-source software licensed under the AGPL-3.0 license.
 
 ## Disclaimer
 
-- This program is a free and open source project. It is designed to share files on the network disk, which is convenient for downloading and learning Golang. Please abide by relevant laws and regulations when using it, and do not abuse it;
+- This program is a free and open source project. It is designed to share files on the network disk, which is convenient
+  for downloading and learning Golang. Please abide by relevant laws and regulations when using it, and do not abuse it;
 - This program is implemented by calling the official sdk/interface, without destroying the official interface behavior;
 - This program only does 302 redirect/traffic forwarding, and does not intercept, store, or tamper with any user data;
-- Before using this program, you should understand and bear the corresponding risks, including but not limited to account ban, download speed limit, etc., which is none of this program's business;
-- If there is any infringement, please contact [OpenListTeam](https://github.com/OpenListTeam), and it will be dealt with in time.
+- Before using this program, you should understand and bear the corresponding risks, including but not limited to
+  account ban, download speed limit, etc., which is none of this program's business;
+- If there is any infringement, please contact [OpenListTeam](https://github.com/OpenListTeam), and it will be dealt
+  with in time.
 
 ---
 

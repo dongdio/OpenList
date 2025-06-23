@@ -1,11 +1,11 @@
-package data
+package initialize
 
 import (
 	"context"
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/dongdio/OpenList/cmd/flags"
+	"github.com/dongdio/OpenList/global"
 	"github.com/dongdio/OpenList/internal/db"
 	"github.com/dongdio/OpenList/internal/message"
 	"github.com/dongdio/OpenList/internal/model"
@@ -36,7 +36,7 @@ func initDevData() {
 }
 
 func initDevDo() {
-	if flags.Dev {
+	if global.Dev {
 		go func() {
 			err := message.GetMessenger().WaitSend(message.Message{
 				Type:    "string",

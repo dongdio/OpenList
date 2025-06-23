@@ -1,4 +1,4 @@
-package data
+package initialize
 
 import (
 	"os"
@@ -6,7 +6,7 @@ import (
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 
-	"github.com/dongdio/OpenList/cmd/flags"
+	"github.com/dongdio/OpenList/global"
 	"github.com/dongdio/OpenList/internal/db"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
@@ -18,7 +18,7 @@ func initUser() {
 	admin, err := op.GetAdmin()
 	adminPassword := random.String(8)
 	envpass := os.Getenv("OPENLIST_ADMIN_PASSWORD")
-	if flags.Dev {
+	if global.Dev {
 		adminPassword = "admin"
 	} else if len(envpass) > 0 {
 		adminPassword = envpass

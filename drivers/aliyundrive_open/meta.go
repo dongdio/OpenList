@@ -37,6 +37,6 @@ var API_URL = "https://openapi.alipan.com"
 
 func init() {
 	op.RegisterDriver(func() driver.Driver {
-		return &AliyundriveOpen{}
+		return new(AliyundriveOpen)
 	})
 }

@@ -3,7 +3,7 @@ package conf
 import (
 	"path/filepath"
 
-	"github.com/dongdio/OpenList/cmd/flags"
+	"github.com/dongdio/OpenList/global"
 	"github.com/dongdio/OpenList/pkg/utils/random"
 )
 
@@ -120,10 +120,10 @@ type Config struct {
 }
 
 func DefaultConfig() *Config {
-	tempDir := filepath.Join(flags.DataDir, "temp")
-	indexDir := filepath.Join(flags.DataDir, "bleve")
-	logPath := filepath.Join(flags.DataDir, "log/log.log")
-	dbPath := filepath.Join(flags.DataDir, "data.db")
+	tempDir := filepath.Join(global.DataDir, "temp")
+	indexDir := filepath.Join(global.DataDir, "bleve")
+	logPath := filepath.Join(global.DataDir, "log/log.log")
+	dbPath := filepath.Join(global.DataDir, "data.db")
 	return &Config{
 		Scheme: Scheme{
 			Address:    "0.0.0.0",

@@ -12,8 +12,8 @@ import (
 	sdk "github.com/xhofe/115-sdk-go"
 	"golang.org/x/time/rate"
 
-	"github.com/dongdio/OpenList/cmd/flags"
 	"github.com/dongdio/OpenList/drivers/base"
+	"github.com/dongdio/OpenList/global"
 	"github.com/dongdio/OpenList/internal/driver"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
@@ -43,7 +43,7 @@ func (d *Open115) Init(ctx context.Context) error {
 			d.Addition.RefreshToken = s2
 			op.MustSaveDriverStorage(d)
 		}))
-	if flags.Debug || flags.Dev {
+	if global.Debug || global.Dev {
 		d.client.SetDebug(true)
 	}
 	_, err := d.client.UserInfo(ctx)

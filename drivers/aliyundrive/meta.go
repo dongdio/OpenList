@@ -25,6 +25,6 @@ We recommend using the official driver AliyundriveOpen.`,
 
 func init() {
 	op.RegisterDriver(func() driver.Driver {
-		return &AliDrive{}
+		return new(AliDrive)
 	})
 }
