@@ -23,7 +23,7 @@ jobs:
           - linux-arm64-musl
           - linux-amd64-musl
           - windows-arm64
-          - android-arm64
+#          - android-arm64
     name: Build
     runs-on: ${{ matrix.platform }}
     steps:
