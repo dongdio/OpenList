@@ -9,7 +9,7 @@ require (
 	github.com/OpenListTeam/sftpd-openlist v1.0.1
 	github.com/OpenListTeam/times v0.1.0
 	github.com/ProtonMail/go-crypto v1.3.0
-	github.com/SheltonZhu/115driver v1.0.37
+	github.com/SheltonZhu/115driver v1.1.0
 	github.com/Xhofe/go-cache v0.0.0-20240804043513-b1a71927bc21
 	github.com/Xhofe/rateg v0.1.0
 	github.com/aliyun/aliyun-oss-go-sdk v3.0.2+incompatible

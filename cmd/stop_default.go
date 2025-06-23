@@ -36,7 +36,7 @@ func stop() {
 	} else {
 		log.Info("terminated process: ", pid)
 	}
-	err = os.Remove(pidFile)
+	err = os.Remove(pidFilePath)
 	if err != nil {
 		log.Errorf("failed to remove pid file")
 	}
