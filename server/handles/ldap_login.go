@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"gopkg.in/ldap.v3"
+	"github.com/go-ldap/ldap/v3"
 
 	"github.com/dongdio/OpenList/internal/conf"
 	"github.com/dongdio/OpenList/internal/db"
@@ -157,8 +157,7 @@ func dial(ldapServer string) (*ldap.Conn, error) {
 	}
 
 	if tlsEnabled {
-		return ldap.DialTLS("tcp", ldapServer, &tls.Config{InsecureSkipVerify: true})
-	} else {
-		return ldap.Dial("tcp", ldapServer)
+		return ldap.DialURL(ldapServer, ldap.DialWithTLSConfig(&tls.Config{InsecureSkipVerify: true}))
 	}
+	return ldap.DialURL(ldapServer)
 }
