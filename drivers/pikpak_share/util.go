@@ -78,7 +78,7 @@ const (
 	PCSdkVersion         = "8.0.3"
 )
 
-func (d *PikPakShare) request(url string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+func (d *PikPakShare) request(url string, method string, callback base.ReqCallback, resp any) ([]byte, error) {
 	req := base.RestyClient.R()
 	req.SetHeaders(map[string]string{
 		"User-Agent":      d.GetUserAgent(),

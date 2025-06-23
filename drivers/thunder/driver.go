@@ -473,7 +473,7 @@ func (xc *XunLeiCommon) SetCoreTokenResp(tr *CoreLoginResp) {
 }
 
 // 携带Authorization和CaptchaToken的请求
-func (xc *XunLeiCommon) Request(url string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+func (xc *XunLeiCommon) Request(url string, method string, callback base.ReqCallback, resp any) ([]byte, error) {
 	data, err := xc.Common.Request(url, method, func(req *resty.Request) {
 		req.SetHeaders(map[string]string{
 			"Authorization":   xc.Token(),

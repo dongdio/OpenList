@@ -62,7 +62,7 @@ func (a *Aria2) IsReady() bool {
 }
 
 func (a *Aria2) AddURL(args *tool.AddUrlArgs) (string, error) {
-	options := map[string]interface{}{
+	options := map[string]any{
 		"dir": args.TempDir,
 	}
 	gid, err := a.client.AddURI([]string{args.Url}, options)

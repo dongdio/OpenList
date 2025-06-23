@@ -329,7 +329,7 @@ func (d *Open115) Put(ctx context.Context, dstDir model.Obj, file model.FileStre
 // 	return nil, errs.NotImplement
 // }
 
-// func (d *Template) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
+// func (d *Template) Other(ctx context.Context, args model.OtherArgs) (any, error) {
 //	return nil, errs.NotSupport
 // }
 

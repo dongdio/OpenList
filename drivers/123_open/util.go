@@ -32,7 +32,7 @@ var ( // 不同情况下获取的AccessTokenQPS限制不同 如下模块化易�
 	UploadAsync    = InitApiInfo(Api+"/upload/v1/file/upload_async_result", 1)
 )
 
-func (d *Open123) Request(apiInfo *ApiInfo, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+func (d *Open123) Request(apiInfo *ApiInfo, method string, callback base.ReqCallback, resp any) ([]byte, error) {
 	retryToken := true
 	for {
 		req := base.RestyClient.R()

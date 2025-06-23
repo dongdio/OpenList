@@ -132,7 +132,7 @@ func (d *Onedrive) _refreshToken() error {
 	return nil
 }
 
-func (d *Onedrive) Request(url string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+func (d *Onedrive) Request(url string, method string, callback base.ReqCallback, resp any) ([]byte, error) {
 	req := base.RestyClient.R()
 	req.SetHeader("Authorization", "Bearer "+d.AccessToken)
 	if callback != nil {
@@ -230,7 +230,7 @@ func toAPIMetadata(stream model.FileStreamer) Metadata {
 
 func (d *Onedrive) upBig(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
 	url := d.GetMetaUrl(false, stdpath.Join(dstDir.GetPath(), stream.GetName())) + "/createUploadSession"
-	metadata := map[string]interface{}{"item": toAPIMetadata(stream)}
+	metadata := map[string]any{"item": toAPIMetadata(stream)}
 	res, err := d.Request(url, http.MethodPost, func(req *resty.Request) {
 		req.SetBody(metadata).SetContext(ctx)
 	}, nil)

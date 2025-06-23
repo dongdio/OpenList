@@ -1,57 +1,92 @@
+// Package op provides operations for OpenList's core functionality
 package op
 
 import (
 	"reflect"
 	"strings"
 
-	"github.com/dongdio/OpenList/internal/conf"
-
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 
+	"github.com/dongdio/OpenList/internal/conf"
 	"github.com/dongdio/OpenList/internal/driver"
 )
 
+// DriverConstructor is a function type that creates a new driver instance
 type DriverConstructor func() driver.Driver
 
-var driverMap = map[string]DriverConstructor{}
-var driverInfoMap = map[string]driver.Info{}
+// Maps to store registered drivers and their information
+var (
+	// driverMap maps driver names to their constructor functions
+	driverMap = map[string]DriverConstructor{}
 
-func RegisterDriver(driver DriverConstructor) {
-	// log.Infof("register driver: [%s]", config.Name)
-	tempDriver := driver()
+	// driverInfoMap maps driver names to their metadata and configuration
+	driverInfoMap = map[string]driver.Info{}
+)
+
+// RegisterDriver registers a new storage driver with the system
+// It extracts the driver's configuration and additional information
+func RegisterDriver(constructor DriverConstructor) {
+	if constructor == nil {
+		log.Error("attempted to register nil driver constructor")
+		return
+	}
+
+	// Create a temporary instance to get configuration
+	tempDriver := constructor()
+	if tempDriver == nil {
+		log.Error("driver constructor returned nil")
+		return
+	}
+
 	tempConfig := tempDriver.Config()
+	log.Debugf("registering driver: [%s]", tempConfig.Name)
+
+	// Register driver items and store the constructor
 	registerDriverItems(tempConfig, tempDriver.GetAddition())
-	driverMap[tempConfig.Name] = driver
+	driverMap[tempConfig.Name] = constructor
 }
 
+// GetDriver returns the constructor for a driver by name
+// Returns an error if the driver is not found
 func GetDriver(name string) (DriverConstructor, error) {
-	n, ok := driverMap[name]
+	constructor, ok := driverMap[name]
 	if !ok {
 		return nil, errors.Errorf("no driver named: %s", name)
 	}
-	return n, nil
+	return constructor, nil
 }
 
+// GetDriverNames returns a list of all registered driver names
 func GetDriverNames() []string {
-	var driverNames []string
-	for k := range driverInfoMap {
-		driverNames = append(driverNames, k)
+	driverNames := make([]string, 0, len(driverInfoMap))
+	for name := range driverInfoMap {
+		driverNames = append(driverNames, name)
 	}
 	return driverNames
 }
 
+// GetDriverInfoMap returns the map of driver information for all registered drivers
 func GetDriverInfoMap() map[string]driver.Info {
 	return driverInfoMap
 }
 
+// registerDriverItems processes driver configuration and additional information
+// to build the driver info structure
 func registerDriverItems(config driver.Config, addition driver.Additional) {
-	// log.Debugf("addition of %s: %+v", config.Name, addition)
+	log.Debugf("processing addition for %s: %+v", config.Name, addition)
+
+	// Get the underlying type of the addition
 	tAddition := reflect.TypeOf(addition)
 	for tAddition.Kind() == reflect.Pointer {
 		tAddition = tAddition.Elem()
 	}
+
+	// Generate driver items
 	mainItems := getMainItems(config)
 	additionalItems := getAdditionalItems(tAddition, config.DefaultRoot)
+
+	// Store driver info
 	driverInfoMap[config.Name] = driver.Info{
 		Common:     mainItems,
 		Additional: additionalItems,
@@ -59,20 +94,29 @@ func registerDriverItems(config driver.Config, addition driver.Additional) {
 	}
 }
 
+// getMainItems generates the common configuration items for all drivers
+// based on the driver's capabilities
 func getMainItems(config driver.Config) []driver.Item {
-	items := []driver.Item{{
-		Name:     "mount_path",
-		Type:     conf.TypeString,
-		Required: true,
-		Help:     "The path you want to mount to, it is unique and cannot be repeated",
-	}, {
-		Name: "order",
-		Type: conf.TypeNumber,
-		Help: "use to sort",
-	}, {
-		Name: "remark",
-		Type: conf.TypeText,
-	}}
+	// Basic items that all drivers have
+	items := []driver.Item{
+		{
+			Name:     "mount_path",
+			Type:     conf.TypeString,
+			Required: true,
+			Help:     "The path you want to mount to, it is unique and cannot be repeated",
+		},
+		{
+			Name: "order",
+			Type: conf.TypeNumber,
+			Help: "use to sort",
+		},
+		{
+			Name: "remark",
+			Type: conf.TypeText,
+		},
+	}
+
+	// Add cache expiration if the driver supports caching
 	if !config.NoCache {
 		items = append(items, driver.Item{
 			Name:     "cache_expiration",
@@ -82,18 +126,24 @@ func getMainItems(config driver.Config) []driver.Item {
 			Help:     "The cache expiration time for this storage",
 		})
 	}
+
+	// Add proxy options if the driver supports it
 	if !config.OnlyProxy && !config.OnlyLocal {
-		items = append(items, []driver.Item{{
-			Name: "web_proxy",
-			Type: conf.TypeBool,
-		}, {
-			Name:     "webdav_policy",
-			Type:     conf.TypeSelect,
-			Options:  "302_redirect,use_proxy_url,native_proxy",
-			Default:  "302_redirect",
-			Required: true,
-		},
+		items = append(items, []driver.Item{
+			{
+				Name: "web_proxy",
+				Type: conf.TypeBool,
+			},
+			{
+				Name:     "webdav_policy",
+				Type:     conf.TypeSelect,
+				Options:  "302_redirect,use_proxy_url,native_proxy",
+				Default:  "302_redirect",
+				Required: true,
+			},
 		}...)
+
+		// Add proxy range option if supported
 		if config.ProxyRangeOption {
 			item := driver.Item{
 				Name: "proxy_range",
@@ -106,6 +156,7 @@ func getMainItems(config driver.Config) []driver.Item {
 			items = append(items, item)
 		}
 	} else {
+		// For proxy-only or local-only drivers
 		items = append(items, driver.Item{
 			Name:     "webdav_policy",
 			Type:     conf.TypeSelect,
@@ -114,54 +165,80 @@ func getMainItems(config driver.Config) []driver.Item {
 			Required: true,
 		})
 	}
+
+	// Add download proxy URL option
 	items = append(items, driver.Item{
 		Name: "down_proxy_url",
 		Type: conf.TypeText,
 	})
+
+	// Add sorting options if supported
 	if config.LocalSort {
-		items = append(items, []driver.Item{{
-			Name:    "order_by",
-			Type:    conf.TypeSelect,
-			Options: "name,size,modified",
-		}, {
-			Name:    "order_direction",
-			Type:    conf.TypeSelect,
-			Options: "asc,desc",
-		}}...)
+		items = append(items, []driver.Item{
+			{
+				Name:    "order_by",
+				Type:    conf.TypeSelect,
+				Options: "name,size,modified",
+			},
+			{
+				Name:    "order_direction",
+				Type:    conf.TypeSelect,
+				Options: "asc,desc",
+			},
+		}...)
 	}
+
+	// Add extract folder option
 	items = append(items, driver.Item{
 		Name:    "extract_folder",
 		Type:    conf.TypeSelect,
 		Options: "front,back",
 	})
+
+	// Add index and sign options
 	items = append(items, driver.Item{
 		Name:     "disable_index",
 		Type:     conf.TypeBool,
 		Default:  "false",
 		Required: true,
 	})
+
 	items = append(items, driver.Item{
 		Name:     "enable_sign",
 		Type:     conf.TypeBool,
 		Default:  "false",
 		Required: true,
 	})
+
 	return items
 }
+
+// getAdditionalItems extracts driver-specific configuration items
+// from the Additional struct using reflection
 func getAdditionalItems(t reflect.Type, defaultRoot string) []driver.Item {
-	var items []driver.Item
+	items := make([]driver.Item, 0)
+
+	// Process each field in the struct
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
+
+		// Recursively process nested structs
 		if field.Type.Kind() == reflect.Struct {
 			items = append(items, getAdditionalItems(field.Type, defaultRoot)...)
 			continue
 		}
+
+		// Get field tags
 		tag := field.Tag
-		ignore, ok1 := tag.Lookup("ignore")
-		name, ok2 := tag.Lookup("json")
-		if (ok1 && ignore == "true") || !ok2 {
+		ignore, hasIgnore := tag.Lookup("ignore")
+		name, hasName := tag.Lookup("json")
+
+		// Skip fields that should be ignored or don't have a json tag
+		if (hasIgnore && ignore == "true") || !hasName {
 			continue
 		}
+
+		// Create item from field metadata
 		item := driver.Item{
 			Name:     name,
 			Type:     strings.ToLower(field.Type.Name()),
@@ -170,20 +247,27 @@ func getAdditionalItems(t reflect.Type, defaultRoot string) []driver.Item {
 			Required: tag.Get("required") == "true",
 			Help:     tag.Get("help"),
 		}
+
+		// Override type if specified
 		if tag.Get("type") != "" {
 			item.Type = tag.Get("type")
 		}
+
+		// Special handling for root folder fields
 		if item.Name == "root_folder_id" || item.Name == "root_folder_path" {
 			if item.Default == "" {
 				item.Default = defaultRoot
 			}
 			item.Required = item.Default != ""
 		}
-		// set default type to string
+
+		// Set default type to string if not specified
 		if item.Type == "" {
 			item.Type = "string"
 		}
+
 		items = append(items, item)
 	}
+
 	return items
 }

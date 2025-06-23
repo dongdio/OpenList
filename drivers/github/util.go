@@ -130,7 +130,7 @@ func loadPrivateKey(key, passphrase string) (*openpgp.Entity, error) {
 	return entity, nil
 }
 
-func signCommit(m *map[string]interface{}, entity *openpgp.Entity) (string, error) {
+func signCommit(m *map[string]any, entity *openpgp.Entity) (string, error) {
 	var commit strings.Builder
 	commit.WriteString(fmt.Sprintf("tree %s\n", (*m)["tree"].(string)))
 	parents := (*m)["parents"].([]string)

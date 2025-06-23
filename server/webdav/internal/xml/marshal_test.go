@@ -120,17 +120,17 @@ type MixedNested struct {
 }
 
 type NilTest struct {
-	A interface{} `xml:"parent1>parent2>a"`
-	B interface{} `xml:"parent1>b"`
-	C interface{} `xml:"parent1>parent2>c"`
+	A any `xml:"parent1>parent2>a"`
+	B any `xml:"parent1>b"`
+	C any `xml:"parent1>parent2>c"`
 }
 
 type Service struct {
 	XMLName struct{} `xml:"service"`
 	Domain  *Domain  `xml:"host>domain"`
 	Port    *Port    `xml:"host>port"`
-	Extra1  interface{}
-	Extra2  interface{} `xml:"host>extra2"`
+	Extra1  any
+	Extra2  any `xml:"host>extra2"`
 }
 
 var nilStruct *Ship
@@ -269,7 +269,7 @@ type Data struct {
 }
 
 type Plain struct {
-	V interface{}
+	V any
 }
 
 type MyInt int
@@ -394,7 +394,7 @@ type RecursiveXMLNSFieldStruct struct {
 	Text string                     `xml:",omitempty"`
 }
 
-func ifaceptr(x interface{}) interface{} {
+func ifaceptr(x any) any {
 	return &x
 }
 
@@ -409,7 +409,7 @@ var (
 // please try to make them two-way as well to ensure that
 // marshalling and unmarshalling are as symmetrical as feasible.
 var marshalTests = []struct {
-	Value         interface{}
+	Value         any
 	ExpectXML     string
 	MarshalOnly   bool
 	UnmarshalOnly bool
@@ -634,7 +634,7 @@ var marshalTests = []struct {
 			`<parent2><c>C</c></parent2>` +
 			`</parent1>` +
 			`</NilTest>`,
-		MarshalOnly: true, // Uses interface{}
+		MarshalOnly: true, // Uses any
 	},
 	{
 		Value: &MixedNested{A: "A", B: "B", C: "C", D: "D"},
@@ -1125,7 +1125,7 @@ type BadAttr struct {
 }
 
 var marshalErrorTests = []struct {
-	Value interface{}
+	Value any
 	Err   string
 	Kind  reflect.Kind
 }{
@@ -1163,7 +1163,7 @@ var marshalErrorTests = []struct {
 }
 
 var marshalIndentTests = []struct {
-	Value     interface{}
+	Value     any
 	Prefix    string
 	Indent    string
 	ExpectXML string
@@ -1318,7 +1318,7 @@ func TestMarshalFlush(t *testing.T) {
 
 var encodeElementTests = []struct {
 	desc      string
-	value     interface{}
+	value     any
 	start     StartElement
 	expectXML string
 }{{
@@ -1429,7 +1429,7 @@ func BenchmarkUnmarshal(b *testing.B) {
 func TestStructPointerMarshal(t *testing.T) {
 	type A struct {
 		XMLName string `xml:"a"`
-		B       []interface{}
+		B       []any
 	}
 	type C struct {
 		XMLName Name
@@ -1799,7 +1799,7 @@ loop:
 				continue loop
 			}
 		}
-		errorf := func(f string, a ...interface{}) {
+		errorf := func(f string, a ...any) {
 			t.Errorf("#%d %s token #%d:%s", i, tt.desc, len(tt.toks)-1, fmt.Sprintf(f, a...))
 		}
 		switch {

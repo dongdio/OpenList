@@ -120,7 +120,7 @@ func (d *AliyundriveShare) link(ctx context.Context, file model.Obj) (*model.Lin
 	}, nil
 }
 
-func (d *AliyundriveShare) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
+func (d *AliyundriveShare) Other(ctx context.Context, args model.OtherArgs) (any, error) {
 	var resp base.Json
 	var url string
 	data := base.Json{

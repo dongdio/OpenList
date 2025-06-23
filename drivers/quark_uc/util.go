@@ -24,7 +24,7 @@ import (
 
 // do others that not defined in Driver interface
 
-func (d *QuarkOrUC) request(pathname string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+func (d *QuarkOrUC) request(pathname string, method string, callback base.ReqCallback, resp any) ([]byte, error) {
 	u := d.conf.api + pathname
 	req := base.RestyClient.R()
 	req.SetHeaders(map[string]string{

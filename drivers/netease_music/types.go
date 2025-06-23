@@ -107,8 +107,8 @@ func (ch Characteristic) toCookies() []*http.Cookie {
 	return cookies
 }
 
-func (ch *Characteristic) merge(data map[string]string) map[string]interface{} {
-	body := map[string]interface{}{
+func (ch *Characteristic) merge(data map[string]string) map[string]any {
+	body := map[string]any{
 		"header": ch,
 	}
 	for k, v := range data {

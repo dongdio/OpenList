@@ -846,7 +846,7 @@ func (d *Yun139) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 	}
 }
 
-func (d *Yun139) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
+func (d *Yun139) Other(ctx context.Context, args model.OtherArgs) (any, error) {
 	switch d.Addition.Type {
 	case MetaPersonalNew:
 		var resp base.Json

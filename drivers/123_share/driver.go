@@ -160,7 +160,7 @@ func (d *Pan123Share) Put(ctx context.Context, dstDir model.Obj, stream model.Fi
 	return errs.NotSupport
 }
 
-// func (d *Pan123Share) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
+// func (d *Pan123Share) Other(ctx context.Context, args model.OtherArgs) (any, error) {
 //	return nil, errs.NotSupport
 // }
 

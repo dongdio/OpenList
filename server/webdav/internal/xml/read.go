@@ -110,13 +110,13 @@ import (
 //
 // Unmarshal maps an XML element to a pointer by setting the pointer
 // to a freshly allocated value and then mapping the element to that value.
-func Unmarshal(data []byte, v interface{}) error {
+func Unmarshal(data []byte, v any) error {
 	return NewDecoder(bytes.NewReader(data)).Decode(v)
 }
 
 // Decode works like xml.Unmarshal, except it reads the decoder
 // stream to find the start element.
-func (d *Decoder) Decode(v interface{}) error {
+func (d *Decoder) Decode(v any) error {
 	return d.DecodeElement(v, nil)
 }
 
@@ -124,7 +124,7 @@ func (d *Decoder) Decode(v interface{}) error {
 // a pointer to the start XML element to decode into v.
 // It is useful when a client reads some raw XML tokens itself
 // but also wants to defer to Unmarshal for some elements.
-func (d *Decoder) DecodeElement(v interface{}, start *StartElement) error {
+func (d *Decoder) DecodeElement(v any, start *StartElement) error {
 	val := reflect.ValueOf(v)
 	if val.Kind() != reflect.Ptr {
 		return errors.New("non-pointer passed to Unmarshal")
@@ -169,7 +169,7 @@ type UnmarshalerAttr interface {
 }
 
 // receiverType returns the receiver type to use in an expression like "%s.MethodName".
-func receiverType(val interface{}) string {
+func receiverType(val any) string {
 	t := reflect.TypeOf(val)
 	if t.Name() != "" {
 		return t.String()

@@ -32,7 +32,7 @@ func ErrorResp(c *gin.Context, err error, code int, l ...bool) {
 	//		log.Errorf("%v", err)
 	//	}
 	// }
-	// c.JSON(200, Resp[interface{}]{
+	// c.JSON(200, Resp[any]{
 	//	Code:    code,
 	//	Message: hidePrivacy(err.Error()),
 	//	Data:    nil,
@@ -40,7 +40,7 @@ func ErrorResp(c *gin.Context, err error, code int, l ...bool) {
 	// c.Abort()
 }
 
-func ErrorWithDataResp(c *gin.Context, err error, code int, data interface{}, l ...bool) {
+func ErrorWithDataResp(c *gin.Context, err error, code int, data any, l ...bool) {
 	if len(l) > 0 && l[0] {
 		if flags.Debug || flags.Dev {
 			log.Errorf("%+v", err)
@@ -48,7 +48,7 @@ func ErrorWithDataResp(c *gin.Context, err error, code int, data interface{}, l 
 			log.Errorf("%v", err)
 		}
 	}
-	c.JSON(200, Resp[interface{}]{
+	c.JSON(200, Resp[any]{
 		Code:    code,
 		Message: hidePrivacy(err.Error()),
 		Data:    data,
@@ -60,7 +60,7 @@ func ErrorStrResp(c *gin.Context, str string, code int, l ...bool) {
 	if len(l) != 0 && l[0] {
 		log.Error(str)
 	}
-	c.JSON(200, Resp[interface{}]{
+	c.JSON(200, Resp[any]{
 		Code:    code,
 		Message: hidePrivacy(str),
 		Data:    nil,
@@ -68,17 +68,17 @@ func ErrorStrResp(c *gin.Context, str string, code int, l ...bool) {
 	c.Abort()
 }
 
-func SuccessResp(c *gin.Context, data ...interface{}) {
+func SuccessResp(c *gin.Context, data ...any) {
 	SuccessWithMsgResp(c, "success", data...)
 }
 
-func SuccessWithMsgResp(c *gin.Context, msg string, data ...interface{}) {
-	var respData interface{}
+func SuccessWithMsgResp(c *gin.Context, msg string, data ...any) {
+	var respData any
 	if len(data) > 0 {
 		respData = data[0]
 	}
 
-	c.JSON(200, Resp[interface{}]{
+	c.JSON(200, Resp[any]{
 		Code:    200,
 		Message: msg,
 		Data:    respData,

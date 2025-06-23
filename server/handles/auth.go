@@ -15,183 +15,243 @@ import (
 	"github.com/dongdio/OpenList/server/common"
 )
 
-var loginCache = cache.NewMemCache[int]()
-var (
-	defaultDuration = time.Minute * 5
-	defaultTimes    = 5
+const (
+	// Default duration for login attempt cache expiry
+	defaultLoginCacheDuration = time.Minute * 5
+	// Default maximum number of login attempts before rate limiting
+	defaultMaxLoginAttempts = 5
+	// OTP issuer name for 2FA
+	otpIssuerName = "OpenList"
 )
 
-type LoginReq struct {
+// Cache for tracking login attempts by IP
+var loginAttemptsCache = cache.NewMemCache[int]()
+
+// LoginRequest represents the login request payload
+type LoginRequest struct {
 	Username string `json:"username" binding:"required"`
 	Password string `json:"password"`
 	OtpCode  string `json:"otp_code"`
 }
 
-// Login Deprecated
+// Login is deprecated - use LoginHash instead
+// Handles login with plaintext password (which gets hashed)
 func Login(c *gin.Context) {
-	var req LoginReq
+	var req LoginRequest
 	if err := c.ShouldBind(&req); err != nil {
 		common.ErrorResp(c, err, 400)
 		return
 	}
+	// Hash the password before processing
 	req.Password = model.StaticHash(req.Password)
-	loginHash(c, &req)
+	processLogin(c, &req)
 }
 
-// LoginHash login with password hashed by sha256
+// LoginHash handles login with pre-hashed password
 func LoginHash(c *gin.Context) {
-	var req LoginReq
+	var req LoginRequest
 	if err := c.ShouldBind(&req); err != nil {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	loginHash(c, &req)
+	processLogin(c, &req)
 }
 
-func loginHash(c *gin.Context, req *LoginReq) {
-	// check count of login
+// processLogin handles the common login logic for both Login and LoginHash
+func processLogin(c *gin.Context, req *LoginRequest) {
+	// Check for rate limiting
 	ip := c.ClientIP()
-	count, ok := loginCache.Get(ip)
-	if ok && count >= defaultTimes {
-		common.ErrorStrResp(c, "Too many unsuccessful sign-in attempts have been made using an incorrect username or password, Try again later.", 429)
-		loginCache.Expire(ip, defaultDuration)
+	attempts, ok := loginAttemptsCache.Get(ip)
+	if ok && attempts >= defaultMaxLoginAttempts {
+		common.ErrorStrResp(c, "Too many unsuccessful sign-in attempts have been made using an incorrect username or password. Try again later.", 429)
+		loginAttemptsCache.Expire(ip, defaultLoginCacheDuration)
 		return
 	}
-	// check username
+
+	// Validate username and password
 	user, err := op.GetUserByName(req.Username)
 	if err != nil {
 		common.ErrorResp(c, err, 400)
-		loginCache.Set(ip, count+1)
+		incrementLoginAttempts(ip)
 		return
 	}
-	// validate password hash
+
 	if err := user.ValidatePwdStaticHash(req.Password); err != nil {
 		common.ErrorResp(c, err, 400)
-		loginCache.Set(ip, count+1)
+		incrementLoginAttempts(ip)
 		return
 	}
-	// check 2FA
+
+	// Validate 2FA if enabled
 	if user.OtpSecret != "" {
 		if !totp.Validate(req.OtpCode, user.OtpSecret) {
 			common.ErrorStrResp(c, "Invalid 2FA code", 402)
-			loginCache.Set(ip, count+1)
+			incrementLoginAttempts(ip)
 			return
 		}
 	}
-	// generate token
+
+	// Generate authentication token
 	token, err := common.GenerateToken(user)
 	if err != nil {
 		common.ErrorResp(c, err, 400, true)
 		return
 	}
+
+	// Login successful - clear rate limiting counter
+	loginAttemptsCache.Del(ip)
 	common.SuccessResp(c, gin.H{"token": token})
-	loginCache.Del(ip)
 }
 
-type UserResp struct {
+// incrementLoginAttempts increases the count of failed login attempts for an IP
+func incrementLoginAttempts(ip string) {
+	count, ok := loginAttemptsCache.Get(ip)
+	if !ok {
+		count = 0
+	}
+	loginAttemptsCache.Set(ip, count+1)
+}
+
+// UserResponse extends the User model with additional fields for API responses
+type UserResponse struct {
 	model.User
-	Otp bool `json:"otp"`
+	HasOTP bool `json:"otp"` // Indicates if 2FA is enabled
 }
 
-// CurrentUser get current user by token
-// if token is empty, return guest user
+// CurrentUser returns information about the currently authenticated user
 func CurrentUser(c *gin.Context) {
 	user := c.MustGet("user").(*model.User)
-	userResp := UserResp{
+
+	// Create response with sanitized user data
+	userResp := UserResponse{
 		User: *user,
 	}
+
+	// Remove sensitive information
 	userResp.Password = ""
+
+	// Set OTP flag if 2FA is enabled
 	if userResp.OtpSecret != "" {
-		userResp.Otp = true
+		userResp.HasOTP = true
 	}
+
 	common.SuccessResp(c, userResp)
 }
 
+// UpdateCurrent updates the current user's profile information
 func UpdateCurrent(c *gin.Context) {
 	var req model.User
 	if err := c.ShouldBind(&req); err != nil {
 		common.ErrorResp(c, err, 400)
 		return
 	}
+
 	user := c.MustGet("user").(*model.User)
 	if user.IsGuest() {
-		common.ErrorStrResp(c, "Guest user can not update profile", 403)
+		common.ErrorStrResp(c, "Guest user cannot update profile", 403)
 		return
 	}
+
+	// Update allowed fields
 	user.Username = req.Username
+	user.SsoID = req.SsoID
+
+	// Update password if provided
 	if req.Password != "" {
 		user.SetPassword(req.Password)
 	}
-	user.SsoID = req.SsoID
+
 	if err := op.UpdateUser(user); err != nil {
 		common.ErrorResp(c, err, 500)
-	} else {
-		common.SuccessResp(c)
+		return
 	}
+
+	common.SuccessResp(c)
 }
 
+// Generate2FA creates a new 2FA secret and QR code for the current user
 func Generate2FA(c *gin.Context) {
 	user := c.MustGet("user").(*model.User)
 	if user.IsGuest() {
-		common.ErrorStrResp(c, "Guest user can not generate 2FA code", 403)
+		common.ErrorStrResp(c, "Guest user cannot enable 2FA", 403)
 		return
 	}
+
+	// Generate new TOTP key
 	key, err := totp.Generate(totp.GenerateOpts{
-		Issuer:      "OpenList",
+		Issuer:      otpIssuerName,
 		AccountName: user.Username,
 	})
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}
+
+	// Generate QR code image
 	img, err := key.Image(400, 400)
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}
-	// to base64
+
+	// Convert image to base64
 	var buf bytes.Buffer
-	png.Encode(&buf, img)
-	b64 := base64.StdEncoding.EncodeToString(buf.Bytes())
+	if err = png.Encode(&buf, img); err != nil {
+		common.ErrorResp(c, err, 500)
+		return
+	}
+
+	qrCodeBase64 := base64.StdEncoding.EncodeToString(buf.Bytes())
+
 	common.SuccessResp(c, gin.H{
-		"qr":     "data:image/png;base64," + b64,
+		"qr":     "data:image/png;base64," + qrCodeBase64,
 		"secret": key.Secret(),
 	})
 }
 
-type Verify2FAReq struct {
+// Verify2FARequest represents the request to verify and enable 2FA
+type Verify2FARequest struct {
 	Code   string `json:"code" binding:"required"`
 	Secret string `json:"secret" binding:"required"`
 }
 
+// Verify2FA verifies a 2FA code and enables 2FA for the current user
 func Verify2FA(c *gin.Context) {
-	var req Verify2FAReq
+	var req Verify2FARequest
 	if err := c.ShouldBind(&req); err != nil {
 		common.ErrorResp(c, err, 400)
 		return
 	}
+
 	user := c.MustGet("user").(*model.User)
 	if user.IsGuest() {
-		common.ErrorStrResp(c, "Guest user can not generate 2FA code", 403)
+		common.ErrorStrResp(c, "Guest user cannot enable 2FA", 403)
 		return
 	}
+
+	// Verify the provided code against the secret
 	if !totp.Validate(req.Code, req.Secret) {
 		common.ErrorStrResp(c, "Invalid 2FA code", 400)
 		return
 	}
+
+	// Save the verified secret
 	user.OtpSecret = req.Secret
 	if err := op.UpdateUser(user); err != nil {
 		common.ErrorResp(c, err, 500)
-	} else {
-		common.SuccessResp(c)
+		return
 	}
+
+	common.SuccessResp(c)
 }
 
+// LogOut invalidates the current user's authentication token
 func LogOut(c *gin.Context) {
 	err := common.InvalidateToken(c.GetHeader("Authorization"))
 	if err != nil {
 		common.ErrorResp(c, err, 500)
-	} else {
-		common.SuccessResp(c)
+		return
 	}
+
+	common.SuccessResp(c)
 }

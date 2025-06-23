@@ -84,7 +84,7 @@ func (y *Cloud189PC) EncryptParams(params Params, isFamily bool) string {
 	return ""
 }
 
-func (y *Cloud189PC) request(url, method string, callback base.ReqCallback, params Params, resp interface{}, isFamily ...bool) ([]byte, error) {
+func (y *Cloud189PC) request(url, method string, callback base.ReqCallback, params Params, resp any, isFamily ...bool) ([]byte, error) {
 	req := y.getClient().R().SetQueryParams(clientSuffix())
 
 	// 设置params
@@ -132,11 +132,11 @@ func (y *Cloud189PC) request(url, method string, callback base.ReqCallback, para
 	return res.Bytes(), nil
 }
 
-func (y *Cloud189PC) get(url string, callback base.ReqCallback, resp interface{}, isFamily ...bool) ([]byte, error) {
+func (y *Cloud189PC) get(url string, callback base.ReqCallback, resp any, isFamily ...bool) ([]byte, error) {
 	return y.request(url, http.MethodGet, callback, nil, resp, isFamily...)
 }
 
-func (y *Cloud189PC) post(url string, callback base.ReqCallback, resp interface{}, isFamily ...bool) ([]byte, error) {
+func (y *Cloud189PC) post(url string, callback base.ReqCallback, resp any, isFamily ...bool) ([]byte, error) {
 	return y.request(url, http.MethodPost, callback, nil, resp, isFamily...)
 }
 

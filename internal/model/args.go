@@ -41,13 +41,13 @@ type Link struct {
 type OtherArgs struct {
 	Obj    Obj
 	Method string
-	Data   interface{}
+	Data   any
 }
 
 type FsOtherArgs struct {
-	Path   string      `json:"path" form:"path"`
-	Method string      `json:"method" form:"method"`
-	Data   interface{} `json:"data" form:"data"`
+	Path   string `json:"path" form:"path"`
+	Method string `json:"method" form:"method"`
+	Data   any    `json:"data" form:"data"`
 }
 
 type ArchiveArgs struct {

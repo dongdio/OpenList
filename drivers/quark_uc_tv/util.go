@@ -29,7 +29,7 @@ const (
 	ActivityRect = "{}"
 )
 
-func (d *QuarkUCTV) request(ctx context.Context, pathname string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+func (d *QuarkUCTV) request(ctx context.Context, pathname string, method string, callback base.ReqCallback, resp any) ([]byte, error) {
 	u := d.conf.api + pathname
 	tm, token, reqID := d.generateReqSign(method, pathname, d.conf.signKey)
 	req := base.RestyClient.R()

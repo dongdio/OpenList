@@ -2,7 +2,6 @@ package _139
 
 import (
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -13,6 +12,7 @@ import (
 	"time"
 
 	jsoniter "github.com/json-iterator/go"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
 
@@ -61,21 +61,21 @@ func (d *Yun139) refreshToken() error {
 	}
 	decode, err := base64.StdEncoding.DecodeString(d.Authorization)
 	if err != nil {
-		return fmt.Errorf("authorization decode failed: %s", err)
+		return errors.Errorf("authorization decode failed: %s", err)
 	}
 	decodeStr := string(decode)
 	splits := strings.Split(decodeStr, ":")
 	if len(splits) < 3 {
-		return fmt.Errorf("authorization is invalid, splits < 3")
+		return errors.Errorf("authorization is invalid, splits < 3")
 	}
 	d.Account = splits[1]
 	strs := strings.Split(splits[2], "|")
 	if len(strs) < 4 {
-		return fmt.Errorf("authorization is invalid, strs < 4")
+		return errors.Errorf("authorization is invalid, strs < 4")
 	}
 	expiration, err := strconv.ParseInt(strs[3], 10, 64)
 	if err != nil {
-		return fmt.Errorf("authorization is invalid")
+		return errors.Errorf("authorization is invalid")
 	}
 	expiration -= time.Now().UnixMilli()
 	if expiration > 1000*60*60*24*15 {
@@ -83,7 +83,7 @@ func (d *Yun139) refreshToken() error {
 		return nil
 	}
 	if expiration < 0 {
-		return fmt.Errorf("authorization has expired")
+		return errors.Errorf("authorization has expired")
 	}
 
 	link := "https://aas.caiyun.feixin.10086.cn:443/tellin/authTokenRefresh.do"
@@ -98,14 +98,14 @@ func (d *Yun139) refreshToken() error {
 		return err
 	}
 	if resp.Return != "0" {
-		return fmt.Errorf("failed to refresh token: %s", resp.Desc)
+		return errors.Errorf("failed to refresh token: %s", resp.Desc)
 	}
 	d.Authorization = base64.StdEncoding.EncodeToString([]byte(splits[0] + ":" + splits[1] + ":" + resp.Token))
 	op.MustSaveDriverStorage(d)
 	return nil
 }
 
-func (d *Yun139) request(pathname string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+func (d *Yun139) request(pathname string, method string, callback base.ReqCallback, resp any) ([]byte, error) {
 	link := "https://yun.139.com" + pathname
 	req := base.RestyClient.R()
 	randStr := random.String(16)
@@ -162,7 +162,7 @@ func (d *Yun139) request(pathname string, method string, callback base.ReqCallba
 	return res.Bytes(), nil
 }
 
-func (d *Yun139) requestRoute(data interface{}, resp interface{}) ([]byte, error) {
+func (d *Yun139) requestRoute(data any, resp any) ([]byte, error) {
 	link := "https://user-njs.yun.139.com/user/route/qryRoutePolicy"
 	req := base.RestyClient.R()
 	randStr := random.String(16)
@@ -222,7 +222,7 @@ func (d *Yun139) requestRoute(data interface{}, resp interface{}) ([]byte, error
 	return res.Bytes(), nil
 }
 
-func (d *Yun139) post(pathname string, data interface{}, resp interface{}) ([]byte, error) {
+func (d *Yun139) post(pathname string, data any, resp any) ([]byte, error) {
 	return d.request(pathname, http.MethodPost, func(req *resty.Request) {
 		req.SetBody(data)
 	}, resp)
@@ -284,8 +284,8 @@ func (d *Yun139) getFiles(catalogID string) ([]model.Obj, error) {
 	return files, nil
 }
 
-func (d *Yun139) newJson(data map[string]interface{}) base.Json {
-	common := map[string]interface{}{
+func (d *Yun139) newJson(data map[string]any) base.Json {
+	common := map[string]any{
 		"catalogType": 3,
 		"cloudID":     d.CloudID,
 		"cloudType":   1,
@@ -455,7 +455,7 @@ func unicode(str string) string {
 	return textUnquoted
 }
 
-func (d *Yun139) personalRequest(pathname string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+func (d *Yun139) personalRequest(pathname string, method string, callback base.ReqCallback, resp any) ([]byte, error) {
 	link := d.getPersonalCloudHost() + pathname
 	req := base.RestyClient.R()
 	randStr := random.String(16)
@@ -514,7 +514,7 @@ func (d *Yun139) personalRequest(pathname string, method string, callback base.R
 	}
 	return res.Bytes(), nil
 }
-func (d *Yun139) personalPost(pathname string, data interface{}, resp interface{}) ([]byte, error) {
+func (d *Yun139) personalPost(pathname string, data any, resp any) ([]byte, error) {
 	return d.personalRequest(pathname, http.MethodPost, func(req *resty.Request) {
 		req.SetBody(data)
 	}, resp)

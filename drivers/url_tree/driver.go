@@ -270,7 +270,7 @@ func (d *Urls) updateStorage() {
 	op.MustSaveDriverStorage(d)
 }
 
-// func (d *Template) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
+// func (d *Template) Other(ctx context.Context, args model.OtherArgs) (any, error) {
 //	return nil, errs.NotSupport
 // }
 

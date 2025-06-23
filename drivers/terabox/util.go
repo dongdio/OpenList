@@ -55,7 +55,7 @@ func (d *Terabox) resetJsToken() error {
 	return nil
 }
 
-func (d *Terabox) request(rurl string, method string, callback base.ReqCallback, resp interface{}, noRetry ...bool) ([]byte, error) {
+func (d *Terabox) request(rurl string, method string, callback base.ReqCallback, resp any, noRetry ...bool) ([]byte, error) {
 	req := base.RestyClient.R()
 	req.SetHeaders(map[string]string{
 		"Cookie":           d.Cookie,
@@ -105,7 +105,7 @@ func (d *Terabox) request(rurl string, method string, callback base.ReqCallback,
 	return res.Bytes(), nil
 }
 
-func (d *Terabox) get(pathname string, params map[string]string, resp interface{}) ([]byte, error) {
+func (d *Terabox) get(pathname string, params map[string]string, resp any) ([]byte, error) {
 	return d.request(pathname, http.MethodGet, func(req *resty.Request) {
 		if params != nil {
 			req.SetQueryParams(params)
@@ -113,7 +113,7 @@ func (d *Terabox) get(pathname string, params map[string]string, resp interface{
 	}, resp)
 }
 
-func (d *Terabox) post(pathname string, params map[string]string, data interface{}, resp interface{}) ([]byte, error) {
+func (d *Terabox) post(pathname string, params map[string]string, data any, resp any) ([]byte, error) {
 	return d.request(pathname, http.MethodPost, func(req *resty.Request) {
 		if params != nil {
 			req.SetQueryParams(params)
@@ -122,7 +122,7 @@ func (d *Terabox) post(pathname string, params map[string]string, data interface
 	}, resp)
 }
 
-func (d *Terabox) post_form(pathname string, params map[string]string, data map[string]string, resp interface{}) ([]byte, error) {
+func (d *Terabox) post_form(pathname string, params map[string]string, data map[string]string, resp any) ([]byte, error) {
 	return d.request(pathname, http.MethodPost, func(req *resty.Request) {
 		if params != nil {
 			req.SetQueryParams(params)
@@ -250,7 +250,7 @@ func (d *Terabox) linkCrack(file model.Obj, args model.LinkArgs) (*model.Link, e
 	}, nil
 }
 
-func (d *Terabox) manage(opera string, filelist interface{}) ([]byte, error) {
+func (d *Terabox) manage(opera string, filelist any) ([]byte, error) {
 	params := map[string]string{
 		"onnest": "fail",
 		"opera":  opera,

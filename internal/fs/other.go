@@ -49,7 +49,7 @@ func remove(ctx context.Context, path string) error {
 	return op.Remove(ctx, storage, actualPath)
 }
 
-func other(ctx context.Context, args model.FsOtherArgs) (interface{}, error) {
+func other(ctx context.Context, args model.FsOtherArgs) (any, error) {
 	storage, actualPath, err := op.GetStorageAndActualPath(args.Path)
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed get storage")

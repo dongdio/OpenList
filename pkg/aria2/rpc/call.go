@@ -16,7 +16,7 @@ import (
 
 type caller interface {
 	// Call sends a request of rpc to aria2 daemon
-	Call(method string, params, reply interface{}) (err error)
+	Call(method string, params, reply any) (err error)
 	Close() error
 }
 
@@ -120,7 +120,7 @@ func (h *httpCaller) setNotifier(ctx context.Context, u url.URL, notifier Notifi
 	return
 }
 
-func (h httpCaller) Call(method string, params, reply interface{}) (err error) {
+func (h httpCaller) Call(method string, params, reply any) (err error) {
 	payload, err := EncodeClientRequest(method, params)
 	if err != nil {
 		return
@@ -236,7 +236,7 @@ func (w *websocketCaller) Close() (err error) {
 	return
 }
 
-func (w websocketCaller) Call(method string, params, reply interface{}) (err error) {
+func (w websocketCaller) Call(method string, params, reply any) (err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), w.timeout)
 	defer cancel()
 	select {
@@ -263,7 +263,7 @@ func (w websocketCaller) Call(method string, params, reply interface{}) (err err
 type sendRequest struct {
 	cancel  context.CancelFunc
 	request *clientRequest
-	reply   interface{}
+	reply   any
 }
 
 var reqid = func() func() uint64 {

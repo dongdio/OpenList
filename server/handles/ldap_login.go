@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"gopkg.in/ldap.v3"
@@ -20,7 +21,7 @@ import (
 )
 
 func LoginLdap(c *gin.Context) {
-	var req LoginReq
+	var req LoginRequest
 	if err := c.ShouldBind(&req); err != nil {
 		common.ErrorResp(c, err, 400)
 		return
@@ -28,7 +29,12 @@ func LoginLdap(c *gin.Context) {
 	loginLdap(c, &req)
 }
 
-func loginLdap(c *gin.Context, req *LoginReq) {
+const (
+	defaultTimes    = 5
+	defaultDuration = 5 * time.Minute
+)
+
+func loginLdap(c *gin.Context, req *LoginRequest) {
 	enabled := setting.GetBool(conf.LdapLoginEnabled)
 	if !enabled {
 		common.ErrorStrResp(c, "ldap is not enabled", 403)
@@ -37,10 +43,10 @@ func loginLdap(c *gin.Context, req *LoginReq) {
 
 	// check count of login
 	ip := c.ClientIP()
-	count, ok := loginCache.Get(ip)
-	if ok && count >= defaultTimes {
+	count, ok := loginAttemptsCache.Get(ip)
+	if ok && count >= defaultMaxLoginAttempts {
 		common.ErrorStrResp(c, "Too many unsuccessful sign-in attempts have been made using an incorrect username or password, Try again later.", 429)
-		loginCache.Expire(ip, defaultDuration)
+		loginAttemptsCache.Expire(ip, defaultLoginCacheDuration)
 		return
 	}
 
@@ -95,7 +101,7 @@ func loginLdap(c *gin.Context, req *LoginReq) {
 	if err != nil {
 		utils.Log.Errorf("Failed to auth. %v", err)
 		common.ErrorResp(c, err, 400)
-		loginCache.Set(ip, count+1)
+		loginAttemptsCache.Set(ip, count+1)
 		return
 	} else {
 		utils.Log.Infof("Auth successful username:%s", req.Username)
@@ -107,7 +113,7 @@ func loginLdap(c *gin.Context, req *LoginReq) {
 		user, err = ladpRegister(req.Username)
 		if err != nil {
 			common.ErrorResp(c, err, 400)
-			loginCache.Set(ip, count+1)
+			loginAttemptsCache.Set(ip, count+1)
 			return
 		}
 	}
@@ -119,7 +125,7 @@ func loginLdap(c *gin.Context, req *LoginReq) {
 		return
 	}
 	common.SuccessResp(c, gin.H{"token": token})
-	loginCache.Del(ip)
+	loginAttemptsCache.Del(ip)
 }
 
 func ladpRegister(username string) (*model.User, error) {
@@ -142,7 +148,7 @@ func ladpRegister(username string) (*model.User, error) {
 }
 
 func dial(ldapServer string) (*ldap.Conn, error) {
-	var tlsEnabled bool = false
+	var tlsEnabled = false
 	if strings.HasPrefix(ldapServer, "ldaps://") {
 		tlsEnabled = true
 		ldapServer = strings.TrimPrefix(ldapServer, "ldaps://")

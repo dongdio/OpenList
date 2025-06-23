@@ -68,7 +68,7 @@ const (
 )
 
 // do others that not defined in Driver interface
-func (d *Doubao) request(path string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+func (d *Doubao) request(path string, method string, callback base.ReqCallback, resp any) ([]byte, error) {
 	reqUrl := BaseURL + path
 	req := base.RestyClient.R()
 	req.SetHeader("Cookie", d.Cookie)
@@ -242,7 +242,7 @@ func (d *Doubao) signRequest(req *resty.Request, method, tokenType, uploadUrl st
 	return nil
 }
 
-func (d *Doubao) requestApi(url, method, tokenType string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+func (d *Doubao) requestApi(url, method, tokenType string, callback base.ReqCallback, resp any) ([]byte, error) {
 	req := base.RestyClient.R()
 	req.SetHeaders(map[string]string{
 		"user-agent": UserAgent,
@@ -620,7 +620,7 @@ func (d *Doubao) UploadByMultipart(ctx context.Context, config *UploadConfig, fi
 }
 
 // 统一上传请求方法
-func (d *Doubao) uploadRequest(uploadUrl string, method string, storeInfo StoreInfo, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+func (d *Doubao) uploadRequest(uploadUrl string, method string, storeInfo StoreInfo, callback base.ReqCallback, resp any) ([]byte, error) {
 	client := resty.New()
 	client.SetTransport(&http.Transport{
 		DisableKeepAlives: true,  // 禁用连接复用

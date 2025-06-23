@@ -2,9 +2,9 @@ package rpc
 
 // Protocol is a set of rpc methods that aria2 daemon supports
 type Protocol interface {
-	AddURI(uris []string, options ...interface{}) (gid string, err error)
-	AddTorrent(filename string, options ...interface{}) (gid string, err error)
-	AddMetalink(filename string, options ...interface{}) (gid []string, err error)
+	AddURI(uris []string, options ...any) (gid string, err error)
+	AddTorrent(filename string, options ...any) (gid string, err error)
+	AddMetalink(filename string, options ...any) (gid []string, err error)
 	Remove(gid string) (g string, err error)
 	ForceRemove(gid string) (g string, err error)
 	Pause(gid string) (g string, err error)
@@ -35,6 +35,6 @@ type Protocol interface {
 	Shutdown() (ok string, err error)
 	ForceShutdown() (ok string, err error)
 	SaveSession() (ok string, err error)
-	Multicall(methods []Method) (r []interface{}, err error)
+	Multicall(methods []Method) (r []any, err error)
 	ListMethods() (methods []string, err error)
 }

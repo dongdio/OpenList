@@ -15,6 +15,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/pkg/errors"
+
 	// As of https://go-review.googlesource.com/#/c/12772/ which was submitted
 	// in July 2015, this package uses an internal fork of the standard
 	// library's encoding/xml package, due to changes in the way namespaces
@@ -149,7 +151,7 @@ func (pn *propfindProps) UnmarshalXML(d *ixml.Decoder, start ixml.StartElement) 
 		switch t.(type) {
 		case ixml.EndElement:
 			if len(*pn) == 0 {
-				return fmt.Errorf("%s must not be empty", start.Name.Local)
+				return errors.Errorf("%s must not be empty", start.Name.Local)
 			}
 			return nil
 		case ixml.StartElement:
@@ -159,7 +161,7 @@ func (pn *propfindProps) UnmarshalXML(d *ixml.Decoder, start ixml.StartElement) 
 				return err
 			}
 			if _, ok := t.(ixml.EndElement); !ok {
-				return fmt.Errorf("unexpected token %T", t)
+				return errors.Errorf("unexpected token %T", t)
 			}
 			*pn = append(*pn, xml.Name(name))
 		}
@@ -461,7 +463,7 @@ func (ps *proppatchProps) UnmarshalXML(d *ixml.Decoder, start ixml.StartElement)
 		switch elem := t.(type) {
 		case ixml.EndElement:
 			if len(*ps) == 0 {
-				return fmt.Errorf("%s must not be empty", start.Name.Local)
+				return errors.Errorf("%s must not be empty", start.Name.Local)
 			}
 			return nil
 		case ixml.StartElement:

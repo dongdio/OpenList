@@ -25,7 +25,7 @@ func (d *FebBox) refreshTokenByOAuth2() error {
 	return nil
 }
 
-func (d *FebBox) request(url string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+func (d *FebBox) request(url string, method string, callback base.ReqCallback, resp any) ([]byte, error) {
 	req := base.RestyClient.R()
 	// 使用oauth2 获取 access_token
 	token, err := d.oauth2Token.Token()

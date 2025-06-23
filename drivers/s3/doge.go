@@ -31,7 +31,7 @@ type Credentials struct {
 func getCredentials(AccessKey, SecretKey string) (rst Credentials, err error) {
 	apiPath := "/auth/tmp_token.json"
 	var reqBody []byte
-	reqBody, err = sonic.ConfigDefault.Marshal(map[string]interface{}{"channel": "OSS_FULL", "scopes": []string{"*"}})
+	reqBody, err = sonic.ConfigDefault.Marshal(map[string]any{"channel": "OSS_FULL", "scopes": []string{"*"}})
 	if err != nil {
 		return
 	}

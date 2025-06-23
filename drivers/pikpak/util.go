@@ -168,7 +168,7 @@ func (d *PikPak) refreshToken(refreshToken string) error {
 	return nil
 }
 
-func (d *PikPak) request(url string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+func (d *PikPak) request(url string, method string, callback base.ReqCallback, resp any) ([]byte, error) {
 	req := base.RestyClient.R()
 	req.SetHeaders(map[string]string{
 		// "Authorization":   "Bearer " + d.AccessToken,

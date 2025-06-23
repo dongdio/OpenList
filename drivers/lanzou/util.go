@@ -24,7 +24,7 @@ import (
 var upClient *resty.Client
 var once sync.Once
 
-func (d *LanZou) doupload(callback base.ReqCallback, resp interface{}) ([]byte, error) {
+func (d *LanZou) doupload(callback base.ReqCallback, resp any) ([]byte, error) {
 	return d.post(d.BaseUrl+"/doupload.php", func(req *resty.Request) {
 		req.SetQueryParams(map[string]string{
 			"uid": d.uid,
@@ -40,7 +40,7 @@ func (d *LanZou) get(url string, callback base.ReqCallback) ([]byte, error) {
 	return d.request(url, http.MethodGet, callback, false)
 }
 
-func (d *LanZou) post(url string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+func (d *LanZou) post(url string, callback base.ReqCallback, resp any) ([]byte, error) {
 	data, err := d._post(url, callback, resp, false)
 	if err == ErrCookieExpiration && d.IsAccount() {
 		if atomic.CompareAndSwapInt32(&d.flag, 0, 1) {
@@ -61,7 +61,7 @@ func (d *LanZou) post(url string, callback base.ReqCallback, resp interface{}) (
 	return data, err
 }
 
-func (d *LanZou) _post(url string, callback base.ReqCallback, resp interface{}, up bool) ([]byte, error) {
+func (d *LanZou) _post(url string, callback base.ReqCallback, resp any, up bool) ([]byte, error) {
 	data, err := d.request(url, http.MethodPost, func(req *resty.Request) {
 		req.AddRetryConditions(func(r *resty.Response, err error) bool {
 			if utils.Json.Get(r.Bytes(), "zt").ToInt() == 4 {

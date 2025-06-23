@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func log(msg interface{}) {
+func log(msg any) {
 	fmt.Println(msg)
 }
 
@@ -75,7 +75,7 @@ func parseModified(s *string) time.Time {
 	return time.Unix(0, 0)
 }
 
-func parseXML(data io.Reader, resp interface{}, parse func(resp interface{}) error) error {
+func parseXML(data io.Reader, resp any, parse func(resp any) error) error {
 	decoder := xml.NewDecoder(data)
 	for t, _ := decoder.Token(); t != nil; t, _ = decoder.Token() {
 		switch se := t.(type) {

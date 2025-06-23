@@ -62,7 +62,7 @@ func main() {
 	}
 }
 
-func fail(err interface{}) {
+func fail(err any) {
 	if err != nil {
 		fmt.Println(err)
 	}

@@ -400,7 +400,7 @@ func (d *Crypt) Put(ctx context.Context, dstDir model.Obj, streamer model.FileSt
 	return nil
 }
 
-// func (d *Safe) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
+// func (d *Safe) Other(ctx context.Context, args model.OtherArgs) (any, error) {
 //	return nil, errs.NotSupport
 // }
 

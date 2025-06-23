@@ -13,59 +13,91 @@ import (
 	"github.com/dongdio/OpenList/server/common"
 )
 
+// Favicon handles the favicon request by redirecting to the configured favicon URL
 func Favicon(c *gin.Context) {
 	c.Redirect(302, setting.GetStr(conf.Favicon))
 }
 
+// Robots returns the configured robots.txt content
 func Robots(c *gin.Context) {
 	c.String(200, setting.GetStr(conf.RobotsTxt))
 }
 
+// Plist generates an iOS plist file for app installation
+// The link_name parameter is expected to be a base64 encoded string containing URL and name information
 func Plist(c *gin.Context) {
+	// Extract and decode the link name from the URL parameter
 	linkNameB64 := strings.TrimSuffix(c.Param("link_name"), ".plist")
 	linkName, err := utils.SafeAtob(linkNameB64)
 	if err != nil {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	linkNameSplit := strings.Split(linkName, "/")
-	if len(linkNameSplit) != 2 {
+
+	// Split the link name into URL and name parts
+	linkNameParts := strings.Split(linkName, "/")
+	if len(linkNameParts) != 2 {
 		common.ErrorStrResp(c, "malformed link", 400)
 		return
 	}
-	linkEncode := linkNameSplit[0]
-	linkStr, err := url.PathUnescape(linkEncode)
+
+	// Process the URL part
+	linkEncoded := linkNameParts[0]
+	linkStr, err := url.PathUnescape(linkEncoded)
 	if err != nil {
 		common.ErrorResp(c, err, 400)
 		return
 	}
+
 	link, err := url.Parse(linkStr)
 	if err != nil {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	fullName := c.Param("name")
-	Url := link.String()
-	Url = strings.ReplaceAll(Url, "<", "[")
-	Url = strings.ReplaceAll(Url, ">", "]")
-	nameEncode := linkNameSplit[1]
-	fullName, err = url.PathUnescape(nameEncode)
+
+	// Process the name part
+	nameEncoded := linkNameParts[1]
+	fullName, err := url.PathUnescape(nameEncoded)
 	if err != nil {
 		common.ErrorResp(c, err, 400)
 		return
 	}
+
+	// Sanitize URL and name
+	downloadURL := link.String()
+	downloadURL = sanitizeForXML(downloadURL)
+
+	// Extract identifier from name if it contains separator
 	name := fullName
 	identifier := fmt.Sprintf("ci.nn.%s", url.PathEscape(fullName))
-	sep := "@"
-	if strings.Contains(fullName, sep) {
-		ss := strings.Split(fullName, sep)
-		name = strings.Join(ss[:len(ss)-1], sep)
-		identifier = ss[len(ss)-1]
+
+	const identifierSeparator = "@"
+	if strings.Contains(fullName, identifierSeparator) {
+		parts := strings.Split(fullName, identifierSeparator)
+		name = strings.Join(parts[:len(parts)-1], identifierSeparator)
+		identifier = parts[len(parts)-1]
 	}
 
-	name = strings.ReplaceAll(name, "<", "[")
-	name = strings.ReplaceAll(name, ">", "]")
-	plist := fmt.Sprintf(`<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+	name = sanitizeForXML(name)
+
+	// Generate the plist XML content
+	plist := generatePlistXML(downloadURL, identifier, name)
+
+	// Return the plist as XML
+	c.Header("Content-Type", "application/xml;charset=utf-8")
+	c.Status(200)
+	_, _ = c.Writer.WriteString(plist)
+}
+
+// sanitizeForXML replaces characters that could cause issues in XML
+func sanitizeForXML(input string) string {
+	result := strings.ReplaceAll(input, "<", "[")
+	return strings.ReplaceAll(result, ">", "]")
+}
+
+// generatePlistXML creates the XML content for the iOS app installation plist
+func generatePlistXML(url, identifier, name string) string {
+	return fmt.Sprintf(`<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
     <dict>
         <key>items</key>
@@ -94,8 +126,5 @@ func Plist(c *gin.Context) {
             </dict>
         </array>
     </dict>
-</plist>`, Url, identifier, name)
-	c.Header("Content-Type", "application/xml;charset=utf-8")
-	c.Status(200)
-	_, _ = c.Writer.WriteString(plist)
+</plist>`, url, identifier, name)
 }

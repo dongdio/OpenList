@@ -7,6 +7,6 @@ type Resp[T any] struct {
 }
 
 type PageResp struct {
-	Content interface{} `json:"content"`
-	Total   int64       `json:"total"`
+	Content any   `json:"content"`
+	Total   int64 `json:"total"`
 }

@@ -281,7 +281,7 @@ func (d *AliyundriveOpen) Put(ctx context.Context, dstDir model.Obj, stream mode
 	return obj, err
 }
 
-func (d *AliyundriveOpen) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
+func (d *AliyundriveOpen) Other(ctx context.Context, args model.OtherArgs) (any, error) {
 	var resp base.Json
 	var uri string
 	data := base.Json{

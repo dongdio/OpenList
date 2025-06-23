@@ -67,7 +67,7 @@ func (d *Misskey) Put(ctx context.Context, dstDir model.Obj, stream model.FileSt
 	return d.put(ctx, dstDir, stream, up)
 }
 
-// func (d *Template) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
+// func (d *Template) Other(ctx context.Context, args model.OtherArgs) (any, error) {
 //	return nil, errs.NotSupport
 // }
 

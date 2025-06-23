@@ -63,16 +63,16 @@ type Media struct {
 		Token  string    `json:"token"`
 		Expire time.Time `json:"expire"`
 	} `json:"link"`
-	NeedMoreQuota  bool          `json:"need_more_quota"`
-	VipTypes       []interface{} `json:"vip_types"`
-	RedirectLink   string        `json:"redirect_link"`
-	IconLink       string        `json:"icon_link"`
-	IsDefault      bool          `json:"is_default"`
-	Priority       int           `json:"priority"`
-	IsOrigin       bool          `json:"is_origin"`
-	ResolutionName string        `json:"resolution_name"`
-	IsVisible      bool          `json:"is_visible"`
-	Category       string        `json:"category"`
+	NeedMoreQuota  bool   `json:"need_more_quota"`
+	VipTypes       []any  `json:"vip_types"`
+	RedirectLink   string `json:"redirect_link"`
+	IconLink       string `json:"icon_link"`
+	IsDefault      bool   `json:"is_default"`
+	Priority       int    `json:"priority"`
+	IsOrigin       bool   `json:"is_origin"`
+	ResolutionName string `json:"resolution_name"`
+	IsVisible      bool   `json:"is_visible"`
+	Category       string `json:"category"`
 }
 
 type CaptchaTokenRequest struct {

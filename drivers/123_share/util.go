@@ -53,7 +53,7 @@ func GetApi(rawUrl string) string {
 	return u.String()
 }
 
-func (d *Pan123Share) request(url string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+func (d *Pan123Share) request(url string, method string, callback base.ReqCallback, resp any) ([]byte, error) {
 	if d.ref != nil {
 		return d.ref.Request(url, method, callback, resp)
 	}

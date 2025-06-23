@@ -2,11 +2,12 @@ package dropbox
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"net/http"
 	"strings"
 
+	"github.com/bytedance/sonic"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
 
@@ -16,14 +17,41 @@ import (
 )
 
 func (d *Dropbox) refreshToken() error {
-	url := d.base + "/oauth2/token"
-	if utils.SliceContains([]string{"", DefaultClientID}, d.ClientID) {
-		url = d.OauthTokenURL
+	if d.UserOnlineAPI && len(d.APIAddress) > 0 {
+		u := d.APIAddress
+		var resp struct {
+			RefreshToken string `json:"refresh_token"`
+			AccessToken  string `json:"access_token"`
+			ErrorMessage string `json:"text"`
+		}
+		_, err := base.RestyClient.R().
+			SetResult(&resp).
+			SetQueryParams(map[string]string{
+				"refresh_ui": d.RefreshToken,
+				"server_use": "true",
+				"driver_txt": "dropboxs_go",
+			}).
+			Get(u)
+		if err != nil {
+			return err
+		}
+		if resp.RefreshToken == "" || resp.AccessToken == "" {
+			if resp.ErrorMessage != "" {
+				return errors.Errorf("failed to refresh token: %s", resp.ErrorMessage)
+			}
+			return errors.Errorf("empty token returned from official API")
+		}
+		d.AccessToken = resp.AccessToken
+		d.RefreshToken = resp.RefreshToken
+		op.MustSaveDriverStorage(d)
+		return nil
 	}
+	url := d.base + "/oauth2/token"
+	// if utils.SliceContains([]string{"", DefaultClientID}, d.ClientID) {
+	// 	url = d.APIAddress
+	// }
 	var tokenResp TokenResp
 	resp, err := base.RestyClient.R().
-		//ForceContentType("application/x-www-form-urlencoded").
-		//SetBasicAuth(d.ClientID, d.ClientSecret).
 		SetFormData(map[string]string{
 			"grant_type":    "refresh_token",
 			"refresh_token": d.RefreshToken,
@@ -36,22 +64,24 @@ func (d *Dropbox) refreshToken() error {
 	}
 	log.Debugf("[dropbox] refresh token response: %s", resp.String())
 	if resp.StatusCode() != 200 {
-		return fmt.Errorf("failed to refresh token: %s", resp.String())
+		return errors.Errorf("failed to refresh token: %s", resp.String())
 	}
 	_ = utils.Json.UnmarshalFromString(resp.String(), &tokenResp)
 	d.AccessToken = tokenResp.AccessToken
 	op.MustSaveDriverStorage(d)
 	return nil
+
 }
 
 func (d *Dropbox) request(uri, method string, callback base.ReqCallback, retry ...bool) ([]byte, error) {
-	req := base.RestyClient.R()
-	req.SetHeader("Authorization", "Bearer "+d.AccessToken)
+	req := base.RestyClient.R().
+		SetAuthToken(d.AccessToken)
 	if d.RootNamespaceId != "" {
-		apiPathRootJson, err := utils.Json.MarshalToString(map[string]interface{}{
-			".tag": "root",
-			"root": d.RootNamespaceId,
-		})
+		apiPathRootJson, err := sonic.ConfigDefault.
+			MarshalToString(map[string]any{
+				".tag": "root",
+				"root": d.RootNamespaceId,
+			})
 		if err != nil {
 			return nil, err
 		}
@@ -77,13 +107,14 @@ func (d *Dropbox) request(uri, method string, callback base.ReqCallback, retry .
 			func(item string, v string) bool {
 				return strings.Contains(v, item)
 			}) || d.AccessToken == "") {
+
 			err = d.refreshToken()
 			if err != nil {
 				return nil, err
 			}
 			return d.request(uri, method, callback, true)
 		}
-		return nil, fmt.Errorf("%s:%s", e.Error, e.ErrorSummary)
+		return nil, errors.Errorf("%s:%s", e.Error, e.ErrorSummary)
 	}
 	return res.Bytes(), nil
 }
@@ -126,10 +157,10 @@ func (d *Dropbox) getFiles(ctx context.Context, path string) ([]File, error) {
 	res = append(res, resp.Entries...)
 
 	for hasMore {
-		data := base.Json{
+		data = base.Json{
 			"cursor": marker,
 		}
-		resp, err := d.list(ctx, data, true)
+		resp, err = d.list(ctx, data, true)
 		if err != nil {
 			return nil, err
 		}

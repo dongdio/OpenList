@@ -64,16 +64,16 @@ type Media struct {
 		Token  string    `json:"token"`
 		Expire time.Time `json:"expire"`
 	} `json:"link"`
-	NeedMoreQuota  bool          `json:"need_more_quota"`
-	VipTypes       []interface{} `json:"vip_types"`
-	RedirectLink   string        `json:"redirect_link"`
-	IconLink       string        `json:"icon_link"`
-	IsDefault      bool          `json:"is_default"`
-	Priority       int           `json:"priority"`
-	IsOrigin       bool          `json:"is_origin"`
-	ResolutionName string        `json:"resolution_name"`
-	IsVisible      bool          `json:"is_visible"`
-	Category       string        `json:"category"`
+	NeedMoreQuota  bool   `json:"need_more_quota"`
+	VipTypes       []any  `json:"vip_types"`
+	RedirectLink   string `json:"redirect_link"`
+	IconLink       string `json:"icon_link"`
+	IsDefault      bool   `json:"is_default"`
+	Priority       int    `json:"priority"`
+	IsOrigin       bool   `json:"is_origin"`
+	ResolutionName string `json:"resolution_name"`
+	IsVisible      bool   `json:"is_visible"`
+	Category       string `json:"category"`
 }
 
 type UploadTaskData struct {
@@ -148,23 +148,23 @@ type Params struct {
 }
 
 type ReferenceResource struct {
-	Type          string                 `json:"@type"`
-	Audit         interface{}            `json:"audit"`
-	Hash          string                 `json:"hash"`
-	IconLink      string                 `json:"icon_link"`
-	ID            string                 `json:"id"`
-	Kind          string                 `json:"kind"`
-	Medias        []Media                `json:"medias"`
-	MIMEType      string                 `json:"mime_type"`
-	Name          string                 `json:"name"`
-	Params        map[string]interface{} `json:"params"`
-	ParentID      string                 `json:"parent_id"`
-	Phase         string                 `json:"phase"`
-	Size          string                 `json:"size"`
-	Space         string                 `json:"space"`
-	Starred       bool                   `json:"starred"`
-	Tags          []string               `json:"tags"`
-	ThumbnailLink string                 `json:"thumbnail_link"`
+	Type          string         `json:"@type"`
+	Audit         any            `json:"audit"`
+	Hash          string         `json:"hash"`
+	IconLink      string         `json:"icon_link"`
+	ID            string         `json:"id"`
+	Kind          string         `json:"kind"`
+	Medias        []Media        `json:"medias"`
+	MIMEType      string         `json:"mime_type"`
+	Name          string         `json:"name"`
+	Params        map[string]any `json:"params"`
+	ParentID      string         `json:"parent_id"`
+	Phase         string         `json:"phase"`
+	Size          string         `json:"size"`
+	Space         string         `json:"space"`
+	Starred       bool           `json:"starred"`
+	Tags          []string       `json:"tags"`
+	ThumbnailLink string         `json:"thumbnail_link"`
 }
 
 type ErrResp struct {

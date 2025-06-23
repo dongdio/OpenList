@@ -56,11 +56,11 @@ func fileToObj(f File) *model.ObjThumb {
 }
 
 type PartInfo struct {
-	Etag        interface{} `json:"etag"`
-	PartNumber  int         `json:"part_number"`
-	PartSize    interface{} `json:"part_size"`
-	UploadUrl   string      `json:"upload_url"`
-	ContentType string      `json:"content_type"`
+	Etag        any    `json:"etag"`
+	PartNumber  int    `json:"part_number"`
+	PartSize    any    `json:"part_size"`
+	UploadUrl   string `json:"upload_url"`
+	ContentType string `json:"content_type"`
 }
 
 type CreateResp struct {

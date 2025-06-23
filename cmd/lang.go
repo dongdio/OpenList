@@ -24,7 +24,7 @@ import (
 
 type KV[V any] map[string]V
 
-type Drivers KV[KV[interface{}]]
+type Drivers KV[KV[any]]
 
 var frontendPath string
 
@@ -41,7 +41,7 @@ func convert(s string) string {
 	return firstUpper(ans)
 }
 
-func writeFile(name string, data interface{}) {
+func writeFile(name string, data any) {
 	f, err := os.Open(fmt.Sprintf("%s/src/lang/en/%s.json", frontendPath, name))
 	if err != nil {
 		log.Errorf("failed to open %s.json: %+v", name, err)
@@ -53,8 +53,8 @@ func writeFile(name string, data interface{}) {
 		log.Errorf("failed to read %s.json: %+v", name, err)
 		return
 	}
-	oldData := make(map[string]interface{})
-	newData := make(map[string]interface{})
+	oldData := make(map[string]any)
+	newData := make(map[string]any)
 	err = utils.Json.Unmarshal(content, &oldData)
 	if err != nil {
 		log.Errorf("failed to unmarshal %s.json: %+v", name, err)
@@ -81,12 +81,12 @@ func writeFile(name string, data interface{}) {
 
 func generateDriversJson() {
 	drivers := make(Drivers)
-	drivers["drivers"] = make(KV[interface{}])
-	drivers["config"] = make(KV[interface{}])
+	drivers["drivers"] = make(KV[any])
+	drivers["config"] = make(KV[any])
 	driverInfoMap := op.GetDriverInfoMap()
 	for k, v := range driverInfoMap {
 		drivers["drivers"][k] = convert(k)
-		items := make(KV[interface{}])
+		items := make(KV[any])
 		config := map[string]string{}
 		if v.Config.Alert != "" {
 			alert := strings.SplitN(v.Config.Alert, "|", 2)

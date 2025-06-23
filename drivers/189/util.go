@@ -141,7 +141,7 @@ import (
 //	return err
 // }
 
-func (d *Cloud189) request(url string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+func (d *Cloud189) request(url string, method string, callback base.ReqCallback, resp any) ([]byte, error) {
 	var e Error
 	req := base.RestyClient.R().
 		SetError(&e).
@@ -269,7 +269,7 @@ func (d *Cloud189) getResKey() (string, string, error) {
 	return pubKey, pkId, nil
 }
 
-func (d *Cloud189) uploadRequest(uri string, form map[string]string, resp interface{}) ([]byte, error) {
+func (d *Cloud189) uploadRequest(uri string, form map[string]string, resp any) ([]byte, error) {
 	c := strconv.FormatInt(time.Now().UnixMilli(), 10)
 	r := Random("xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx")
 	l := Random("xxxxxxxxxxxx4xxxyxxxxxxxxxxxxxxx")

@@ -125,7 +125,7 @@ func (d *OnedriveSharelink) Put(ctx context.Context, dstDir model.Obj, stream mo
 	return errs.NotImplement
 }
 
-// func (d *OnedriveSharelink) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
+// func (d *OnedriveSharelink) Other(ctx context.Context, args model.OtherArgs) (any, error) {
 //	return nil, errs.NotSupport
 // }
 

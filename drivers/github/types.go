@@ -51,10 +51,10 @@ type ErrResp struct {
 }
 
 type TreeObjReq struct {
-	Path string      `json:"path"`
-	Mode string      `json:"mode"`
-	Type string      `json:"type"`
-	Sha  interface{} `json:"sha"`
+	Path string `json:"path"`
+	Mode string `json:"mode"`
+	Type string `json:"type"`
+	Sha  any    `json:"sha"`
 }
 
 type TreeObjResp struct {
@@ -80,8 +80,8 @@ type TreeResp struct {
 }
 
 type TreeReq struct {
-	BaseTree interface{}   `json:"base_tree,omitempty"`
-	Trees    []interface{} `json:"tree"`
+	BaseTree any   `json:"base_tree,omitempty"`
+	Trees    []any `json:"tree"`
 }
 
 type CommitResp struct {

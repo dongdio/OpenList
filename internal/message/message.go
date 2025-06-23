@@ -1,8 +1,8 @@
 package message
 
 type Message struct {
-	Type    string      `json:"type"`
-	Content interface{} `json:"content"`
+	Type    string `json:"type"`
+	Content any    `json:"content"`
 }
 
 type Messenger interface {

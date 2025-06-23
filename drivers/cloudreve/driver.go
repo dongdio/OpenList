@@ -204,7 +204,7 @@ func (d *Cloudreve) create(ctx context.Context, dir model.Obj, file model.Obj) e
 	}, nil)
 }
 
-// func (d *Cloudreve) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
+// func (d *Cloudreve) Other(ctx context.Context, args model.OtherArgs) (any, error) {
 //	return nil, errs.NotSupport
 // }
 

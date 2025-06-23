@@ -1,6 +1,7 @@
+package s3
+
 // Credits: https://pkg.go.dev/github.com/rclone/rclone@v1.65.2/cmd/serve/s3
 // Package s3 implements a fake s3 server for OpenList
-package s3
 
 import (
 	"fmt"
@@ -10,19 +11,20 @@ import (
 	"github.com/dongdio/OpenList/pkg/utils"
 )
 
-// logger output formatted message
+// logger implements gofakes3.Logger interface for OpenList's logging system
 type logger struct{}
 
-// print log message
-func (l logger) Print(level gofakes3.LogLevel, v ...interface{}) {
+// Print logs messages with appropriate log level
+func (l logger) Print(level gofakes3.LogLevel, v ...any) {
+	message := fmt.Sprintln(v...)
+	prefix := "serve s3: "
+
 	switch level {
-	default:
-		fallthrough
-	case gofakes3.LogErr:
-		utils.Log.Errorf("serve s3: %s", fmt.Sprintln(v...))
-	case gofakes3.LogWarn:
-		utils.Log.Infof("serve s3: %s", fmt.Sprintln(v...))
 	case gofakes3.LogInfo:
-		utils.Log.Debugf("serve s3: %s", fmt.Sprintln(v...))
+		utils.Log.Debugf("%s%s", prefix, message)
+	case gofakes3.LogWarn:
+		utils.Log.Infof("%s%s", prefix, message)
+	default: // Including gofakes3.LogErr
+		utils.Log.Errorf("%s%s", prefix, message)
 	}
 }

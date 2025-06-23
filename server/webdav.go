@@ -7,9 +7,6 @@ import (
 	"path"
 	"strings"
 
-	"github.com/dongdio/OpenList/internal/stream"
-	"github.com/dongdio/OpenList/server/middlewares"
-
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 
@@ -17,6 +14,8 @@ import (
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
 	"github.com/dongdio/OpenList/internal/setting"
+	"github.com/dongdio/OpenList/internal/stream"
+	"github.com/dongdio/OpenList/server/middlewares"
 	"github.com/dongdio/OpenList/server/webdav"
 )
 

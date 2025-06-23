@@ -82,17 +82,17 @@ type TokenResponse struct {
 }
 
 type File struct {
-	Type          int         `json:"type"` // 0: file, 1: folder
-	ID            string      `json:"id"`
-	Name          string      `json:"name"`
-	CreatedAt     time.Time   `json:"created_at"`
-	UpdatedAt     time.Time   `json:"updated_at"`
-	Size          int64       `json:"size"`
-	Metadata      interface{} `json:"metadata"`
-	Path          string      `json:"path"`
-	Capability    string      `json:"capability"`
-	Owned         bool        `json:"owned"`
-	PrimaryEntity string      `json:"primary_entity"`
+	Type          int       `json:"type"` // 0: file, 1: folder
+	ID            string    `json:"id"`
+	Name          string    `json:"name"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
+	Size          int64     `json:"size"`
+	Metadata      any       `json:"metadata"`
+	Path          string    `json:"path"`
+	Capability    string    `json:"capability"`
+	Owned         bool      `json:"owned"`
+	PrimaryEntity string    `json:"primary_entity"`
 }
 
 type StoragePolicy struct {

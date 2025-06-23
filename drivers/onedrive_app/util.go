@@ -88,7 +88,7 @@ func (d *OnedriveAPP) _accessToken() error {
 	return nil
 }
 
-func (d *OnedriveAPP) Request(url string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+func (d *OnedriveAPP) Request(url string, method string, callback base.ReqCallback, resp any) ([]byte, error) {
 	req := base.RestyClient.R()
 	req.SetHeader("Authorization", "Bearer "+d.AccessToken)
 	if callback != nil {

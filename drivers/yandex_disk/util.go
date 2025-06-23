@@ -70,7 +70,7 @@ func (d *YandexDisk) refreshToken() error {
 	return nil
 }
 
-func (d *YandexDisk) request(pathname string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+func (d *YandexDisk) request(pathname string, method string, callback base.ReqCallback, resp any) ([]byte, error) {
 	u := "https://cloud-api.yandex.net/v1/disk/resources" + pathname
 	req := base.RestyClient.R()
 	req.SetHeader("Authorization", "OAuth "+d.AccessToken)

@@ -93,7 +93,7 @@ func (d *Template) ArchiveDecompress(ctx context.Context, srcObj, dstDir model.O
 	return nil, errs.NotImplement
 }
 
-// func (d *Template) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
+// func (d *Template) Other(ctx context.Context, args model.OtherArgs) (any, error) {
 //	return nil, errs.NotSupport
 // }
 

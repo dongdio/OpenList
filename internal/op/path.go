@@ -1,3 +1,4 @@
+// Package op provides operations for OpenList's core functionality
 package op
 
 import (
@@ -12,48 +13,69 @@ import (
 	"github.com/dongdio/OpenList/pkg/utils"
 )
 
-// GetStorageAndActualPath Get the corresponding storage and actual path
-// for path: remove the mount path prefix and join the actual root folder if exists
+// GetStorageAndActualPath returns the corresponding storage and actual path
+// For path: removes the mount path prefix and joins the actual root folder if exists
+// Returns:
+//   - storage: the driver instance for the storage
+//   - actualPath: the path within the storage
+//   - err: error if any occurred
 func GetStorageAndActualPath(rawPath string) (storage driver.Driver, actualPath string, err error) {
+	// Clean and normalize the path
 	rawPath = utils.FixAndCleanPath(rawPath)
+
+	// Get the appropriate storage for this path
 	storage = GetBalancedStorage(rawPath)
 	if storage == nil {
 		if rawPath == "/" {
 			err = errs.NewErr(errs.StorageNotFound, "please add a storage first")
 			return
 		}
-		err = errs.NewErr(errs.StorageNotFound, "rawPath: %s", rawPath)
+		err = errs.NewErr(errs.StorageNotFound, "storage not found for path: %s", rawPath)
 		return
 	}
-	log.Debugln("use storage: ", storage.GetStorage().MountPath)
+
+	log.Debugf("using storage: %s", storage.GetStorage().MountPath)
+
+	// Convert the mount path to the actual path within the storage
 	mountPath := utils.GetActualMountPath(storage.GetStorage().MountPath)
 	actualPath = utils.FixAndCleanPath(strings.TrimPrefix(rawPath, mountPath))
 	return
 }
 
-// urlTreeSplitLineFormPath 分割path中分割真实路径和UrlTree定义字符串
-func urlTreeSplitLineFormPath(path string) (pp string, file string) {
-	// url.PathUnescape 会移除 // ，手动加回去
+// URLTreeSplitPathAndURL splits a path into directory path and URL components for URL-Tree driver
+// Handles different URL-Tree formats:
+// 1. /url_tree_driver/file_name[:size[:time]]:https://example.com/file
+// 2. /url_tree_driver/https://example.com/file
+// Returns:
+//   - dirPath: the directory path component
+//   - urlPart: the URL or file component
+func URLTreeSplitPathAndURL(path string) (dirPath string, urlPart string) {
+	// Fix double slashes in URLs that might have been removed
 	path = strings.Replace(path, "https:/", "https://", 1)
 	path = strings.Replace(path, "http:/", "http://", 1)
+
 	if strings.Contains(path, ":https:/") || strings.Contains(path, ":http:/") {
-		// URL-Tree模式 /url_tree_drivr/file_name[:size[:time]]:https://example.com/file
-		fPath := strings.SplitN(path, ":", 2)[0]
-		pp, _ = stdpath.Split(fPath)
-		file = path[len(pp):]
+		// Format: /url_tree_driver/file_name[:size[:time]]:https://example.com/file
+		filePath := strings.SplitN(path, ":", 2)[0]
+		dirPath, _ = stdpath.Split(filePath)
+		urlPart = path[len(dirPath):]
 	} else if strings.Contains(path, "/https:/") || strings.Contains(path, "/http:/") {
-		// URL-Tree模式 /url_tree_drivr/https://example.com/file
+		// Format: /url_tree_driver/https://example.com/file
 		index := strings.Index(path, "/http://")
 		if index == -1 {
 			index = strings.Index(path, "/https://")
 		}
-		pp = path[:index]
-		file = path[index+1:]
+		dirPath = path[:index]
+		urlPart = path[index+1:]
 	} else {
-		pp, file = stdpath.Split(path)
+		// Regular path format
+		dirPath, urlPart = stdpath.Split(path)
 	}
-	if pp == "" {
-		pp = "/"
+
+	// Ensure dirPath is at least "/"
+	if dirPath == "" {
+		dirPath = "/"
 	}
+
 	return
 }

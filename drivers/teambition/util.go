@@ -29,7 +29,7 @@ func (d *Teambition) isInternational() bool {
 	return d.Region == "international"
 }
 
-func (d *Teambition) request(pathname string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+func (d *Teambition) request(pathname string, method string, callback base.ReqCallback, resp any) ([]byte, error) {
 	url := "https://www.teambition.com" + pathname
 	if d.isInternational() {
 		url = "https://us.teambition.com" + pathname
@@ -208,7 +208,7 @@ func (d *Teambition) chunkUpload(ctx context.Context, file model.FileStreamer, t
 }
 
 func (d *Teambition) finishUpload(file *FileUpload, parentId string) error {
-	file.InvolveMembers = []interface{}{}
+	file.InvolveMembers = []any{}
 	file.Visible = "members"
 	file.ParentId = parentId
 	_, err := d.request("/api/works", http.MethodPost, func(req *resty.Request) {

@@ -95,7 +95,8 @@ English | [中文](./README_cn.md) | [日本語](./README_ja.md) | [Contributing
 
 ## Document
 
-<https://docs.openlist.team>
+<https://docs.openlist.team><br/>
+<https://docs.openlist.org>
 
 ## Demo
 
@@ -104,12 +105,6 @@ N/A (to be rebuilt)
 ## Discussion
 
 Please refer to [*Discussions*](https://github.com/dongdio/OpenList/discussions) for raising general questions, ***Issues* is for bug reports and feature requests only.**
-
-## Contributors
-
-Thanks goes to these wonderful people:
-
-[![Contributors](https://contrib.rocks/image?repo=OpenListTeam/OpenList)](https://github.com/dongdio/OpenList/graphs/contributors)
 
 ## License
 

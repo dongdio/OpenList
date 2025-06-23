@@ -63,7 +63,7 @@ func (f File) IsDir() bool {
 }
 
 // Sys ????
-func (f File) Sys() interface{} {
+func (f File) Sys() any {
 	return nil
 }
 

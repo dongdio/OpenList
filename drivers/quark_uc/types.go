@@ -141,9 +141,9 @@ type HashResp struct {
 type UpAuthResp struct {
 	Resp
 	Data struct {
-		AuthKey string        `json:"auth_key"`
-		Speed   int           `json:"speed"`
-		Headers []interface{} `json:"headers"`
+		AuthKey string `json:"auth_key"`
+		Speed   int    `json:"speed"`
+		Headers []any  `json:"headers"`
 	} `json:"data"`
 	Metadata struct {
 	} `json:"metadata"`

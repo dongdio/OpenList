@@ -17,7 +17,7 @@ func LoadStorages() {
 	}
 	go func(storages []model.Storage) {
 		for i := range storages {
-			err := op.LoadStorage(context.Background(), storages[i])
+			err = op.LoadStorage(context.Background(), storages[i])
 			if err != nil {
 				utils.Log.Errorf("failed get enabled storages: %+v", err)
 			} else {

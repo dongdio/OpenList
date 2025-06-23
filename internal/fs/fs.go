@@ -174,7 +174,7 @@ func GetStorage(path string, args *GetStoragesArgs) (driver.Driver, error) {
 	return storageDriver, nil
 }
 
-func Other(ctx context.Context, args model.FsOtherArgs) (interface{}, error) {
+func Other(ctx context.Context, args model.FsOtherArgs) (any, error) {
 	res, err := other(ctx, args)
 	if err != nil {
 		log.Errorf("failed remove %s: %+v", args.Path, err)

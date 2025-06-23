@@ -3,14 +3,11 @@ package utils
 import (
 	"bytes"
 	"context"
-	"errors"
-	"fmt"
 	"io"
 	"sync"
 	"time"
 
-	"golang.org/x/exp/constraints"
-
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -149,7 +146,7 @@ func Retry(attempts int, sleep time.Duration, f func() error) (err error) {
 			return nil
 		}
 	}
-	return fmt.Errorf("after %d attempts, last error: %s", attempts, err)
+	return errors.Errorf("after %d attempts, last error: %s", attempts, err)
 }
 
 type ClosersIF interface {
@@ -170,14 +167,15 @@ func (c *Closers) GetClosers() Closers {
 var _ ClosersIF = (*Closers)(nil)
 
 func (c *Closers) Close() error {
-	var errs []error
+	var err error
 	for _, closer := range c.closers {
 		if closer != nil {
-			errs = append(errs, closer.Close())
+			err = errors.WithStack(closer.Close())
 		}
 	}
-	return errors.Join(errs...)
+	return errors.Wrap(err, "failed to close")
 }
+
 func (c *Closers) Add(closer io.Closer) {
 	c.closers = append(c.closers, closer)
 
@@ -193,21 +191,8 @@ func NewClosers(c ...io.Closer) Closers {
 	return Closers{c}
 }
 
-func Min[T constraints.Ordered](a, b T) T {
-	if a < b {
-		return a
-	}
-	return b
-}
-func Max[T constraints.Ordered](a, b T) T {
-	if a < b {
-		return b
-	}
-	return a
-}
-
 var IoBuffPool = &sync.Pool{
-	New: func() interface{} {
+	New: func() any {
 		return make([]byte, 32*1024*2) // Two times of size in io package
 	},
 }

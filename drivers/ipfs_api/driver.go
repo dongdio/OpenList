@@ -181,7 +181,7 @@ func (d *IPFS) Put(ctx context.Context, dstDir model.Obj, s model.FileStreamer, 
 	return &model.Object{ID: outHash, Name: s.GetName(), Path: dstPath, Size: int64(s.GetSize()), IsFolder: s.IsDir()}, err
 }
 
-// func (d *Template) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
+// func (d *Template) Other(ctx context.Context, args model.OtherArgs) (any, error) {
 //	return nil, errs.NotSupport
 // }
 

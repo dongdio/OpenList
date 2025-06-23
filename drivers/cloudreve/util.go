@@ -36,7 +36,7 @@ func (d *Cloudreve) getUA() string {
 	return base.UserAgent
 }
 
-func (d *Cloudreve) request(method string, path string, callback base.ReqCallback, out interface{}) error {
+func (d *Cloudreve) request(method string, path string, callback base.ReqCallback, out any) error {
 	if d.ref != nil {
 		return d.ref.request(method, path, callback, out)
 	}
@@ -149,8 +149,8 @@ func (d *Cloudreve) doLogin(needCaptcha bool) error {
 	return err
 }
 
-func convertSrc(obj model.Obj) map[string]interface{} {
-	m := make(map[string]interface{})
+func convertSrc(obj model.Obj) map[string]any {
+	m := make(map[string]any)
 	var dirs []string
 	var items []string
 	if obj.IsDir() {

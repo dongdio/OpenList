@@ -94,7 +94,8 @@
 
 ## ドキュメント
 
-<https://docs.openlist.team>
+<https://docs.openlist.team><br/>
+<https://docs.openlist.org>
 
 ## デモ
 
@@ -103,12 +104,6 @@ N/A （再構築中）
 ## ディスカッション
 
 一般的なご質問は [*Discussions*](https://github.com/dongdio/OpenList/discussions) をご利用ください。***Issues* はバグ報告と機能リクエストに限定されています。**
-
-## コントリビューター
-
-これらの素晴らしい人々に感謝します:
-
-[![Contributors](https://contrib.rocks/image?repo=openlistteam/openlist)](https://github.com/dongdio/OpenList/graphs/contributors)
 
 ## ライセンス
 

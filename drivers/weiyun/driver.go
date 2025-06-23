@@ -393,7 +393,7 @@ func (d *WeiYun) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 	}, nil
 }
 
-// func (d *WeiYun) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
+// func (d *WeiYun) Other(ctx context.Context, args model.OtherArgs) (any, error) {
 // 	return nil, errs.NotSupport
 // }
 

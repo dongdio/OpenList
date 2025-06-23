@@ -50,7 +50,7 @@ func (d *NeteaseMusic) request(url, method string, opt ReqOption) ([]byte, error
 		url = re.ReplaceAllString(url, "/eapi/")
 	} else if opt.crypto == "linuxapi" {
 		re, _ := regexp.Compile(`/\w*api/`)
-		data = linuxapi(map[string]interface{}{
+		data = linuxapi(map[string]any{
 			"url":    re.ReplaceAllString(url, "/api/"),
 			"method": method,
 			"params": data,

@@ -1,6 +1,6 @@
 package driver
 
-type Additional interface{}
+type Additional any
 
 type Select string
 

@@ -15,7 +15,7 @@ import (
 
 // do others that not defined in Driver interface
 
-func (d *MediaTrack) request(url string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+func (d *MediaTrack) request(url string, method string, callback base.ReqCallback, resp any) ([]byte, error) {
 	req := base.RestyClient.R()
 	req.SetHeader("Authorization", "Bearer "+d.AccessToken)
 	if callback != nil {

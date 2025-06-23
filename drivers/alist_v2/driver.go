@@ -111,7 +111,7 @@ func (d *AListV2) Put(ctx context.Context, dstDir model.Obj, stream model.FileSt
 	return errs.NotImplement
 }
 
-// func (d *AList) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
+// func (d *AList) Other(ctx context.Context, args model.OtherArgs) (any, error) {
 //	return nil, errs.NotSupport
 // }
 

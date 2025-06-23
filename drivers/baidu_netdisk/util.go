@@ -94,7 +94,7 @@ func (d *BaiduNetdisk) _refreshToken() error {
 	return nil
 }
 
-func (d *BaiduNetdisk) request(furl string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+func (d *BaiduNetdisk) request(furl string, method string, callback base.ReqCallback, resp any) ([]byte, error) {
 	var result []byte
 	err := retry.Do(func() error {
 		req := base.RestyClient.R()
@@ -137,13 +137,13 @@ func (d *BaiduNetdisk) request(furl string, method string, callback base.ReqCall
 	return result, err
 }
 
-func (d *BaiduNetdisk) get(pathname string, params map[string]string, resp interface{}) ([]byte, error) {
+func (d *BaiduNetdisk) get(pathname string, params map[string]string, resp any) ([]byte, error) {
 	return d.request("https://pan.baidu.com/rest/2.0"+pathname, http.MethodGet, func(req *resty.Request) {
 		req.SetQueryParams(params)
 	}, resp)
 }
 
-func (d *BaiduNetdisk) postForm(pathname string, params map[string]string, form map[string]string, resp interface{}) ([]byte, error) {
+func (d *BaiduNetdisk) postForm(pathname string, params map[string]string, form map[string]string, resp any) ([]byte, error) {
 	return d.request("https://pan.baidu.com/rest/2.0"+pathname, http.MethodPost, func(req *resty.Request) {
 		req.SetQueryParams(params)
 		req.SetFormData(form)

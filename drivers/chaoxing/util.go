@@ -16,7 +16,7 @@ import (
 	"github.com/dongdio/OpenList/drivers/base"
 )
 
-func (d *ChaoXing) requestDownload(pathname string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+func (d *ChaoXing) requestDownload(pathname string, method string, callback base.ReqCallback, resp any) ([]byte, error) {
 	u := d.conf.DowloadApi + pathname
 	req := base.RestyClient.R()
 	req.SetHeaders(map[string]string{
@@ -39,7 +39,7 @@ func (d *ChaoXing) requestDownload(pathname string, method string, callback base
 	return res.Bytes(), nil
 }
 
-func (d *ChaoXing) request(pathname string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+func (d *ChaoXing) request(pathname string, method string, callback base.ReqCallback, resp any) ([]byte, error) {
 	u := d.conf.api + pathname
 	if strings.Contains(pathname, "getUploadConfig") {
 		u = pathname

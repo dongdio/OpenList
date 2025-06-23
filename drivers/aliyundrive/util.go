@@ -82,7 +82,7 @@ func (d *AliDrive) refreshToken() error {
 	return nil
 }
 
-func (d *AliDrive) request(url, method string, callback base.ReqCallback, resp interface{}) ([]byte, error, RespErr) {
+func (d *AliDrive) request(url, method string, callback base.ReqCallback, resp any) ([]byte, error, RespErr) {
 	req := base.RestyClient.R()
 	state, ok := global.Load(d.UserID)
 	if !ok {

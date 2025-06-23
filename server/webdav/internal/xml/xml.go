@@ -16,13 +16,14 @@ package xml
 import (
 	"bufio"
 	"bytes"
-	"errors"
 	"fmt"
 	"io"
 	"strconv"
 	"strings"
 	"unicode"
 	"unicode/utf8"
+
+	"github.com/pkg/errors"
 )
 
 // A SyntaxError represents a syntax error in the XML input stream.
@@ -61,7 +62,7 @@ type Attr struct {
 
 // A Token is an interface holding one of the token types:
 // StartElement, EndElement, CharData, Comment, ProcInst, or Directive.
-type Token interface{}
+type Token any
 
 // A StartElement represents an XML start element.
 type StartElement struct {
@@ -609,18 +610,18 @@ func (d *Decoder) rawToken() (Token, error) {
 			content := string(data)
 			ver := procInst("version", content)
 			if ver != "" && ver != "1.0" {
-				d.err = fmt.Errorf("xml: unsupported version %q; only version 1.0 is supported", ver)
+				d.err = errors.Errorf("xml: unsupported version %q; only version 1.0 is supported", ver)
 				return nil, d.err
 			}
 			enc := procInst("encoding", content)
 			if enc != "" && enc != "utf-8" && enc != "UTF-8" {
 				if d.CharsetReader == nil {
-					d.err = fmt.Errorf("xml: encoding %q declared but Decoder.CharsetReader is nil", enc)
+					d.err = errors.Errorf("xml: encoding %q declared but Decoder.CharsetReader is nil", enc)
 					return nil, d.err
 				}
 				newr, err := d.CharsetReader(enc, d.r.(io.Reader))
 				if err != nil {
-					d.err = fmt.Errorf("xml: opening charset %q: %v", enc, err)
+					d.err = errors.Errorf("xml: opening charset %q: %v", enc, err)
 					return nil, d.err
 				}
 				if newr == nil {

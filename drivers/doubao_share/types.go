@@ -195,7 +195,7 @@ func (r *CommonResp) GetError() error {
 }
 
 // UnmarshalData 将data字段解析为指定类型
-func (r *CommonResp) UnmarshalData(v interface{}) error {
+func (r *CommonResp) UnmarshalData(v any) error {
 	if !r.IsSuccess() {
 		return r.GetError()
 	}

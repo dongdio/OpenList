@@ -64,7 +64,7 @@ func (d *Teambition) MakeDir(ctx context.Context, parentDir model.Obj, dirName s
 		"description":    "",
 		"workCount":      0,
 		"collectionType": "",
-		"recentWorks":    []interface{}{},
+		"recentWorks":    []any{},
 		"_parentId":      parentDir.GetID(),
 		"subCount":       nil,
 	}

@@ -5,7 +5,7 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
-	"fmt"
+	"errors"
 	"os"
 	"path/filepath"
 
@@ -97,7 +97,7 @@ func rsaEncodePrivateKey(privateKey *rsa.PrivateKey) []byte {
 func rsaDecodePrivateKey(bytes []byte) (*rsa.PrivateKey, error) {
 	block, _ := pem.Decode(bytes)
 	if block == nil {
-		return nil, fmt.Errorf("failed to parse PEM block containing the key")
+		return nil, errors.New("failed to parse PEM block containing the key")
 	}
 	privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 	if err != nil {

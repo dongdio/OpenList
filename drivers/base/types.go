@@ -2,7 +2,7 @@ package base
 
 import "resty.dev/v3"
 
-type Json map[string]interface{}
+type Json map[string]any
 
 type TokenResp struct {
 	AccessToken  string `json:"access_token"`

@@ -198,7 +198,7 @@ func (d *Mega) Put(ctx context.Context, dstDir model.Obj, stream model.FileStrea
 	return fmt.Errorf("unable to convert dir to mega n")
 }
 
-// func (d *Mega) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
+// func (d *Mega) Other(ctx context.Context, args model.OtherArgs) (any, error) {
 //	return nil, errs.NotSupport
 // }
 

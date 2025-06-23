@@ -245,7 +245,7 @@ func (d *BaiduShare) Put(ctx context.Context, dstDir model.Obj, stream model.Fil
 	return errs.NotSupport
 }
 
-// func (d *Template) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
+// func (d *Template) Other(ctx context.Context, args model.OtherArgs) (any, error) {
 //	return nil, errs.NotSupport
 // }
 

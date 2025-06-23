@@ -15,62 +15,91 @@ import (
 	"github.com/dongdio/OpenList/server/common"
 )
 
-type SearchReq struct {
+// SearchRequest extends the base search request with password for accessing protected folders
+type SearchRequest struct {
 	model.SearchReq
 	Password string `json:"password"`
 }
 
-type SearchResp struct {
+// SearchResponse extends SearchNode with additional type information for UI rendering
+type SearchResponse struct {
 	model.SearchNode
-	Type int `json:"type"`
+	Type int `json:"type"` // File type for UI rendering
 }
 
+// Search handles file/folder search requests with permission filtering
 func Search(c *gin.Context) {
-	var (
-		req SearchReq
-		err error
-	)
-	if err = c.ShouldBind(&req); err != nil {
+	var req SearchRequest
+	if err := c.ShouldBind(&req); err != nil {
 		common.ErrorResp(c, err, 400)
 		return
 	}
+
+	// Get user and validate permissions
 	user := c.MustGet("user").(*model.User)
+
+	// Convert relative path to absolute path
+	var err error
 	req.Parent, err = user.JoinPath(req.Parent)
 	if err != nil {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	if err := req.Validate(); err != nil {
+
+	// Validate search parameters
+	if err = req.Validate(); err != nil {
 		common.ErrorResp(c, err, 400)
 		return
 	}
+
+	// Perform the search
 	nodes, total, err := search.Search(c, req.SearchReq)
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}
-	var filteredNodes []model.SearchNode
-	for _, node := range nodes {
-		if !strings.HasPrefix(node.Parent, user.BasePath) {
-			continue
-		}
-		meta, err := op.GetNearestMeta(node.Parent)
-		if err != nil && !errors.Is(errors.Cause(err), errs.MetaNotFound) {
-			continue
-		}
-		if !common.CanAccess(user, meta, path.Join(node.Parent, node.Name), req.Password) {
-			continue
-		}
-		filteredNodes = append(filteredNodes, node)
-	}
+
+	// Filter results based on user permissions
+	filteredNodes := filterSearchResults(nodes, user, req.Password)
+
+	// Return paginated results
 	common.SuccessResp(c, common.PageResp{
-		Content: utils.MustSliceConvert(filteredNodes, nodeToSearchResp),
+		Content: utils.MustSliceConvert(filteredNodes, convertToSearchResponse),
 		Total:   total,
 	})
 }
 
-func nodeToSearchResp(node model.SearchNode) SearchResp {
-	return SearchResp{
+// filterSearchResults removes search results that the user doesn't have permission to access
+func filterSearchResults(nodes []model.SearchNode, user *model.User, password string) []model.SearchNode {
+	var filteredNodes []model.SearchNode
+
+	for _, node := range nodes {
+		// Skip nodes outside user's base path
+		if !strings.HasPrefix(node.Parent, user.BasePath) {
+			continue
+		}
+
+		// Get metadata for permission check
+		meta, err := op.GetNearestMeta(node.Parent)
+		if err != nil && !errors.Is(errors.Cause(err), errs.MetaNotFound) {
+			continue
+		}
+
+		// Check if user can access this node
+		nodePath := path.Join(node.Parent, node.Name)
+		if !common.CanAccess(user, meta, nodePath, password) {
+			continue
+		}
+
+		filteredNodes = append(filteredNodes, node)
+	}
+
+	return filteredNodes
+}
+
+// convertToSearchResponse converts a SearchNode to a SearchResponse by adding type information
+func convertToSearchResponse(node model.SearchNode) SearchResponse {
+	return SearchResponse{
 		SearchNode: node,
 		Type:       utils.GetObjType(node.Name, node.IsDir),
 	}

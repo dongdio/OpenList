@@ -115,7 +115,7 @@ func weapi(data map[string]string) map[string]string {
 	}
 }
 
-func eapi(url string, data map[string]interface{}) map[string]string {
+func eapi(url string, data map[string]any) map[string]string {
 	text, _ := utils.Json.Marshal(data)
 	msg := "nobody" + url + "use" + string(text) + "md5forencrypt"
 	h := md5.New()
@@ -127,7 +127,7 @@ func eapi(url string, data map[string]interface{}) map[string]string {
 	}
 }
 
-func linuxapi(data map[string]interface{}) map[string]string {
+func linuxapi(data map[string]any) map[string]string {
 	text, _ := utils.Json.Marshal(data)
 	return map[string]string{
 		"eparams": strings.ToUpper(hex.EncodeToString(aesECBEncrypt(text, linuxapiKey))),

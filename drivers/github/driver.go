@@ -197,7 +197,7 @@ func (d *Github) MakeDir(ctx context.Context, parentDir model.Obj, dirName strin
 	if parent.Entries == nil {
 		return errs.NotFolder
 	}
-	subDirSha, err := d.newTree("", []interface{}{
+	subDirSha, err := d.newTree("", []any{
 		map[string]string{
 			"path":    ".gitkeep",
 			"mode":    "100644",
@@ -208,7 +208,7 @@ func (d *Github) MakeDir(ctx context.Context, parentDir model.Obj, dirName strin
 	if err != nil {
 		return err
 	}
-	newTree := make([]interface{}, 0, 2)
+	newTree := make([]any, 0, 2)
 	newTree = append(newTree, TreeObjReq{
 		Path: dirName,
 		Mode: "040000",
@@ -290,7 +290,7 @@ func (d *Github) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 		if delSrc == nil || dstNextTree == nil {
 			return errs.ObjectNotFound
 		}
-		ancestorNewSha, err := d.newTree(ancestorOldSha, []interface{}{*delSrc, *dstNextTree})
+		ancestorNewSha, err := d.newTree(ancestorOldSha, []any{*delSrc, *dstNextTree})
 		if err != nil {
 			return err
 		}
@@ -320,7 +320,7 @@ func (d *Github) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 
 		delSrc := *src
 		delSrc.Sha = nil
-		delSrcTree := make([]interface{}, 0, 2)
+		delSrcTree := make([]any, 0, 2)
 		delSrcTree = append(delSrcTree, delSrc)
 		if len(srcParentTree.Trees) == 1 {
 			delSrcTree = append(delSrcTree, map[string]string{
@@ -363,7 +363,7 @@ func (d *Github) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 		if srcNextTree == nil {
 			return errs.ObjectNotFound
 		}
-		ancestorNewSha, err := d.newTree(ancestorOldSha, []interface{}{*srcNextTree, *src})
+		ancestorNewSha, err := d.newTree(ancestorOldSha, []any{*srcNextTree, *src})
 		if err != nil {
 			return err
 		}
@@ -390,7 +390,7 @@ func (d *Github) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 		if srcNewTree == nil {
 			return errs.ObjectNotFound
 		}
-		delSrcTree := make([]interface{}, 0, 2)
+		delSrcTree := make([]any, 0, 2)
 		delSrcTree = append(delSrcTree, *srcNewTree)
 		if len(srcParentTree.Trees) == 1 {
 			delSrcTree = append(delSrcTree, map[string]string{
@@ -421,7 +421,7 @@ func (d *Github) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 		if err != nil {
 			return err
 		}
-		newTree := make([]interface{}, 2)
+		newTree := make([]any, 2)
 		srcBind := false
 		dstBind := false
 		for _, t := range ancestorTree.Trees {
@@ -480,7 +480,7 @@ func (d *Github) Rename(ctx context.Context, srcObj model.Obj, newName string) e
 	if err != nil {
 		return err
 	}
-	newTree := make([]interface{}, 2)
+	newTree := make([]any, 2)
 	operated := false
 	for _, t := range tree.Trees {
 		if t.Path == srcObj.GetName() {
@@ -580,7 +580,7 @@ func (d *Github) Remove(ctx context.Context, obj model.Obj) error {
 	if del == nil {
 		return errs.ObjectNotFound
 	}
-	newTree := make([]interface{}, 0, 2)
+	newTree := make([]any, 0, 2)
 	newTree = append(newTree, *del)
 	if len(tree.Trees) == 1 { // completely emptying the repository will get a 404
 		newTree = append(newTree, map[string]string{
@@ -628,7 +628,7 @@ func (d *Github) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 	if parent.Entries == nil {
 		return errs.NotFolder
 	}
-	newTree := make([]interface{}, 0, 2)
+	newTree := make([]any, 0, 2)
 	newTree = append(newTree, TreeObjReq{
 		Path: stream.GetName(),
 		Mode: "100644",
@@ -763,7 +763,7 @@ func (d *Github) renewParentTrees(path, prevSha, curSha, until string) (string, 
 		if newTree == nil {
 			return "", errs.ObjectNotFound
 		}
-		curSha, err = d.newTree(sha, []interface{}{*newTree})
+		curSha, err = d.newTree(sha, []any{*newTree})
 		if err != nil {
 			return "", err
 		}
@@ -805,7 +805,7 @@ func (d *Github) getTreeDirectly(path string) (*TreeResp, string, error) {
 	return tree, p.Sha, nil
 }
 
-func (d *Github) newTree(baseSha string, tree []interface{}) (string, error) {
+func (d *Github) newTree(baseSha string, tree []any) (string, error) {
 	body := &TreeReq{Trees: tree}
 	if baseSha != "" {
 		body.BaseTree = baseSha
@@ -827,7 +827,7 @@ func (d *Github) newTree(baseSha string, tree []interface{}) (string, error) {
 
 func (d *Github) commit(message, treeSha string) error {
 	oldCommit, err := d.getBranchHead()
-	body := map[string]interface{}{
+	body := map[string]any{
 		"message": message,
 		"tree":    treeSha,
 		"parents": []string{oldCommit},
@@ -911,7 +911,7 @@ func (d *Github) copyWithoutRenewTree(srcObj, dstDir model.Obj) (dstSha, newSha,
 		return "", "", "", nil, errs.ObjectNotFound
 	}
 
-	newTree := make([]interface{}, 0, 2)
+	newTree := make([]any, 0, 2)
 	newTree = append(newTree, *src)
 	if len(dst.Entries) == 1 && dst.Entries[0].Name == ".gitkeep" {
 		newTree = append(newTree, TreeObjReq{
@@ -958,7 +958,7 @@ func (d *Github) getAuthenticatedUser() (*UserResp, error) {
 	return resp, nil
 }
 
-func (d *Github) addCommitterAndAuthor(m *map[string]interface{}) {
+func (d *Github) addCommitterAndAuthor(m *map[string]any) {
 	if d.CommitterName != "" {
 		committer := map[string]string{
 			"name":  d.CommitterName,

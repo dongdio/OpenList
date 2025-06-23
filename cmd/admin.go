@@ -74,7 +74,7 @@ func setAdminPassword(pwd string) {
 		return
 	}
 	admin.SetPassword(pwd)
-	if err := op.UpdateUser(admin); err != nil {
+	if err = op.UpdateUser(admin); err != nil {
 		utils.Log.Errorf("failed update admin user: %+v", err)
 		return
 	}

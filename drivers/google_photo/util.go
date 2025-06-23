@@ -39,7 +39,7 @@ func (d *GooglePhoto) refreshToken() error {
 	return nil
 }
 
-func (d *GooglePhoto) request(url string, method string, callback base.ReqCallback, resp interface{}, headers map[string]string) ([]byte, error) {
+func (d *GooglePhoto) request(url string, method string, callback base.ReqCallback, resp any, headers map[string]string) ([]byte, error) {
 	req := base.RestyClient.R()
 	req.SetHeader("Authorization", "Bearer "+d.AccessToken)
 	req.SetHeader("Accept-Encoding", "gzip")

@@ -27,29 +27,29 @@ type Work struct {
 }
 
 type FileUpload struct {
-	FileKey        string        `json:"fileKey"`
-	FileName       string        `json:"fileName"`
-	FileType       string        `json:"fileType"`
-	FileSize       int           `json:"fileSize"`
-	FileCategory   string        `json:"fileCategory"`
-	ImageWidth     int           `json:"imageWidth"`
-	ImageHeight    int           `json:"imageHeight"`
-	InvolveMembers []interface{} `json:"involveMembers"`
-	Source         string        `json:"source"`
-	Visible        string        `json:"visible"`
-	ParentId       string        `json:"_parentId"`
+	FileKey        string `json:"fileKey"`
+	FileName       string `json:"fileName"`
+	FileType       string `json:"fileType"`
+	FileSize       int    `json:"fileSize"`
+	FileCategory   string `json:"fileCategory"`
+	ImageWidth     int    `json:"imageWidth"`
+	ImageHeight    int    `json:"imageHeight"`
+	InvolveMembers []any  `json:"involveMembers"`
+	Source         string `json:"source"`
+	Visible        string `json:"visible"`
+	ParentId       string `json:"_parentId"`
 }
 
 type ChunkUpload struct {
 	FileUpload
-	Storage        string        `json:"storage"`
-	MimeType       string        `json:"mimeType"`
-	Chunks         int           `json:"chunks"`
-	ChunkSize      int           `json:"chunkSize"`
-	Created        time.Time     `json:"created"`
-	FileMD5        string        `json:"fileMD5"`
-	LastUpdated    time.Time     `json:"lastUpdated"`
-	UploadedChunks []interface{} `json:"uploadedChunks"`
+	Storage        string    `json:"storage"`
+	MimeType       string    `json:"mimeType"`
+	Chunks         int       `json:"chunks"`
+	ChunkSize      int       `json:"chunkSize"`
+	Created        time.Time `json:"created"`
+	FileMD5        string    `json:"fileMD5"`
+	LastUpdated    time.Time `json:"lastUpdated"`
+	UploadedChunks []any     `json:"uploadedChunks"`
 	Token          struct {
 		AppID          string    `json:"AppID"`
 		OrganizationID string    `json:"OrganizationID"`
@@ -59,12 +59,12 @@ type ChunkUpload struct {
 		Resource       string    `json:"Resource"`
 		Speed          int       `json:"Speed"`
 	} `json:"token"`
-	DownloadUrl    string      `json:"downloadUrl"`
-	ThumbnailUrl   string      `json:"thumbnailUrl"`
-	PreviewUrl     string      `json:"previewUrl"`
-	ImmPreviewUrl  string      `json:"immPreviewUrl"`
-	PreviewExt     string      `json:"previewExt"`
-	LastUploadTime interface{} `json:"lastUploadTime"`
+	DownloadUrl    string `json:"downloadUrl"`
+	ThumbnailUrl   string `json:"thumbnailUrl"`
+	PreviewUrl     string `json:"previewUrl"`
+	ImmPreviewUrl  string `json:"immPreviewUrl"`
+	PreviewExt     string `json:"previewExt"`
+	LastUploadTime any    `json:"lastUploadTime"`
 }
 
 type UploadToken struct {

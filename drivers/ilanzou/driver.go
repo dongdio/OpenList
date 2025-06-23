@@ -386,7 +386,7 @@ func (d *ILanZou) Put(ctx context.Context, dstDir model.Obj, s model.FileStreame
 	}, nil
 }
 
-// func (d *ILanZou) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
+// func (d *ILanZou) Other(ctx context.Context, args model.OtherArgs) (any, error) {
 //	return nil, errs.NotSupport
 // }
 

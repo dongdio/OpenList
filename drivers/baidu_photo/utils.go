@@ -24,7 +24,7 @@ const (
 	FILE_API_URL_V2 = API_URL + "/file/v2"
 )
 
-func (d *BaiduPhoto) Request(client *resty.Client, furl string, method string, callback base.ReqCallback, resp interface{}) (*resty.Response, error) {
+func (d *BaiduPhoto) Request(client *resty.Client, furl string, method string, callback base.ReqCallback, resp any) (*resty.Response, error) {
 	req := client.R().
 		// SetQueryParam("access_token", d.AccessToken)
 		SetHeader("Cookie", d.Cookie)
@@ -59,7 +59,7 @@ func (d *BaiduPhoto) Request(client *resty.Client, furl string, method string, c
 	return res, nil
 }
 
-// func (d *BaiduPhoto) Request(furl string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+// func (d *BaiduPhoto) Request(furl string, method string, callback base.ReqCallback, resp any) ([]byte, error) {
 //	res, err := d.request(furl, method, callback, resp)
 //	if err != nil {
 //		return nil, err
@@ -91,11 +91,11 @@ func (d *BaiduPhoto) Request(client *resty.Client, furl string, method string, c
 // 	return nil
 // }
 
-func (d *BaiduPhoto) Get(furl string, callback base.ReqCallback, resp interface{}) (*resty.Response, error) {
+func (d *BaiduPhoto) Get(furl string, callback base.ReqCallback, resp any) (*resty.Response, error) {
 	return d.Request(base.RestyClient, furl, http.MethodGet, callback, resp)
 }
 
-func (d *BaiduPhoto) Post(furl string, callback base.ReqCallback, resp interface{}) (*resty.Response, error) {
+func (d *BaiduPhoto) Post(furl string, callback base.ReqCallback, resp any) (*resty.Response, error) {
 	return d.Request(base.RestyClient, furl, http.MethodPost, callback, resp)
 }
 

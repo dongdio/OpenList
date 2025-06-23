@@ -97,6 +97,6 @@ type SessionInfo struct {
 
 // Method is an element of parameters used in system.multicall
 type Method struct {
-	Name   string        `json:"methodName"` // Method name to call
-	Params []interface{} `json:"params"`     // Array containing parameters to the method call
+	Name   string `json:"methodName"` // Method name to call
+	Params []any  `json:"params"`     // Array containing parameters to the method call
 }

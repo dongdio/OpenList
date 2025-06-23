@@ -362,7 +362,7 @@ func (p *Pan115) UploadByMultipart(ctx context.Context, params *driver115.Upload
 		go func(threadId int) {
 			defer func() {
 				if r := recover(); r != nil {
-					errCh <- fmt.Errorf("recovered in %v", r)
+					errCh <- errors.Errorf("recovered in %v", r)
 				}
 			}()
 			for chunk := range chunksCh {
@@ -416,7 +416,7 @@ LOOP:
 		case <-errCh:
 			return nil, err
 		case <-timeout.C:
-			return nil, fmt.Errorf("time out")
+			return nil, errors.New("time out")
 		}
 	}
 

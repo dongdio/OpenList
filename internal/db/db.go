@@ -19,7 +19,7 @@ func Init(d *gorm.DB) {
 	}
 }
 
-func AutoMigrate(dst ...interface{}) error {
+func AutoMigrate(dst ...any) error {
 	var err error
 	if conf.Conf.Database.Type == "mysql" {
 		err = db.Set("gorm:table_options", "ENGINE=InnoDB CHARSET=utf8mb4").AutoMigrate(dst...)

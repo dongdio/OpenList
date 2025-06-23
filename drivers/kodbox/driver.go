@@ -190,7 +190,7 @@ func (d *KodBox) Copy(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj,
 		return nil, fmt.Errorf("%s", resp.Data)
 	}
 
-	path := resp.Info.([]interface{})[0].(string)
+	path := resp.Info.([]any)[0].(string)
 	objectName, err := d.getFileOrFolderName(ctx, path)
 	if err != nil {
 		return nil, err

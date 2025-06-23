@@ -2,11 +2,11 @@ package _123
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"net/http"
 	"strconv"
 
+	"github.com/pkg/errors"
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/drivers/base"
@@ -124,7 +124,7 @@ func (d *Pan123) newUpload(ctx context.Context, upReq *UploadResp, file model.Fi
 func (d *Pan123) uploadS3Chunk(ctx context.Context, upReq *UploadResp, s3PreSignedUrls *S3PreSignedURLs, cur, end int, reader *io.SectionReader, curSize int64, retry bool, getS3UploadUrl func(ctx context.Context, upReq *UploadResp, start int, end int) (*S3PreSignedURLs, error)) error {
 	uploadUrl := s3PreSignedUrls.Data.PreSignedUrls[strconv.Itoa(cur)]
 	if uploadUrl == "" {
-		return fmt.Errorf("upload url is empty, s3PreSignedUrls: %+v", s3PreSignedUrls)
+		return errors.Errorf("upload url is empty, s3PreSignedUrls: %+v", s3PreSignedUrls)
 	}
 	req, err := http.NewRequest("PUT", uploadUrl, driver.NewLimitedUploadStream(ctx, reader))
 	if err != nil {
@@ -140,7 +140,7 @@ func (d *Pan123) uploadS3Chunk(ctx context.Context, upReq *UploadResp, s3PreSign
 	defer res.Body.Close()
 	if res.StatusCode == http.StatusForbidden {
 		if retry {
-			return fmt.Errorf("upload s3 chunk %d failed, status code: %d", cur, res.StatusCode)
+			return errors.Errorf("upload s3 chunk %d failed, status code: %d", cur, res.StatusCode)
 		}
 		// refresh s3 pre signed urls
 		newS3PreSignedUrls, err := getS3UploadUrl(ctx, upReq, cur, end)
@@ -157,7 +157,7 @@ func (d *Pan123) uploadS3Chunk(ctx context.Context, upReq *UploadResp, s3PreSign
 		if err != nil {
 			return err
 		}
-		return fmt.Errorf("upload s3 chunk %d failed, status code: %d, body: %s", cur, res.StatusCode, body)
+		return errors.Errorf("upload s3 chunk %d failed, status code: %d, body: %s", cur, res.StatusCode, body)
 	}
 	return nil
 }

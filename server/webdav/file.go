@@ -81,7 +81,7 @@ func walkFS(ctx context.Context, depth int, name string, info model.Obj, walkFn 
 	// This implementation is based on Walk's code in the standard path/path package.
 	err := walkFn(name, info, nil)
 	if err != nil {
-		if info.IsDir() && err == filepath.SkipDir {
+		if info.IsDir() && errors.Is(err, filepath.SkipDir) {
 			return nil
 		}
 		return err

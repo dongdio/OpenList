@@ -9,7 +9,7 @@ import (
 	"github.com/dongdio/OpenList/pkg/utils"
 )
 
-func (d *LenovoNasShare) request(url string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+func (d *LenovoNasShare) request(url string, method string, callback base.ReqCallback, resp any) ([]byte, error) {
 	req := base.RestyClient.R()
 	req.SetHeaders(map[string]string{
 		"origin":      "https://siot-share.lenovo.com.cn",

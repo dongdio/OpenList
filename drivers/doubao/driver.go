@@ -265,7 +265,7 @@ func (d *Doubao) ArchiveDecompress(ctx context.Context, srcObj, dstDir model.Obj
 	return nil, errs.NotImplement
 }
 
-// func (d *Doubao) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
+// func (d *Doubao) Other(ctx context.Context, args model.OtherArgs) (any, error) {
 //	return nil, errs.NotSupport
 // }
 

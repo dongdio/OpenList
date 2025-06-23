@@ -397,7 +397,7 @@ func (c *Lark) Put(ctx context.Context, dstDir model.Obj, stream model.FileStrea
 	}, nil
 }
 
-// func (d *Lark) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
+// func (d *Lark) Other(ctx context.Context, args model.OtherArgs) (any, error) {
 //	return nil, errs.NotSupport
 // }
 

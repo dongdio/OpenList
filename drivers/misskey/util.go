@@ -17,7 +17,7 @@ import (
 
 // Base layer methods
 
-func (d *Misskey) request(path, method string, callback base.ReqCallback, resp interface{}) error {
+func (d *Misskey) request(path, method string, callback base.ReqCallback, resp any) error {
 	url := d.Endpoint + "/api/drive" + path
 	req := base.RestyClient.R()
 
@@ -49,13 +49,13 @@ func (d *Misskey) getThumb(ctx context.Context, obj model.Obj) (io.Reader, error
 	return nil, errs.NotImplement
 }
 
-func setBody(body interface{}) base.ReqCallback {
+func setBody(body any) base.ReqCallback {
 	return func(req *resty.Request) {
 		req.SetBody(body)
 	}
 }
 
-func handleFolderId(dir model.Obj) interface{} {
+func handleFolderId(dir model.Obj) any {
 	if dir.GetID() == "" {
 		return nil
 	}
@@ -117,7 +117,7 @@ func (d *Misskey) link(file model.Obj) (*model.Link, error) {
 
 func (d *Misskey) makeDir(parentDir model.Obj, dirName string) (model.Obj, error) {
 	var folder MFolder
-	err := d.request("/folders/create", "POST", setBody(map[string]interface{}{"parentId": handleFolderId(parentDir), "name": dirName}), &folder)
+	err := d.request("/folders/create", "POST", setBody(map[string]any{"parentId": handleFolderId(parentDir), "name": dirName}), &folder)
 	if err != nil {
 		return nil, err
 	}
@@ -127,11 +127,11 @@ func (d *Misskey) makeDir(parentDir model.Obj, dirName string) (model.Obj, error
 func (d *Misskey) move(srcObj, dstDir model.Obj) (model.Obj, error) {
 	if srcObj.IsDir() {
 		var folder MFolder
-		err := d.request("/folders/update", "POST", setBody(map[string]interface{}{"folderId": srcObj.GetID(), "parentId": handleFolderId(dstDir)}), &folder)
+		err := d.request("/folders/update", "POST", setBody(map[string]any{"folderId": srcObj.GetID(), "parentId": handleFolderId(dstDir)}), &folder)
 		return mFolder2Object(folder), err
 	} else {
 		var file MFile
-		err := d.request("/files/update", "POST", setBody(map[string]interface{}{"fileId": srcObj.GetID(), "folderId": handleFolderId(dstDir)}), &file)
+		err := d.request("/files/update", "POST", setBody(map[string]any{"fileId": srcObj.GetID(), "folderId": handleFolderId(dstDir)}), &file)
 		return mFile2Object(file), err
 	}
 }
@@ -171,7 +171,7 @@ func (d *Misskey) copy(srcObj, dstDir model.Obj) (model.Obj, error) {
 		if err != nil {
 			return nil, err
 		}
-		err = d.request("/files/upload-from-url", "POST", setBody(map[string]interface{}{"url": url.URL, "folderId": handleFolderId(dstDir)}), &file)
+		err = d.request("/files/upload-from-url", "POST", setBody(map[string]any{"url": url.URL, "folderId": handleFolderId(dstDir)}), &file)
 		if err != nil {
 			return nil, err
 		}

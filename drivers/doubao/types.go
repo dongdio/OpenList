@@ -254,7 +254,7 @@ type UploadConfig struct {
 	FallbackUploadAddress FallbackUploadAddress `json:"FallbackUploadAddress"`
 	InnerUploadAddress    InnerUploadAddress    `json:"InnerUploadAddress"`
 	RequestID             string                `json:"RequestId"`
-	SDKParam              interface{}           `json:"SDKParam"`
+	SDKParam              any                   `json:"SDKParam"`
 }
 
 type UploadConfigResp struct {
@@ -264,41 +264,41 @@ type UploadConfigResp struct {
 
 // StoreInfo 存储信息
 type StoreInfo struct {
-	StoreURI      string                 `json:"StoreUri"`
-	Auth          string                 `json:"Auth"`
-	UploadID      string                 `json:"UploadID"`
-	UploadHeader  map[string]interface{} `json:"UploadHeader,omitempty"`
-	StorageHeader map[string]interface{} `json:"StorageHeader,omitempty"`
+	StoreURI      string         `json:"StoreUri"`
+	Auth          string         `json:"Auth"`
+	UploadID      string         `json:"UploadID"`
+	UploadHeader  map[string]any `json:"UploadHeader,omitempty"`
+	StorageHeader map[string]any `json:"StorageHeader,omitempty"`
 }
 
 // UploadAddress 上传地址信息
 type UploadAddress struct {
-	StoreInfos   []StoreInfo            `json:"StoreInfos"`
-	UploadHosts  []string               `json:"UploadHosts"`
-	UploadHeader map[string]interface{} `json:"UploadHeader"`
-	SessionKey   string                 `json:"SessionKey"`
-	Cloud        string                 `json:"Cloud"`
+	StoreInfos   []StoreInfo    `json:"StoreInfos"`
+	UploadHosts  []string       `json:"UploadHosts"`
+	UploadHeader map[string]any `json:"UploadHeader"`
+	SessionKey   string         `json:"SessionKey"`
+	Cloud        string         `json:"Cloud"`
 }
 
 // FallbackUploadAddress 备用上传地址
 type FallbackUploadAddress struct {
-	StoreInfos   []StoreInfo            `json:"StoreInfos"`
-	UploadHosts  []string               `json:"UploadHosts"`
-	UploadHeader map[string]interface{} `json:"UploadHeader"`
-	SessionKey   string                 `json:"SessionKey"`
-	Cloud        string                 `json:"Cloud"`
+	StoreInfos   []StoreInfo    `json:"StoreInfos"`
+	UploadHosts  []string       `json:"UploadHosts"`
+	UploadHeader map[string]any `json:"UploadHeader"`
+	SessionKey   string         `json:"SessionKey"`
+	Cloud        string         `json:"Cloud"`
 }
 
 // UploadNode 上传节点信息
 type UploadNode struct {
-	Vid          string                 `json:"Vid"`
-	Vids         []string               `json:"Vids"`
-	StoreInfos   []StoreInfo            `json:"StoreInfos"`
-	UploadHost   string                 `json:"UploadHost"`
-	UploadHeader map[string]interface{} `json:"UploadHeader"`
-	Type         string                 `json:"Type"`
-	Protocol     string                 `json:"Protocol"`
-	SessionKey   string                 `json:"SessionKey"`
+	Vid          string         `json:"Vid"`
+	Vids         []string       `json:"Vids"`
+	StoreInfos   []StoreInfo    `json:"StoreInfos"`
+	UploadHost   string         `json:"UploadHost"`
+	UploadHeader map[string]any `json:"UploadHeader"`
+	Type         string         `json:"Type"`
+	Protocol     string         `json:"Protocol"`
+	SessionKey   string         `json:"SessionKey"`
 	NodeConfig   struct {
 		UploadMode string `json:"UploadMode"`
 	} `json:"NodeConfig"`
@@ -402,7 +402,7 @@ func (r *CommonResp) GetError() error {
 }
 
 // UnmarshalData 将data字段解析为指定类型
-func (r *CommonResp) UnmarshalData(v interface{}) error {
+func (r *CommonResp) UnmarshalData(v any) error {
 	if !r.IsSuccess() {
 		return r.GetError()
 	}

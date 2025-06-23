@@ -329,7 +329,7 @@ func (d *AliDrive) Put(ctx context.Context, dstDir model.Obj, streamer model.Fil
 	return fmt.Errorf("%+v", resp2)
 }
 
-func (d *AliDrive) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
+func (d *AliDrive) Other(ctx context.Context, args model.OtherArgs) (any, error) {
 	var resp base.Json
 	var url string
 	data := base.Json{

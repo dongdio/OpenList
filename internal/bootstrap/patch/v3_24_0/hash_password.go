@@ -18,7 +18,7 @@ func HashPwdForOldVersion() {
 		if user.PwdHash == "" {
 			user.SetPassword(user.Password)
 			user.Password = ""
-			if err := db.UpdateUser(&user); err != nil {
+			if err = db.UpdateUser(&user); err != nil {
 				utils.Log.Fatalf("[hash pwd for old version] failed update user: %v", err)
 			}
 		}

@@ -11,14 +11,14 @@ type BaseResp struct {
 	Message string `json:"message"`
 }
 type File struct {
-	Category     int           `json:"category"`
-	ChildAssets  []interface{} `json:"childAssets"`
-	CommentCount int           `json:"comment_count"`
-	CoverAsset   interface{}   `json:"cover_asset"`
-	CoverAssetID string        `json:"cover_asset_id"`
-	CreatedAt    time.Time     `json:"created_at"`
-	DeletedAt    string        `json:"deleted_at"`
-	Description  string        `json:"description"`
+	Category     int       `json:"category"`
+	ChildAssets  []any     `json:"childAssets"`
+	CommentCount int       `json:"comment_count"`
+	CoverAsset   any       `json:"cover_asset"`
+	CoverAssetID string    `json:"cover_asset_id"`
+	CreatedAt    time.Time `json:"created_at"`
+	DeletedAt    string    `json:"deleted_at"`
+	Description  string    `json:"description"`
 	File         *struct {
 		Cover string `json:"cover"`
 		Src   string `json:"src"`
@@ -26,10 +26,10 @@ type File struct {
 	// FileID string `json:"file_id"`
 	ID string `json:"id"`
 
-	Size       string        `json:"size"`
-	Thumbnails []interface{} `json:"thumbnails"`
-	Title      string        `json:"title"`
-	UpdatedAt  time.Time     `json:"updated_at"`
+	Size       string    `json:"size"`
+	Thumbnails []any     `json:"thumbnails"`
+	Title      string    `json:"title"`
+	UpdatedAt  time.Time `json:"updated_at"`
 }
 
 type ChildrenResp struct {

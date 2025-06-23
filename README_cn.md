@@ -93,7 +93,8 @@
 
 ## 文档
 
-<https://docs.openlist.team>
+<https://docs.openlist.team><br/>
+<https://docs.openlist.org>
 
 ## Demo
 
@@ -102,12 +103,6 @@ N/A（重建中）
 ## 讨论
 
 一般问题请到 [*Discussions*](https://github.com/dongdio/OpenList/discussions) 讨论，***Issues* 仅针对错误报告和功能请求。**
-
-## 贡献者
-
-感谢这些开源作者们：
-
-[![Contributors](https://contrib.rocks/image?repo=OpenListTeam/OpenList)](https://github.com/dongdio/OpenList/graphs/contributors)
 
 ## 许可
 

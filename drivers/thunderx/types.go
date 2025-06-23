@@ -14,7 +14,7 @@ type ErrResp struct {
 	ErrorCode        int64  `json:"error_code"`
 	ErrorMsg         string `json:"error"`
 	ErrorDescription string `json:"error_description"`
-	//	ErrorDetails   interface{} `json:"error_details"`
+	//	ErrorDetails   any `json:"error_details"`
 }
 
 func (e *ErrResp) IsError() bool {
@@ -146,10 +146,10 @@ type Files struct {
 	// Params            struct{} `json:"params"`
 	// OriginalFileIndex int    `json:"original_file_index"`
 	// Space             string `json:"space"`
-	// Apps              []interface{} `json:"apps"`
+	// Apps              []any `json:"apps"`
 	// Writable   bool   `json:"writable"`
 	// FolderType string `json:"folder_type"`
-	// Collection interface{} `json:"collection"`
+	// Collection any `json:"collection"`
 }
 
 func (c *Files) GetHash() utils.HashInfo {

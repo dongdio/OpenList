@@ -53,7 +53,6 @@ import (
 	_ "github.com/dongdio/OpenList/drivers/pikpak_share"
 	_ "github.com/dongdio/OpenList/drivers/quark_uc"
 	_ "github.com/dongdio/OpenList/drivers/quark_uc_tv"
-	_ "github.com/dongdio/OpenList/drivers/quqi"
 	_ "github.com/dongdio/OpenList/drivers/s3"
 	_ "github.com/dongdio/OpenList/drivers/seafile"
 	_ "github.com/dongdio/OpenList/drivers/sftp"

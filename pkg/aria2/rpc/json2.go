@@ -29,7 +29,7 @@ type clientRequest struct {
 	Method string `json:"method"`
 
 	// Object to pass as request parameter to the method.
-	Params interface{} `json:"params"`
+	Params any `json:"params"`
 
 	// The request id. This can be of any type. It is used to match the
 	// response with the request that it is replying to.
@@ -45,7 +45,7 @@ type clientResponse struct {
 }
 
 // EncodeClientRequest encodes parameters for a JSON-RPC client request.
-func EncodeClientRequest(method string, args interface{}) (*bytes.Buffer, error) {
+func EncodeClientRequest(method string, args any) (*bytes.Buffer, error) {
 	var buf bytes.Buffer
 	c := &clientRequest{
 		Version: "2.0",
@@ -59,7 +59,7 @@ func EncodeClientRequest(method string, args interface{}) (*bytes.Buffer, error)
 	return &buf, nil
 }
 
-func (c clientResponse) decode(reply interface{}) error {
+func (c clientResponse) decode(reply any) error {
 	if c.Error != nil {
 		jsonErr := &Error{}
 		if err := sonic.ConfigDefault.Unmarshal(*c.Error, jsonErr); err != nil {
@@ -80,7 +80,7 @@ func (c clientResponse) decode(reply interface{}) error {
 
 // DecodeClientResponse decodes the response body of a client request into
 // the interface reply.
-func DecodeClientResponse(r io.Reader, reply interface{}) error {
+func DecodeClientResponse(r io.Reader, reply any) error {
 	var c clientResponse
 	if err := sonic.ConfigDefault.NewDecoder(r).Decode(&c); err != nil {
 		return err
@@ -110,7 +110,7 @@ type Error struct {
 	Message string `json:"message"` /* required */
 
 	// A Primitive or Structured value that contains additional information about the error.
-	Data interface{} `json:"data"` /* optional */
+	Data any `json:"data"` /* optional */
 }
 
 func (e *Error) Error() string {

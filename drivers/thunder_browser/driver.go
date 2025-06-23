@@ -576,7 +576,7 @@ func (xc *XunLeiBrowserCommon) SetSpaceTokenResp(spaceToken string) {
 }
 
 // Request 携带Authorization和CaptchaToken的请求
-func (xc *XunLeiBrowserCommon) Request(url string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+func (xc *XunLeiBrowserCommon) Request(url string, method string, callback base.ReqCallback, resp any) ([]byte, error) {
 	data, err := xc.Common.Request(url, method, func(req *resty.Request) {
 		req.SetHeaders(map[string]string{
 			"Authorization":         xc.GetToken(),

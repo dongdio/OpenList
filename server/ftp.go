@@ -3,8 +3,6 @@ package server
 import (
 	"context"
 	"crypto/tls"
-	"errors"
-	"fmt"
 	"math/rand"
 	"net"
 	"net/http"
@@ -14,6 +12,7 @@ import (
 	"sync"
 
 	ftpserver "github.com/fclairamb/ftpserverlib"
+	"github.com/pkg/errors"
 
 	"github.com/dongdio/OpenList/internal/conf"
 	"github.com/dongdio/OpenList/internal/model"
@@ -55,7 +54,7 @@ func NewMainDriver() (*FtpMainDriver, error) {
 	}
 	tlsConf, err := getTlsConf(setting.GetStr(conf.FTPTLSPrivateKeyPath), setting.GetStr(conf.FTPTLSPublicCertPath))
 	if err != nil && tlsRequired != ftpserver.ClearOrEncrypted {
-		return nil, fmt.Errorf("FTP mandatory TLS has been enabled, but the certificate failed to load: %w", err)
+		return nil, errors.Errorf("FTP mandatory TLS has been enabled, but the certificate failed to load: %w", err)
 	}
 	return &FtpMainDriver{
 		settings: &ftpserver.Settings{

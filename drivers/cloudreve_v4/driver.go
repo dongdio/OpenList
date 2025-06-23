@@ -299,7 +299,7 @@ func (d *CloudreveV4) ArchiveDecompress(ctx context.Context, srcObj, dstDir mode
 	return nil, errs.NotImplement
 }
 
-// func (d *CloudreveV4) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
+// func (d *CloudreveV4) Other(ctx context.Context, args model.OtherArgs) (any, error) {
 //	return nil, errs.NotSupport
 // }
 

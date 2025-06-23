@@ -399,13 +399,13 @@ func (b *byExpiry) Swap(i, j int) {
 	(*b)[j].byExpiryIndex = j
 }
 
-func (b *byExpiry) Push(x interface{}) {
+func (b *byExpiry) Push(x any) {
 	n := x.(*memLSNode)
 	n.byExpiryIndex = len(*b)
 	*b = append(*b, n)
 }
 
-func (b *byExpiry) Pop() interface{} {
+func (b *byExpiry) Pop() any {
 	i := len(*b) - 1
 	n := (*b)[i]
 	(*b)[i] = nil

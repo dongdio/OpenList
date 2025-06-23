@@ -138,7 +138,7 @@ func (c *Client) ReadDir(path string) ([]os.FileInfo, error) {
 	path = FixSlashes(path)
 	files := make([]os.FileInfo, 0)
 	skipSelf := true
-	parse := func(resp interface{}) error {
+	parse := func(resp any) error {
 		r := resp.(*response)
 
 		if skipSelf {
@@ -203,7 +203,7 @@ func (c *Client) ReadDir(path string) ([]os.FileInfo, error) {
 // Stat returns the file stats for a specified path
 func (c *Client) Stat(path string) (os.FileInfo, error) {
 	var f *File
-	parse := func(resp interface{}) error {
+	parse := func(resp any) error {
 		r := resp.(*response)
 		if p := getProps(r, "200"); p != nil && f == nil {
 			f = new(File)
