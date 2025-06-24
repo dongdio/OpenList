@@ -4,7 +4,7 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/dongdio/OpenList/pkg/generic_sync"
+	"github.com/dongdio/OpenList/pkg/generic"
 	"github.com/dongdio/OpenList/pkg/utils"
 )
 
@@ -12,7 +12,7 @@ type Manager[K comparable] struct {
 	curID    K
 	workerC  chan struct{}
 	updateID func(*K)
-	tasks    generic_sync.MapOf[K, *Task[K]]
+	tasks    generic.MapOf[K, *Task[K]]
 }
 
 func (tm *Manager[K]) Submit(task *Task[K]) K {
@@ -127,13 +127,13 @@ func (tm *Manager[K]) ClearSucceeded() {
 	tm.RemoveByStates(SUCCEEDED)
 }
 
-func (tm *Manager[K]) RawTasks() *generic_sync.MapOf[K, *Task[K]] {
+func (tm *Manager[K]) RawTasks() *generic.MapOf[K, *Task[K]] {
 	return &tm.tasks
 }
 
 func NewTaskManager[K comparable](maxWorker int, updateID ...func(*K)) *Manager[K] {
 	tm := &Manager[K]{
-		tasks:   generic_sync.MapOf[K, *Task[K]]{},
+		tasks:   generic.MapOf[K, *Task[K]]{},
 		workerC: make(chan struct{}, maxWorker),
 	}
 	for i := 0; i < maxWorker; i++ {

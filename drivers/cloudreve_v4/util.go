@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,7 +12,8 @@ import (
 	"time"
 
 	"github.com/bytedance/sonic"
-	jsoniter "github.com/json-iterator/go"
+	"github.com/pkg/errors"
+	"github.com/tidwall/gjson"
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/drivers/base"
@@ -135,7 +135,7 @@ func (d *CloudreveV4) doLogin(needCaptcha bool) error {
 			return err
 		}
 		if config.CaptchaType != "normal" {
-			return fmt.Errorf("captcha type %s not support", config.CaptchaType)
+			return errors.Errorf("captcha type %s not support", config.CaptchaType)
 		}
 		var captcha CaptchaResp
 		err = d.request(http.MethodGet, "/site/captcha", nil, &captcha)
@@ -154,10 +154,10 @@ func (d *CloudreveV4) doLogin(needCaptcha bool) error {
 		if err != nil {
 			return err
 		}
-		if jsoniter.Get(vRes.Bytes(), "status").ToInt() != 200 {
-			return errors.New("ocr error:" + jsoniter.Get(vRes.Bytes(), "msg").ToString())
+		if gjson.GetBytes(vRes.Bytes(), "status").Int() != 200 {
+			return errors.New("ocr error:" + gjson.GetBytes(vRes.Bytes(), "msg").String())
 		}
-		captchaCode := jsoniter.Get(vRes.Bytes(), "result").ToString()
+		captchaCode := gjson.GetBytes(vRes.Bytes(), "result").String()
 		if captchaCode == "" {
 			return errors.New("ocr error: empty result")
 		}
@@ -176,16 +176,16 @@ func (d *CloudreveV4) doLogin(needCaptcha bool) error {
 }
 
 func (d *CloudreveV4) refreshToken() error {
-	var token Token
-	if token.RefreshToken == "" {
+	if d.RefreshToken == "" {
 		if d.Username != "" {
 			err := d.login()
 			if err != nil {
-				return fmt.Errorf("cannot login to get refresh token, error: %s", err)
+				return errors.Errorf("cannot login to get refresh token, error: %s", err)
 			}
 		}
 		return nil
 	}
+	var token Token
 	err := d.request(http.MethodPost, "/session/token/refresh", func(req *resty.Request) {
 		req.SetBody(base.Json{
 			"refresh_token": d.RefreshToken,
@@ -201,7 +201,7 @@ func (d *CloudreveV4) refreshToken() error {
 
 func (d *CloudreveV4) upLocal(ctx context.Context, file model.FileStreamer, u FileUploadResp, up driver.UpdateProgress) error {
 	var finish int64 = 0
-	var chunk int = 0
+	var chunk = 0
 	DEFAULT := int64(u.ChunkSize)
 	if DEFAULT == 0 {
 		// support relay
@@ -257,7 +257,7 @@ func (d *CloudreveV4) upRemote(ctx context.Context, file model.FileStreamer, u F
 	uploadUrl := u.UploadUrls[0]
 	credential := u.Credential
 	var finish int64 = 0
-	var chunk int = 0
+	var chunk = 0
 	DEFAULT := int64(u.ChunkSize)
 	retryCount := 0
 	maxRetries := 3
@@ -315,7 +315,7 @@ func (d *CloudreveV4) upRemote(ctx context.Context, file model.FileStreamer, u F
 		} else {
 			retryCount++
 			if retryCount > maxRetries {
-				return fmt.Errorf("upload failed after %d retries due to server errors, error: %s", maxRetries, err)
+				return errors.Errorf("upload failed after %d retries due to server errors, error: %s", maxRetries, err)
 			}
 			backoff := time.Duration(1<<retryCount) * time.Second
 			utils.Log.Warnf("[Cloudreve-Remote] server errors while uploading, retrying after %v...", backoff)
@@ -326,7 +326,7 @@ func (d *CloudreveV4) upRemote(ctx context.Context, file model.FileStreamer, u F
 }
 
 func (d *CloudreveV4) upOneDrive(ctx context.Context, file model.FileStreamer, u FileUploadResp, up driver.UpdateProgress) error {
-	uploadUrl := u.UploadUrls[0]
+	uploadURL := u.UploadUrls[0]
 	var finish int64 = 0
 	DEFAULT := int64(u.ChunkSize)
 	retryCount := 0
@@ -344,7 +344,7 @@ func (d *CloudreveV4) upOneDrive(ctx context.Context, file model.FileStreamer, u
 		if err != nil {
 			return err
 		}
-		req, err := http.NewRequest(http.MethodPut, uploadUrl, driver.NewLimitedUploadStream(ctx, bytes.NewReader(byteData)))
+		req, err := http.NewRequest(http.MethodPut, uploadURL, driver.NewLimitedUploadStream(ctx, bytes.NewReader(byteData)))
 		if err != nil {
 			return err
 		}
@@ -363,7 +363,7 @@ func (d *CloudreveV4) upOneDrive(ctx context.Context, file model.FileStreamer, u
 			retryCount++
 			if retryCount > maxRetries {
 				res.Body.Close()
-				return fmt.Errorf("upload failed after %d retries due to server errors, error %d", maxRetries, res.StatusCode)
+				return errors.Errorf("upload failed after %d retries due to server errors, error %d", maxRetries, res.StatusCode)
 			}
 			backoff := time.Duration(1<<retryCount) * time.Second
 			utils.Log.Warnf("[CloudreveV4-OneDrive] server errors %d while uploading, retrying after %v...", res.StatusCode, backoff)
@@ -387,7 +387,7 @@ func (d *CloudreveV4) upOneDrive(ctx context.Context, file model.FileStreamer, u
 
 func (d *CloudreveV4) upS3(ctx context.Context, file model.FileStreamer, u FileUploadResp, up driver.UpdateProgress) error {
 	var finish int64 = 0
-	var chunk int = 0
+	var chunk = 0
 	var etags []string
 	DEFAULT := int64(u.ChunkSize)
 	retryCount := 0
@@ -422,7 +422,7 @@ func (d *CloudreveV4) upS3(ctx context.Context, file model.FileStreamer, u FileU
 		case res.StatusCode != 200:
 			retryCount++
 			if retryCount > maxRetries {
-				return fmt.Errorf("upload failed after %d retries due to server errors", maxRetries)
+				return errors.Errorf("upload failed after %d retries due to server errors", maxRetries)
 			}
 			backoff := time.Duration(1<<retryCount) * time.Second
 			utils.Log.Warnf("server error %d, retrying after %v...", res.StatusCode, backoff)
@@ -450,7 +450,7 @@ func (d *CloudreveV4) upS3(ctx context.Context, file model.FileStreamer, u FileU
 	}
 	bodyBuilder.WriteString("</CompleteMultipartUpload>")
 	req, err := http.NewRequest(
-		"POST",
+		http.MethodPost,
 		u.CompleteURL,
 		strings.NewReader(bodyBuilder.String()),
 	)
@@ -466,11 +466,11 @@ func (d *CloudreveV4) upS3(ctx context.Context, file model.FileStreamer, u FileU
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(res.Body)
-		return fmt.Errorf("up status: %d, error: %s", res.StatusCode, string(body))
+		return errors.Errorf("up status: %d, error: %s", res.StatusCode, string(body))
 	}
 
 	// 上传成功发送回调请求
-	return d.request(http.MethodPost, "/callback/s3/"+u.SessionID+"/"+u.CallbackSecret, func(req *resty.Request) {
+	return d.request(http.MethodGet, "/callback/s3/"+u.SessionID+"/"+u.CallbackSecret, func(req *resty.Request) {
 		req.SetBody("{}")
 	}, nil)
 }

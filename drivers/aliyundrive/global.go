@@ -3,7 +3,7 @@ package aliyundrive
 import (
 	"crypto/ecdsa"
 
-	"github.com/dongdio/OpenList/pkg/generic_sync"
+	"github.com/dongdio/OpenList/pkg/generic"
 )
 
 type State struct {
@@ -13,4 +13,4 @@ type State struct {
 	privateKey *ecdsa.PrivateKey
 }
 
-var global = generic_sync.MapOf[string, *State]{}
+var global = generic.MapOf[string, *State]{}

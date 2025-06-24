@@ -155,7 +155,7 @@ var _ model.FileStreamer = (*FileStream)(nil)
 
 // var _ seekableStream = (*FileStream)(nil)
 
-// for most internal stream, which is either RangeReadCloser or MFile
+// SeekableStream for most internal stream, which is either RangeReadCloser or MFile
 // Any functionality implemented based on SeekableStream should implement a Close method,
 // whose only purpose is to close the SeekableStream object. If such functionality has
 // additional resources that need to be closed, they should be added to the Closer property of
@@ -177,7 +177,7 @@ func NewSeekableStream(fs FileStream, link *model.Link) (*SeekableStream, error)
 		result, ok := ss.Reader.(model.File)
 		if ok {
 			ss.mFile = result
-			ss.Closers.Add(result)
+			ss.Add(result)
 			return ss, nil
 		}
 	}
@@ -193,7 +193,7 @@ func NewSeekableStream(fs FileStream, link *model.Link) (*SeekableStream, error)
 			}
 			ss.mFile = mFile
 			ss.Reader = mFile
-			ss.Closers.Add(mFile)
+			ss.Add(mFile)
 			return ss, nil
 		}
 		if ss.Link.RangeReadCloser != nil {
@@ -253,7 +253,7 @@ func (ss *SeekableStream) RangeRead(httpRange http_range.Range) (io.Reader, erro
 //	return f.Reader
 // }
 
-// only provide Reader as full stream when it's demanded. in rapid-upload, we can skip this to save memory
+// Read only provide Reader as full stream when it's demanded. in rapid-upload, we can skip this to save memory
 func (ss *SeekableStream) Read(p []byte) (n int, err error) {
 	// f.mu.Lock()
 
@@ -399,6 +399,7 @@ func (c *headCache) read(p []byte) (n int, err error) {
 	}
 	return
 }
+
 func (r *headCache) Close() error {
 	for i := range r.bufs {
 		r.bufs[i] = nil

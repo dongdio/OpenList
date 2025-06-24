@@ -1,9 +1,7 @@
-package mq
+package generic
 
 import (
 	"sync"
-
-	"github.com/dongdio/OpenList/pkg/generic"
 )
 
 type Message[T any] struct {
@@ -22,12 +20,12 @@ type MQ[T any] interface {
 }
 
 type inMemoryMQ[T any] struct {
-	queue generic.Queue[Message[T]]
+	queue Queue[Message[T]]
 	sync.Mutex
 }
 
 func NewInMemoryMQ[T any]() MQ[T] {
-	return &inMemoryMQ[T]{queue: *generic.NewQueue[Message[T]]()}
+	return &inMemoryMQ[T]{queue: *NewQueue[Message[T]]()}
 }
 
 func (mq *inMemoryMQ[T]) Publish(msg Message[T]) {

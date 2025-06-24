@@ -16,13 +16,13 @@ import (
 	"github.com/dongdio/OpenList/internal/driver"
 	"github.com/dongdio/OpenList/internal/errs"
 	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/pkg/generic_sync"
+	"github.com/dongdio/OpenList/pkg/generic"
 	"github.com/dongdio/OpenList/pkg/utils"
 )
 
 // storagesMap maintains a mapping of mount paths to their corresponding storage drivers
 // Although labeled as a driver, it actually represents a storage wrapped by a driver
-var storagesMap generic_sync.MapOf[string, driver.Driver]
+var storagesMap generic.MapOf[string, driver.Driver]
 
 // GetAllStorages returns all active storage drivers
 func GetAllStorages() []driver.Driver {
@@ -291,8 +291,8 @@ func UpdateStorage(ctx context.Context, storage model.Storage) error {
 	return nil
 }
 
-// DeleteStorageById completely removes a storage
-func DeleteStorageById(ctx context.Context, id uint) error {
+// DeleteStorageByID completely removes a storage
+func DeleteStorageByID(ctx context.Context, id uint) error {
 	storage, err := db.GetStorageById(id)
 	if err != nil {
 		return errors.WithMessage(err, "failed to get storage")
@@ -441,7 +441,7 @@ func GetStorageVirtualFilesByPath(prefix string) []model.Obj {
 }
 
 // balanceMap tracks the round-robin state for load balancing multiple storages
-var balanceMap generic_sync.MapOf[string, int]
+var balanceMap generic.MapOf[string, int]
 
 // GetBalancedStorage returns a storage for a path, using round-robin if multiple exist
 func GetBalancedStorage(path string) driver.Driver {

@@ -6,6 +6,7 @@ import (
 	stdpath "path"
 
 	"github.com/dongdio/OpenList/internal/task"
+	"github.com/dongdio/OpenList/pkg/generic"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
@@ -16,7 +17,6 @@ import (
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
 	"github.com/dongdio/OpenList/internal/sign"
-	"github.com/dongdio/OpenList/pkg/generic"
 	"github.com/dongdio/OpenList/pkg/utils"
 	"github.com/dongdio/OpenList/server/common"
 )

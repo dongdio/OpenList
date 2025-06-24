@@ -2,7 +2,7 @@ package aria2
 
 import (
 	"github.com/dongdio/OpenList/pkg/aria2/rpc"
-	"github.com/dongdio/OpenList/pkg/generic_sync"
+	"github.com/dongdio/OpenList/pkg/generic"
 )
 
 const (
@@ -14,11 +14,11 @@ const (
 )
 
 type Notify struct {
-	Signals generic_sync.MapOf[string, chan int]
+	Signals generic.MapOf[string, chan int]
 }
 
 func NewNotify() *Notify {
-	return &Notify{Signals: generic_sync.MapOf[string, chan int]{}}
+	return &Notify{Signals: generic.MapOf[string, chan int]{}}
 }
 
 func (n *Notify) OnDownloadStart(events []rpc.Event) {

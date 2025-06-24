@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
 
+	"github.com/dongdio/OpenList/global"
 	"github.com/dongdio/OpenList/internal/conf"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
@@ -24,7 +25,7 @@ type SftpDriver struct {
 }
 
 func NewSftpDriver() (*SftpDriver, error) {
-	sftp.InitHostKey()
+	sftp.InitHostKey(global.DataDir)
 	header := &http.Header{}
 	header.Add("User-Agent", setting.GetStr(conf.FTPProxyUserAgent))
 	return &SftpDriver{
@@ -109,7 +110,7 @@ func (d *SftpDriver) PublicKeyAuth(conn ssh.ConnMetadata, key ssh.PublicKey) (*s
 	if userObj.Disabled || !userObj.CanFTPAccess() {
 		return nil, errors.New("user is not allowed to access via SFTP")
 	}
-	keys, _, err := op.GetSSHPublicKeyByUserId(userObj.ID, 1, -1)
+	keys, _, err := op.GetSSHPublicKeyByUserID(userObj.ID, 1, -1)
 	if err != nil {
 		return nil, err
 	}

@@ -14,7 +14,7 @@ import (
 	"github.com/dongdio/OpenList/internal/errs"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/stream"
-	"github.com/dongdio/OpenList/pkg/generic_sync"
+	"github.com/dongdio/OpenList/pkg/generic"
 	"github.com/dongdio/OpenList/pkg/singleflight"
 	"github.com/dongdio/OpenList/pkg/utils"
 )
@@ -73,7 +73,7 @@ func delCacheObj(storage driver.Driver, path string, obj model.Obj) {
 }
 
 // Map to debounce sort operations for the same directory
-var addSortDebounceMap generic_sync.MapOf[string, func(func())]
+var addSortDebounceMap generic.MapOf[string, func(func())]
 
 // addCacheObj adds a new object to the cache
 // If an object with the same name already exists, it will be replaced
@@ -709,14 +709,14 @@ func Put(ctx context.Context, storage driver.Driver, dstDirPath string, file mod
 
 	// Special handling for UrlTree driver
 	if storage.GetStorage().Driver == "UrlTree" {
-		return handleUrlTreePut(ctx, storage, dstDirPath, file, up, lazyCache...)
+		return handleURLTreePut(ctx, storage, dstDirPath, file, up, lazyCache...)
 	}
 
 	dstDirPath = utils.FixAndCleanPath(dstDirPath)
 	dstPath := stdpath.Join(dstDirPath, file.GetName())
 
 	// Handle existing file at destination
-	err := handleExistingFile(ctx, storage, dstPath, dstDirPath, file)
+	err := handleExistingFile(ctx, storage, dstPath, file)
 	if err != nil {
 		return err
 	}
@@ -752,8 +752,6 @@ func Put(ctx context.Context, storage driver.Driver, dstDirPath string, file mod
 				ClearCache(storage, dstDirPath)
 			}
 		}
-		return finalizePut(ctx, storage, dstDirPath, dstPath, file, err)
-
 	case driver.Put:
 		// Driver that only reports success/failure
 		err = s.Put(ctx, parentDir, file, up)
@@ -761,15 +759,14 @@ func Put(ctx context.Context, storage driver.Driver, dstDirPath string, file mod
 			// Clear cache to force refresh
 			ClearCache(storage, dstDirPath)
 		}
-		return finalizePut(ctx, storage, dstDirPath, dstPath, file, err)
-
 	default:
 		return errs.NotImplement
 	}
+	return finalizePut(ctx, storage, dstDirPath, file, err)
 }
 
-// handleUrlTreePut handles uploading to the UrlTree driver
-func handleUrlTreePut(ctx context.Context, storage driver.Driver, dstDirPath string, file model.FileStreamer, up driver.UpdateProgress, lazyCache ...bool) error {
+// handleURLTreePut handles uploading to the UrlTree driver
+func handleURLTreePut(ctx context.Context, storage driver.Driver, dstDirPath string, file model.FileStreamer, up driver.UpdateProgress, lazyCache ...bool) error {
 	var link string
 	dstDirPath, link = URLTreeSplitPathAndURL(stdpath.Join(dstDirPath, file.GetName()))
 	file = &stream.FileStream{Obj: &model.Object{Name: link}}
@@ -779,12 +776,11 @@ func handleUrlTreePut(ctx context.Context, storage driver.Driver, dstDirPath str
 }
 
 // handleExistingFile checks if a file already exists at the destination path and handles it accordingly
-func handleExistingFile(ctx context.Context, storage driver.Driver, dstPath, dstDirPath string, file model.FileStreamer) error {
+func handleExistingFile(ctx context.Context, storage driver.Driver, dstPath string, file model.FileStreamer) error {
 	// Check if file already exists
 	fi, err := GetUnwrap(ctx, storage, dstPath)
 	if err == nil {
 		// File exists, handle based on configuration and size
-		tempName := file.GetName() + ".openlist_to_delete"
 		switch {
 		case fi.GetSize() == 0:
 			// Remove zero-size files
@@ -794,7 +790,7 @@ func handleExistingFile(ctx context.Context, storage driver.Driver, dstPath, dst
 			}
 		case storage.Config().NoOverwriteUpload:
 			// Rename existing file to temp name if overwrite not allowed
-			err = Rename(ctx, storage, dstPath, tempName)
+			err = Rename(ctx, storage, dstPath, file.GetName()+".openlist_to_delete")
 			if err != nil {
 				return err
 			}
@@ -808,12 +804,11 @@ func handleExistingFile(ctx context.Context, storage driver.Driver, dstPath, dst
 }
 
 // finalizePut performs final cleanup after a put operation
-func finalizePut(ctx context.Context, storage driver.Driver, dstDirPath, dstPath string, file model.FileStreamer, uploadErr error) error {
+func finalizePut(ctx context.Context, storage driver.Driver, dstDirPath string, file model.FileStreamer, uploadErr error) error {
 	log.Debugf("put file [%s] complete", file.GetName())
 
 	// Handle rename cleanup for NoOverwriteUpload mode
-	tempName := file.GetName() + ".openlist_to_delete"
-	tempPath := stdpath.Join(dstDirPath, tempName)
+	tempPath := stdpath.Join(dstDirPath, file.GetName()+".openlist_to_delete")
 
 	// Check if we were in NoOverwriteUpload mode and have a temp file
 	fi, err := GetUnwrap(ctx, storage, tempPath)

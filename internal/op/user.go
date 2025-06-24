@@ -75,8 +75,8 @@ func GetUserByName(username string) (*model.User, error) {
 	return user, err
 }
 
-// GetUserById retrieves a user by ID
-func GetUserById(id uint) (*model.User, error) {
+// GetUserByID retrieves a user by ID
+func GetUserByID(id uint) (*model.User, error) {
 	return db.GetUserById(id)
 }
 
@@ -91,9 +91,9 @@ func CreateUser(user *model.User) error {
 	return db.CreateUser(user)
 }
 
-// DeleteUserById deletes a user by ID
+// DeleteUserByID deletes a user by ID
 // Admin and guest users cannot be deleted
-func DeleteUserById(id uint) error {
+func DeleteUserByID(id uint) error {
 	oldUser, err := db.GetUserById(id)
 	if err != nil {
 		return err
@@ -139,8 +139,8 @@ func Cancel2FAByUser(user *model.User) error {
 	return UpdateUser(user)
 }
 
-// Cancel2FAById disables two-factor authentication for a user by ID
-func Cancel2FAById(id uint) error {
+// Cancel2FAByID disables two-factor authentication for a user by ID
+func Cancel2FAByID(id uint) error {
 	user, err := db.GetUserById(id)
 	if err != nil {
 		return err

@@ -196,6 +196,25 @@ func moveFileBetween2Storages(tsk *MoveTask, srcStorage, dstStorage driver.Drive
 
 	// Update progress to 50% after successful copy
 	tsk.SetProgress(50)
+	tsk.Status = "verifying file in destination"
+
+	// check if the file exists in the destination
+	dstFilePath := stdpath.Join(dstDirPath, stdpath.Base(srcFilePath))
+	const (
+		maxRetries    = 3
+		retryInterval = time.Second
+	)
+	var checkErr error
+	for range maxRetries {
+		_, checkErr = op.Get(tsk.Ctx(), dstStorage, dstFilePath)
+		if checkErr == nil {
+			break
+		}
+		time.Sleep(retryInterval)
+	}
+	if checkErr != nil {
+		return errors.WithMessagef(checkErr, "failed to verify file[%s] in destination after copy", dstFilePath)
+	}
 
 	// Delete the source file after successful copy
 	tsk.Status = "deleting source file"

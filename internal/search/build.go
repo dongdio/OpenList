@@ -19,7 +19,7 @@ import (
 	"github.com/dongdio/OpenList/internal/op"
 	"github.com/dongdio/OpenList/internal/search/searcher"
 	"github.com/dongdio/OpenList/internal/setting"
-	"github.com/dongdio/OpenList/pkg/mq"
+	"github.com/dongdio/OpenList/pkg/generic"
 	"github.com/dongdio/OpenList/pkg/utils"
 )
 
@@ -45,7 +45,7 @@ func BuildIndex(ctx context.Context, indexPaths, ignorePaths []string, maxDepth 
 		return errs.BuildIndexIsRunning
 	}
 	var (
-		indexMQ = mq.NewInMemoryMQ[ObjWithParent]()
+		indexMQ = generic.NewInMemoryMQ[ObjWithParent]()
 		running = atomic.Bool{} // current goroutine running
 		wg      = &sync.WaitGroup{}
 	)
@@ -71,12 +71,12 @@ func BuildIndex(ctx context.Context, indexPaths, ignorePaths []string, maxDepth 
 					tickCount = 0
 				}
 				log.Infof("index obj count: %d", objCount)
-				indexMQ.ConsumeAll(func(messages []mq.Message[ObjWithParent]) {
+				indexMQ.ConsumeAll(func(messages []generic.Message[ObjWithParent]) {
 					if len(messages) != 0 {
 						log.Debugf("current index: %s", messages[len(messages)-1].Content.Parent)
 					}
 					if err = BatchIndex(ctx, utils.MustSliceConvert(messages,
-						func(src mq.Message[ObjWithParent]) ObjWithParent {
+						func(src generic.Message[ObjWithParent]) ObjWithParent {
 							return src.Content
 						})); err != nil {
 						log.Errorf("build index in batch error: %+v", err)
@@ -97,9 +97,9 @@ func BuildIndex(ctx context.Context, indexPaths, ignorePaths []string, maxDepth 
 				eMsg := ""
 				now := time.Now()
 				originErr := err
-				indexMQ.ConsumeAll(func(messages []mq.Message[ObjWithParent]) {
+				indexMQ.ConsumeAll(func(messages []generic.Message[ObjWithParent]) {
 					if err = BatchIndex(ctx, utils.MustSliceConvert(messages,
-						func(src mq.Message[ObjWithParent]) ObjWithParent {
+						func(src generic.Message[ObjWithParent]) ObjWithParent {
 							return src.Content
 						})); err != nil {
 						log.Errorf("build index in batch error: %+v", err)
@@ -167,7 +167,7 @@ func BuildIndex(ctx context.Context, indexPaths, ignorePaths []string, maxDepth 
 			if indexPath == "/" {
 				return nil
 			}
-			indexMQ.Publish(mq.Message[ObjWithParent]{
+			indexMQ.Publish(generic.Message[ObjWithParent]{
 				Content: ObjWithParent{
 					Obj:    info,
 					Parent: path.Dir(indexPath),
@@ -244,26 +244,27 @@ func Update(parent string, objs []model.Obj) {
 		}
 	}
 	for i := range objs {
-		if toAdd.Contains(objs[i].GetName()) {
-			if !objs[i].IsDir() {
-				log.Debugf("add index: %s", path.Join(parent, objs[i].GetName()))
-				err = Index(ctx, parent, objs[i])
-				if err != nil {
-					log.Errorf("update search index error while index new node: %+v", err)
-					return
-				}
-			} else {
-				// build index if it's a folder
-				dir := path.Join(parent, objs[i].GetName())
-				err = BuildIndex(ctx,
-					[]string{dir},
-					conf.SlicesMap[conf.IgnorePaths],
-					setting.GetInt(conf.MaxIndexDepth, 20)-strings.Count(dir, "/"), false)
-				if err != nil {
-					log.Errorf("update search index error while build index: %+v", err)
-					return
-				}
+		if !toAdd.Contains(objs[i].GetName()) {
+			continue
+		}
+		if !objs[i].IsDir() {
+			log.Debugf("add index: %s", path.Join(parent, objs[i].GetName()))
+			err = Index(ctx, parent, objs[i])
+			if err != nil {
+				log.Errorf("update search index error while index new node: %+v", err)
+				return
 			}
+			continue
+		}
+		// build index if it's a folder
+		dir := path.Join(parent, objs[i].GetName())
+		err = BuildIndex(ctx,
+			[]string{dir},
+			conf.SlicesMap[conf.IgnorePaths],
+			setting.GetInt(conf.MaxIndexDepth, 20)-strings.Count(dir, "/"), false)
+		if err != nil {
+			log.Errorf("update search index error while build index: %+v", err)
+			return
 		}
 	}
 }

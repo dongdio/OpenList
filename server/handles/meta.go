@@ -122,7 +122,7 @@ func DeleteMeta(c *gin.Context) {
 		return
 	}
 
-	if err = op.DeleteMetaById(uint(id)); err != nil {
+	if err = op.DeleteMetaByID(uint(id)); err != nil {
 		common.ErrorResp(c, err, 500, true)
 		return
 	}
@@ -144,7 +144,7 @@ func GetMeta(c *gin.Context) {
 		return
 	}
 
-	meta, err := op.GetMetaById(uint(id))
+	meta, err := op.GetMetaByID(uint(id))
 	if err != nil {
 		common.ErrorResp(c, err, 500, true)
 		return

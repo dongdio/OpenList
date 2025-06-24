@@ -11,7 +11,7 @@ const (
 
 type Addition struct {
 	driver.RootPath
-	UserOnlineAPI bool   `json:"user_online_api" default:"true"`
+	UserOnlineAPI bool   `json:"user_online_api" default:"false"`
 	APIAddress    string `json:"api_url_address" default:"https://api.oplist.org/dropboxs/renewapi"`
 	ClientID      string `json:"client_id" required:"false" help:"Keep it empty if you don't have one"`
 	ClientSecret  string `json:"client_secret" required:"false" help:"Keep it empty if you don't have one"`

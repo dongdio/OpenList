@@ -67,12 +67,12 @@ func DeleteMyPublicKey(c *gin.Context) {
 		common.ErrorStrResp(c, "id format invalid", 400)
 		return
 	}
-	key, err := op.GetSSHPublicKeyByIdAndUserId(uint(keyId), userObj.ID)
+	key, err := op.GetSSHPublicKeyByIDAndUserID(uint(keyId), userObj.ID)
 	if err != nil {
 		common.ErrorStrResp(c, "failed to get public key", 404)
 		return
 	}
-	err = op.DeleteSSHPublicKeyById(key.ID)
+	err = op.DeleteSSHPublicKeyByID(key.ID)
 	if err != nil {
 		common.ErrorResp(c, err, 500, true)
 		return
@@ -86,7 +86,7 @@ func ListPublicKeys(c *gin.Context) {
 		common.ErrorStrResp(c, "user id format invalid", 400)
 		return
 	}
-	userObj, err := op.GetUserById(uint(userId))
+	userObj, err := op.GetUserByID(uint(userId))
 	if err != nil {
 		common.ErrorStrResp(c, "user invalid", 404)
 		return
@@ -100,7 +100,7 @@ func DeletePublicKey(c *gin.Context) {
 		common.ErrorStrResp(c, "id format invalid", 400)
 		return
 	}
-	err = op.DeleteSSHPublicKeyById(uint(keyId))
+	err = op.DeleteSSHPublicKeyByID(uint(keyId))
 	if err != nil {
 		common.ErrorResp(c, err, 500, true)
 		return
@@ -115,7 +115,7 @@ func list(c *gin.Context, userObj *model.User) {
 		return
 	}
 	req.Validate()
-	keys, total, err := op.GetSSHPublicKeyByUserId(userObj.ID, req.Page, req.PerPage)
+	keys, total, err := op.GetSSHPublicKeyByUserID(userObj.ID, req.Page, req.PerPage)
 	if err != nil {
 		common.ErrorResp(c, err, 500, true)
 		return

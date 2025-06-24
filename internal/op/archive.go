@@ -677,7 +677,7 @@ func ArchiveDecompress(ctx context.Context, storage driver.Driver, srcPath, dstD
 		var newObjs []model.Obj
 		newObjs, err = s.ArchiveDecompress(ctx, srcObj, dstDir, args)
 		if err == nil {
-			if newObjs != nil && len(newObjs) > 0 {
+			if len(newObjs) > 0 {
 				// Add new objects to cache
 				for _, newObj := range newObjs {
 					addCacheObj(storage, dstDirPath, model.WrapObjName(newObj))

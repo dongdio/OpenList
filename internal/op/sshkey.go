@@ -33,22 +33,22 @@ func CreateSSHPublicKey(key *model.SSHPublicKey) (error, bool) {
 	return db.CreateSSHPublicKey(key), true
 }
 
-// GetSSHPublicKeyByUserId retrieves a paginated list of SSH public keys for a user
-func GetSSHPublicKeyByUserId(userId uint, pageIndex, pageSize int) (keys []model.SSHPublicKey, count int64, err error) {
-	return db.GetSSHPublicKeyByUserId(userId, pageIndex, pageSize)
+// GetSSHPublicKeyByUserID retrieves a paginated list of SSH public keys for a user
+func GetSSHPublicKeyByUserID(userID uint, pageIndex, pageSize int) (keys []model.SSHPublicKey, count int64, err error) {
+	return db.GetSSHPublicKeyByUserId(userID, pageIndex, pageSize)
 }
 
-// GetSSHPublicKeyByIdAndUserId retrieves a specific SSH public key for a user
+// GetSSHPublicKeyByIDAndUserID retrieves a specific SSH public key for a user
 // Ensures the key belongs to the specified user
-func GetSSHPublicKeyByIdAndUserId(id uint, userId uint) (*model.SSHPublicKey, error) {
+func GetSSHPublicKeyByIDAndUserID(id uint, userID uint) (*model.SSHPublicKey, error) {
 	key, err := db.GetSSHPublicKeyById(id)
 	if err != nil {
 		return nil, err
 	}
 
 	// Verify the key belongs to the specified user
-	if key.UserId != userId {
-		return nil, errors.Errorf("SSH key %d does not belong to user %d", id, userId)
+	if key.UserId != userID {
+		return nil, errors.Errorf("SSH key %d does not belong to user %d", id, userID)
 	}
 
 	return key, nil
@@ -59,7 +59,7 @@ func UpdateSSHPublicKey(key *model.SSHPublicKey) error {
 	return db.UpdateSSHPublicKey(key)
 }
 
-// DeleteSSHPublicKeyById deletes an SSH public key by its ID
-func DeleteSSHPublicKeyById(keyId uint) error {
-	return db.DeleteSSHPublicKeyById(keyId)
+// DeleteSSHPublicKeyByID deletes an SSH public key by its ID
+func DeleteSSHPublicKeyByID(keyID uint) error {
+	return db.DeleteSSHPublicKeyById(keyID)
 }

@@ -11,17 +11,16 @@ import (
 
 	"golang.org/x/crypto/ssh"
 
-	"github.com/dongdio/OpenList/global"
 	"github.com/dongdio/OpenList/pkg/utils"
 )
 
 var SSHSigners []ssh.Signer
 
-func InitHostKey() {
+func InitHostKey(dataDir string) {
 	if SSHSigners != nil {
 		return
 	}
-	sshPath := filepath.Join(global.DataDir, "ssh")
+	sshPath := filepath.Join(dataDir, "ssh")
 	if !utils.Exists(sshPath) {
 		err := utils.CreateNestedDirectory(sshPath)
 		if err != nil {

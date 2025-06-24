@@ -91,8 +91,8 @@ func getMetaByPath(path string) (*model.Meta, error) {
 	return metaRes, err
 }
 
-// DeleteMetaById deletes metadata by its ID and removes it from cache
-func DeleteMetaById(id uint) error {
+// DeleteMetaByID deletes metadata by its ID and removes it from cache
+func DeleteMetaByID(id uint) error {
 	old, err := db.GetMetaById(id)
 	if err != nil {
 		return errors.Wrap(err, "failed to get meta before deletion")
@@ -141,8 +141,8 @@ func CreateMeta(meta *model.Meta) error {
 	return db.CreateMeta(meta)
 }
 
-// GetMetaById retrieves metadata by its ID directly from the database
-func GetMetaById(id uint) (*model.Meta, error) {
+// GetMetaByID retrieves metadata by its ID directly from the database
+func GetMetaByID(id uint) (*model.Meta, error) {
 	meta, err := db.GetMetaById(id)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get meta by id")

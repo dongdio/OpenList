@@ -56,7 +56,7 @@ func UpdateUser(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	user, err := op.GetUserById(req.ID)
+	user, err := op.GetUserByID(req.ID)
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return
@@ -93,7 +93,7 @@ func DeleteUser(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	if err := op.DeleteUserById(uint(id)); err != nil {
+	if err := op.DeleteUserByID(uint(id)); err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}
@@ -107,7 +107,7 @@ func GetUser(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	user, err := op.GetUserById(uint(id))
+	user, err := op.GetUserByID(uint(id))
 	if err != nil {
 		common.ErrorResp(c, err, 500, true)
 		return
@@ -122,7 +122,7 @@ func Cancel2FAById(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	if err := op.Cancel2FAById(uint(id)); err != nil {
+	if err := op.Cancel2FAByID(uint(id)); err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}
