@@ -145,4 +145,5 @@ const (
 // ContextKey is the type of context keys.
 const (
 	NoTaskKey = "no_task"
+	MetaKey   = "meta"
 )

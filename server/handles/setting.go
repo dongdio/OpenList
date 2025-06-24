@@ -56,7 +56,7 @@ func SaveSettings(c *gin.Context) {
 		common.ErrorResp(c, err, 500)
 	} else {
 		common.SuccessResp(c)
-		static.UpdateIndex()
+		static.UpdateIndexHTML()
 	}
 }
 

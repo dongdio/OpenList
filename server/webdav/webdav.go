@@ -2,8 +2,10 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Package webdav provides a WebDAV server implementation.
-package webdav // import "golang.org/x/net/webdav"
+// Package webdav 提供WebDAV服务器实现
+// WebDAV(Web-based Distributed Authoring and Versioning)是HTTP协议的扩展，
+// 允许客户端在Web服务器上执行远程内容管理操作
+package webdav
 
 import (
 	"context"
@@ -26,112 +28,199 @@ import (
 	"github.com/dongdio/OpenList/server/common"
 )
 
+// Handler 实现WebDAV协议的HTTP处理器
 type Handler struct {
-	// Prefix is the URL path prefix to strip from WebDAV resource paths.
+	// Prefix 是要从WebDAV资源路径中删除的URL路径前缀
+	// 用于在子目录中挂载WebDAV服务
 	Prefix string
-	// LockSystem is the lock management system.
+
+	// LockSystem 是锁管理系统
+	// 用于支持WebDAV的锁定功能
 	LockSystem LockSystem
-	// Logger is an optional error logger. If non-nil, it will be called
-	// for all HTTP requests.
+
+	// Logger 是可选的错误日志记录器
+	// 如果非nil，将为所有HTTP请求调用它来记录错误
 	Logger func(*http.Request, error)
 }
 
+// stripPrefix 从请求路径中删除配置的前缀
+//
+// 参数:
+//   - p: 原始请求路径
+//
+// 返回:
+//   - string: 处理后的路径
+//   - int: HTTP状态码，成功时为http.StatusOK
+//   - error: 错误信息，如果前缀不匹配则返回errPrefixMismatch
 func (h *Handler) stripPrefix(p string) (string, int, error) {
 	if h.Prefix == "" {
 		return p, http.StatusOK, nil
 	}
-	if r := strings.TrimPrefix(p, h.Prefix); len(r) < len(p) {
-		return r, http.StatusOK, nil
+
+	// 尝试删除前缀并检查是否成功
+	if resultPath := strings.TrimPrefix(p, h.Prefix); len(resultPath) < len(p) {
+		return resultPath, http.StatusOK, nil
 	}
+
 	return p, http.StatusNotFound, errPrefixMismatch
 }
 
+// ServeHTTP 处理所有WebDAV请求
+// 实现http.Handler接口
+//
+// 参数:
+//   - w: HTTP响应写入器
+//   - r: HTTP请求
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// 默认状态和错误
 	status, err := http.StatusBadRequest, errUnsupportedMethod
-	brw := newBufferedResponseWriter()
+
+	// 创建缓冲响应写入器，用于延迟发送响应
+	brw := NewBufferedResponseWriter()
 	useBufferedWriter := true
+
+	// 检查锁系统是否已配置
 	if h.LockSystem == nil {
 		status, err = http.StatusInternalServerError, errNoLockSystem
 	} else {
+		// 根据HTTP方法分发到对应的处理函数
 		switch r.Method {
 		case "OPTIONS":
+			// 处理OPTIONS请求，用于发现服务器支持的功能
 			status, err = h.handleOptions(brw, r)
+
 		case "GET", "HEAD", "POST":
+			// 对于获取内容的请求，直接写入响应，不使用缓冲
 			useBufferedWriter = false
-			Writer := &common.WrittenResponseWriter{ResponseWriter: w}
-			status, err = h.handleGetHeadPost(Writer, r)
-			if status != 0 && Writer.IsWritten() {
+			responseWriter := &common.WrittenResponseWriter{ResponseWriter: w}
+			status, err = h.handleGetHeadPost(responseWriter, r)
+			// 如果响应已经写入，不再设置状态码
+			if status != 0 && responseWriter.IsWritten() {
 				status = 0
 			}
+
 		case "DELETE":
+			// 处理删除资源请求
 			status, err = h.handleDelete(brw, r)
+
 		case "PUT":
+			// 处理上传文件请求
 			status, err = h.handlePut(brw, r)
+
 		case "MKCOL":
+			// 处理创建集合(目录)请求
 			status, err = h.handleMkcol(brw, r)
+
 		case "COPY", "MOVE":
+			// 处理复制和移动资源请求
 			status, err = h.handleCopyMove(brw, r)
+
 		case "LOCK":
+			// 处理锁定资源请求
 			status, err = h.handleLock(brw, r)
+
 		case "UNLOCK":
+			// 处理解锁资源请求
 			status, err = h.handleUnlock(brw, r)
+
 		case "PROPFIND":
+			// 处理属性查询请求
 			status, err = h.handlePropfind(brw, r)
-			// if there is a error for PROPFIND, we should be as an empty folder to the client
+			// 如果PROPFIND出错，将其作为空文件夹呈现给客户端
 			if err != nil {
 				status = http.StatusNotFound
 			}
+
 		case "PROPPATCH":
+			// 处理属性修改请求
 			status, err = h.handleProppatch(brw, r)
 		}
 	}
 
+	// 写入响应
 	if status != 0 {
+		// 如果有状态码，直接写入
 		w.WriteHeader(status)
 		if status != http.StatusNoContent {
 			w.Write([]byte(StatusText(status)))
 		}
 	} else if useBufferedWriter {
+		// 否则将缓冲的响应写入
 		brw.WriteToResponse(w)
 	}
+
+	// 记录错误
 	if h.Logger != nil && err != nil {
 		h.Logger(r, err)
 	}
 }
 
+// lock 创建一个资源的锁
+// 用于在无显式锁头的情况下确保资源安全
+//
+// 参数:
+//   - now: 当前时间
+//   - root: 要锁定的资源路径
+//
+// 返回:
+//   - string: 锁令牌
+//   - int: HTTP状态码，成功时为0
+//   - error: 错误信息
 func (h *Handler) lock(now time.Time, root string) (token string, status int, err error) {
+	// 使用无限超时创建一个零深度锁
 	token, err = h.LockSystem.Create(now, LockDetails{
 		Root:      root,
 		Duration:  infiniteTimeout,
 		ZeroDepth: true,
 	})
+
 	if err != nil {
 		if err == ErrLocked {
+			// 资源已被锁定
 			return "", StatusLocked, err
 		}
+		// 其他错误
 		return "", http.StatusInternalServerError, err
 	}
+
 	return token, 0, nil
 }
 
+// confirmLocks 确认请求可以访问指定的资源
+// 处理WebDAV的If头部，检查锁定条件
+//
+// 参数:
+//   - r: HTTP请求
+//   - src: 源资源路径
+//   - dst: 目标资源路径（可选）
+//
+// 返回:
+//   - func(): 释放函数，调用后释放临时锁
+//   - int: HTTP状态码，成功时为0
+//   - error: 错误信息
 func (h *Handler) confirmLocks(r *http.Request, src, dst string) (release func(), status int, err error) {
-	hdr := r.Header.Get("If")
-	if hdr == "" {
-		// An empty If header means that the client hasn't previously created locks.
-		// Even if this client doesn't care about locks, we still need to check that
-		// the resources aren't locked by another client, so we create temporary
-		// locks that would conflict with another client's locks. These temporary
-		// locks are unlocked at the end of the HTTP request.
+	// 获取If头部
+	ifHeader := r.Header.Get("If")
+
+	if ifHeader == "" {
+		// 如果If头部为空，表示客户端未创建锁
+		// 但我们仍需检查资源是否被其他客户端锁定
+		// 为此创建临时锁并在请求结束时释放
 		now, srcToken, dstToken := time.Now(), "", ""
+
+		// 如果提供了源路径，尝试锁定它
 		if src != "" {
 			srcToken, status, err = h.lock(now, src)
 			if err != nil {
 				return nil, status, err
 			}
 		}
+
+		// 如果提供了目标路径，尝试锁定它
 		if dst != "" {
 			dstToken, status, err = h.lock(now, dst)
 			if err != nil {
+				// 如果目标锁定失败，释放源锁
 				if srcToken != "" {
 					h.LockSystem.Unlock(now, srcToken)
 				}
@@ -139,6 +228,7 @@ func (h *Handler) confirmLocks(r *http.Request, src, dst string) (release func()
 			}
 		}
 
+		// 返回释放函数，用于请求结束时释放临时锁
 		return func() {
 			if dstToken != "" {
 				h.LockSystem.Unlock(now, dstToken)
@@ -149,55 +239,86 @@ func (h *Handler) confirmLocks(r *http.Request, src, dst string) (release func()
 		}, 0, nil
 	}
 
-	ih, ok := parseIfHeader(hdr)
+	// 解析If头部
+	parsedIfHeader, ok := parseIfHeader(ifHeader)
 	if !ok {
 		return nil, http.StatusBadRequest, errInvalidIfHeader
 	}
-	// ih is a disjunction (OR) of ifLists, so any ifList will do.
-	for _, l := range ih.lists {
-		lsrc := l.resourceTag
-		if lsrc == "" {
-			lsrc = src
+
+	// If头部是ifLists的逻辑或(OR)，任何一个ifList匹配即可
+	for _, ifList := range parsedIfHeader.lists {
+		// 确定源资源路径
+		lockSrc := ifList.resourceTag
+		if lockSrc == "" {
+			// 如果没有资源标签，使用请求的源路径
+			lockSrc = src
 		} else {
-			u, err := url.Parse(lsrc)
+			// 否则解析URL并确保主机匹配
+			parsedURL, err := url.Parse(lockSrc)
 			if err != nil {
 				continue
 			}
-			if u.Host != r.Host {
+			if parsedURL.Host != r.Host {
 				continue
 			}
-			lsrc, status, err = h.stripPrefix(u.Path)
+			// 移除前缀并检查路径
+			lockSrc, status, err = h.stripPrefix(parsedURL.Path)
 			if err != nil {
 				return nil, status, err
 			}
 		}
-		release, err = h.LockSystem.Confirm(time.Now(), lsrc, dst, l.conditions...)
+
+		// 尝试确认锁
+		release, err = h.LockSystem.Confirm(time.Now(), lockSrc, dst, ifList.conditions...)
 		if err == ErrConfirmationFailed {
+			// 如果确认失败，尝试下一个列表
 			continue
 		}
 		if err != nil {
 			return nil, http.StatusInternalServerError, err
 		}
+
+		// 确认成功
 		return release, 0, nil
 	}
-	// Section 10.4.1 says that "If this header is evaluated and all state lists
-	// fail, then the request must fail with a 412 (Precondition Failed) status."
-	// We follow the spec even though the cond_put_corrupt_token test case from
-	// the litmus test warns on seeing a 412 instead of a 423 (Locked).
+
+	// WebDAV规范10.4.1节指出，如果评估此头部且所有状态列表都失败，
+	// 则请求必须失败，状态为412(Precondition Failed)。
+	// 我们遵循规范，即使litmus测试中的cond_put_corrupt_token测试用例
+	// 在看到412而不是423(Locked)时会发出警告。
 	return nil, http.StatusPreconditionFailed, ErrLocked
 }
 
+// handleOptions 处理OPTIONS请求
+// 用于发现服务器支持的功能
+//
+// 参数:
+//   - w: HTTP响应写入器
+//   - r: HTTP请求
+//
+// 返回:
+//   - int: HTTP状态码
+//   - error: 错误信息
 func (h *Handler) handleOptions(w http.ResponseWriter, r *http.Request) (status int, err error) {
+	// 移除路径前缀
 	reqPath, status, err := h.stripPrefix(r.URL.Path)
 	if err != nil {
 		return status, err
 	}
+
+	// 获取用户信息
 	ctx := r.Context()
-	user := ctx.Value("user").(*model.User)
+	user, ok := ctx.Value("user").(*model.User)
+	if !ok || user == nil {
+		return http.StatusUnauthorized, errors.New("未找到用户信息")
+	}
+
+	// 合并用户路径
 	reqPath, err = user.JoinPath(reqPath)
 	if err != nil {
-		return 403, err
+		return http.StatusForbidden, err
 	}
+
 	allow := "OPTIONS, LOCK, PUT, MKCOL"
 	if fi, err := fs.Get(ctx, reqPath, &fs.GetArgs{}); err == nil {
 		if fi.IsDir() {

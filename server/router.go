@@ -4,12 +4,11 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 
-	"github.com/dongdio/OpenList/pkg/stream"
-
 	"github.com/dongdio/OpenList/global"
 	"github.com/dongdio/OpenList/internal/conf"
 	"github.com/dongdio/OpenList/internal/sign"
 	"github.com/dongdio/OpenList/pkg/message"
+	"github.com/dongdio/OpenList/pkg/stream"
 	"github.com/dongdio/OpenList/pkg/utils"
 	"github.com/dongdio/OpenList/server/common"
 	"github.com/dongdio/OpenList/server/handles"
@@ -26,7 +25,7 @@ func Init(e *gin.Engine) {
 	Cors(e)
 	g := e.Group(conf.URL.Path)
 	if conf.Conf.Scheme.HttpPort != -1 && conf.Conf.Scheme.HttpsPort != -1 && conf.Conf.Scheme.ForceHttps {
-		e.Use(middlewares.ForceHttps)
+		e.Use(middlewares.ForceHTTPS)
 	}
 	g.Any("/ping", func(c *gin.Context) {
 		c.String(200, "pong")

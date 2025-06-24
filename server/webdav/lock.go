@@ -13,105 +13,104 @@ import (
 	"time"
 )
 
+// WebDAV锁定系统相关错误
 var (
-	// ErrConfirmationFailed is returned by a LockSystem's Confirm method.
-	ErrConfirmationFailed = errors.New("webdav: confirmation failed")
-	// ErrForbidden is returned by a LockSystem's Unlock method.
-	ErrForbidden = errors.New("webdav: forbidden")
-	// ErrLocked is returned by a LockSystem's Create, Refresh and Unlock methods.
-	ErrLocked = errors.New("webdav: locked")
-	// ErrNoSuchLock is returned by a LockSystem's Refresh and Unlock methods.
-	ErrNoSuchLock = errors.New("webdav: no such lock")
+	// ErrConfirmationFailed 当锁定确认失败时由LockSystem的Confirm方法返回
+	ErrConfirmationFailed = errors.New("webdav: 锁定确认失败")
+
+	// ErrForbidden 当无权限解锁时由LockSystem的Unlock方法返回
+	ErrForbidden = errors.New("webdav: 禁止访问")
+
+	// ErrLocked 当资源已被锁定时由LockSystem的Create、Refresh和Unlock方法返回
+	ErrLocked = errors.New("webdav: 资源已锁定")
+
+	// ErrNoSuchLock 当指定的锁不存在时由LockSystem的Refresh和Unlock方法返回
+	ErrNoSuchLock = errors.New("webdav: 锁不存在")
 )
 
-// Condition can match a WebDAV resource, based on a token or ETag.
-// Exactly one of Token and ETag should be non-empty.
+// Condition 表示WebDAV资源的匹配条件，基于令牌或ETag
+// Token和ETag中应该有且仅有一个非空
 type Condition struct {
-	Not   bool
-	Token string
-	ETag  string
+	Not   bool   // 是否为否定条件
+	Token string // 锁定令牌
+	ETag  string // 实体标签
 }
 
-// LockSystem manages access to a collection of named resources. The elements
-// in a lock name are separated by slash ('/', U+002F) characters, regardless
-// of host operating system convention.
+// LockSystem 管理对命名资源集合的访问
+// 锁名称中的元素由斜杠('/', U+002F)字符分隔，与主机操作系统约定无关
 type LockSystem interface {
-	// Confirm confirms that the caller can claim all of the locks specified by
-	// the given conditions, and that holding the union of all of those locks
-	// gives exclusive access to all of the named resources. Up to two resources
-	// can be named. Empty names are ignored.
+	// Confirm 确认调用方可以声明指定条件的所有锁，
+	// 并且持有这些锁的并集可以对所有指定资源进行独占访问。
+	// 最多可以命名两个资源，空名称将被忽略。
 	//
-	// Exactly one of release and err will be non-nil. If release is non-nil,
-	// all of the requested locks are held until release is called. Calling
-	// release does not unlock the lock, in the WebDAV UNLOCK sense, but once
-	// Confirm has confirmed that a lock claim is valid, that lock cannot be
-	// Confirmed again until it has been released.
+	// release和err中有且仅有一个非nil。如果release非nil，
+	// 则所有请求的锁将被持有直到调用release。调用release不会
+	// 在WebDAV UNLOCK的意义上解锁，但一旦Confirm确认锁定声明有效，
+	// 该锁就不能再被Confirm，直到它被释放。
 	//
-	// If Confirm returns ErrConfirmationFailed then the Handler will continue
-	// to try any other set of locks presented (a WebDAV HTTP request can
-	// present more than one set of locks). If it returns any other non-nil
-	// error, the Handler will write a "500 Internal Server Error" HTTP status.
+	// 如果Confirm返回ErrConfirmationFailed，则Handler将继续尝试
+	// 请求中提供的其他锁集合（WebDAV HTTP请求可以提供多个锁集合）。
+	// 如果返回任何其他非nil错误，Handler将写入"500 Internal Server Error"HTTP状态。
 	Confirm(now time.Time, name0, name1 string, conditions ...Condition) (release func(), err error)
 
-	// Create creates a lock with the given depth, duration, owner and root
-	// (name). The depth will either be negative (meaning infinite) or zero.
+	// Create 使用给定的深度、持续时间、所有者和根(name)创建锁。
+	// 深度要么为负(表示无限)，要么为零。
 	//
-	// If Create returns ErrLocked then the Handler will write a "423 Locked"
-	// HTTP status. If it returns any other non-nil error, the Handler will
-	// write a "500 Internal Server Error" HTTP status.
+	// 如果Create返回ErrLocked，则Handler将写入"423 Locked"HTTP状态。
+	// 如果返回任何其他非nil错误，Handler将写入"500 Internal Server Error"HTTP状态。
 	//
-	// See http://www.webdav.org/specs/rfc4918.html#rfc.section.9.10.6 for
-	// when to use each error.
+	// 有关何时使用每种错误的信息，请参见
+	// http://www.webdav.org/specs/rfc4918.html#rfc.section.9.10.6
 	//
-	// The token returned identifies the created lock. It should be an absolute
-	// URI as defined by RFC 3986, Section 4.3. In particular, it should not
-	// contain whitespace.
+	// 返回的令牌标识创建的锁。它应该是由RFC 3986第4.3节定义的绝对URI。
+	// 特别是，它不应包含空格。
 	Create(now time.Time, details LockDetails) (token string, err error)
 
-	// Refresh refreshes the lock with the given token.
+	// Refresh 刷新具有给定令牌的锁的持续时间。
 	//
-	// If Refresh returns ErrLocked then the Handler will write a "423 Locked"
-	// HTTP Status. If Refresh returns ErrNoSuchLock then the Handler will write
-	// a "412 Precondition Failed" HTTP Status. If it returns any other non-nil
-	// error, the Handler will write a "500 Internal Server Error" HTTP status.
+	// 如果Refresh返回ErrLocked，则Handler将写入"423 Locked"HTTP状态。
+	// 如果Refresh返回ErrNoSuchLock，则Handler将写入"412 Precondition Failed"HTTP状态。
+	// 如果返回任何其他非nil错误，Handler将写入"500 Internal Server Error"HTTP状态。
 	//
-	// See http://www.webdav.org/specs/rfc4918.html#rfc.section.9.10.6 for
-	// when to use each error.
+	// 有关何时使用每种错误的信息，请参见
+	// http://www.webdav.org/specs/rfc4918.html#rfc.section.9.10.6
 	Refresh(now time.Time, token string, duration time.Duration) (LockDetails, error)
 
-	// Unlock unlocks the lock with the given token.
+	// Unlock 解锁具有给定令牌的锁。
 	//
-	// If Unlock returns ErrForbidden then the Handler will write a "403
-	// Forbidden" HTTP Status. If Unlock returns ErrLocked then the Handler
-	// will write a "423 Locked" HTTP status. If Unlock returns ErrNoSuchLock
-	// then the Handler will write a "409 Conflict" HTTP Status. If it returns
-	// any other non-nil error, the Handler will write a "500 Internal Server
-	// Error" HTTP status.
+	// 如果Unlock返回ErrForbidden，则Handler将写入"403 Forbidden"HTTP状态。
+	// 如果Unlock返回ErrLocked，则Handler将写入"423 Locked"HTTP状态。
+	// 如果Unlock返回ErrNoSuchLock，则Handler将写入"409 Conflict"HTTP状态。
+	// 如果返回任何其他非nil错误，Handler将写入"500 Internal Server Error"HTTP状态。
 	//
-	// See http://www.webdav.org/specs/rfc4918.html#rfc.section.9.11.1 for
-	// when to use each error.
+	// 有关何时使用每种错误的信息，请参见
+	// http://www.webdav.org/specs/rfc4918.html#rfc.section.9.11.1
 	Unlock(now time.Time, token string) error
 }
 
-// LockDetails are a lock's metadata.
+// LockDetails 表示锁的元数据信息
 type LockDetails struct {
-	// Root is the root resource name being locked. For a zero-depth lock, the
-	// root is the only resource being locked.
+	// Root 是被锁定的根资源名称
+	// 对于零深度锁，根是唯一被锁定的资源
 	Root string
-	// Duration is the lock timeout. A negative duration means infinite.
+
+	// Duration 是锁的超时时间
+	// 负持续时间表示无限期
 	Duration time.Duration
-	// OwnerXML is the verbatim <owner> XML given in a LOCK HTTP request.
+
+	// OwnerXML 是LOCK HTTP请求中给出的原始<owner>XML内容
 	//
-	// TODO: does the "verbatim" nature play well with XML namespaces?
-	// Does the OwnerXML field need to have more structure? See
+	// TODO: "原始"内容是否与XML命名空间兼容？
+	// OwnerXML字段是否需要更多结构？参见
 	// https://codereview.appspot.com/175140043/#msg2
 	OwnerXML string
-	// ZeroDepth is whether the lock has zero depth. If it does not have zero
-	// depth, it has infinite depth.
+
+	// ZeroDepth 表示锁是否具有零深度
+	// 如果没有零深度，则具有无限深度
 	ZeroDepth bool
 }
 
-// NewMemLS returns a new in-memory LockSystem.
+// NewMemLS 返回一个新的内存中的LockSystem实现
 func NewMemLS() LockSystem {
 	return &memLS{
 		byName:  make(map[string]*memLSNode),
@@ -121,57 +120,84 @@ func NewMemLS() LockSystem {
 }
 
 type memLS struct {
-	mu      sync.Mutex
-	byName  map[string]*memLSNode
-	byToken map[string]*memLSNode
-	gen     uint64
-	// byExpiry only contains those nodes whose LockDetails have a finite
-	// Duration and are yet to expire.
+	mu      sync.Mutex            // 保护以下字段的互斥锁
+	byName  map[string]*memLSNode // 按资源名称索引的锁节点
+	byToken map[string]*memLSNode // 按令牌索引的锁节点
+	gen     uint64                // 令牌生成计数器
+	// byExpiry 仅包含那些具有有限持续时间且尚未过期的节点
 	byExpiry byExpiry
 }
 
+// nextToken 生成一个新的唯一令牌
+// 使用基于时间的计数器确保唯一性
 func (m *memLS) nextToken() string {
 	m.gen++
 	return strconv.FormatUint(m.gen, 10)
 }
 
+// collectExpiredNodes 收集并移除所有已过期的锁节点
+// 此方法应在持有m.mu锁的情况下调用
+//
+// 参数:
+//   - now: 当前时间，用于判断节点是否过期
 func (m *memLS) collectExpiredNodes(now time.Time) {
 	for len(m.byExpiry) > 0 {
+		// 如果堆顶节点未过期，则所有节点都未过期，退出循环
 		if now.Before(m.byExpiry[0].expiry) {
 			break
 		}
+		// 移除过期节点
 		m.remove(m.byExpiry[0])
 	}
 }
 
+// Confirm 实现LockSystem接口的Confirm方法
+// 确认调用方可以声明指定条件的所有锁
+//
+// 参数:
+//   - now: 当前时间
+//   - name0, name1: 要确认的资源名称（最多两个）
+//   - conditions: 锁条件列表
+//
+// 返回:
+//   - func(): 释放函数，调用后释放持有的锁
+//   - error: 错误信息
 func (m *memLS) Confirm(now time.Time, name0, name1 string, conditions ...Condition) (func(), error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+
+	// 首先清理过期节点
 	m.collectExpiredNodes(now)
 
+	// 查找并确认每个资源的锁
 	var n0, n1 *memLSNode
 	if name0 != "" {
+		// 清理路径并查找匹配条件的锁
 		if n0 = m.lookup(slashClean(name0), conditions...); n0 == nil {
 			return nil, ErrConfirmationFailed
 		}
 	}
 	if name1 != "" {
+		// 清理路径并查找匹配条件的锁
 		if n1 = m.lookup(slashClean(name1), conditions...); n1 == nil {
 			return nil, ErrConfirmationFailed
 		}
 	}
 
-	// Don't hold the same node twice.
+	// 避免持有同一个节点两次
 	if n1 == n0 {
 		n1 = nil
 	}
 
+	// 持有找到的节点
 	if n0 != nil {
 		m.hold(n0)
 	}
 	if n1 != nil {
 		m.hold(n1)
 	}
+
+	// 返回释放函数
 	return func() {
 		m.mu.Lock()
 		defer m.mu.Unlock()
@@ -184,24 +210,34 @@ func (m *memLS) Confirm(now time.Time, name0, name1 string, conditions ...Condit
 	}, nil
 }
 
-// lookup returns the node n that locks the named resource, provided that n
-// matches at least one of the given conditions and that lock isn't held by
-// another party. Otherwise, it returns nil.
+// lookup 返回锁定指定资源的节点n
+// 前提是n至少匹配给定条件之一，并且该锁未被其他方持有
+// 如果n是无限深度锁，则n可能是指定资源的父节点
 //
-// n may be a parent of the named resource, if n is an infinite depth lock.
+// 参数:
+//   - name: 资源名称
+//   - conditions: 要匹配的条件列表
+//
+// 返回:
+//   - *memLSNode: 匹配的锁节点，如果没有匹配则返回nil
 func (m *memLS) lookup(name string, conditions ...Condition) (n *memLSNode) {
-	// TODO: support Condition.Not and Condition.ETag.
+	// TODO: 支持Condition.Not和Condition.ETag
 	for _, c := range conditions {
+		// 通过令牌查找节点
 		n = m.byToken[c.Token]
+		// 如果节点不存在或已被持有，则继续检查下一个条件
 		if n == nil || n.held {
 			continue
 		}
+		// 如果资源名称与锁的根资源完全匹配
 		if name == n.details.Root {
 			return n
 		}
+		// 如果节点是无限深度锁，则继续检查下一个条件
 		if n.details.ZeroDepth {
 			continue
 		}
+		// 如果资源名称是根资源或其子资源
 		if n.details.Root == "/" || strings.HasPrefix(name, n.details.Root+"/") {
 			return n
 		}

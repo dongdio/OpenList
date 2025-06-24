@@ -1,0 +1,2052 @@
+规则类型：WAF
+规则名称：Bad Crawler
+内容：(http.user_agent contains "80legs") or
+(http.user_agent contains "Abonti") or
+(http.user_agent contains "admantx") or
+(http.user_agent contains "aipbot") or
+(http.user_agent contains "AllSubmitter") or
+(http.user_agent contains "Backlink") or (http.user_agent contains "backlink") or
+(http.user_agent contains "Badass") or
+(http.user_agent contains "Bigfoot") or
+(http.user_agent contains "blexbot") or
+(http.user_agent contains "Buddy") or
+(http.user_agent contains "CherryPicker") or
+(http.user_agent contains "cloudsystemnetwork") or
+(http.user_agent contains "cognitiveseo") or
+(http.user_agent contains "Collector") or
+(http.user_agent contains "cosmos") or
+(http.user_agent contains "CrazyWebCrawler") or
+(http.user_agent contains "Crescent") or
+(http.user_agent contains "Devil") or
+((lower(http.user_agent) contains "domain") and ((http.user_agent contains "spider") or (http.user_agent contains "stat") or (http.user_agent contains "Appender") or (http.user_agent contains "Crawler"))) or
+(http.user_agent contains "DittoSpyder") or
+(http.user_agent contains "Konqueror") or
+(http.user_agent contains "Easou") or (http.user_agent contains "Yisou") or (http.user_agent contains "Etao") or
+(http.user_agent contains "mail" and ((http.user_agent contains "olf") or (http.user_agent contains "spider"))) or
+(http.user_agent contains "exabot.com") or
+(http.user_agent contains "getintent") or
+(http.user_agent contains "Grabber") or
+(http.user_agent contains "GrabNet") or
+(http.user_agent contains "HEADMasterSEO") or
+(http.user_agent contains "heritrix") or
+(http.user_agent contains "htmlparser") or
+(http.user_agent contains "hubspot") or
+(http.user_agent contains "Jyxobot") or
+(lower(http.user_agent) contains "kraken") or
+(http.user_agent contains "larbin") or
+(http.user_agent contains "ltx71") or
+(http.user_agent contains "leiki") or
+(http.user_agent contains "LinkScan") or
+(http.user_agent contains "Magnet") or
+(http.user_agent contains "Mag-Net") or
+(http.user_agent contains "Mechanize") or
+(http.user_agent contains "MegaIndex") or
+(http.user_agent contains "Metasearch") or
+(http.user_agent contains "MJ12bot") or
+(http.user_agent contains "moz.com") or
+(http.user_agent contains "Navroad") or
+(http.user_agent contains "Netcraft") or
+(http.user_agent contains "niki-bot") or
+(http.user_agent contains "NimbleCrawler") or
+(http.user_agent contains "Nimbostratus") or
+(http.user_agent contains "Ninja") or
+(http.user_agent contains "Openfind") or
+(http.user_agent contains "Page" and http.user_agent contains "Analyzer") or
+(http.user_agent contains "Pixray") or
+(http.user_agent contains "probethenet") or
+(http.user_agent contains "proximic") or
+(http.user_agent contains "psbot") or
+(http.user_agent contains "RankActive") or (http.user_agent contains "RankingBot") or (http.user_agent contains "RankurBot") or
+(http.user_agent contains "Reaper") or
+(http.user_agent contains "SalesIntelligent") or
+(http.user_agent contains "Semrush") or
+(http.user_agent contains "SEOkicks") or
+(http.user_agent contains "spbot") or
+(http.user_agent contains "SEOstats") or
+(http.user_agent contains "Snapbot") or
+(http.user_agent contains "Stripper") or
+(http.user_agent contains "Siteimprove") or
+(http.user_agent contains "sitesell") or
+(http.user_agent contains "Siphon") or
+(http.user_agent contains "Sucker") or
+(http.user_agent contains "TenFourFox") or
+(http.user_agent contains "TurnitinBot") or
+(http.user_agent contains "trendiction") or
+(http.user_agent contains "twingly") or
+(http.user_agent contains "VidibleScraper") or
+(http.user_agent contains "WebLeacher") or
+(http.user_agent contains "WebmasterWorldForum") or
+(http.user_agent contains "webmeup") or
+(http.user_agent contains "Webster") or
+(http.user_agent contains "Widow") or
+(http.user_agent contains "Xaldon") or
+(http.user_agent contains "Xenu") or
+(http.user_agent contains "xtractor") or
+(http.user_agent contains "Zermelo")
+操作：阻止
+
+规则类型：WAF
+规则名称：Basic Bot
+内容：(lower(http.user_agent) contains "fuck") or
+(lower(http.user_agent) contains "java") or
+(http.user_agent contains "Joomla") or
+(http.user_agent contains "libweb") or (http.user_agent contains "libwww") or
+(http.user_agent contains "PHPCrawl") or
+(http.user_agent contains "PyCurl") or
+((http.user_agent contains "Go") and (not http.user_agent contains "Google")) or
+(lower(http.user_agent) contains "python") or
+(http.user_agent contains "wrk") or
+(http.user_agent contains "hey/") or
+(http.user_agent contains "Acunetix") or
+(lower(http.user_agent) contains "apache") or
+(http.user_agent contains "BackDoorBot") or
+(http.user_agent contains "cobion") or
+(http.user_agent contains "masscan") or (http.user_agent contains "FHscan") or (http.user_agent contains "scanbot") or (http.user_agent contains "Gscan") or (http.user_agent contains "Researchscan") or (http.user_agent contains "WPScan") or (http.user_agent contains "ScanAlert") or (http.user_agent contains "Wprecon") or
+(lower(http.user_agent) contains "virusdie") or
+(http.user_agent contains "VoidEYE") or
+(http.user_agent contains "WebShag") or
+(http.user_agent contains "Zeus") or
+(http.user_agent contains "zgrab") or
+(lower(http.user_agent) contains "zmap") or (lower(http.user_agent) contains "nmap") or (lower(http.user_agent) contains "fimap") or
+(http.user_agent contains "ZmEu") or
+(http.user_agent contains "ZumBot") or
+(http.user_agent contains "Zyborg")
+操作：阻止
+
+规则类型：WAF
+规则名称：Non-(Google/Telegram)-Bots
+内容：((lower(http.user_agent) contains "bot") and (not http.user_agent contains "Google") and (not http.user_agent contains "Telegram"))
+操作：阻止
+
+
+规则类型：Nginx
+内容：
+map $http_user_agent $bad_ua {
+    default 0;
+    ~*80legs 1;
+    ~*Abonti 1;
+    ~*Acunetix 1;
+    ~*admantx 1;
+    ~*aipbot 1;
+    ~*AllSubmitter 1;
+    ~*apache 1;
+    ~*BackDoorBot 1;
+    ~*backlink 1;
+    ~*Backlink 1;
+    ~*Badass 1;
+    ~*Bigfoot 1;
+    ~*blexbot 1;
+    ~*Buddy 1;
+    ~*CherryPicker 1;
+    ~*cloudsystemnetwork 1;
+    ~*cobion 1;
+    ~*cognitiveseo 1;
+    ~*Collector 1;
+    ~*cosmos 1;
+    ~*CrazyWebCrawler 1;
+    ~*Crescent 1;
+    ~*Devil 1;
+    ~*DittoSpyder 1;
+    ~*Easou 1;
+    ~*Etao 1;
+    ~*exabot.com 1;
+    ~*FHscan 1;
+    ~*fimap 1;
+    ~*fuck 1;
+    ~*getintent 1;
+    ~*Go-http-client 1;
+    ~*Grabber 1;
+    ~*GrabNet 1;
+    ~*Gscan 1;
+    ~*HEADMasterSEO 1;
+    ~*heritrix 1;
+    ~*hey/ 1;
+    ~*htmlparser 1;
+    ~*hubspot 1;
+    ~*java 1;
+    ~*Joomla 1;
+    ~*Jyxobot 1;
+    ~*Konqueror 1;
+    ~*kraken 1;
+    ~*larbin 1;
+    ~*leiki 1;
+    ~*libweb 1;
+    ~*libwww 1;
+    ~*LinkScan 1;
+    ~*ltx71 1;
+    ~*Mag-Net 1;
+    ~*Magnet 1;
+    ~*masscan 1;
+    ~*Mechanize 1;
+    ~*MegaIndex 1;
+    ~*Metasearch 1;
+    ~*MJ12bot 1;
+    ~*moz.com 1;
+    ~*Navroad 1;
+    ~*Netcraft 1;
+    ~*niki-bot 1;
+    ~*NimbleCrawler 1;
+    ~*Nimbostratus 1;
+    ~*Ninja 1;
+    ~*nmap 1;
+    ~*Openfind 1;
+    ~*PHPCrawl 1;
+    ~*Pixray 1;
+    ~*probethenet 1;
+    ~*proximic 1;
+    ~*psbot 1;
+    ~*PyCurl 1;
+    ~*python 1;
+    ~*RankActive 1;
+    ~*RankingBot 1;
+    ~*RankurBot 1;
+    ~*Reaper 1;
+    ~*Researchscan 1;
+    ~*SalesIntelligent 1;
+    ~*ScanAlert 1;
+    ~*scanbot 1;
+    ~*Semrush 1;
+    ~*SEOkicks 1;
+    ~*SEOstats 1;
+    ~*Siphon 1;
+    ~*Siteimprove 1;
+    ~*sitesell 1;
+    ~*Snapbot 1;
+    ~*spbot 1;
+    ~*Stripper 1;
+    ~*Sucker 1;
+    ~*TenFourFox 1;
+    ~*trendiction 1;
+    ~*TurnitinBot 1;
+    ~*twingly 1;
+    ~*VidibleScraper 1;
+    ~*virusdie 1;
+    ~*VoidEYE 1;
+    ~*WebLeacher 1;
+    ~*WebmasterWorldForum 1;
+    ~*webmeup 1;
+    ~*WebShag 1;
+    ~*Webster 1;
+    ~*Widow 1;
+    ~*Wprecon 1;
+    ~*WPScan 1;
+    ~*wrk 1;
+    ~*Xaldon 1;
+    ~*Xenu 1;
+    ~*xtractor 1;
+    ~*Yisou 1;
+    ~*Zermelo 1;
+    ~*Zeus 1;
+    ~*zgrab 1;
+    ~*zmap 1;
+    ~*ZmEu 1;
+    ~*ZumBot 1;
+    ~*Zyborg 1;
+    ~*mail.*(olf|spider) 1;
+    ~*domain.*(pider|stat|Appender|Crawler) 1;
+    ~*Page.*Analyzer 1;
+    ~*MicroMessenger 1;
+    ~*QQ 1;
+}
+geo $remote_addr $bad_ip {
+    default 0;
+    1.12.0.0/20 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    1.12.14.0/23 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    1.12.34.0/23 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    5.8.66.0/23 1; # GREEN FLOID LLC
+    5.42.192.0/24 1; # GREEN FLOID LLC
+    5.42.195.0/24 1; # GREEN FLOID LLC
+    5.42.209.0/24 1; # GREEN FLOID LLC
+    5.42.210.0/24 1; # GREEN FLOID LLC
+    5.101.92.0/22 1; # GREEN FLOID LLC
+    5.188.10.0/23 1; # GREEN FLOID LLC
+    5.188.48.0/23 1; # GREEN FLOID LLC
+    5.188.60.0/23 1; # GREEN FLOID LLC
+    5.252.154.0/24 1; # Virtual Systems LLC
+    23.27.138.0/24 1; # Virtual Systems LLC
+    23.27.184.0/24 1; # Virtual Systems LLC
+    23.157.176.0/24 1; # SkyLink Data Center BV
+    23.183.80.0/24 1; # FranTech Solutions
+    23.183.81.0/24 1; # FranTech Solutions
+    23.183.82.0/24 1; # FranTech Solutions
+    23.183.83.0/24 1; # FranTech Solutions
+    23.186.113.0/24 1; # Aurora Development LLC
+    31.42.184.0/23 1; # Virtual Systems LLC
+    31.42.186.0/24 1; # Virtual Systems LLC
+    31.42.187.0/24 1; # Virtual Systems LLC
+    31.222.239.0/24 1; # NForce Entertainment B.V.
+    35.203.210.0/24 1; # Palo Alto Networks
+    35.203.211.0/24 1; # Palo Alto Networks
+    36.133.43.0/24 1; # 中国移动河南数据中心
+    37.140.200.0/21 1; # SkyLink Data Center BV
+    37.143.32.0/24 1; # NForce Entertainment B.V.
+    37.143.33.0/24 1; # NForce Entertainment B.V.
+    37.143.34.0/24 1; # NForce Entertainment B.V.
+    37.143.35.0/24 1; # NForce Entertainment B.V.
+    45.11.58.0/24 1; # Virtual Systems LLC
+    45.12.0.0/22 1; # Virtual Systems LLC
+    45.12.1.0/24 1; # Virtual Systems LLC
+    45.12.2.0/24 1; # Virtual Systems LLC
+    45.13.184.0/24 1; # NForce Entertainment B.V.
+    45.61.176.0/21 1; # FranTech Solutions
+    45.61.184.0/22 1; # FranTech Solutions
+    45.61.188.0/24 1; # FranTech Solutions
+    45.61.191.0/24 1; # FranTech Solutions
+    45.67.120.0/22 1; # NForce Entertainment B.V.
+    45.78.90.0/23 1; # ChenYaQiong
+    45.78.92.0/22 1; # ChenYaQiong
+    45.113.192.0/24 1; # Baidu (Hong Kong) Limited
+    45.113.193.0/24 1; # Baidu (Hong Kong) Limited
+    45.113.194.0/24 1; # Baidu (Hong Kong) Limited
+    45.128.77.0/24 1; # NForce Entertainment B.V.
+    45.129.136.0/24 1; # SONIC INC SAL
+    45.129.137.0/24 1; # SONIC INC SAL
+    45.129.139.0/24 1; # SONIC INC SAL
+    45.134.156.0/24 1; # GREEN FLOID LLC
+    45.134.157.0/24 1; # GREEN FLOID LLC
+    45.134.172.0/24 1; # Virtual Systems LLC
+    45.134.173.0/24 1; # Virtual Systems LLC
+    45.140.7.0/24 1; # GREEN FLOID LLC
+    45.141.38.0/23 1; # SkyLink Data Center BV
+    45.142.180.0/24 1; # SkyLink Data Center BV
+    45.142.182.0/24 1; # SkyLink Data Center BV
+    45.142.183.0/24 1; # SkyLink Data Center BV
+    45.147.254.0/23 1; # NForce Entertainment B.V.
+    45.148.10.0/24 1; # TECHOFF SRV LIMITED
+    45.148.152.0/22 1; # NForce Entertainment B.V.
+    45.152.139.0/24 1; # GREEN FLOID LLC
+    45.153.32.0/24 1; # SkyLink Data Center BV
+    45.153.34.0/24 1; # SkyLink Data Center BV
+    45.153.35.0/24 1; # SkyLink Data Center BV
+    45.155.208.0/23 1; # Huawei Technologies (Netherlands) B.V.
+    45.155.211.0/24 1; # Huawei Technologies (Netherlands) B.V.
+    45.156.86.0/24 1; # SkyLink Data Center BV
+    45.200.88.0/24 1; # NForce Entertainment B.V.
+    45.227.252.0/24 1; # DATA GRANDE S.A.
+    45.227.254.0/24 1; # XWIN UNIVERSAL LTD
+    45.227.255.0/24 1; # NForce Entertainment B.V.
+    46.8.18.0/23 1; # Kontel LLC
+    46.8.208.0/22 1; # Kontel LLC
+    46.8.220.0/23 1; # Kontel LLC
+    46.8.255.0/24 1; # Kontel LLC
+    46.161.26.0/24 1; # GREEN FLOID LLC
+    46.161.27.0/24 1; # NForce Entertainment B.V.
+    46.161.28.0/22 1; # GREEN FLOID LLC
+    46.161.41.0/24 1; # GREEN FLOID LLC
+    46.166.128.0/21 1; # NForce Entertainment B.V.
+    46.166.136.0/24 1; # NForce Entertainment B.V.
+    46.166.137.0/24 1; # NForce Entertainment B.V.
+    46.166.138.0/24 1; # NForce Entertainment B.V.
+    46.166.139.0/24 1; # NForce Entertainment B.V.
+    46.166.140.0/24 1; # NForce Entertainment B.V.
+    46.166.141.0/24 1; # NForce Entertainment B.V.
+    46.166.142.0/24 1; # NForce Entertainment B.V.
+    46.166.143.0/24 1; # NForce Entertainment B.V.
+    46.166.144.0/24 1; # NForce Entertainment B.V.
+    46.166.146.0/24 1; # NForce Entertainment B.V.
+    46.166.147.0/24 1; # NForce Entertainment B.V.
+    46.166.148.0/24 1; # NForce Entertainment B.V.
+    46.166.150.0/24 1; # NForce Entertainment B.V.
+    46.166.151.0/24 1; # NForce Entertainment B.V.
+    46.166.158.0/24 1; # NForce Entertainment B.V.
+    46.166.159.0/24 1; # NForce Entertainment B.V.
+    46.166.176.0/21 1; # NForce Entertainment B.V.
+    46.166.184.0/24 1; # NForce Entertainment B.V.
+    46.166.185.0/24 1; # NForce Entertainment B.V.
+    46.203.159.0/24 1; # Virtual Systems LLC
+    46.203.186.0/24 1; # Virtual Systems LLC
+    49.4.111.0/24 1; # Huawei
+    62.3.6.0/24 1; # Xiamen Jiufu Network Co., Ltd.
+    62.182.80.0/23 1; # Virtual Systems LLC
+    62.182.82.0/23 1; # Virtual Systems LLC
+    62.182.84.0/24 1; # Virtual Systems LLC
+    62.182.85.0/24 1; # Virtual Systems LLC
+    62.182.86.0/24 1; # Virtual Systems LLC
+    62.182.87.0/24 1; # Virtual Systems LLC
+    64.79.234.0/23 1; # Virtual Systems LLC
+    65.49.144.0/24 1; # DMIT Cloud Services
+    66.132.148.0/24 1; # Censys, Inc.
+    66.132.153.0/24 1; # Censys, Inc.
+    66.132.159.0/24 1; # Censys, Inc.
+    71.18.1.0/24 1; # Bytedance Inc.
+    71.18.10.0/24 1; # Bytedance Inc.
+    71.18.11.0/24 1; # Bytedance Inc.
+    71.18.12.0/24 1; # Bytedance Inc.
+    71.18.15.0/24 1; # Bytedance Inc.
+    71.18.16.0/22 1; # Bytedance Inc.
+    71.18.100.0/24 1; # Bytedance Inc.
+    71.18.101.0/24 1; # Bytedance Inc.
+    71.18.102.0/24 1; # Bytedance Inc.
+    71.18.103.0/24 1; # Bytedance Inc.
+    71.18.104.0/24 1; # Bytedance Inc.
+    71.18.105.0/24 1; # Bytedance Inc.
+    71.18.106.0/24 1; # Bytedance Inc.
+    71.18.107.0/24 1; # Bytedance Inc.
+    71.18.108.0/22 1; # Bytedance Inc.
+    71.18.112.0/24 1; # Bytedance Inc.
+    71.18.113.0/24 1; # Bytedance Inc.
+    71.18.116.0/24 1; # Bytedance Inc.
+    71.18.117.0/24 1; # Bytedance Inc.
+    71.18.118.0/24 1; # Bytedance Inc.
+    71.18.119.0/24 1; # Bytedance Inc.
+    71.18.120.0/23 1; # Bytedance Inc.
+    71.18.122.0/24 1; # Bytedance Inc.
+    71.18.123.0/24 1; # Bytedance Inc.
+    71.18.124.0/24 1; # Bytedance Inc.
+    71.18.125.0/24 1; # Bytedance Inc.
+    71.18.126.0/24 1; # Bytedance Inc.
+    71.18.127.0/24 1; # Bytedance Inc.
+    71.18.128.0/23 1; # Bytedance Inc.
+    71.18.130.0/24 1; # Bytedance Inc.
+    71.18.131.0/24 1; # Bytedance Inc.
+    71.18.132.0/24 1; # Bytedance Inc.
+    71.18.133.0/24 1; # Bytedance Inc.
+    71.18.134.0/24 1; # Bytedance Inc.
+    71.18.135.0/24 1; # Bytedance Inc.
+    71.18.136.0/24 1; # Bytedance Inc.
+    71.18.137.0/24 1; # Bytedance Inc.
+    71.18.138.0/23 1; # Bytedance Inc.
+    71.18.140.0/22 1; # Bytedance Inc.
+    71.18.144.0/24 1; # Bytedance Inc.
+    71.18.145.0/24 1; # Bytedance Inc.
+    71.18.146.0/24 1; # Bytedance Inc.
+    71.18.148.0/24 1; # Bytedance Inc.
+    71.18.149.0/24 1; # Bytedance Inc.
+    71.18.150.0/24 1; # Bytedance Inc.
+    71.18.152.0/24 1; # Bytedance Inc.
+    71.18.153.0/24 1; # Bytedance Inc.
+    71.18.154.0/24 1; # Bytedance Inc.
+    71.18.155.0/24 1; # Bytedance Inc.
+    71.18.156.0/24 1; # Bytedance Inc.
+    71.18.157.0/24 1; # Bytedance Inc.
+    71.18.159.0/24 1; # Bytedance Inc.
+    71.18.162.0/24 1; # Bytedance Inc.
+    71.18.163.0/24 1; # Bytedance Inc.
+    71.18.164.0/24 1; # Bytedance Inc.
+    71.18.165.0/24 1; # Bytedance Inc.
+    71.18.166.0/24 1; # Bytedance Inc.
+    71.18.167.0/24 1; # Bytedance Inc.
+    71.18.168.0/24 1; # Bytedance Inc.
+    71.18.169.0/24 1; # Bytedance Inc.
+    71.18.170.0/24 1; # Bytedance Inc.
+    71.18.171.0/24 1; # Bytedance Inc.
+    71.18.175.0/24 1; # Bytedance Inc.
+    71.18.176.0/24 1; # Bytedance Inc.
+    71.18.177.0/24 1; # Bytedance Inc.
+    71.18.178.0/24 1; # Bytedance Inc.
+    71.18.182.0/24 1; # Bytedance Inc.
+    71.18.185.0/24 1; # Bytedance Inc.
+    71.18.186.0/24 1; # Bytedance Inc.
+    77.83.20.0/24 1; # GREEN FLOID LLC
+    77.83.21.0/24 1; # GREEN FLOID LLC
+    77.83.22.0/24 1; # GREEN FLOID LLC
+    77.83.23.0/24 1; # GREEN FLOID LLC
+    77.90.17.0/24 1; # SkyLink Data Center BV
+    77.90.149.0/24 1; # GREEN FLOID LLC
+    77.90.152.0/24 1; # GREEN FLOID LLC
+    77.90.155.0/24 1; # GREEN FLOID LLC
+    77.90.167.0/24 1; # GREEN FLOID LLC
+    77.90.179.0/24 1; # GREEN FLOID LLC
+    77.90.180.0/24 1; # GREEN FLOID LLC
+    77.90.181.0/24 1; # GREEN FLOID LLC
+    78.136.248.0/24 1; # GREEN FLOID LLC
+    78.136.249.0/24 1; # GREEN FLOID LLC
+    78.136.250.0/24 1; # GREEN FLOID LLC
+    78.136.251.0/24 1; # GREEN FLOID LLC
+    78.136.252.0/24 1; # GREEN FLOID LLC
+    78.136.253.0/24 1; # GREEN FLOID LLC
+    78.136.254.0/24 1; # GREEN FLOID LLC
+    80.71.158.0/24 1; # Rices Privately owned enterprise
+    80.78.132.0/24 1; # SkyLink Data Center BV
+    80.89.12.0/24 1; # GREEN FLOID LLC
+    80.89.13.0/24 1; # GREEN FLOID LLC
+    80.89.14.0/24 1; # GREEN FLOID LLC
+    80.89.15.0/24 1; # GREEN FLOID LLC
+    80.243.228.0/24 1; # GREEN FLOID LLC
+    82.21.219.0/24 1; # Virtual Systems LLC
+    82.21.223.0/24 1; # Virtual Systems LLC
+    82.21.224.0/24 1; # Virtual Systems LLC
+    82.21.236.0/24 1; # Virtual Systems LLC
+    82.21.253.0/24 1; # GREEN FLOID LLC
+    82.21.254.0/24 1; # GREEN FLOID LLC
+    82.22.210.0/24 1; # Virtual Systems LLC
+    82.22.216.0/24 1; # Virtual Systems LLC
+    82.22.217.0/24 1; # Virtual Systems LLC
+    82.22.220.0/24 1; # Virtual Systems LLC
+    82.22.227.0/24 1; # Virtual Systems LLC
+    82.22.254.0/24 1; # GREEN FLOID LLC
+    82.23.209.0/24 1; # Virtual Systems LLC
+    82.23.244.0/24 1; # GREEN FLOID LLC
+    82.24.210.0/24 1; # Virtual Systems LLC
+    82.24.224.0/24 1; # Virtual Systems LLC
+    82.24.225.0/24 1; # Virtual Systems LLC
+    82.24.234.0/24 1; # Virtual Systems LLC
+    82.24.254.0/24 1; # GREEN FLOID LLC
+    82.25.216.0/24 1; # Virtual Systems LLC
+    82.25.228.0/24 1; # Virtual Systems LLC
+    82.25.237.0/24 1; # Virtual Systems LLC
+    82.25.238.0/24 1; # Virtual Systems LLC
+    82.25.254.0/24 1; # GREEN FLOID LLC
+    82.26.221.0/24 1; # Virtual Systems LLC
+    82.26.226.0/24 1; # Virtual Systems LLC
+    82.26.239.0/24 1; # Virtual Systems LLC
+    82.26.254.0/24 1; # GREEN FLOID LLC
+    82.26.255.0/24 1; # GREEN FLOID LLC
+    82.27.214.0/24 1; # Virtual Systems LLC
+    82.27.233.0/24 1; # Virtual Systems LLC
+    82.27.235.0/24 1; # Virtual Systems LLC
+    82.27.239.0/24 1; # Virtual Systems LLC
+    82.27.254.0/24 1; # GREEN FLOID LLC
+    82.27.255.0/24 1; # GREEN FLOID LLC
+    82.29.221.0/24 1; # Virtual Systems LLC
+    82.29.225.0/24 1; # Virtual Systems LLC
+    82.29.226.0/24 1; # Virtual Systems LLC
+    82.29.229.0/24 1; # Virtual Systems LLC
+    82.29.230.0/24 1; # Virtual Systems LLC
+    82.29.253.0/24 1; # GREEN FLOID LLC
+    82.29.254.0/24 1; # GREEN FLOID LLC
+    82.115.0.0/24 1; # Virtual Systems LLC
+    84.252.66.0/24 1; # GREEN FLOID LLC
+    84.252.67.0/24 1; # GREEN FLOID LLC
+    85.208.96.0/24 1; # SEMrush CY LTD
+    85.208.97.0/24 1; # SEMrush CY LTD
+    85.208.99.0/24 1; # SEMrush CY LTD
+    87.119.4.0/24 1; # HUAWEI INTERNATIONAL PTE. LTD.
+    87.119.7.0/24 1; # HUAWEI INTERNATIONAL PTE. LTD.
+    87.119.9.0/24 1; # HUAWEI INTERNATIONAL PTE. LTD.
+    87.119.10.0/24 1; # HUAWEI INTERNATIONAL PTE. LTD.
+    87.119.11.0/24 1; # HUAWEI INTERNATIONAL PTE. LTD.
+    87.119.16.0/24 1; # HUAWEI INTERNATIONAL PTE. LTD.
+    87.236.176.0/24 1; # Internet Measurement
+    88.204.40.0/24 1; # GREEN FLOID LLC
+    88.204.41.0/24 1; # GREEN FLOID LLC
+    88.204.42.0/24 1; # GREEN FLOID LLC
+    88.204.43.0/24 1; # GREEN FLOID LLC
+    88.204.44.0/24 1; # GREEN FLOID LLC
+    88.204.45.0/24 1; # GREEN FLOID LLC
+    88.204.46.0/24 1; # GREEN FLOID LLC
+    88.204.47.0/24 1; # GREEN FLOID LLC
+    88.218.239.0/24 1; # GREEN FLOID LLC
+    89.213.185.0/24 1; # Virtual Systems LLC
+    91.207.236.0/24 1; # SkyLink Data Center BV
+    91.208.115.0/24 1; # Virtual Systems LLC
+    91.209.211.0/24 1; # SkyLink Data Center BV
+    91.210.166.0/24 1; # GREEN FLOID LLC
+    91.213.230.0/24 1; # GREEN FLOID LLC
+    91.215.152.0/24 1; # GREEN FLOID LLC
+    91.223.95.0/24 1; # SkyLink Data Center BV
+    91.224.10.0/24 1; # Virtual Systems LLC
+    91.235.142.0/23 1; # Virtual Systems LLC
+    91.235.142.0/24 1; # Virtual Systems LLC
+    91.235.143.0/24 1; # Virtual Systems LLC
+    92.112.135.0/24 1; # Virtual Systems LLC
+    92.112.138.0/24 1; # Virtual Systems LLC
+    92.114.85.0/24 1; # SkyLink Data Center BV
+    92.246.84.0/24 1; # SkyLink Data Center BV
+    92.246.85.0/24 1; # SkyLink Data Center BV
+    92.246.86.0/24 1; # SkyLink Data Center BV
+    92.255.57.0/24 1; # Chang Way Technologies Co. Limited
+    92.255.85.0/24 1; # Chang Way Technologies Co. Limited
+    95.156.192.0/24 1; # SkyLink Data Center BV
+    95.156.199.0/24 1; # SkyLink Data Center BV
+    95.156.208.0/24 1; # SkyLink Data Center BV
+    95.156.212.0/24 1; # SkyLink Data Center BV
+    95.182.79.0/24 1; # Kontel LLC
+    95.214.232.0/24 1; # Virtual Systems LLC
+    95.214.233.0/24 1; # Virtual Systems LLC
+    95.214.234.0/23 1; # Virtual Systems LLC
+    100.20.0.0/14 1; # Amazon.com, Inc.
+    100.42.64.0/20 1; # Amazon.com, Inc.
+    100.48.0.0/12 1; # Amazon.com, Inc.
+    101.32.0.0/20 1; # 16 COLLYER QUAY
+    101.32.13.0/24 1; # 16 COLLYER QUAY
+    101.32.16.0/20 1; # 16 COLLYER QUAY
+    101.32.17.0/24 1; # 16 COLLYER QUAY
+    101.32.32.0/20 1; # 16 COLLYER QUAY
+    101.32.48.0/20 1; # 16 COLLYER QUAY
+    101.32.64.0/20 1; # 16 COLLYER QUAY
+    101.32.78.0/23 1; # 16 COLLYER QUAY
+    101.32.80.0/20 1; # 16 COLLYER QUAY
+    101.32.94.0/23 1; # 6 COLLYER QUAY
+    101.32.96.0/20 1; # 16 COLLYER QUAY
+    101.32.102.0/23 1; # 6 COLLYER QUAY
+    101.32.112.0/23 1; # 16 COLLYER QUAY
+    101.32.112.0/24 1; # 16 COLLYER QUAY
+    101.32.114.0/23 1; # 16 COLLYER QUAY
+    101.32.116.0/23 1; # 16 COLLYER QUAY
+    101.32.118.0/23 1; # 16 COLLYER QUAY
+    101.32.120.0/23 1; # 16 COLLYER QUAY
+    101.32.122.0/23 1; # 16 COLLYER QUAY
+    101.32.124.0/23 1; # 16 COLLYER QUAY
+    101.32.126.0/23 1; # 16 COLLYER QUAY
+    101.32.128.0/23 1; # 16 COLLYER QUAY
+    101.32.130.0/23 1; # 16 COLLYER QUAY
+    101.32.132.0/22 1; # 16 COLLYER QUAY
+    101.32.132.0/24 1; # 16 COLLYER QUAY
+    101.32.136.0/21 1; # 16 COLLYER QUAY
+    101.32.140.0/24 1; # 16 COLLYER QUAY
+    101.32.144.0/20 1; # 16 COLLYER QUAY
+    101.32.160.0/20 1; # 16 COLLYER QUAY
+    101.32.176.0/20 1; # 16 COLLYER QUAY
+    101.32.192.0/20 1; # 16 COLLYER QUAY
+    101.32.208.0/20 1; # 16 COLLYER QUAY
+    101.32.224.0/22 1; # 16 COLLYER QUAY
+    101.32.228.0/22 1; # 16 COLLYER QUAY
+    101.32.232.0/22 1; # 16 COLLYER QUAY
+    101.32.236.0/23 1; # 16 COLLYER QUAY
+    101.32.238.0/23 1; # 16 COLLYER QUAY
+    101.32.240.0/20 1; # 16 COLLYER QUAY
+    101.33.0.0/23 1; # ACEVILLE PTE.LTD.
+    101.33.4.0/23 1; # 6 COLLYER QUAY
+    101.33.17.0/24 1; # 6 COLLYER QUAY
+    101.33.18.0/23 1; # 6 COLLYER QUAY
+    101.33.30.0/23 1; # 6 COLLYER QUAY
+    101.33.32.0/21 1; # 16 COLLYER QUAY
+    101.33.40.0/24 1; # 16 COLLYER QUAY
+    101.33.41.0/24 1; # 6 COLLYER QUAY
+    101.33.42.0/23 1; # 16 COLLYER QUAY
+    101.33.44.0/22 1; # 16 COLLYER QUAY
+    101.33.48.0/22 1; # 16 COLLYER QUAY
+    101.33.52.0/22 1; # 16 COLLYER QUAY
+    101.33.56.0/22 1; # 16 COLLYER QUAY
+    101.33.60.0/22 1; # 16 COLLYER QUAY
+    101.33.64.0/19 1; # 16 COLLYER QUAY
+    101.33.64.0/23 1; # 16 COLLYER QUAY
+    101.33.96.0/22 1; # 16 COLLYER QUAY
+    101.33.100.0/22 1; # 16 COLLYER QUAY
+    101.33.104.0/21 1; # 16 COLLYER QUAY
+    101.33.112.0/22 1; # 16 COLLYER QUAY
+    101.33.116.0/22 1; # 16 COLLYER QUAY
+    101.33.120.0/21 1; # 16 COLLYER QUAY
+    101.33.128.0/22 1; # Tencent Cloud Computing (Beijing) Co., Ltd
+    101.33.128.0/17 1; # Tencent Cloud Computing (Beijing) Co., Ltd
+    101.33.132.0/22 1; # Tencent Cloud Computing (Beijing) Co., Ltd
+    101.33.136.0/22 1; # Tencent Cloud Computing (Beijing) Co., Ltd
+    101.33.140.0/22 1; # Tencent Cloud Computing (Beijing) Co., Ltd
+    101.33.144.0/22 1; # Tencent Cloud Computing (Beijing) Co., Ltd
+    101.33.148.0/22 1; # Tencent Cloud Computing (Beijing) Co., Ltd
+    101.33.152.0/22 1; # Tencent Cloud Computing (Beijing) Co., Ltd
+    101.33.156.0/22 1; # Tencent Cloud Computing (Beijing) Co., Ltd
+    101.33.160.0/22 1; # Tencent Cloud Computing (Beijing) Co., Ltd
+    101.33.164.0/22 1; # Tencent Cloud Computing (Beijing) Co., Ltd
+    101.33.168.0/22 1; # Tencent Cloud Computing (Beijing) Co., Ltd
+    101.33.172.0/22 1; # Tencent Cloud Computing (Beijing) Co., Ltd
+    101.33.176.0/22 1; # Tencent Cloud Computing (Beijing) Co., Ltd
+    101.33.180.0/22 1; # Tencent Cloud Computing (Beijing) Co., Ltd
+    101.33.184.0/22 1; # Tencent Cloud Computing (Beijing) Co., Ltd
+    101.33.188.0/22 1; # Tencent Cloud Computing (Beijing) Co., Ltd
+    101.33.192.0/18 1; # Tencent Cloud Computing (Beijing) Co., Ltd
+    101.34.0.0/15 1; # Tencent Cloud Computing (Beijing) Co., Ltd
+    101.34.0.0/18 1; # Tencent Cloud Computing (Beijing) Co., Ltd
+    101.34.64.0/18 1; # Tencent Cloud Computing (Beijing) Co., Ltd
+    101.34.128.0/18 1; # Tencent Cloud Computing (Beijing) Co., Ltd
+    101.34.192.0/18 1; # Tencent Cloud Computing (Beijing) Co., Ltd
+    101.35.0.0/18 1; # Tencent Cloud Computing (Beijing) Co., Ltd
+    101.35.64.0/18 1; # Tencent Cloud Computing (Beijing) Co., Ltd
+    101.35.128.0/18 1; # Tencent Cloud Computing (Beijing) Co., Ltd
+    101.35.192.0/18 1; # Tencent Cloud Computing (Beijing) Co., Ltd
+    101.36.96.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    101.36.97.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    101.36.98.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    101.36.99.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    101.36.100.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    101.36.101.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    101.36.102.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    101.36.103.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    101.36.104.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    101.36.105.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    101.36.106.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    101.36.107.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    101.36.108.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    101.36.109.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    101.36.110.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    101.36.111.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    101.36.112.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    101.36.113.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    101.36.114.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    101.36.115.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    101.36.116.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    101.36.117.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    101.36.118.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    101.36.119.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    101.36.120.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    101.36.121.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    101.36.122.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    101.36.123.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    101.36.124.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    101.36.125.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    101.36.126.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    101.36.127.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    101.42.0.0/15 1; # Tencent Cloud Computing (Beijing) Co., Ltd
+    101.42.0.0/18 1; # Tencent Cloud Computing (Beijing) Co., Ltd
+    101.42.64.0/18 1; # Tencent Cloud Computing (Beijing) Co., Ltd
+    101.42.128.0/18 1; # Tencent Cloud Computing (Beijing) Co., Ltd
+    101.42.192.0/18 1; # Tencent Cloud Computing (Beijing) Co., Ltd
+    101.43.0.0/18 1; # Tencent Cloud Computing (Beijing) Co., Ltd
+    101.43.64.0/18 1; # Tencent Cloud Computing (Beijing) Co., Ltd
+    101.43.128.0/18 1; # Tencent Cloud Computing (Beijing) Co., Ltd
+    101.43.192.0/18 1; # Tencent Cloud Computing (Beijing) Co., Ltd
+    101.44.0.0/20 1; # HUAWEI CLOUDS
+    101.44.16.0/20 1; # HUAWEI CLOUDS
+    101.44.32.0/20 1; # HUAWEI CLOUDS
+    101.44.48.0/20 1; # HUAWEI CLOUDS
+    101.44.64.0/20 1; # HUAWEI CLOUDS
+    101.44.80.0/20 1; # HUAWEI CLOUDS
+    101.44.96.0/20 1; # HUAWEI CLOUDS
+    101.44.144.0/20 1; # HUAWEI CLOUDS
+    101.44.160.0/20 1; # HUAWEI CLOUDS
+    101.44.173.0/24 1; # HUAWEI CLOUDS
+    101.44.176.0/20 1; # HUAWEI CLOUDS
+    101.44.192.0/20 1; # HUAWEI CLOUDS
+    101.44.208.0/22 1; # HUAWEI CLOUDS
+    101.44.212.0/22 1; # HUAWEI CLOUDS
+    101.44.216.0/22 1; # HUAWEI CLOUDS
+    101.44.220.0/22 1; # HUAWEI CLOUDS
+    101.44.224.0/22 1; # HUAWEI CLOUDS
+    101.44.228.0/22 1; # HUAWEI CLOUDS
+    101.44.232.0/22 1; # HUAWEI CLOUDS
+    101.44.236.0/22 1; # HUAWEI CLOUDS
+    101.44.240.0/22 1; # HUAWEI CLOUDS
+    101.44.244.0/22 1; # HUAWEI CLOUDS
+    101.44.248.0/22 1; # HUAWEI CLOUDS
+    101.44.252.0/24 1; # HUAWEI CLOUDS
+    101.44.253.0/24 1; # HUAWEI CLOUDS
+    101.44.254.0/24 1; # HUAWEI CLOUDS
+    101.44.255.0/24 1; # HUAWEI CLOUDS
+    101.45.0.0/22 1; # Bytedance Inc.
+    101.46.0.0/20 1; # HUAWEI CLOUDS
+    101.46.32.0/20 1; # HUAWEI CLOUDS
+    101.46.48.0/20 1; # HUAWEI CLOUDS
+    101.46.64.0/20 1; # HUAWEI CLOUDS
+    101.46.80.0/20 1; # HUAWEI CLOUDS
+    101.46.128.0/21 1; # HUAWEI CLOUDS
+    101.46.136.0/21 1; # HUAWEI CLOUDS
+    101.46.144.0/21 1; # HUAWEI CLOUDS
+    101.46.152.0/21 1; # HUAWEI CLOUDS
+    101.46.160.0/21 1; # HUAWEI CLOUDS
+    101.46.168.0/21 1; # HUAWEI CLOUDS
+    101.46.176.0/21 1; # HUAWEI CLOUDS
+    101.46.184.0/21 1; # HUAWEI CLOUDS
+    101.46.192.0/21 1; # HUAWEI CLOUDS
+    101.46.200.0/21 1; # HUAWEI CLOUDS
+    101.46.208.0/21 1; # HUAWEI CLOUDS
+    101.46.216.0/21 1; # HUAWEI CLOUDS
+    101.46.224.0/22 1; # HUAWEI CLOUDS
+    101.46.232.0/22 1; # HUAWEI CLOUDS
+    101.46.236.0/22 1; # HUAWEI CLOUDS
+    101.46.240.0/22 1; # HUAWEI CLOUDS
+    101.46.244.0/22 1; # HUAWEI CLOUDS
+    101.46.248.0/22 1; # HUAWEI CLOUDS
+    101.46.252.0/24 1; # HUAWEI CLOUDS
+    101.46.253.0/24 1; # HUAWEI CLOUDS
+    101.46.254.0/24 1; # HUAWEI CLOUDS
+    101.46.255.0/24 1; # HUAWEI CLOUDS
+    101.197.0.0/16 1; # Beijing Qihu Technology Company Limited
+    101.198.160.0/19 1; # Beijing Qihu Technology Company Limited
+    101.198.170.0/23 1; # Beijing Qihu Technology Company Limited
+    101.198.172.0/22 1; # Beijing Qihu Technology Company Limited
+    101.198.192.0/19 1; # Beijing Qihu Technology Company Limited
+    101.198.192.0/24 1; # Beijing Qihu Technology Company Limited
+    101.198.193.0/24 1; # Beijing Qihu Technology Company Limited
+    101.198.194.0/24 1; # Beijing Qihu Technology Company Limited
+    101.198.196.0/24 1; # Beijing Qihu Technology Company Limited
+    101.198.198.0/24 1; # Beijing Qihu Technology Company Limited
+    101.198.199.0/24 1; # Beijing Qihu Technology Company Limited
+    101.245.0.0/23 1; # Huawei Cloud Service data center
+    101.245.16.0/23 1; # Huawei Cloud Service data center
+    101.245.32.0/21 1; # Huawei Cloud Service data center
+    102.129.136.0/24 1; # The Constant Company, LLC
+    102.129.207.0/24 1; # The Constant Company, LLC
+    102.135.181.0/24 1; # Reserved
+    102.208.248.0/24 1; # Thinkst Applied Research (PTY) Limited
+    102.208.249.0/24 1; # Thinkst Applied Research (PTY) Limited
+    102.210.60.0/22 1; # SkyLink Data Center BV
+    102.210.190.0/24 1; # Byte Orbit (PTY) LTD
+    102.210.191.0/24 1; # Byte Orbit (PTY) LTD
+    102.212.56.0/22 1; # SkyLink Data Center BV
+    102.217.106.0/24 1; # The Constant Company, LLC
+    102.219.181.0/24 1; # SkyLink Data Center BV
+    103.4.8.0/21 1; # Amazon Data Services Japan KK
+    103.5.54.0/23 1; # JINX CO., LIMITED
+    103.5.54.0/24 1; # JINX CO., LIMITED
+    103.7.28.0/24 1; # Tencent Building, Kejizhongyi Avenue
+    103.7.29.0/24 1; # Tencent Building, Kejizhongyi Avenue
+    103.7.30.0/24 1; # Tencent Building, Kejizhongyi Avenue
+    103.7.31.0/24 1; # Tencent Building, Kejizhongyi Avenue
+    103.9.76.0/22 1; # VNPT Corp
+    103.9.76.0/24 1; # VNPT Corp
+    103.9.77.0/24 1; # VNPT Corp
+    103.9.78.0/24 1; # VNPT Corp
+    103.9.79.0/24 1; # VNPT Corp
+    103.10.9.0/24 1; # DIGITRAL PRIVATE LIMITED
+    103.10.44.0/22 1; # VNPT Corp
+    103.10.127.0/24 1; # United Communications Networks, LLC.
+    103.14.32.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    103.14.33.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    103.14.34.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    103.14.35.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    103.14.230.0/24 1; # Axiom Design Studio Pty Ltd
+    103.15.90.0/23 1; # VNPT Corp
+    103.16.56.0/24 1; # Route Mobile Limited
+    103.16.59.0/24 1; # Route Mobile Limited
+    103.16.101.0/24 1; # Route Mobile Limited
+    103.21.240.0/22 1; # Amazon Connection Technology Services (Beijing) Co., LTD
+    103.23.4.0/24 1; # DeNA, Co. Ltd.
+    103.23.5.0/24 1; # DeNA, Co. Ltd.
+    103.23.6.0/24 1; # DeNA, Co. Ltd.
+    103.23.68.0/23 1; # oVice Inc
+    103.26.8.0/24 1; # IPXO
+    103.26.9.0/24 1; # IPXO
+    103.26.11.0/24 1; # The Constant Company, LLC
+    103.31.200.0/22 1; # Huawei Cloud Service data center
+    103.31.202.0/24 1; # Huawei Cloud Service data center
+    103.31.203.0/24 1; # Huawei Cloud Service data center
+    103.38.116.0/22 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    103.38.221.0/24 1; # TTMFS Singapore Pte Ltd.
+    103.39.40.0/24 1; # Gamesys Ltd.
+    103.39.112.0/24 1; # Sportsbet Pty Ltd
+    103.42.56.0/24 1; # VNPT Corp
+    103.42.57.0/24 1; # VNPT Corp
+    103.42.58.0/24 1; # VNPT Corp
+    103.42.59.0/24 1; # VNPT Corp
+    103.43.38.0/23 1; # ARN Group Pty Ltd
+    103.43.72.0/22 1; # The Constant Company, LLC
+    103.44.109.0/24 1; # HRT SG PTE. LTD.
+    103.48.191.0/24 1; # VNPT Corp
+    103.53.55.0/24 1; # ONEPLACE WEB SOLUTION PRIVATE LIMITED
+    103.53.168.0/24 1; # VNPT Corp
+    103.53.169.0/24 1; # VNPT Corp
+    103.54.236.0/24 1; # ACL MOBILE LIMITED
+    103.55.4.0/24 1; # JINX CO., LIMITED
+    103.55.5.0/24 1; # JINX CO., LIMITED
+    103.56.156.0/22 1; # VNPT Corp
+    103.58.192.0/24 1; # Gaming Investments Pty Ltd
+    103.68.252.0/22 1; # VNPT Corp
+    103.69.192.0/23 1; # VNPT Corp
+    103.70.49.0/24 1; # Australia AWS IPA
+    103.70.51.0/24 1; # Australia IP
+    103.72.144.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    103.72.145.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    103.72.146.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    103.72.147.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    103.73.158.0/24 1; # PT Jaringan Buana Nusa
+    103.82.155.0/24 1; # The Constant Company, LLC
+    103.84.110.0/24 1; # HUAWEI CLOUDS
+    103.89.92.0/22 1; # VNPT Corp
+    103.96.214.0/24 1; # The Constant Company, LLC
+    103.98.16.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    103.98.17.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    103.102.4.0/24 1; # JINX CO., LIMITED
+    103.102.5.0/24 1; # JINX CO., LIMITED
+    103.102.7.0/24 1; # JINX CO., LIMITED
+    103.104.86.0/24 1; # ECOUNT Inc.
+    103.107.56.0/24 1; # Nubitel Technology Pte. Ltd.
+    103.107.180.0/22 1; # VNPT Corp
+    103.109.83.0/24 1; # IT Eagle Eye
+    103.116.6.0/24 1; # Box, Inc
+    103.116.50.0/23 1; # AS137876 – Tencent (Thailand) Company Limited
+    103.116.73.0/24 1; # JINX CO., LIMITED
+    103.119.213.0/24 1; # CKMATES INTERNATIONAL CO., LTD
+    103.120.176.0/24 1; # WEBNOX TECHNOLOGIES
+    103.120.177.0/24 1; # WEBNOX TECHNOLOGIES
+    103.120.178.0/24 1; # WEBNOX TECHNOLOGIES
+    103.120.179.0/24 1; # WEBNOX TECHNOLOGIES
+    103.120.242.0/23 1; # VNPT Corp
+    103.122.124.0/24 1; # The Constant Company, LLC
+    103.122.126.0/24 1; # The Constant Company, LLC
+    103.124.134.0/24 1; # VADACOM LIMITED
+    103.124.135.0/24 1; # VADACOM LIMITED
+    103.125.147.0/24 1; # The Constant Company, LLC
+    103.125.192.0/22 1; # VNPT Corp
+    103.125.225.0/24 1; # mlytics
+    103.125.226.0/24 1; # mlytics
+    103.127.75.0/24 1; # JWS Services Pty Ltd
+    103.129.147.0/24 1; # The Constant Company, LLC
+    103.131.68.0/22 1; # VNPT Corp
+    103.131.196.0/24 1; # WEBNOX TECHNOLOGIES
+    103.136.10.0/24 1; # Engage Australia Pty Ltd
+    103.136.224.0/24 1; # The Constant Company, LLC
+    103.136.225.0/24 1; # The Constant Company, LLC
+    103.143.45.0/24 1; # MediaMall Technologies, Inc.
+    103.143.46.0/24 1; # WEBNOX TECHNOLOGIES
+    103.145.50.0/24 1; # WEBNOX TECHNOLOGIES
+    103.145.182.0/24 1; # VX GROUP - AWS
+    103.145.192.0/24 1; # Zeald IP Limited
+    103.147.71.0/24 1; # Telzio, Inc.
+    103.148.56.0/23 1; # VNPT Corp
+    103.149.26.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    103.149.27.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    103.149.112.0/24 1; # Innodata-Isogen India Pvt Ltd
+    103.149.192.0/23 1; # SkyLink Data Center BV
+    103.150.47.0/24 1; # Enjin PTE LTD
+    103.150.161.0/24 1; # PIPELINE PTE LTD
+    103.150.252.0/24 1; # Atmail Pty Ltd
+    103.151.192.0/24 1; # ZENDESK PTY LTD
+    103.151.193.0/24 1; # ZENDESK PTY LTD
+    103.154.184.0/23 1; # WEBNOX TECHNOLOGIES
+    103.154.244.0/23 1; # VNPT Corp
+    103.159.84.0/23 1; # WEBNOX TECHNOLOGIES
+    103.160.250.0/24 1; # The Constant Company, LLC
+    103.160.251.0/24 1; # The Constant Company, LLC
+    103.161.77.0/24 1; # PIPELINE PTE LTD
+    103.165.160.0/24 1; # Asia Pacific Network Information Centre
+    103.166.180.0/24 1; # Netpico Labs Private Limited
+    103.167.153.0/24 1; # MATRIMONY.COM LIMITED
+    103.167.207.0/24 1; # CyberAgent, Inc.
+    103.168.156.0/24 1; # CyberLink Corp.
+    103.168.157.0/24 1; # CyberLink Corp.
+    103.168.209.0/24 1; # SBI Holdings, Inc.
+    103.169.216.0/24 1; # JINX CO., LIMITED
+    103.169.217.0/24 1; # JINX CO., LIMITED
+    103.171.92.0/24 1; # VNPT Corp
+    103.171.180.0/23 1; # WEBNOX TECHNOLOGIES
+    103.172.141.0/24 1; # SUPER RETAIL GROUP SERVICES PTY LTD
+    103.172.192.0/24 1; # FYERS Securities Pvt Ltd
+    103.175.13.0/24 1; # Bluwaves Internet Services India P. Ltd
+    103.175.120.0/23 1; # Contacta Pty Ltd t/a Sproutsend
+    103.177.196.0/24 1; # 54N Ltd t/a 54North
+    103.177.197.0/24 1; # 54N Ltd t/a 54North
+    103.180.30.0/24 1; # Setel Ventures Sdn Bhd
+    103.180.120.0/23 1; # WEBNOX TECHNOLOGIES
+    103.181.194.0/24 1; # The Constant Company, LLC
+    103.181.240.0/24 1; # Isoton Pty. Ltd. t/a Oasis Systems
+    103.182.250.0/24 1; # Tosspayments
+    103.182.251.0/24 1; # Tosspayments
+    103.186.184.0/24 1; # WEBNOX TECHNOLOGIES
+    103.186.185.0/24 1; # WEBNOX TECHNOLOGIES
+    103.186.205.0/24 1; # Hubco PTE. LTD.
+    103.186.250.0/24 1; # Bluwaves Internet Services India P. Ltd
+    103.186.251.0/24 1; # Bluwaves Internet Services India P. Ltd
+    103.188.89.0/24 1; # JOBIS Villains Inc
+    103.190.166.0/24 1; # Zerodha Technology Private Limited
+    103.193.9.0/24 1; # Vista Group (NZ) Limited
+    103.195.60.0/24 1; # SABA SOFTWARE (AUSTRALIA) PTY LIMITED
+    103.195.61.0/24 1; # SABA SOFTWARE (AUSTRALIA) PTY LIMITED
+    103.195.62.0/24 1; # SABA SOFTWARE (AUSTRALIA) PTY LIMITED
+    103.195.63.0/24 1; # SABA SOFTWARE (AUSTRALIA) PTY LIMITED
+    103.195.128.0/24 1; # APPTIOPTYLTD AU 1
+    103.195.129.0/24 1; # APPTIOPTYLTD AU 2
+    103.196.32.0/24 1; # Bigtree Entertainment Pvt. Ltd.
+    103.197.184.0/23 1; # VNPT Corp
+    103.198.203.0/24 1; # HUAWEI CLOUDS
+    103.200.112.0/23 1; # JINX CO., LIMITED
+    103.200.112.0/24 1; # JINX CO., LIMITED
+    103.200.113.0/24 1; # JINX CO., LIMITED
+    103.203.56.0/24 1; # Beijing Tiantexin Tech. Co., Ltd.
+    103.203.57.0/24 1; # Beijing Tiantexin Tech. Co., Ltd.
+    103.203.58.0/24 1; # Beijing Tiantexin Tech. Co., Ltd.
+    103.203.59.0/24 1; # Beijing Tiantexin Tech. Co., Ltd.
+    103.205.78.0/24 1; # Singapore Exchange Limited
+    103.207.60.0/24 1; # A5-DB OPERATIONS (M) BERHAD
+    103.207.61.0/24 1; # A5-DB OPERATIONS (M) BERHAD
+    103.210.20.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    103.210.21.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    103.210.22.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    103.210.23.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    103.211.172.0/24 1; # Sportsbet Pty Ltd
+    103.212.67.0/24 1; # NINE ENTERTAINMENT CO. PTY LTD
+    103.212.169.0/24 1; # Unit 24 Hume Ave, Park West Business Park, Dublin 12, D12 YY88, Ireland
+    103.215.0.0/24 1; # HUAWEI CLOUDS
+    103.215.1.0/24 1; # HUAWEI CLOUDS
+    103.215.3.0/24 1; # HUAWEI CLOUDS
+    103.215.168.0/24 1; # Bluwaves Internet Services India P. Ltd
+    103.215.169.0/24 1; # Bluwaves Internet Services India P. Ltd
+    103.215.170.0/24 1; # Bluwaves Internet Services India P. Ltd
+    103.215.171.0/24 1; # Bluwaves Internet Services India P. Ltd
+    103.218.240.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    103.218.241.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    103.218.242.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    103.218.243.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    103.228.2.0/24 1; # The Constant Company, LLC
+    103.229.3.0/24 1; # VALUEFIRST DIGITAL MEDIA PRIVATE LIMITED
+    103.229.8.0/24 1; # Quantcast Corporation
+    103.229.9.0/24 1; # Quantcast Corporation
+    103.229.10.0/24 1; # Quantcast Corporation
+    103.229.233.0/24 1; # ActiveCampaign LLC
+    103.231.58.0/24 1; # The Constant Company, LLC
+    103.234.60.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    103.234.61.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    103.234.62.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    103.235.44.0/22 1; # Rooms 2201-03, 22/F, World Wide House
+    103.235.45.0/24 1; # Rooms 2201-03, 22/F, World Wide House
+    103.235.46.0/24 1; # Rooms 2201-03, 22/F, World Wide House
+    103.235.47.0/24 1; # Rooms 2201-03, 22/F, World Wide House
+    103.235.88.0/24 1; # Taiwan Network Information Center
+    103.237.96.0/22 1; # VNPT Corp
+    103.238.16.0/22 1; # Shenzhen Tencent Computer Systems Company Limited
+    103.238.120.0/24 1; # Nexcess.net LLC
+    103.238.214.0/24 1; # VNPT Corp
+    103.238.215.0/24 1; # VNPT Corp
+    103.239.72.0/24 1; # HUAWEI CLOUDS
+    103.239.73.0/24 1; # Huawei Tech(UAE)FZ-LLC
+    103.240.157.0/24 1; # HUAWEI CLOUDS
+    103.240.198.0/24 1; # IPXO
+    103.246.148.0/22 1; # Amazon.com, Inc.
+    103.246.148.0/23 1; # Amazon.com, Inc.
+    103.246.150.0/23 1; # Amazon.com, Inc.
+    103.246.251.0/24 1; # Reflexion Networks, Inc.
+    103.253.240.0/22 1; # Doosan Corporation Digital Innovation
+    103.255.61.0/24 1; # HUAWEI CLOUDS
+    103.255.62.0/24 1; # HUAWEI CLOUDS
+    103.255.239.0/24 1; # VNPT Corp
+    104.156.224.0/22 1; # The Constant Company, LLC
+    104.156.228.0/22 1; # The Constant Company, LLC
+    104.156.232.0/23 1; # The Constant Company, LLC
+    104.156.234.0/23 1; # The Constant Company, LLC
+    104.156.236.0/23 1; # The Constant Company, LLC
+    104.156.238.0/23 1; # The Constant Company, LLC
+    104.156.240.0/21 1; # The Constant Company, LLC
+    104.156.248.0/22 1; # The Constant Company, LLC
+    104.156.252.0/23 1; # The Constant Company, LLC
+    104.156.254.0/23 1; # The Constant Company, LLC
+    104.164.29.0/24 1; # The Constant Company, LLC
+    104.164.42.0/24 1; # The Constant Company, LLC
+    104.164.46.0/24 1; # The Constant Company, LLC
+    104.164.48.0/24 1; # The Constant Company, LLC
+    104.164.86.0/24 1; # The Constant Company, LLC
+    104.165.3.0/24 1; # The Constant Company, LLC
+    104.165.19.0/24 1; # The Constant Company, LLC
+    104.171.16.0/24 1; # The Constant Company, LLC
+    104.171.20.0/24 1; # The Constant Company, LLC
+    104.171.21.0/24 1; # The Constant Company, LLC
+    104.192.108.0/24 1; # QiHU 360 Inc.
+    104.192.109.0/24 1; # QiHU 360 Inc.
+    104.192.110.0/24 1; # QiHU 360 Inc.
+    104.193.88.0/24 1; # Baidu USA LLC
+    104.193.89.0/24 1; # Baidu USA LLC
+    104.193.90.0/24 1; # Baidu USA LLC
+    104.207.128.0/23 1; # The Constant Company, LLC
+    104.207.130.0/23 1; # The Constant Company, LLC
+    104.207.132.0/22 1; # The Constant Company, LLC
+    104.207.136.0/21 1; # The Constant Company, LLC
+    104.207.144.0/22 1; # The Constant Company, LLC
+    104.207.148.0/22 1; # The Constant Company, LLC
+    104.207.152.0/22 1; # The Constant Company, LLC
+    104.207.156.0/22 1; # The Constant Company, LLC
+    104.218.162.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    104.218.163.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    104.218.164.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    104.218.165.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    104.218.166.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    104.224.80.0/24 1; # The Constant Company, LLC
+    104.234.1.0/24 1; # NForce Entertainment B.V.
+    104.234.46.0/24 1; # NForce Entertainment B.V.
+    104.234.94.0/24 1; # The Constant Company, LLC
+    104.234.95.0/24 1; # The Constant Company, LLC
+    104.234.150.0/24 1; # The Constant Company, LLC
+    104.234.193.0/24 1; # The Constant Company, LLC
+    104.234.196.0/24 1; # NForce Entertainment B.V.
+    104.234.226.0/24 1; # The Constant Company, LLC
+    104.234.242.0/24 1; # The Constant Company, LLC
+    104.237.8.0/24 1; # The Constant Company, LLC
+    104.238.128.0/21 1; # The Constant Company, LLC
+    104.238.136.0/23 1; # The Constant Company, LLC
+    104.238.138.0/23 1; # The Constant Company, LLC
+    104.238.140.0/22 1; # The Constant Company, LLC
+    104.238.144.0/22 1; # The Constant Company, LLC
+    104.238.148.0/22 1; # The Constant Company, LLC
+    104.238.152.0/22 1; # The Constant Company, LLC
+    104.238.156.0/23 1; # The Constant Company, LLC
+    104.238.158.0/23 1; # The Constant Company, LLC
+    104.238.160.0/23 1; # The Constant Company, LLC
+    104.238.162.0/23 1; # The Constant Company, LLC
+    104.238.164.0/23 1; # The Constant Company, LLC
+    104.238.166.0/23 1; # The Constant Company, LLC
+    104.238.168.0/21 1; # The Constant Company, LLC
+    104.238.176.0/23 1; # The Constant Company, LLC
+    104.238.178.0/23 1; # The Constant Company, LLC
+    104.238.180.0/22 1; # The Constant Company, LLC
+    104.238.184.0/22 1; # The Constant Company, LLC
+    104.238.188.0/22 1; # The Constant Company, LLC
+    104.243.241.0/24 1; # The Constant Company, LLC
+    104.244.72.0/21 1; # BuyVM
+    104.244.72.0/24 1; # BuyVM
+    104.244.73.0/24 1; # BuyVM
+    104.244.74.0/24 1; # BuyVM
+    104.244.75.0/24 1; # BuyVM
+    104.244.77.0/24 1; # BuyVM
+    104.244.78.0/24 1; # BuyVM
+    104.244.79.0/24 1; # BuyVM
+    104.253.207.0/24 1; # The Constant Company, LLC
+    104.253.211.0/24 1; # The Constant Company, LLC
+    106.11.222.0/23 1; # AliYunDun
+    106.11.224.0/24 1; # AliYunDun
+    106.11.228.0/22 1; # AliYunDun
+    106.12.0.0/18 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    106.12.0.0/19 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    106.12.64.0/18 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    106.12.96.0/20 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    106.12.112.0/20 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    106.12.128.0/18 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    106.12.128.0/20 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    106.12.144.0/20 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    106.12.160.0/20 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    106.12.192.0/19 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    106.12.192.0/20 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    106.12.208.0/20 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    106.12.224.0/20 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    106.12.224.0/21 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    106.12.232.0/21 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    106.12.240.0/21 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    106.13.0.0/18 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    106.13.0.0/19 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    106.13.32.0/20 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    106.13.48.0/20 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    106.13.64.0/18 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    106.13.64.0/19 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    106.13.96.0/19 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    106.13.128.0/18 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    106.13.128.0/19 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    106.13.192.0/19 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    106.13.192.0/20 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    106.13.208.0/20 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    106.13.224.0/20 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    106.13.224.0/21 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    106.13.232.0/21 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    106.13.240.0/22 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    106.52.0.0/14 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    106.52.0.0/15 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    106.52.0.0/20 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    106.52.16.0/20 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    106.52.32.0/20 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    106.52.48.0/20 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    106.52.64.0/20 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    106.52.80.0/20 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    106.52.96.0/20 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    106.52.112.0/20 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    106.52.128.0/20 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    106.52.144.0/20 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    106.52.160.0/20 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    106.52.176.0/20 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    106.52.192.0/20 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    106.52.208.0/20 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    106.52.224.0/20 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    106.52.240.0/20 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    106.53.0.0/20 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    106.53.16.0/20 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    106.53.32.0/20 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    106.53.48.0/20 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    106.53.64.0/20 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    106.53.80.0/20 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    106.53.96.0/20 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    106.53.112.0/20 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    106.53.128.0/20 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    106.53.144.0/20 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    106.53.160.0/20 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    106.53.176.0/20 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    106.53.192.0/20 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    106.53.208.0/20 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    106.53.224.0/20 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    106.53.240.0/20 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    106.54.0.0/15 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    106.54.0.0/18 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    106.54.64.0/18 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    106.54.128.0/18 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    106.54.192.0/18 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    106.55.0.0/18 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    106.55.64.0/18 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    106.55.128.0/18 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    106.55.192.0/18 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    106.75.192.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    106.75.193.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    106.75.194.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    106.75.195.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    106.75.196.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    106.75.197.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    106.75.198.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    106.75.199.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    107.150.96.0/21 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    107.150.104.0/21 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    107.150.112.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    107.150.117.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    107.150.118.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    107.150.119.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    107.150.120.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    107.150.121.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    107.150.122.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    107.150.123.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    107.150.124.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    107.150.125.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    107.150.126.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    107.150.127.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    107.155.15.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    107.155.43.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    107.155.45.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    107.155.48.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    107.155.50.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    107.155.55.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    107.155.56.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    107.155.60.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    107.181.136.0/24 1; # IOMART Cloud Services Limited
+    107.181.137.0/24 1; # NForce Entertainment B.V.
+    107.189.0.0/21 1; # BuyVM
+    107.189.8.0/22 1; # BuyVM
+    107.189.9.0/24 1; # BuyVM
+    107.189.12.0/24 1; # FranTech Solutions
+    107.189.13.0/24 1; # FranTech Solutions
+    107.189.14.0/24 1; # FranTech Solutions
+    107.189.28.0/23 1; # FranTech Solutions
+    107.189.30.0/23 1; # BuyVM
+    107.191.32.0/21 1; # The Constant Company, LLC
+    107.191.40.0/22 1; # The Constant Company, LLC
+    107.191.44.0/23 1; # The Constant Company, LLC
+    107.191.46.0/23 1; # The Constant Company, LLC
+    107.191.48.0/22 1; # The Constant Company, LLC
+    107.191.52.0/23 1; # The Constant Company, LLC
+    107.191.54.0/23 1; # The Constant Company, LLC
+    107.191.56.0/23 1; # The Constant Company, LLC
+    107.191.58.0/23 1; # The Constant Company, LLC
+    107.191.60.0/23 1; # The Constant Company, LLC
+    107.191.62.0/23 1; # The Constant Company, LLC
+    108.61.0.0/18 1; # The Constant Company, LLC
+    108.61.100.0/23 1; # The Constant Company, LLC
+    108.61.100.0/24 1; # The Constant Company, LLC
+    108.61.103.0/24 1; # The Constant Company, LLC
+    108.61.104.0/24 1; # The Constant Company, LLC
+    108.61.105.0/24 1; # The Constant Company, LLC
+    108.61.108.0/22 1; # The Constant Company, LLC
+    108.61.109.0/24 1; # The Constant Company, LLC
+    108.160.128.0/20 1; # The Constant Company, LLC
+    108.165.150.0/24 1; # The Constant Company, LLC
+    108.165.201.0/24 1; # The Constant Company, LLC
+    108.165.245.0/24 1; # The Constant Company, LLC
+    108.165.247.0/24 1; # The Constant Company, LLC
+    108.167.132.0/24 1; # Network Solutions, LLC
+    108.167.135.0/24 1; # Network Solutions, LLC
+    108.167.139.0/24 1; # Network Solutions, LLC
+    108.167.146.0/23 1; # Network Solutions, LLC
+    108.167.148.0/23 1; # Network Solutions, LLC
+    108.167.150.0/24 1; # Network Solutions, LLC
+    108.167.151.0/24 1; # Network Solutions, LLC
+    108.167.156.0/22 1; # Network Solutions, LLC
+    108.167.161.0/24 1; # Network Solutions, LLC
+    108.167.163.0/24 1; # Network Solutions, LLC
+    108.167.164.0/23 1; # Network Solutions, LLC
+    108.167.168.0/22 1; # Network Solutions, LLC
+    108.167.172.0/23 1; # Network Solutions, LLC
+    108.167.174.0/23 1; # Network Solutions, LLC
+    108.167.176.0/22 1; # Network Solutions, LLC
+    108.167.178.0/24 1; # Network Solutions, LLC
+    108.167.180.0/22 1; # Network Solutions, LLC
+    108.167.184.0/22 1; # Network Solutions, LLC
+    108.167.188.0/24 1; # Network Solutions, LLC
+    108.167.189.0/24 1; # Network Solutions, LLC
+    108.179.192.0/23 1; # Network Solutions, LLC
+    108.179.194.0/24 1; # Network Solutions, LLC
+    108.179.195.0/24 1; # Network Solutions, LLC
+    108.179.196.0/22 1; # Network Solutions, LLC
+    108.179.204.0/23 1; # Network Solutions, LLC
+    108.179.206.0/23 1; # Network Solutions, LLC
+    108.179.208.0/22 1; # Network Solutions, LLC
+    108.179.216.0/21 1; # Network Solutions, LLC
+    108.179.224.0/22 1; # Network Solutions, LLC
+    108.179.232.0/23 1; # Network Solutions, LLC
+    108.179.234.0/23 1; # Network Solutions, LLC
+    108.179.236.0/22 1; # Network Solutions, LLC
+    108.179.239.0/24 1; # Network Solutions, LLC
+    108.179.240.0/24 1; # Network Solutions, LLC
+    108.179.241.0/24 1; # Network Solutions, LLC
+    108.179.242.0/23 1; # Network Solutions, LLC
+    108.179.244.0/23 1; # Network Solutions, LLC
+    108.179.248.0/22 1; # Network Solutions, LLC
+    108.179.252.0/23 1; # Network Solutions, LLC
+    108.179.254.0/24 1; # Network Solutions, LLC
+    109.169.0.0/18 1; # IOMART Cloud Services Limited
+    109.169.64.0/19 1; # IOMART Cloud Services Limited
+    109.200.0.0/19 1; # IOMART Cloud Services Limited
+    109.200.30.0/24 1; # IOMART Cloud Services Limited
+    109.201.128.0/19 1; # NForce Entertainment B.V.
+    109.203.103.0/24 1; # IOMART Cloud Services Limited
+    109.203.106.0/24 1; # IOMART Cloud Services Limited
+    109.203.108.0/24 1; # IOMART Cloud Services Limited
+    109.203.110.0/24 1; # IOMART Cloud Services Limited
+    109.203.112.0/24 1; # IOMART Cloud Services Limited
+    109.230.213.0/24 1; # SkyLink Data Center BV
+    109.244.0.0/16 1; # Tencent Cloud Computing (Beijing) Co., Ltd
+    109.248.10.0/23 1; # Kontel LLC
+    109.248.200.0/22 1; # Kontel LLC
+    110.40.128.0/17 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    110.40.128.0/18 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    110.40.192.0/18 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    110.41.0.0/18 1; # Huawei Cloud Service data center
+    110.41.64.0/18 1; # Huawei Cloud Service data center
+    110.41.90.0/24 1; # HUAWEI CLOUDS
+    110.41.128.0/18 1; # Huawei Cloud Service data center
+    110.41.192.0/20 1; # Huawei Cloud Service data center
+    110.41.208.0/24 1; # Huawei Cloud Service data center
+    110.41.209.0/24 1; # Huawei Cloud Service data center
+    110.41.210.0/24 1; # HUAWEI CLOUDS
+    110.41.211.0/24 1; # Huawei Cloud Service data center
+    110.41.212.0/22 1; # Huawei Cloud Service data center
+    110.41.216.0/21 1; # Huawei Cloud Service data center
+    110.41.224.0/19 1; # Huawei Cloud Service data center
+    110.41.255.0/24 1; # Huawei Cloud Service data center
+    110.42.128.0/17 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    110.42.128.0/18 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    110.42.192.0/18 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    110.238.64.0/21 1; # HUAWEI CLOUDS
+    110.238.72.0/21 1; # HUAWEI CLOUDS
+    110.238.80.0/20 1; # HUAWEI CLOUDS
+    110.238.96.0/24 1; # HUAWEI CLOUDS
+    110.238.98.0/24 1; # HUAWEI CLOUDS
+    110.238.99.0/24 1; # HUAWEI CLOUDS
+    110.238.100.0/22 1; # HUAWEI CLOUDS
+    110.238.104.0/21 1; # HUAWEI CLOUDS
+    110.238.112.0/21 1; # HUAWEI CLOUDS
+    110.238.120.0/22 1; # HUAWEI CLOUDS
+    110.238.124.0/22 1; # HUAWEI CLOUDS
+    110.239.64.0/19 1; # HUAWEI CLOUDS
+    110.239.96.0/19 1; # HUAWEI CLOUDS
+    110.239.126.0/24 1; # HUAWEI CLOUDS
+    110.239.127.0/24 1; # HUAWEI CLOUDS
+    111.91.0.0/20 1; # HUAWEI CLOUDS
+    111.91.16.0/20 1; # HUAWEI CLOUDS
+    111.91.32.0/20 1; # HUAWEI CLOUDS
+    111.91.48.0/20 1; # HUAWEI CLOUDS
+    111.91.64.0/20 1; # HUAWEI CLOUDS
+    111.91.80.0/20 1; # HUAWEI CLOUDS
+    111.119.192.0/20 1; # HUAWEI CLOUDS
+    111.119.208.0/20 1; # HUAWEI CLOUDS
+    111.119.224.0/20 1; # HUAWEI CLOUDS
+    111.119.240.0/20 1; # HUAWEI CLOUDS
+    111.229.0.0/16 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    111.229.0.0/18 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    111.229.64.0/18 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    111.229.128.0/18 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    111.229.192.0/18 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    111.230.0.0/15 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    111.230.0.0/18 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    111.230.0.0/23 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    111.230.10.0/23 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    111.230.100.0/23 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    111.230.102.0/23 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    111.230.104.0/23 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    111.230.106.0/23 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    111.230.108.0/23 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    111.230.110.0/23 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    111.230.112.0/23 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    113.31.192.0/20 1; # Shanghai UCloud Information Technology Company Limited
+    113.31.208.0/20 1; # Shanghai UCloud Information Technology Company Limited
+    113.31.224.0/20 1; # Shanghai UCloud Information Technology Company Limited
+    113.31.240.0/20 1; # Shanghai UCloud Information Technology Company Limited
+    113.44.0.0/18 1; # Huawei Cloud Service data center
+    113.44.64.0/19 1; # Huawei Cloud Service data center
+    113.44.96.0/19 1; # Huawei Cloud Service data center
+    113.44.128.0/19 1; # Huawei Cloud Service data center
+    113.44.160.0/19 1; # Huawei Cloud Service data center
+    113.44.192.0/19 1; # Huawei Cloud Service data center
+    113.44.224.0/19 1; # Huawei Cloud Service data center
+    113.45.0.0/19 1; # Huawei Cloud Service data center
+    113.45.32.0/19 1; # Huawei Cloud Service data center
+    113.45.64.0/20 1; # Huawei Cloud Service data center
+    113.45.80.0/20 1; # Huawei Cloud Service data center
+    113.45.96.0/23 1; # Huawei Cloud Service data center
+    113.45.98.0/23 1; # Huawei Cloud Service data center
+    113.45.104.0/21 1; # Huawei Cloud Service data center
+    113.45.112.0/23 1; # Huawei Cloud Service data center
+    113.45.114.0/23 1; # Huawei Cloud Service data center
+    113.45.120.0/22 1; # Huawei Cloud Service data center
+    113.45.128.0/19 1; # Huawei Cloud Service data center
+    113.45.160.0/19 1; # Huawei Cloud Service data center
+    113.45.192.0/19 1; # Huawei Cloud Service data center
+    113.45.224.0/19 1; # Huawei Cloud Service data center
+    113.46.128.0/19 1; # Huawei Cloud Service data center
+    113.46.160.0/19 1; # Huawei Cloud Service data center
+    113.46.192.0/19 1; # Huawei Cloud Service data center
+    113.46.224.0/20 1; # Huawei Cloud Service data center
+    113.46.240.0/22 1; # Huawei Cloud Service data center
+    113.46.244.0/22 1; # Huawei Cloud Service data center
+    113.47.0.0/19 1; # Huawei Cloud Service data center
+    113.47.32.0/19 1; # Huawei Cloud Service data center
+    113.47.64.0/19 1; # Huawei Cloud Service data center
+    113.47.112.0/21 1; # Huawei Cloud Service data center
+    113.47.120.0/21 1; # Huawei Cloud Service data center
+    113.47.204.0/23 1; # Huawei Cloud Service data center
+    113.47.206.0/23 1; # Huawei Cloud Service data center
+    113.47.220.0/23 1; # Huawei Cloud Service data center
+    113.47.222.0/23 1; # Huawei Cloud Service data center
+    113.47.234.0/23 1; # Huawei Cloud Service data center
+    113.47.236.0/23 1; # Huawei Cloud Service data center
+    113.47.238.0/23 1; # Huawei Cloud Service data center
+    113.47.250.0/23 1; # Huawei Cloud Service data center
+    113.47.252.0/23 1; # Huawei Cloud Service data center
+    113.47.254.0/23 1; # Huawei Cloud Service data center
+    113.160.0.0/16 1; # VNPT Corp
+    113.160.0.0/20 1; # VNPT Corp
+    113.160.16.0/20 1; # VNPT Corp
+    113.160.32.0/20 1; # VNPT Corp
+    113.160.48.0/20 1; # VNPT Corp
+    113.160.64.0/20 1; # VNPT Corp
+    113.160.80.0/20 1; # VNPT Corp
+    113.160.96.0/20 1; # VNPT Corp
+    113.160.112.0/20 1; # VNPT Corp
+    113.160.128.0/20 1; # VNPT Corp
+    113.160.144.0/20 1; # VNPT Corp
+    113.160.148.0/24 1; # VNPT Corp
+    113.160.160.0/20 1; # VNPT Corp
+    113.160.160.0/21 1; # VNPT Corp
+    113.160.176.0/20 1; # VNPT Corp
+    113.160.192.0/20 1; # VNPT Corp
+    113.160.208.0/20 1; # VNPT Corp
+    113.160.218.0/24 1; # VNPT Corp
+    113.160.224.0/20 1; # VNPT Corp
+    113.160.240.0/20 1; # VNPT Corp
+    113.161.0.0/16 1; # VNPT Corp
+    113.161.0.0/20 1; # VNPT Corp
+    113.161.0.0/21 1; # VNPT Corp
+    113.161.8.0/21 1; # VNPT Corp
+    113.161.16.0/20 1; # VNPT Corp
+    113.161.16.0/21 1; # VNPT Corp
+    113.161.24.0/21 1; # VNPT Corp
+    113.161.32.0/20 1; # VNPT Corp
+    113.161.32.0/21 1; # VNPT Corp
+    113.161.40.0/21 1; # VNPT Corp
+    113.161.48.0/20 1; # VNPT Corp
+    113.161.48.0/21 1; # VNPT Corp
+    113.161.56.0/21 1; # VNPT Corp
+    113.161.60.0/23 1; # VNPT Corp
+    113.161.64.0/20 1; # VNPT Corp
+    113.161.64.0/21 1; # VNPT Corp
+    113.161.72.0/21 1; # VNPT Corp
+    113.161.80.0/20 1; # VNPT Corp
+    113.161.80.0/21 1; # VNPT Corp
+    113.161.88.0/21 1; # VNPT Corp
+    113.161.96.0/20 1; # VNPT Corp
+    113.161.96.0/21 1; # VNPT Corp
+    113.161.104.0/21 1; # VNPT Corp
+    113.161.112.0/20 1; # VNPT Corp
+    113.161.112.0/21 1; # VNPT Corp
+    113.161.120.0/21 1; # VNPT Corp
+    113.161.128.0/20 1; # VNPT Corp
+    113.161.128.0/21 1; # VNPT Corp
+    113.161.136.0/21 1; # VNPT Corp
+    113.161.144.0/21 1; # VNPT Corp
+    113.161.152.0/21 1; # VNPT Corp
+    113.161.160.0/20 1; # VNPT Corp
+    113.161.160.0/21 1; # VNPT Corp
+    113.161.168.0/21 1; # VNPT Corp
+    113.161.176.0/20 1; # VNPT Corp
+    113.161.176.0/21 1; # VNPT Corp
+    113.161.184.0/21 1; # VNPT Corp
+    113.161.192.0/20 1; # VNPT Corp
+    113.161.192.0/21 1; # VNPT Corp
+    113.161.200.0/21 1; # VNPT Corp
+    113.161.208.0/20 1; # VNPT Corp
+    113.161.208.0/21 1; # VNPT Corp
+    113.161.216.0/21 1; # VNPT Corp
+    113.161.224.0/20 1; # VNPT Corp
+    113.161.224.0/21 1; # VNPT Corp
+    113.161.232.0/21 1; # VNPT Corp
+    113.161.240.0/20 1; # VNPT Corp
+    113.161.240.0/21 1; # VNPT Corp
+    113.161.248.0/21 1; # VNPT Corp
+    113.162.0.0/16 1; # VNPT Corp
+    114.116.224.0/19 1; # Huawei Cloud Service data center
+    114.119.128.0/19 1; # HUAWEI CLOUDS
+    114.119.160.0/21 1; # HUAWEI CLOUDS
+    114.119.168.0/24 1; # HUAWEI CLOUDS
+    114.119.169.0/24 1; # HUAWEI CLOUDS
+    114.119.170.0/24 1; # HUAWEI CLOUDS
+    114.119.171.0/24 1; # HUAWEI CLOUDS
+    114.119.172.0/22 1; # HUAWEI CLOUDS
+    114.119.176.0/20 1; # HUAWEI CLOUDS
+    115.120.0.0/18 1; # Huawei Cloud Service data center
+    115.120.64.0/18 1; # Huawei Cloud Service data center
+    115.120.128.0/23 1; # Huawei Cloud Service data center
+    115.120.130.0/24 1; # Huawei Cloud Service data center
+    115.120.131.0/24 1; # Huawei Cloud Service data center
+    115.120.132.0/23 1; # Huawei Cloud Service data center
+    115.120.134.0/23 1; # Huawei Cloud Service data center
+    115.120.136.0/23 1; # Huawei Cloud Service data center
+    115.120.138.0/23 1; # Huawei Cloud Service data center
+    115.120.140.0/23 1; # Huawei Cloud Service data center
+    115.120.142.0/23 1; # Huawei Cloud Service data center
+    115.120.144.0/23 1; # Huawei Cloud Service data center
+    115.120.156.0/23 1; # Huawei Cloud Service data center
+    115.120.158.0/23 1; # Huawei Cloud Service data center
+    115.120.184.0/22 1; # Huawei Cloud Service data center
+    115.120.188.0/24 1; # Huawei Cloud Service data center
+    115.120.189.0/24 1; # Huawei Cloud Service data center
+    115.120.190.0/23 1; # Huawei Cloud Service data center
+    115.120.192.0/18 1; # Huawei Cloud Service data center
+    115.175.0.0/19 1; # Huawei Cloud Service data center
+    115.175.32.0/19 1; # Huawei Cloud Service data center
+    115.175.64.0/20 1; # Huawei Cloud Service data center
+    115.175.80.0/21 1; # Huawei Cloud Service data center
+    115.175.88.0/22 1; # Huawei Cloud Service data center
+    115.175.92.0/22 1; # Huawei Cloud Service data center
+    116.0.81.0/24 1; # ALIBABA.COM SINGAPORE E-COMMERCE PRIVATE LIMITED::1174844
+    116.0.89.0/24 1; # TAOBAO HONG KONG LIMITED::1201909
+    116.204.0.0/18 1; # Huawei Cloud Service data center
+    116.204.64.0/18 1; # Huawei Cloud Service data center
+    116.205.0.0/18 1; # Huawei Cloud Service data center
+    116.205.0.0/24 1; # Huawei Cloud Service data center
+    116.205.1.0/24 1; # Huawei Cloud Service data center
+    116.205.2.0/24 1; # Huawei Cloud Service data center
+    116.205.20.0/24 1; # Huawei Cloud Service data center
+    116.205.22.0/24 1; # Huawei Cloud Service data center
+    116.205.128.0/18 1; # Huawei Cloud Service data center
+    116.205.192.0/19 1; # Huawei Cloud Service data center
+    116.205.193.0/24 1; # Huawei Cloud Service data center
+    116.205.219.0/24 1; # Huawei Cloud Service data center
+    116.205.220.0/24 1; # Huawei Cloud Service data center
+    116.205.221.0/24 1; # Huawei Cloud Service data center
+    116.205.222.0/24 1; # Huawei Cloud Service data center
+    116.213.45.0/24 1; # Beijing Tiantexin Tech. Co., Ltd.
+    118.193.32.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    118.193.33.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    118.193.34.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    118.193.35.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    118.193.36.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    118.193.37.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    118.193.38.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    118.193.39.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    118.193.40.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    118.193.41.0/24 1; # UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+    119.28.0.0/18 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    119.28.0.0/21 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    119.28.0.0/23 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    119.28.10.0/23 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    119.28.12.0/23 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    119.28.100.0/23 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    119.28.102.0/23 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    119.28.104.0/23 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    119.28.106.0/23 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    119.28.108.0/23 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    119.28.110.0/23 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    119.28.112.0/21 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    119.28.112.0/23 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    119.28.114.0/23 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    119.28.116.0/23 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    119.28.118.0/23 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    119.28.120.0/23 1; # Tencent cloud computing (Beijing) Co., Ltd.
+    119.63.192.0/21 1; # Baidu Japan Inc.
+    119.63.192.0/24 1; # Baidu Japan Inc.
+    119.63.193.0/24 1; # Baidu Japan Inc.
+    119.63.194.0/24 1; # Baidu Japan Inc.
+    119.63.195.0/24 1; # Baidu Japan Inc.
+    119.63.196.0/24 1; # Baidu Japan Inc.
+    119.63.197.0/24 1; # Baidu Japan Inc.
+    119.63.198.0/24 1; # Baidu Japan Inc.
+    119.63.199.0/24 1; # Baidu Japan Inc.
+    119.75.208.0/20 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    119.75.216.0/24 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    119.75.222.0/24 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    120.48.0.0/18 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    120.48.0.0/19 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    120.48.32.0/19 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    120.48.64.0/18 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    120.48.64.0/19 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    120.48.96.0/19 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    120.48.128.0/18 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    120.48.128.0/19 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    120.48.160.0/19 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    120.48.192.0/18 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    120.48.192.0/20 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    120.48.224.0/20 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    120.48.240.0/21 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    120.49.0.0/18 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    120.49.64.0/18 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    120.49.192.0/18 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    124.108.20.0/23 1; # JINX CO., LIMITED
+    124.108.20.0/24 1; # JINX CO., LIMITED
+    124.108.21.0/24 1; # JINX CO., LIMITED
+    129.187.0.0/16 1; # Leibniz Rechenzentrum
+    130.44.212.0/24 1; # Bytedance Inc.
+    130.44.214.0/24 1; # Bytedance Inc.
+    130.44.215.0/24 1; # Bytedance Inc.
+    138.244.0.0/15 1; # Leibniz Rechenzentrum
+    138.246.0.0/16 1; # Leibniz Rechenzentrum
+    139.177.225.0/24 1; # Bytedance Inc.
+    139.177.227.0/24 1; # Bytedance Inc.
+    139.177.233.0/24 1; # Bytedance Inc.
+    139.177.235.0/24 1; # Bytedance Inc.
+    139.177.238.0/24 1; # Bytedance Inc.
+    139.177.240.0/24 1; # Bytedance Inc.
+    139.177.241.0/24 1; # Bytedance Inc.
+    139.177.242.0/24 1; # Bytedance Inc.
+    139.177.243.0/24 1; # Bytedance Inc.
+    139.177.244.0/24 1; # Bytedance Inc.
+    139.177.245.0/24 1; # Bytedance Inc.
+    139.177.246.0/24 1; # Bytedance Inc.
+    139.177.247.0/24 1; # Bytedance Inc.
+    139.177.248.0/24 1; # Bytedance Inc.
+    140.205.201.0/24 1; # AliYunDun
+    140.205.225.0/24 1; # AliYunDun
+    141.11.1.0/24 1; # NForce Entertainment B.V.
+    141.11.21.0/24 1; # NForce Entertainment B.V.
+    141.11.37.0/24 1; # NForce Entertainment B.V.
+    141.11.45.0/24 1; # NForce Entertainment B.V.
+    141.11.103.0/24 1; # NForce Entertainment B.V.
+    141.11.107.0/24 1; # NForce Entertainment B.V.
+    141.11.123.0/24 1; # NForce Entertainment B.V.
+    141.11.182.0/24 1; # NForce Entertainment B.V.
+    141.11.184.0/24 1; # NForce Entertainment B.V.
+    141.11.187.0/24 1; # NForce Entertainment B.V.
+    141.11.246.0/24 1; # NForce Entertainment B.V.
+    141.11.250.0/24 1; # NForce Entertainment B.V.
+    141.40.0.0/16 1; # Leibniz Rechenzentrum
+    141.84.0.0/16 1; # Leibniz Rechenzentrum
+    141.98.80.0/24 1; # NForce Entertainment B.V.
+    146.19.100.0/24 1; # Xiamen Jiufu Network Co., Ltd.
+    146.19.169.0/24 1; # SkyLink Data Center BV
+    146.19.236.0/24 1; # Zenlayer Inc
+    147.160.176.0/24 1; # Bytedance Inc.
+    147.160.177.0/24 1; # Bytedance Inc.
+    147.160.180.0/24 1; # Bytedance Inc.
+    147.160.182.0/24 1; # Bytedance Inc.
+    147.160.184.0/24 1; # Bytedance Inc.
+    147.160.185.0/24 1; # Bytedance Inc.
+    147.160.190.0/24 1; # Bytedance Inc.
+    147.160.191.0/24 1; # Bytedance Inc.
+    147.185.132.0/24 1; # Palo Alto Networks
+    149.18.45.0/24 1; # Virtual Systems LLC
+    150.242.120.0/24 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    150.242.122.0/24 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    150.242.123.0/24 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    152.89.60.0/24 1; # Virtual Systems LLC
+    152.89.61.0/24 1; # Virtual Systems LLC
+    152.89.62.0/24 1; # Virtual Systems LLC
+    152.89.63.0/24 1; # Virtual Systems LLC
+    154.16.12.0/24 1; # NForce Entertainment B.V.
+    154.16.16.0/24 1; # NForce Entertainment B.V.
+    154.85.32.0/21 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    154.85.40.0/22 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    154.85.44.0/23 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    154.85.48.0/21 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    154.85.56.0/21 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    154.194.39.0/24 1; # HUAWEI INTERNATIONAL PTE. LTD.
+    154.194.40.0/24 1; # HUAWEI INTERNATIONAL PTE. LTD.
+    155.102.0.0/24 1; # Alibaba Cloud LLC
+    155.102.1.0/24 1; # Alibaba Cloud LLC
+    155.102.2.0/24 1; # Alibaba Cloud LLC
+    155.102.3.0/24 1; # Alibaba Cloud LLC
+    155.102.4.0/24 1; # Alibaba Cloud LLC
+    155.102.5.0/24 1; # Alibaba Cloud LLC
+    155.102.9.0/24 1; # Alibaba Cloud LLC
+    155.102.10.0/24 1; # Alibaba Cloud LLC
+    155.102.12.0/24 1; # Alibaba Cloud LLC
+    155.102.13.0/24 1; # Alibaba Cloud LLC
+    155.102.14.0/24 1; # Alibaba Cloud LLC
+    155.102.15.0/24 1; # Alibaba Cloud LLC
+    155.102.16.0/24 1; # Alibaba Cloud LLC
+    155.102.17.0/24 1; # Alibaba Cloud LLC
+    155.102.18.0/24 1; # Alibaba Cloud LLC
+    155.102.19.0/24 1; # Alibaba Cloud LLC
+    155.102.20.0/24 1; # Alibaba Cloud LLC
+    155.102.21.0/24 1; # Alibaba Cloud LLC
+    155.102.22.0/24 1; # Alibaba Cloud LLC
+    155.102.23.0/24 1; # Alibaba Cloud LLC
+    155.102.24.0/24 1; # Alibaba Cloud LLC
+    155.102.27.0/24 1; # Alibaba Cloud LLC
+    155.102.28.0/24 1; # Alibaba Cloud LLC
+    155.102.29.0/24 1; # Alibaba Cloud LLC
+    155.102.30.0/24 1; # Alibaba Cloud LLC
+    155.102.32.0/24 1; # Alibaba Cloud LLC
+    155.102.33.0/24 1; # Alibaba Cloud LLC
+    155.102.34.0/24 1; # Alibaba Cloud LLC
+    155.102.35.0/24 1; # Alibaba Cloud LLC
+    155.102.36.0/24 1; # Alibaba Cloud LLC
+    155.102.37.0/24 1; # Alibaba Cloud LLC
+    155.102.38.0/24 1; # Alibaba Cloud LLC
+    155.102.39.0/24 1; # Alibaba Cloud LLC
+    155.102.40.0/24 1; # Alibaba Cloud LLC
+    155.102.41.0/24 1; # Alibaba Cloud LLC
+    155.102.42.0/24 1; # Alibaba Cloud LLC
+    155.102.43.0/24 1; # Alibaba Cloud LLC
+    155.102.44.0/24 1; # Alibaba Cloud LLC
+    155.102.45.0/24 1; # Alibaba Cloud LLC
+    155.102.46.0/24 1; # Alibaba Cloud LLC
+    155.102.47.0/24 1; # Alibaba Cloud LLC
+    155.102.49.0/24 1; # Alibaba Cloud LLC
+    155.102.50.0/24 1; # Alibaba Cloud LLC
+    155.102.51.0/24 1; # Alibaba Cloud LLC
+    155.102.52.0/24 1; # Alibaba Cloud LLC
+    155.102.53.0/24 1; # Alibaba Cloud LLC
+    155.102.54.0/24 1; # Alibaba Cloud LLC
+    155.102.55.0/24 1; # Alibaba Cloud LLC
+    155.102.56.0/24 1; # Alibaba Cloud LLC
+    155.102.57.0/24 1; # Alibaba Cloud LLC
+    155.102.58.0/24 1; # Alibaba Cloud LLC
+    155.102.59.0/24 1; # Alibaba Cloud LLC
+    155.102.60.0/24 1; # Alibaba Cloud LLC
+    155.102.61.0/24 1; # Alibaba Cloud LLC
+    156.59.108.0/24 1; # ZEN-PH
+    156.240.112.0/21 1; # Beijing Baidu Netcom Science and Technology Co., Ltd
+    156.240.118.0/24 1; # Beijing Baidu Netcom Science and Technology Co., Ltd
+    156.240.119.0/24 1; # Beijing Baidu Netcom Science and Technology Co., Ltd
+    156.240.120.0/21 1; # Beijing Baidu Netcom Science and Technology Co., Ltd
+    158.46.144.0/24 1; # GREEN FLOID LLC
+    158.46.145.0/24 1; # GREEN FLOID LLC
+    158.46.146.0/24 1; # GREEN FLOID LLC
+    158.46.147.0/24 1; # GREEN FLOID LLC
+    158.79.1.0/24 1; # Tencent Cloud Computing (Beijing) Co., Ltd
+    159.138.223.0/24 1; # Huawei IT Data Center in AP
+    162.142.125.0/24 1; # Censys, Inc.
+    162.144.248.0/21 1; # Network Solutions, LLC
+    162.241.2.0/23 1; # Network Solutions, LLC
+    162.241.2.0/24 1; # Network Solutions, LLC
+    162.241.4.0/22 1; # Network Solutions, LLC
+    162.241.25.0/24 1; # Network Solutions, LLC
+    162.241.29.0/24 1; # Network Solutions, LLC
+    162.241.32.0/21 1; # Network Solutions, LLC
+    162.241.40.0/21 1; # Network Solutions, LLC
+    162.241.48.0/21 1; # Network Solutions, LLC
+    162.241.48.0/24 1; # Network Solutions, LLC
+    162.241.60.0/22 1; # Network Solutions, LLC
+    162.241.60.0/24 1; # Network Solutions, LLC
+    162.241.65.0/24 1; # Network Solutions, LLC
+    162.241.66.0/24 1; # Network Solutions, LLC
+    162.241.67.0/24 1; # Network Solutions, LLC
+    162.241.69.0/24 1; # Network Solutions, LLC
+    162.241.70.0/24 1; # Network Solutions, LLC
+    162.241.71.0/24 1; # Network Solutions, LLC
+    162.241.72.0/21 1; # Network Solutions, LLC
+    162.241.87.0/24 1; # Network Solutions, LLC
+    162.241.88.0/21 1; # Network Solutions, LLC
+    162.241.96.0/21 1; # Network Solutions, LLC
+    162.241.104.0/21 1; # Network Solutions, LLC
+    162.241.114.0/23 1; # Network Solutions, LLC
+    162.241.117.0/24 1; # Network Solutions, LLC
+    162.241.120.0/23 1; # Network Solutions, LLC
+    162.241.124.0/23 1; # Network Solutions, LLC
+    162.241.126.0/23 1; # Network Solutions, LLC
+    162.241.128.0/21 1; # Network Solutions, LLC
+    162.241.136.0/21 1; # Network Solutions, LLC
+    162.241.136.0/24 1; # Network Solutions, LLC
+    162.241.149.0/24 1; # Network Solutions, LLC
+    162.241.152.0/21 1; # Network Solutions, LLC
+    162.241.170.0/23 1; # Network Solutions, LLC
+    162.241.174.0/23 1; # Network Solutions, LLC
+    162.241.176.0/21 1; # Network Solutions, LLC
+    162.241.188.0/23 1; # Network Solutions, LLC
+    162.241.190.0/23 1; # Network Solutions, LLC
+    162.241.192.0/23 1; # Network Solutions, LLC
+    162.241.194.0/24 1; # Network Solutions, LLC
+    162.241.195.0/24 1; # Network Solutions, LLC
+    162.241.196.0/24 1; # Network Solutions, LLC
+    162.241.197.0/24 1; # Network Solutions, LLC
+    162.241.200.0/23 1; # Network Solutions, LLC
+    162.241.202.0/23 1; # Network Solutions, LLC
+    162.241.221.0/24 1; # Network Solutions, LLC
+    162.241.222.0/24 1; # Network Solutions, LLC
+    162.241.232.0/21 1; # Network Solutions, LLC
+    162.241.240.0/22 1; # Network Solutions, LLC
+    163.5.182.0/24 1; # NForce Entertainment B.V.
+    163.181.0.0/24 1; # Alibaba Cloud LLC
+    163.181.1.0/24 1; # Alibaba Cloud LLC
+    163.181.100.0/24 1; # Alibaba Cloud LLC
+    163.181.102.0/24 1; # Alibaba Cloud LLC
+    163.181.103.0/24 1; # Alibaba Cloud LLC
+    163.181.105.0/24 1; # Alibaba Cloud LLC
+    163.181.106.0/24 1; # Alibaba Cloud LLC
+    163.181.107.0/24 1; # Alibaba Cloud LLC
+    163.181.110.0/24 1; # Alibaba Cloud LLC
+    163.181.111.0/24 1; # Alibaba Cloud LLC
+    163.181.112.0/24 1; # Alibaba Cloud LLC
+    163.181.113.0/24 1; # Alibaba Cloud LLC
+    163.181.116.0/24 1; # Alibaba Cloud LLC
+    163.181.117.0/24 1; # Alibaba Cloud LLC
+    163.181.118.0/24 1; # Alibaba Cloud LLC
+    163.181.120.0/24 1; # Alibaba Cloud LLC
+    163.181.121.0/24 1; # Alibaba Cloud LLC
+    163.181.122.0/24 1; # Alibaba Cloud LLC
+    163.181.123.0/24 1; # Alibaba Cloud LLC
+    163.181.126.0/24 1; # Alibaba Cloud LLC
+    163.181.127.0/24 1; # Alibaba Cloud LLC
+    163.181.128.0/24 1; # Alibaba Cloud LLC
+    163.181.129.0/24 1; # Alibaba Cloud LLC
+    163.181.130.0/24 1; # Alibaba Cloud LLC
+    163.181.131.0/24 1; # Alibaba Cloud LLC
+    163.181.132.0/24 1; # Alibaba Cloud LLC
+    163.181.133.0/24 1; # Alibaba Cloud LLC
+    163.181.135.0/24 1; # Alibaba Cloud LLC
+    163.181.136.0/24 1; # Alibaba Cloud LLC
+    163.181.137.0/24 1; # Alibaba Cloud LLC
+    163.181.138.0/24 1; # Alibaba Cloud LLC
+    163.181.139.0/24 1; # Alibaba Cloud LLC
+    163.181.140.0/24 1; # Alibaba Cloud LLC
+    163.181.141.0/24 1; # Alibaba Cloud LLC
+    163.181.142.0/24 1; # Alibaba Cloud LLC
+    163.181.143.0/24 1; # Alibaba Cloud LLC
+    163.181.144.0/24 1; # Alibaba Cloud LLC
+    163.181.145.0/24 1; # Alibaba Cloud LLC
+    163.181.146.0/24 1; # Alibaba Cloud LLC
+    163.181.147.0/24 1; # Alibaba Cloud LLC
+    163.181.148.0/24 1; # Alibaba Cloud LLC
+    166.0.162.0/24 1; # NForce Entertainment B.V.
+    167.88.161.0/24 1; # RouterHosting LLC
+    167.94.138.0/24 1; # Censys, Inc.
+    167.94.145.0/24 1; # Censys, Inc.
+    167.94.146.0/24 1; # Censys, Inc.
+    167.248.133.0/24 1; # Censys, Inc.
+    173.239.241.0/24 1; # Virtual Systems LLC
+    176.65.145.0/24 1; # SkyLink Data Center BV
+    176.65.146.0/24 1; # SkyLink Data Center BV
+    176.97.114.0/24 1; # Virtual Systems LLC
+    176.97.124.0/24 1; # Virtual Systems LLC
+    176.103.62.0/23 1; # GREEN FLOID LLC
+    176.118.188.0/24 1; # GREEN FLOID LLC
+    176.118.189.0/24 1; # GREEN FLOID LLC
+    176.119.24.0/24 1; # Virtual Systems LLC
+    176.119.25.0/24 1; # Virtual Systems LLC
+    176.119.26.0/24 1; # Virtual Systems LLC
+    176.119.27.0/24 1; # Virtual Systems LLC
+    176.119.28.0/24 1; # Virtual Systems LLC
+    176.119.29.0/24 1; # Virtual Systems LLC
+    176.119.30.0/24 1; # Virtual Systems LLC
+    180.76.0.0/20 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    180.76.0.0/24 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    180.76.1.0/24 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    180.76.5.0/24 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    180.76.8.0/24 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    180.76.9.0/24 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    180.76.11.0/24 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    180.76.12.0/24 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    180.76.16.0/20 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    180.76.32.0/20 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    180.76.48.0/20 1; # Wuhan Baidu Netcom Science and Technology Co., Ltd.
+    180.76.48.0/23 1; # Wuhan Baidu Netcom Science and Technology Co., Ltd.
+    180.76.50.0/23 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    180.76.52.0/22 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    180.76.56.0/21 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    180.76.64.0/18 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    180.76.64.0/21 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    180.76.72.0/22 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    180.76.76.0/24 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    180.76.96.0/20 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    180.76.112.0/21 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    180.76.120.0/23 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    180.76.126.0/23 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    180.76.128.0/18 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    180.76.128.0/19 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    180.76.160.0/19 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    180.76.192.0/22 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    180.76.192.0/23 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    180.76.194.0/23 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    180.76.196.0/23 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    180.76.200.0/21 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    180.76.200.0/23 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    180.76.208.0/20 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    180.76.220.0/23 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    180.76.222.0/23 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    180.76.224.0/19 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    180.76.224.0/20 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    180.76.240.0/20 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    180.240.234.0/24 1; # Bytedance Inc.
+    180.240.235.0/24 1; # Bytedance Inc.
+    181.41.194.0/24 1; # NForce Entertainment B.V.
+    181.214.208.0/24 1; # NForce Entertainment B.V.
+    182.61.0.0/18 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    182.61.0.0/19 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    182.61.130.0/23 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    182.61.130.0/24 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    182.61.131.0/24 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    182.61.132.0/22 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    182.61.132.0/23 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    182.61.134.0/23 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    182.61.136.0/21 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    182.61.136.0/22 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    182.61.140.0/22 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    182.61.144.0/20 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    182.61.144.0/21 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    182.61.160.0/19 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    182.61.200.0/21 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    182.61.200.0/22 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    182.61.216.0/21 1; # Beijing Baidu Netcom Science and Technology Co., Ltd.
+    182.255.32.0/22 1; # JINX CO., LIMITED
+    182.255.32.0/24 1; # JINX CO., LIMITED
+    182.255.33.0/24 1; # JINX CO., LIMITED
+    182.255.34.0/24 1; # JINX CO., LIMITED
+    182.255.35.0/24 1; # JINX CO., LIMITED
+    185.7.77.0/24 1; # NForce Entertainment B.V.
+    185.7.78.0/24 1; # NForce Entertainment B.V.
+    185.7.214.0/24 1; # Chang Way Technologies Co. Limited
+    185.10.104.0/24 1; # Baidu (Hong Kong) Limited
+    185.11.144.0/24 1; # NForce Entertainment B.V.
+    185.12.204.0/22 1; # SkyLink Data Center BV
+    185.34.42.0/24 1; # Virtual Systems LLC
+    185.36.147.0/24 1; # GREEN FLOID LLC
+    185.44.140.0/22 1; # SkyLink Data Center BV
+    185.47.200.0/24 1; # NForce Entertainment B.V.
+    185.47.201.0/24 1; # NForce Entertainment B.V.
+    185.47.202.0/24 1; # NForce Entertainment B.V.
+    185.47.203.0/24 1; # NForce Entertainment B.V.
+    185.53.128.0/24 1; # NForce Entertainment B.V.
+    185.53.129.0/24 1; # NForce Entertainment B.V.
+    185.53.130.0/24 1; # NForce Entertainment B.V.
+    185.53.131.0/24 1; # NForce Entertainment B.V.
+    185.56.20.0/22 1; # NForce Entertainment B.V.
+    185.56.80.0/24 1; # NForce Entertainment B.V.
+    185.66.88.0/23 1; # Virtual Systems LLC
+    185.66.90.0/24 1; # Virtual Systems LLC
+    185.66.91.0/24 1; # Virtual Systems LLC
+    185.70.45.0/24 1; # SkyLink Data Center BV
+    185.70.46.0/24 1; # SkyLink Data Center BV
+    185.82.216.0/22 1; # GREEN FLOID LLC
+    185.83.216.0/24 1; # NForce Entertainment B.V.
+    185.83.217.0/24 1; # NForce Entertainment B.V.
+    185.83.218.0/24 1; # NForce Entertainment B.V.
+    185.83.219.0/24 1; # NForce Entertainment B.V.
+    185.107.37.0/24 1; # NForce Entertainment B.V.
+    185.107.44.0/22 1; # NForce Entertainment B.V.
+    185.107.56.0/22 1; # NForce Entertainment B.V.
+    185.107.68.0/22 1; # NForce Entertainment B.V.
+    185.107.80.0/22 1; # NForce Entertainment B.V.
+    185.107.92.0/22 1; # NForce Entertainment B.V.
+    185.107.116.0/24 1; # NForce Entertainment B.V.
+    185.107.117.0/24 1; # NForce Entertainment B.V.
+    185.114.28.0/22 1; # NForce Entertainment B.V.
+    185.127.24.0/22 1; # Kontel LLC
+    185.136.204.0/24 1; # NForce Entertainment B.V.
+    185.150.24.0/22 1; # SkyLink Data Center BV
+    185.150.24.0/24 1; # SkyLink Data Center BV
+    185.150.26.0/24 1; # SkyLink Data Center BV
+    185.150.27.0/24 1; # SkyLink Data Center BV
+    185.154.20.0/22 1; # Kontel LLC
+    185.162.10.0/24 1; # GREEN FLOID LLC
+    185.164.208.0/24 1; # NForce Entertainment B.V.
+    185.164.209.0/24 1; # NForce Entertainment B.V.
+    185.164.210.0/24 1; # NForce Entertainment B.V.
+    185.164.211.0/24 1; # NForce Entertainment B.V.
+    185.170.167.0/24 1; # SEMrush CY LTD
+    185.174.63.0/24 1; # Virtual Systems LLC
+    185.176.78.0/23 1; # HUAWEI TECHNOLOGIES(UK)CO.,LTD
+    185.176.78.0/24 1; # HUAWEI TECHNOLOGIES(UK)CO.,LTD
+    185.177.76.0/24 1; # GREEN FLOID LLC
+    185.177.77.0/24 1; # GREEN FLOID LLC
+    185.186.140.0/22 1; # Kontel LLC
+    185.186.141.0/24 1; # Kontel LLC
+    185.190.250.0/24 1; # GREEN FLOID LLC
+    185.191.171.0/24 1; # SEMrush CY LTD
+    185.193.152.0/24 1; # Huawei Tech(UAE)FZ-LLC
+    185.193.153.0/24 1; # Huawei Tech(UAE)FZ-LLC
+    185.204.53.0/24 1; # GREEN FLOID LLC
+    185.214.74.0/24 1; # NForce Entertainment B.V.
+    185.243.96.0/24 1; # Rices Privately owned enterprise
+    185.243.99.0/24 1; # Rices Privately owned enterprise
+    185.244.41.0/24 1; # Kontel LLC
+    185.244.42.0/24 1; # Kontel LLC
+    185.244.43.0/24 1; # Kontel LLC
+    185.247.137.0/24 1; # Internet Measurement
+    185.247.142.0/24 1; # Kontel LLC
+    185.248.160.0/22 1; # NForce Entertainment B.V.
+    185.248.168.0/24 1; # Rices Privately owned enterprise
+    185.248.169.0/24 1; # Rices Privately owned enterprise
+    185.248.170.0/24 1; # Rices Privately owned enterprise
+    185.248.171.0/24 1; # Rices Privately owned enterprise
+    185.254.196.0/23 1; # Virtual Systems LLC
+    185.254.198.0/24 1; # Virtual Systems LLC
+    185.255.120.0/24 1; # Virtual Systems LLC
+    185.255.122.0/24 1; # Virtual Systems LLC
+    188.95.89.0/24 1; # Virtual Systems LLC
+    188.130.132.0/22 1; # Kontel LLC
+    188.130.132.0/24 1; # Kontel LLC
+    188.130.133.0/24 1; # Kontel LLC
+    188.130.138.0/23 1; # Kontel LLC
+    188.209.55.0/24 1; # NForce Entertainment B.V.
+    188.209.57.0/24 1; # NForce Entertainment B.V.
+    191.96.69.0/24 1; # Virtual Systems LLC
+    191.96.171.0/24 1; # Virtual Systems LLC
+    191.96.173.0/24 1; # Virtual Systems LLC
+    192.54.42.0/24 1; # Leibniz Rechenzentrum
+    192.55.197.0/24 1; # Leibniz Rechenzentrum
+    192.64.15.0/24 1; # Bytedance Inc.
+    192.68.211.0/24 1; # Leibniz Rechenzentrum
+    192.68.212.0/22 1; # Leibniz Rechenzentrum
+    192.129.1.0/24 1; # Leibniz Rechenzentrum
+    192.185.10.0/23 1; # Network Solutions, LLC
+    192.185.12.0/22 1; # Network Solutions, LLC
+    192.185.104.0/21 1; # Network Solutions, LLC
+    192.185.112.0/21 1; # Network Solutions, LLC
+    192.185.118.0/24 1; # Network Solutions, LLC
+    192.185.120.0/21 1; # Network Solutions, LLC
+    192.185.130.0/24 1; # Network Solutions, LLC
+    192.185.131.0/24 1; # Network Solutions, LLC
+    192.185.136.0/21 1; # Network Solutions, LLC
+    192.185.136.0/24 1; # Network Solutions, LLC
+    192.185.144.0/21 1; # Network Solutions, LLC
+    193.8.115.0/24 1; # NForce Entertainment B.V.
+    193.9.20.0/24 1; # GREEN FLOID LLC
+    193.23.181.0/24 1; # Virtual Systems LLC
+    193.34.68.0/24 1; # SkyLink Data Center BV
+    193.34.70.0/24 1; # SkyLink Data Center BV
+    193.57.40.0/24 1; # Alviva Holding Limited
+    193.160.73.0/24 1; # GREEN FLOID LLC
+    193.163.125.0/24 1; # Internet Measurement
+    193.200.199.0/24 1; # GREEN FLOID LLC
+    194.26.204.0/24 1; # GREEN FLOID LLC
+    194.28.156.0/24 1; # GREEN FLOID LLC
+    194.28.158.0/24 1; # GREEN FLOID LLC
+    194.28.159.0/24 1; # GREEN FLOID LLC
+    194.38.20.0/24 1; # Rices Privately owned enterprise
+    194.38.21.0/24 1; # Rices Privately owned enterprise
+    194.38.22.0/24 1; # Rices Privately owned enterprise
+    194.38.23.0/24 1; # Rices Privately owned enterprise
+    194.40.243.0/24 1; # Rices Privately owned enterprise
+    194.42.205.0/24 1; # Virtual Systems LLC
+    194.55.170.0/24 1; # GREEN FLOID LLC
+    194.62.6.0/24 1; # SkyLink Data Center BV
+    194.62.132.0/22 1; # NForce Entertainment B.V.
+    194.104.5.0/24 1; # GREEN FLOID LLC
+    194.104.6.0/24 1; # GREEN FLOID LLC
+    194.145.227.0/24 1; # Rices Privately owned enterprise
+    194.180.32.0/24 1; # NForce Entertainment B.V.
+    195.13.60.0/24 1; # NForce Entertainment B.V.
+    195.62.46.0/24 1; # SkyLink Data Center BV
+    195.66.214.0/23 1; # Virtual Systems LLC
+    195.88.220.0/24 1; # GREEN FLOID LLC
+    195.96.144.0/24 1; # GREEN FLOID LLC
+    195.96.147.0/24 1; # GREEN FLOID LLC
+    195.96.154.0/24 1; # GREEN FLOID LLC
+    195.123.224.0/21 1; # GREEN FLOID LLC
+    195.178.110.0/24 1; # TECHOFF SRV LIMITED
+    198.98.48.0/20 1; # FranTech Solutions
+    198.235.24.0/24 1; # Palo Alto Networks
+    198.251.80.0/24 1; # FranTech Solutions
+    198.251.81.0/24 1; # FranTech Solutions
+    198.251.82.0/24 1; # FranTech Solutions
+    198.251.83.0/24 1; # FranTech Solutions
+    198.251.84.0/24 1; # FranTech Solutions
+    198.251.86.0/24 1; # FranTech Solutions
+    198.251.87.0/24 1; # FranTech Solutions
+    198.251.88.0/24 1; # FranTech Solutions
+    198.251.89.0/24 1; # FranTech Solutions
+    198.251.90.0/24 1; # FranTech Solutions
+    199.15.76.0/23 1; # JINX CO., LIMITED
+    199.15.77.0/24 1; # JINX CO., LIMITED
+    199.15.78.0/23 1; # JINX CO., LIMITED
+    199.15.78.0/24 1; # JINX CO., LIMITED
+    199.15.79.0/24 1; # JINX CO., LIMITED
+    199.19.224.0/22 1; # FranTech Solutions
+    199.45.154.0/24 1; # Censys, Inc.
+    199.45.155.0/24 1; # Censys, Inc.
+    199.103.24.0/24 1; # Bytedance Inc.
+    199.103.25.0/24 1; # Bytedance Inc.
+    199.195.248.0/21 1; # FranTech Solutions
+    202.46.48.0/20 1; # 263 Shanghai Communications Ltd.
+    202.46.63.0/24 1; # 263 Shanghai Communications Ltd.
+    202.51.57.0/24 1; # Virtual Systems LLC
+    202.51.58.0/23 1; # Virtual Systems LLC
+    205.185.112.0/20 1; # FranTech Solutions
+    205.185.112.0/24 1; # FranTech Solutions
+    205.210.31.0/24 1; # Palo Alto Networks
+    206.168.32.0/24 1; # Censys, Inc.
+    206.168.33.0/24 1; # Censys, Inc.
+    206.168.34.0/24 1; # Censys, Inc.
+    206.168.35.0/24 1; # Censys, Inc.
+    206.168.82.0/24 1; # SkyLink Data Center BV
+    209.141.32.0/19 1; # FranTech Solutions
+    209.141.38.0/24 1; # FranTech Solutions
+    209.141.39.0/24 1; # Kodo Technologies
+    212.18.120.0/24 1; # GREEN FLOID LLC
+    212.18.126.0/24 1; # GREEN FLOID LLC
+    212.69.132.0/24 1; # GREEN FLOID LLC
+    212.69.134.0/24 1; # GREEN FLOID LLC
+    212.92.104.0/21 1; # NForce Entertainment B.V.
+    212.92.112.0/21 1; # NForce Entertainment B.V.
+    213.21.243.0/24 1; # NForce Entertainment B.V.
+    213.209.135.0/24 1; # GREEN FLOID LLC
+    217.12.202.0/23 1; # GREEN FLOID LLC
+    217.114.41.0/24 1; # NForce Entertainment B.V.
+}
