@@ -4,7 +4,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bytedance/sonic"
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/pkg/utils"
@@ -27,7 +26,7 @@ func (m *MountPoint) RequestRelease(get func(url string) (*resty.Response, error
 	if m.Release == nil || refresh {
 		resp, _ := get("https://api.github.com/repos/" + m.Repo + "/releases/latest")
 		m.Release = new(Release)
-		_ = sonic.ConfigDefault.Unmarshal(resp.Bytes(), m.Release)
+		_ = utils.Json.Unmarshal(resp.Bytes(), m.Release)
 	}
 }
 
@@ -40,7 +39,7 @@ func (m *MountPoint) RequestReleases(get func(url string) (*resty.Response, erro
 	if m.Releases == nil || refresh {
 		resp, _ := get("https://api.github.com/repos/" + m.Repo + "/releases")
 		m.Releases = new([]Release)
-		_ = sonic.ConfigDefault.Unmarshal(resp.Bytes(), m.Releases)
+		_ = utils.Json.Unmarshal(resp.Bytes(), m.Releases)
 	}
 }
 
@@ -148,7 +147,7 @@ func (m *MountPoint) GetOtherFile(get func(url string) (*resty.Response, error),
 	if m.OtherFile == nil || refresh {
 		resp, _ := get("https://api.github.com/repos/" + m.Repo + "/contents")
 		m.OtherFile = new([]FileInfo)
-		_ = sonic.ConfigDefault.Unmarshal(resp.Bytes(), m.OtherFile)
+		_ = utils.Json.Unmarshal(resp.Bytes(), m.OtherFile)
 	}
 
 	files := make([]File, 0)

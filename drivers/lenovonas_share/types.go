@@ -3,8 +3,6 @@ package LenovoNasShare
 import (
 	"time"
 
-	"github.com/bytedance/sonic"
-
 	"github.com/dongdio/OpenList/pkg/utils"
 
 	_ "github.com/dongdio/OpenList/internal/model"
@@ -20,7 +18,7 @@ func (f *File) UnmarshalJSON(data []byte) error {
 		Alias: (*Alias)(f),
 	}
 
-	if err := sonic.ConfigDefault.Unmarshal(data, aux); err != nil {
+	if err := utils.Json.Unmarshal(data, aux); err != nil {
 		return err
 	}
 

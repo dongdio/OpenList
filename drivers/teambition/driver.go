@@ -145,7 +145,7 @@ func (d *Teambition) Put(ctx context.Context, dstDir model.Obj, stream model.Fil
 		if err != nil {
 			return err
 		}
-		token = utils.Json.Get(res, "strikerAuth").ToString()
+		token = utils.GetBytes(res, "strikerAuth").String()
 	}
 	var newFile *FileUpload
 	if stream.GetSize() <= 20971520 {

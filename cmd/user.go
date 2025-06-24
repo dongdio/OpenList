@@ -43,8 +43,8 @@ func DelUserCacheOnline(username string) {
 		utils.Log.Warnf("[del_user_cache_online] failed: %+v", res.String())
 		return
 	}
-	code := utils.Json.Get(res.Bytes(), "code").ToInt()
-	msg := utils.Json.Get(res.Bytes(), "message").ToString()
+	code := utils.GetBytes(res.Bytes(), "code").Int()
+	msg := utils.GetBytes(res.Bytes(), "message").String()
 	if code != 200 {
 		utils.Log.Errorf("[del_user_cache_online] error: %s", msg)
 		return

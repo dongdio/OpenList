@@ -5,17 +5,17 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
 
-	"github.com/dongdio/OpenList/internal/authn"
 	"github.com/dongdio/OpenList/internal/conf"
 	"github.com/dongdio/OpenList/internal/db"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
 	"github.com/dongdio/OpenList/internal/setting"
+	"github.com/dongdio/OpenList/pkg/authn"
+	"github.com/dongdio/OpenList/pkg/utils"
 	"github.com/dongdio/OpenList/server/common"
 )
 
@@ -49,7 +49,7 @@ func BeginAuthnLogin(c *gin.Context) {
 		return
 	}
 
-	val, err := sonic.ConfigDefault.Marshal(sessionData)
+	val, err := utils.Json.Marshal(sessionData)
 	if err != nil {
 		common.ErrorResp(c, err, 400)
 		return
@@ -80,7 +80,7 @@ func FinishAuthnLogin(c *gin.Context) {
 	}
 
 	var sessionData webauthn.SessionData
-	if err = sonic.ConfigDefault.Unmarshal(sessionDataBytes, &sessionData); err != nil {
+	if err = utils.Json.Unmarshal(sessionDataBytes, &sessionData); err != nil {
 		common.ErrorResp(c, err, 400)
 		return
 	}
@@ -139,7 +139,7 @@ func BeginAuthnRegistration(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 	}
 
-	val, err := sonic.ConfigDefault.Marshal(sessionData)
+	val, err := utils.Json.Marshal(sessionData)
 	if err != nil {
 		common.ErrorResp(c, err, 400)
 	}
@@ -172,7 +172,7 @@ func FinishAuthnRegistration(c *gin.Context) {
 	}
 
 	var sessionData webauthn.SessionData
-	if err = sonic.ConfigDefault.Unmarshal(sessionDataBytes, &sessionData); err != nil {
+	if err = utils.Json.Unmarshal(sessionDataBytes, &sessionData); err != nil {
 		common.ErrorResp(c, err, 400)
 		return
 	}

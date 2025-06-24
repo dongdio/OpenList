@@ -126,7 +126,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        image: ['latest', 'ffmpeg', 'aria2', 'aio']
+        image: [ 'latest', 'ffmpeg', 'aria2', 'aio' ]
         include:
           - image: 'latest'
             build_arg: ''

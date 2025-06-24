@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dongdio/OpenList/internal/stream"
+	"github.com/dongdio/OpenList/pkg/stream"
 
 	"github.com/upyun/go-sdk/v3/upyun"
 

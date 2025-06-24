@@ -3,8 +3,8 @@ package _123Link
 import (
 	"time"
 
-	"github.com/dongdio/OpenList/internal/errs"
 	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/pkg/errs"
 )
 
 // Node is a node in the folder tree

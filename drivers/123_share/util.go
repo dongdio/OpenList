@@ -78,7 +78,7 @@ func (d *Pan123Share) request(url string, method string, callback base.ReqCallba
 		return nil, err
 	}
 	body := res.Bytes()
-	code := utils.Json.Get(body, "code").ToInt()
+	code := utils.GetBytes(body, "code").Int()
 	if code != 0 {
 		return nil, errors.New(jsoniter.Get(body, "message").ToString())
 	}

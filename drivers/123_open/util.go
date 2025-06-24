@@ -6,12 +6,12 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/bytedance/sonic"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/drivers/base"
 	"github.com/dongdio/OpenList/internal/op"
+	"github.com/dongdio/OpenList/pkg/utils"
 )
 
 var ( // 不同情况下获取的AccessTokenQPS限制不同 如下模块化易于拓展
@@ -61,7 +61,7 @@ func (d *Open123) Request(apiInfo *ApiInfo, method string, callback base.ReqCall
 
 		// 解析为通用响应
 		var baseResp BaseResp
-		if err = sonic.ConfigDefault.Unmarshal(body, &baseResp); err != nil {
+		if err = utils.Json.Unmarshal(body, &baseResp); err != nil {
 			return nil, err
 		}
 

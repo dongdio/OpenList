@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/dongdio/OpenList/internal/errs"
+	"github.com/dongdio/OpenList/pkg/errs"
 
 	log "github.com/sirupsen/logrus"
 

@@ -2,7 +2,6 @@ package _123
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"hash/crc32"
 	"math"
@@ -14,6 +13,7 @@ import (
 	"time"
 
 	jsoniter "github.com/json-iterator/go"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
 
@@ -173,10 +173,10 @@ func (d *Pan123) login() error {
 	if err != nil {
 		return err
 	}
-	if utils.Json.Get(res.Bytes(), "code").ToInt() != 200 {
-		err = fmt.Errorf(utils.Json.Get(res.Bytes(), "message").ToString())
+	if utils.GetBytes(res.Bytes(), "code").Int() != 200 {
+		err = errors.Errorf(utils.GetBytes(res.Bytes(), "message").String())
 	} else {
-		d.AccessToken = utils.Json.Get(res.Bytes(), "data", "token").ToString()
+		d.AccessToken = utils.GetBytes(res.Bytes(), "data", "token").String()
 	}
 	return err
 }
@@ -224,7 +224,7 @@ do:
 		return nil, err
 	}
 	body := res.Bytes()
-	code := utils.Json.Get(body, "code").ToInt()
+	code := utils.GetBytes(body, "code").Int()
 	if code != 0 {
 		if !isRetry && code == 401 {
 			err := d.login()

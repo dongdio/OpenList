@@ -1,7 +1,7 @@
 set -e
 appName="openlist"
 builtAt="$(date +'%F %T %z')"
-gitAuthor="The OpenList Projects Contributors <noreply@openlist.team>"
+gitAuthor="The OpenList Projects Contributors <noreply@dongdio.team>"
 gitCommit=$(git log --pretty=format:"%h" -1)
 
 githubAuthHeader=""

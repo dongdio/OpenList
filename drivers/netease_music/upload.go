@@ -109,8 +109,8 @@ func (u *uploader) checkIfExisted() error {
 		return err
 	}
 
-	u.meta.songId = utils.Json.Get(body, "songId").ToString()
-	u.meta.needUpload = utils.Json.Get(body, "needUpload").ToBool()
+	u.meta.songId = utils.GetBytes(body, "songId").String()
+	u.meta.needUpload = utils.GetBytes(body, "needUpload").Bool()
 
 	return nil
 }
@@ -137,9 +137,9 @@ func (u *uploader) allocToken(bucket ...string) (token, error) {
 	}
 
 	return token{
-		resourceId: utils.Json.Get(body, "result", "resourceId").ToString(),
-		objectKey:  utils.Json.Get(body, "result", "objectKey").ToString(),
-		token:      utils.Json.Get(body, "result", "token").ToString(),
+		resourceId: utils.GetBytes(body, "result", "resourceId").String(),
+		objectKey:  utils.GetBytes(body, "result", "objectKey").String(),
+		token:      utils.GetBytes(body, "result", "token").String(),
 	}, nil
 }
 
@@ -164,7 +164,7 @@ func (u *uploader) publishInfo(resourceId string) error {
 	_, err = u.driver.request("https://interface.music.163.com/api/cloud/pub/v2", http.MethodPost, ReqOption{
 		crypto: "weapi",
 		data: map[string]string{
-			"songid": utils.Json.Get(body, "songId").ToString(),
+			"songid": utils.GetBytes(body, "songId").String(),
 		},
 	})
 	if err != nil {

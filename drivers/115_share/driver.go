@@ -7,8 +7,8 @@ import (
 	"golang.org/x/time/rate"
 
 	"github.com/dongdio/OpenList/internal/driver"
-	"github.com/dongdio/OpenList/internal/errs"
 	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/pkg/errs"
 	"github.com/dongdio/OpenList/pkg/utils"
 )
 

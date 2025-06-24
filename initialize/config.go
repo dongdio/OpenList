@@ -13,7 +13,7 @@ import (
 	"github.com/dongdio/OpenList/drivers/base"
 	"github.com/dongdio/OpenList/global"
 	"github.com/dongdio/OpenList/internal/conf"
-	"github.com/dongdio/OpenList/internal/net"
+	"github.com/dongdio/OpenList/pkg/net"
 	"github.com/dongdio/OpenList/pkg/utils"
 )
 

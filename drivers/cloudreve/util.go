@@ -12,8 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bytedance/sonic"
-	"github.com/tidwall/gjson"
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/drivers/base"
@@ -81,11 +79,11 @@ func (d *Cloudreve) request(method string, path string, callback base.ReqCallbac
 	}
 	if out != nil && r.Data != nil {
 		var marshal []byte
-		marshal, err = sonic.ConfigDefault.Marshal(r.Data)
+		marshal, err = utils.Json.Marshal(r.Data)
 		if err != nil {
 			return err
 		}
-		err = sonic.ConfigDefault.Unmarshal(marshal, out)
+		err = utils.Json.Unmarshal(marshal, out)
 		if err != nil {
 			return err
 		}
@@ -133,10 +131,10 @@ func (d *Cloudreve) doLogin(needCaptcha bool) error {
 		if err != nil {
 			return err
 		}
-		if gjson.GetBytes(vRes.Bytes(), "status").Int() != 200 {
-			return errors.New("ocr error:" + gjson.GetBytes(vRes.Bytes(), "msg").String())
+		if utils.GetBytes(vRes.Bytes(), "status").Int() != 200 {
+			return errors.New("ocr error:" + utils.GetBytes(vRes.Bytes(), "msg").String())
 		}
-		captchaCode = gjson.GetBytes(vRes.Bytes(), "result").String()
+		captchaCode = utils.GetBytes(vRes.Bytes(), "result").String()
 	}
 	var resp Resp
 	err = d.request(http.MethodPost, loginPath, func(req *resty.Request) {
@@ -213,7 +211,7 @@ func (d *Cloudreve) upLocal(ctx context.Context, stream model.FileStreamer, u Up
 					return true
 				}
 				var retryResp Resp
-				jErr := sonic.ConfigDefault.Unmarshal(r.Bytes(), &retryResp)
+				jErr := utils.Json.Unmarshal(r.Bytes(), &retryResp)
 				if jErr != nil {
 					return true
 				}

@@ -13,12 +13,12 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/dongdio/OpenList/internal/archive/tool"
 	"github.com/dongdio/OpenList/internal/driver"
-	"github.com/dongdio/OpenList/internal/errs"
 	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/internal/stream"
+	tool2 "github.com/dongdio/OpenList/pkg/archive/tool"
+	"github.com/dongdio/OpenList/pkg/errs"
 	"github.com/dongdio/OpenList/pkg/singleflight"
+	"github.com/dongdio/OpenList/pkg/stream"
 	"github.com/dongdio/OpenList/pkg/utils"
 )
 
@@ -74,7 +74,7 @@ func GetArchiveMeta(ctx context.Context, storage driver.Driver, path string, arg
 
 // GetArchiveToolAndStream retrieves the appropriate archive tool and streams for a file
 // Returns the file object, tool, streams, and any error
-func GetArchiveToolAndStream(ctx context.Context, storage driver.Driver, path string, args model.LinkArgs) (model.Obj, tool.Tool, []*stream.SeekableStream, error) {
+func GetArchiveToolAndStream(ctx context.Context, storage driver.Driver, path string, args model.LinkArgs) (model.Obj, tool2.Tool, []*stream.SeekableStream, error) {
 	// Get file link
 	link, obj, err := Link(ctx, storage, path, args)
 	if err != nil {
@@ -90,11 +90,11 @@ func GetArchiveToolAndStream(ctx context.Context, storage driver.Driver, path st
 	}
 
 	// Try to get archive tool by extension
-	partExt, archiveTool, err := tool.GetArchiveTool("." + ext)
+	partExt, archiveTool, err := tool2.GetArchiveTool("." + ext)
 	if err != nil {
 		// Try with full extension as fallback
 		var fallbackErr error
-		partExt, archiveTool, fallbackErr = tool.GetArchiveTool(stdpath.Ext(obj.GetName()))
+		partExt, archiveTool, fallbackErr = tool2.GetArchiveTool(stdpath.Ext(obj.GetName()))
 		if fallbackErr != nil {
 			// Clean up resources on failure
 			closeResources(link)
@@ -134,7 +134,7 @@ func closeResources(link *model.Link) {
 // appendPartStreams loads additional parts of a multi-part archive
 // Returns the complete list of streams including the primary stream
 func appendPartStreams(ctx context.Context, storage driver.Driver, path string, baseName string,
-	partExt *tool.MultipartExtension, args model.LinkArgs,
+	partExt *tool2.MultipartExtension, args model.LinkArgs,
 	streams []*stream.SeekableStream) []*stream.SeekableStream {
 	dir := stdpath.Dir(path)
 	index := partExt.SecondPartIndex

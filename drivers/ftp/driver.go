@@ -7,8 +7,8 @@ import (
 	"github.com/jlaffaye/ftp"
 
 	"github.com/dongdio/OpenList/internal/driver"
-	"github.com/dongdio/OpenList/internal/errs"
 	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/pkg/errs"
 )
 
 type FTP struct {

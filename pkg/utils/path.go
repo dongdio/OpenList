@@ -5,7 +5,7 @@ import (
 	stdpath "path"
 	"strings"
 
-	"github.com/dongdio/OpenList/internal/errs"
+	"github.com/dongdio/OpenList/pkg/errs"
 )
 
 // FixAndCleanPath

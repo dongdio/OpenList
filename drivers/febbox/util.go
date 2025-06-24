@@ -6,11 +6,11 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/bytedance/sonic"
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/drivers/base"
 	"github.com/dongdio/OpenList/internal/op"
+	"github.com/dongdio/OpenList/pkg/utils"
 )
 
 func (d *FebBox) refreshTokenByOAuth2() error {
@@ -113,7 +113,7 @@ func (d *FebBox) getFiles(dirID string, page, pageLimit int64) (*[]File, error) 
 		return nil, err
 	}
 
-	if err = sonic.ConfigDefault.Unmarshal(res, &fileList); err != nil {
+	if err = utils.Json.Unmarshal(res, &fileList); err != nil {
 		return nil, err
 	}
 
@@ -135,7 +135,7 @@ func (d *FebBox) getDownloadLink(id string, ip string) (string, error) {
 		return "", err
 	}
 
-	if err = sonic.ConfigDefault.Unmarshal(res, &fileDownloadResp); err != nil {
+	if err = utils.Json.Unmarshal(res, &fileDownloadResp); err != nil {
 		return "", err
 	}
 	if len(fileDownloadResp.Data) == 0 {

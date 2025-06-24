@@ -19,9 +19,8 @@ import (
 	crypto "github.com/SheltonZhu/115driver/pkg/crypto/m115"
 	driver115 "github.com/SheltonZhu/115driver/pkg/driver"
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
-	"github.com/bytedance/sonic"
+
 	"github.com/pkg/errors"
-	"github.com/tidwall/gjson"
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/drivers/base"
@@ -140,7 +139,7 @@ func (p *Pan115) DownloadWithUA(pickCode, ua string) (*driver115.DownloadInfo, e
 	info := &driver115.DownloadInfo{}
 	info.PickCode = pickCode
 	info.Header = resp.Request.Header
-	info.Url.Url = gjson.GetBytes(b, "url").String()
+	info.Url.Url = utils.GetBytes(b, "url").String()
 	return info, nil
 }
 
@@ -211,7 +210,7 @@ func (p *Pan115) rapidUpload(fileSize int64, fileName, dirID, preID, fileID stri
 		if decrypted, err = ecdhCipher.Decrypt(resp.Body()); err != nil {
 			return nil, err
 		}
-		if err = driver115.CheckErr(sonic.ConfigDefault.Unmarshal(decrypted, &result), &result, resp); err != nil {
+		if err = driver115.CheckErr(utils.Json.Unmarshal(decrypted, &result), &result, resp); err != nil {
 			return nil, err
 		}
 		if result.Status == 7 {
@@ -277,7 +276,7 @@ func (p *Pan115) UploadByOSS(ctx context.Context, params *driver115.UploadOSSPar
 	}
 
 	var uploadResult UploadResult
-	if err = sonic.ConfigDefault.Unmarshal(bodyBytes, &uploadResult); err != nil {
+	if err = utils.Json.Unmarshal(bodyBytes, &uploadResult); err != nil {
 		return nil, err
 	}
 	return &uploadResult, uploadResult.Err(string(bodyBytes))
@@ -430,7 +429,7 @@ LOOP:
 	}
 
 	var uploadResult UploadResult
-	if err = sonic.ConfigDefault.Unmarshal(bodyBytes, &uploadResult); err != nil {
+	if err = utils.Json.Unmarshal(bodyBytes, &uploadResult); err != nil {
 		return nil, err
 	}
 	return &uploadResult, uploadResult.Err(string(bodyBytes))

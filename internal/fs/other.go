@@ -5,9 +5,9 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/dongdio/OpenList/internal/errs"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
+	"github.com/dongdio/OpenList/pkg/errs"
 )
 
 func makeDir(ctx context.Context, path string, lazyCache ...bool) error {

@@ -5,18 +5,18 @@ import (
 	"io"
 	stdpath "path"
 
-	"github.com/dongdio/OpenList/internal/task"
 	"github.com/dongdio/OpenList/pkg/generic"
+	"github.com/dongdio/OpenList/pkg/task"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/dongdio/OpenList/internal/errs"
 	"github.com/dongdio/OpenList/internal/fs"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
 	"github.com/dongdio/OpenList/internal/sign"
+	"github.com/dongdio/OpenList/pkg/errs"
 	"github.com/dongdio/OpenList/pkg/utils"
 	"github.com/dongdio/OpenList/server/common"
 )

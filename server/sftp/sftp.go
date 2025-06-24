@@ -5,8 +5,8 @@ import (
 
 	"github.com/OpenListTeam/sftpd-openlist"
 
-	"github.com/dongdio/OpenList/internal/errs"
 	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/pkg/errs"
 	"github.com/dongdio/OpenList/pkg/utils"
 	"github.com/dongdio/OpenList/server/ftp"
 )

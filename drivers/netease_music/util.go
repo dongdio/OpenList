@@ -11,8 +11,8 @@ import (
 
 	"github.com/dongdio/OpenList/drivers/base"
 	"github.com/dongdio/OpenList/internal/driver"
-	"github.com/dongdio/OpenList/internal/errs"
 	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/pkg/errs"
 	"github.com/dongdio/OpenList/pkg/utils"
 )
 
@@ -197,7 +197,7 @@ func (d *NeteaseMusic) getLyricObj(file model.Obj) (model.Obj, error) {
 		return nil, err
 	}
 
-	lyric := utils.Json.Get(body, "lrc", "lyric").ToString()
+	lyric := utils.GetBytes(body, "lrc", "lyric").String()
 
 	return &LyricObj{
 		lyric: lyric,

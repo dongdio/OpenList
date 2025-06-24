@@ -8,8 +8,8 @@ import (
 
 	"github.com/dongdio/OpenList/drivers/base"
 	"github.com/dongdio/OpenList/internal/driver"
-	"github.com/dongdio/OpenList/internal/errs"
 	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/pkg/errs"
 	"github.com/dongdio/OpenList/pkg/utils"
 )
 
@@ -140,7 +140,7 @@ func (d *LanZou) MakeDir(ctx context.Context, parentDir model.Obj, dirName strin
 		}
 		return &FileOrFolder{
 			Name:  dirName,
-			FolID: utils.Json.Get(data, "text").ToString(),
+			FolID: utils.GetBytes(data, "text").String(),
 		}, nil
 	}
 	return nil, errs.NotSupport

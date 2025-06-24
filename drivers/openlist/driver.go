@@ -9,14 +9,15 @@ import (
 	"path"
 	"strings"
 
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/drivers/base"
 	"github.com/dongdio/OpenList/internal/conf"
 	"github.com/dongdio/OpenList/internal/driver"
-	"github.com/dongdio/OpenList/internal/errs"
 	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/pkg/errs"
 	"github.com/dongdio/OpenList/pkg/utils"
 	"github.com/dongdio/OpenList/server/common"
 )
@@ -63,9 +64,9 @@ func (d *OpenList) Init(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		allowMounted := utils.Json.Get(res.Bytes(), "data", conf.AllowMounted).ToString() == "true"
+		allowMounted := utils.GetBytes(res.Bytes(), "data", conf.AllowMounted).String() == "true"
 		if !allowMounted {
-			return fmt.Errorf("the site does not allow mounted")
+			return errors.Errorf("the site does not allow mounted")
 		}
 	}
 	return err
@@ -220,9 +221,9 @@ func (d *OpenList) Put(ctx context.Context, dstDir model.Obj, s model.FileStream
 	}
 	log.Debugf("[openlist] response body: %s", string(bytes))
 	if res.StatusCode >= 400 {
-		return fmt.Errorf("request failed, status: %s", res.Status)
+		return errors.Errorf("request failed, status: %s", res.Status)
 	}
-	code := utils.Json.Get(bytes, "code").ToInt()
+	code := utils.GetBytes(bytes, "code").Int()
 	if code != 200 {
 		if code == 401 || code == 403 {
 			err = d.login()
@@ -230,7 +231,7 @@ func (d *OpenList) Put(ctx context.Context, dstDir model.Obj, s model.FileStream
 				return err
 			}
 		}
-		return fmt.Errorf("request failed,code: %d, message: %s", code, utils.Json.Get(bytes, "message").ToString())
+		return errors.Errorf("request failed,code: %d, message: %s", code, utils.GetBytes(bytes, "message").String())
 	}
 	return nil
 }

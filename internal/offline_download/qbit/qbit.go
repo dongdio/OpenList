@@ -4,10 +4,10 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/dongdio/OpenList/internal/conf"
-	"github.com/dongdio/OpenList/internal/errs"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/offline_download/tool"
 	"github.com/dongdio/OpenList/internal/setting"
+	"github.com/dongdio/OpenList/pkg/errs"
 	"github.com/dongdio/OpenList/pkg/qbittorrent"
 )
 

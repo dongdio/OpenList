@@ -17,13 +17,14 @@ import (
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
 
+	"github.com/dongdio/OpenList/pkg/stream"
+
 	"github.com/dongdio/OpenList/drivers/base"
 	"github.com/dongdio/OpenList/internal/conf"
 	"github.com/dongdio/OpenList/internal/driver"
-	"github.com/dongdio/OpenList/internal/errs"
 	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/internal/stream"
 	"github.com/dongdio/OpenList/pkg/cron"
+	"github.com/dongdio/OpenList/pkg/errs"
 	"github.com/dongdio/OpenList/pkg/utils"
 )
 
@@ -56,8 +57,8 @@ func (d *AliDrive) Init(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	d.DriveId = utils.Json.Get(res, "default_drive_id").ToString()
-	d.UserID = utils.Json.Get(res, "user_id").ToString()
+	d.DriveId = utils.GetBytes(res, "default_drive_id").String()
+	d.UserID = utils.GetBytes(res, "user_id").String()
 	d.cron = cron.NewCron(time.Hour * 2)
 	d.cron.Do(func() {
 		err := d.refreshToken()
@@ -116,7 +117,7 @@ func (d *AliDrive) Link(ctx context.Context, file model.Obj, args model.LinkArgs
 		Header: http.Header{
 			"Referer": []string{"https://www.alipan.com/"},
 		},
-		URL: utils.Json.Get(res, "url").ToString(),
+		URL: utils.GetBytes(res, "url").String(),
 	}, nil
 }
 

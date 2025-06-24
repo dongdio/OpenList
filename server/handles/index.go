@@ -8,8 +8,8 @@ import (
 
 	"github.com/dongdio/OpenList/internal/conf"
 	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/internal/search"
 	"github.com/dongdio/OpenList/internal/setting"
+	search2 "github.com/dongdio/OpenList/pkg/search"
 	"github.com/dongdio/OpenList/server/common"
 )
 
@@ -20,18 +20,18 @@ type UpdateIndexReq struct {
 }
 
 func BuildIndex(c *gin.Context) {
-	if search.Running() {
+	if search2.Running() {
 		common.ErrorStrResp(c, "index is running", 400)
 		return
 	}
 	go func() {
 		ctx := context.Background()
-		err := search.Clear(ctx)
+		err := search2.Clear(ctx)
 		if err != nil {
 			log.Errorf("clear index error: %+v", err)
 			return
 		}
-		err = search.BuildIndex(context.Background(), []string{"/"},
+		err = search2.BuildIndex(context.Background(), []string{"/"},
 			conf.SlicesMap[conf.IgnorePaths], setting.GetInt(conf.MaxIndexDepth, 20), true)
 		if err != nil {
 			log.Errorf("build index error: %+v", err)
@@ -46,24 +46,24 @@ func UpdateIndex(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	if search.Running() {
+	if search2.Running() {
 		common.ErrorStrResp(c, "index is running", 400)
 		return
 	}
-	if !search.Config(c).AutoUpdate {
+	if !search2.Config(c).AutoUpdate {
 		common.ErrorStrResp(c, "update is not supported for current index", 400)
 		return
 	}
 	go func() {
 		ctx := context.Background()
 		for _, path := range req.Paths {
-			err := search.Del(ctx, path)
+			err := search2.Del(ctx, path)
 			if err != nil {
 				log.Errorf("delete index on %s error: %+v", path, err)
 				return
 			}
 		}
-		err := search.BuildIndex(context.Background(), req.Paths,
+		err := search2.BuildIndex(context.Background(), req.Paths,
 			conf.SlicesMap[conf.IgnorePaths], req.MaxDepth, false)
 		if err != nil {
 			log.Errorf("update index error: %+v", err)
@@ -73,7 +73,7 @@ func UpdateIndex(c *gin.Context) {
 }
 
 func StopIndex(c *gin.Context) {
-	quit := search.Quit.Load()
+	quit := search2.Quit.Load()
 	if quit == nil {
 		common.ErrorStrResp(c, "index is not running", 400)
 		return
@@ -86,12 +86,12 @@ func StopIndex(c *gin.Context) {
 }
 
 func ClearIndex(c *gin.Context) {
-	if search.Running() {
+	if search2.Running() {
 		common.ErrorStrResp(c, "index is running", 400)
 		return
 	}
-	search.Clear(c)
-	search.WriteProgress(&model.IndexProgress{
+	search2.Clear(c)
+	search2.WriteProgress(&model.IndexProgress{
 		ObjCount:     0,
 		IsDone:       true,
 		LastDoneTime: nil,
@@ -101,7 +101,7 @@ func ClearIndex(c *gin.Context) {
 }
 
 func GetProgress(c *gin.Context) {
-	progress, err := search.Progress()
+	progress, err := search2.Progress()
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return

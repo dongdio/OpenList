@@ -4,11 +4,12 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 
+	"github.com/dongdio/OpenList/pkg/stream"
+
 	"github.com/dongdio/OpenList/global"
 	"github.com/dongdio/OpenList/internal/conf"
-	"github.com/dongdio/OpenList/internal/message"
 	"github.com/dongdio/OpenList/internal/sign"
-	"github.com/dongdio/OpenList/internal/stream"
+	"github.com/dongdio/OpenList/pkg/message"
 	"github.com/dongdio/OpenList/pkg/utils"
 	"github.com/dongdio/OpenList/server/common"
 	"github.com/dongdio/OpenList/server/handles"

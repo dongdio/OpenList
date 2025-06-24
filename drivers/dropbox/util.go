@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/bytedance/sonic"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
@@ -77,7 +76,7 @@ func (d *Dropbox) request(uri, method string, callback base.ReqCallback, retry .
 	req := base.RestyClient.R().
 		SetAuthToken(d.AccessToken)
 	if d.RootNamespaceId != "" {
-		apiPathRootJson, err := sonic.ConfigDefault.
+		apiPathRootJson, err := utils.Json.
 			MarshalToString(map[string]any{
 				".tag": "root",
 				"root": d.RootNamespaceId,
@@ -234,7 +233,7 @@ func (d *Dropbox) startUploadSession(ctx context.Context) (string, error) {
 	}
 
 	body, err := io.ReadAll(res.Body)
-	sessionId := utils.Json.Get(body, "session_id").ToString()
+	sessionId := utils.GetBytes(body, "session_id").String()
 
 	_ = res.Body.Close()
 	return sessionId, nil

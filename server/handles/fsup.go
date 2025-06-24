@@ -9,10 +9,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/dongdio/OpenList/pkg/stream"
+
 	"github.com/dongdio/OpenList/internal/fs"
 	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/internal/stream"
-	"github.com/dongdio/OpenList/internal/task"
+	"github.com/dongdio/OpenList/pkg/task"
 	"github.com/dongdio/OpenList/pkg/utils"
 	"github.com/dongdio/OpenList/server/common"
 )

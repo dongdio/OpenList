@@ -29,7 +29,7 @@ func (d *LenovoNasShare) request(url string, method string, callback base.ReqCal
 		return nil, err
 	}
 	body := res.Bytes()
-	result := utils.Json.Get(body, "result").ToBool()
+	result := utils.GetBytes(body, "result").Bool()
 	if !result {
 		return nil, errors.New(jsoniter.Get(body, "error", "msg").ToString())
 	}

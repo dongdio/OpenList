@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/dongdio/OpenList/internal/conf"
-	"github.com/dongdio/OpenList/internal/patch"
+	"github.com/dongdio/OpenList/pkg/patch"
 	"github.com/dongdio/OpenList/pkg/utils"
 )
 

@@ -9,9 +9,9 @@ import (
 	"github.com/xhofe/tache"
 
 	"github.com/dongdio/OpenList/internal/conf"
-	"github.com/dongdio/OpenList/internal/errs"
 	"github.com/dongdio/OpenList/internal/setting"
-	"github.com/dongdio/OpenList/internal/task"
+	"github.com/dongdio/OpenList/pkg/errs"
+	"github.com/dongdio/OpenList/pkg/task"
 )
 
 type DownloadTask struct {

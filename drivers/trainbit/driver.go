@@ -8,12 +8,11 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/bytedance/sonic"
-
 	"github.com/dongdio/OpenList/drivers/base"
 	"github.com/dongdio/OpenList/internal/driver"
-	"github.com/dongdio/OpenList/internal/errs"
 	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/pkg/errs"
+	"github.com/dongdio/OpenList/pkg/utils"
 )
 
 type Trainbit struct {
@@ -59,7 +58,7 @@ func (d *Trainbit) List(ctx context.Context, dir model.Obj, args model.ListArgs)
 		return nil, err
 	}
 	var jsonData any
-	err = sonic.ConfigDefault.Unmarshal(data, &jsonData)
+	err = utils.Json.Unmarshal(data, &jsonData)
 	if err != nil {
 		return nil, err
 	}

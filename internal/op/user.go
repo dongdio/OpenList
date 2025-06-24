@@ -6,8 +6,8 @@ import (
 	"github.com/Xhofe/go-cache"
 
 	"github.com/dongdio/OpenList/internal/db"
-	"github.com/dongdio/OpenList/internal/errs"
 	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/pkg/errs"
 	"github.com/dongdio/OpenList/pkg/singleflight"
 	"github.com/dongdio/OpenList/pkg/utils"
 )

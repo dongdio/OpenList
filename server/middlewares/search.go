@@ -4,8 +4,8 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/dongdio/OpenList/internal/conf"
-	"github.com/dongdio/OpenList/internal/errs"
 	"github.com/dongdio/OpenList/internal/setting"
+	"github.com/dongdio/OpenList/pkg/errs"
 	"github.com/dongdio/OpenList/server/common"
 )
 

@@ -15,9 +15,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/dongdio/OpenList/pkg/stream"
+
 	"github.com/dongdio/OpenList/internal/driver"
 	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/internal/stream"
 	"github.com/dongdio/OpenList/pkg/cron"
 	"github.com/dongdio/OpenList/server/common"
 )

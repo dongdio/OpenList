@@ -229,7 +229,7 @@ func OIDCLoginCallback(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	userID := utils.Json.Get(payload, setting.GetStr(conf.SSOOIDCUsernameKey, "name")).ToString()
+	userID := utils.GetBytes(payload, setting.GetStr(conf.SSOOIDCUsernameKey, "name")).String()
 	if userID == "" {
 		common.ErrorStrResp(c, "cannot get username from OIDC provider", 400)
 		return
@@ -382,11 +382,11 @@ func SSOLoginCallback(c *gin.Context) {
 		return
 	}
 	if platform == "Dingtalk" {
-		accessToken := utils.Json.Get(resp.Bytes(), "accessToken").ToString()
+		accessToken := utils.GetBytes(resp.Bytes(), "accessToken").String()
 		resp, err = ssoClient.R().SetHeader("x-acs-dingtalk-access-token", accessToken).
 			Get(userUrl)
 	} else {
-		accessToken := utils.Json.Get(resp.Bytes(), "access_token").ToString()
+		accessToken := utils.GetBytes(resp.Bytes(), "access_token").String()
 		resp, err = ssoClient.R().SetHeader("Authorization", "Bearer "+accessToken).
 			Get(userUrl)
 	}
@@ -394,7 +394,7 @@ func SSOLoginCallback(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	userID := utils.Json.Get(resp.Bytes(), idField).ToString()
+	userID := utils.GetBytes(resp.Bytes(), idField).String()
 	if utils.SliceContains([]string{"", "0"}, userID) {
 		common.ErrorResp(c, errors.New("error occurred"), 400)
 		return
@@ -415,7 +415,7 @@ func SSOLoginCallback(c *gin.Context) {
 		c.Data(200, "text/html; charset=utf-8", []byte(html))
 		return
 	}
-	username := utils.Json.Get(resp.Bytes(), usernameField).ToString()
+	username := utils.GetBytes(resp.Bytes(), usernameField).String()
 	user, err := db.GetUserBySSOID(userID)
 	if err != nil {
 		user, err = autoRegister(username, userID, err)

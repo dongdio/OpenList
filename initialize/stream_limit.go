@@ -8,7 +8,7 @@ import (
 	"github.com/dongdio/OpenList/internal/conf"
 	"github.com/dongdio/OpenList/internal/op"
 	"github.com/dongdio/OpenList/internal/setting"
-	"github.com/dongdio/OpenList/internal/stream"
+	"github.com/dongdio/OpenList/pkg/stream"
 )
 
 type blockBurstLimiter struct {

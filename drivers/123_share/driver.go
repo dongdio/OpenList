@@ -17,8 +17,8 @@ import (
 	_123 "github.com/dongdio/OpenList/drivers/123"
 	"github.com/dongdio/OpenList/drivers/base"
 	"github.com/dongdio/OpenList/internal/driver"
-	"github.com/dongdio/OpenList/internal/errs"
 	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/pkg/errs"
 	"github.com/dongdio/OpenList/pkg/utils"
 )
 
@@ -93,7 +93,7 @@ func (d *Pan123Share) Link(ctx context.Context, file model.Obj, args model.LinkA
 		if err != nil {
 			return nil, err
 		}
-		downloadUrl := utils.Json.Get(resp, "data", "DownloadURL").ToString()
+		downloadUrl := utils.GetBytes(resp, "data", "DownloadURL").String()
 		u, err := url.Parse(downloadUrl)
 		if err != nil {
 			return nil, err
@@ -120,7 +120,7 @@ func (d *Pan123Share) Link(ctx context.Context, file model.Obj, args model.LinkA
 		if res.StatusCode() == 302 {
 			link.URL = res.Header().Get("location")
 		} else if res.StatusCode() < 300 {
-			link.URL = utils.Json.Get(res.Bytes(), "data", "redirect_url").ToString()
+			link.URL = utils.GetBytes(res.Bytes(), "data", "redirect_url").String()
 		}
 		link.Header = http.Header{
 			"Referer": []string{"https://www.123pan.com/"},

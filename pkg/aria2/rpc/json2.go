@@ -13,7 +13,7 @@ import (
 	"errors"
 	"io"
 
-	"github.com/bytedance/sonic"
+	"github.com/dongdio/OpenList/pkg/utils"
 )
 
 // ----------------------------------------------------------------------------
@@ -53,7 +53,7 @@ func EncodeClientRequest(method string, args any) (*bytes.Buffer, error) {
 		Params:  args,
 		Id:      reqid(),
 	}
-	if err := sonic.ConfigDefault.NewEncoder(&buf).Encode(c); err != nil {
+	if err := utils.Json.NewEncoder(&buf).Encode(c); err != nil {
 		return nil, err
 	}
 	return &buf, nil
@@ -62,7 +62,7 @@ func EncodeClientRequest(method string, args any) (*bytes.Buffer, error) {
 func (c clientResponse) decode(reply any) error {
 	if c.Error != nil {
 		jsonErr := &Error{}
-		if err := sonic.ConfigDefault.Unmarshal(*c.Error, jsonErr); err != nil {
+		if err := utils.Json.Unmarshal(*c.Error, jsonErr); err != nil {
 			return &Error{
 				Code:    E_SERVER,
 				Message: string(*c.Error),
@@ -75,14 +75,14 @@ func (c clientResponse) decode(reply any) error {
 		return ErrNullResult
 	}
 
-	return sonic.ConfigDefault.Unmarshal(*c.Result, reply)
+	return utils.Json.Unmarshal(*c.Result, reply)
 }
 
 // DecodeClientResponse decodes the response body of a client request into
 // the interface reply.
 func DecodeClientResponse(r io.Reader, reply any) error {
 	var c clientResponse
-	if err := sonic.ConfigDefault.NewDecoder(r).Decode(&c); err != nil {
+	if err := utils.Json.NewDecoder(r).Decode(&c); err != nil {
 		return err
 	}
 	return c.decode(reply)

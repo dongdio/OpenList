@@ -120,9 +120,9 @@ func (d *Cloud189) newLogin() error {
 		return err
 	}
 	log.Debugf("189 login resp body: %s", res.String())
-	loginResult := utils.Json.Get(res.Bytes(), "result").ToInt()
+	loginResult := utils.GetBytes(res.Bytes(), "result").Int()
 	if loginResult != 0 {
-		return errors.New(utils.Json.Get(res.Bytes(), "msg").ToString())
+		return errors.New(utils.GetBytes(res.Bytes(), "msg").String())
 	}
 	return nil
 }

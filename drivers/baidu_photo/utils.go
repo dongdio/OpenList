@@ -39,7 +39,7 @@ func (d *BaiduPhoto) Request(client *resty.Client, furl string, method string, c
 		return nil, err
 	}
 
-	erron := utils.Json.Get(res.Bytes(), "errno").ToInt()
+	erron := utils.GetBytes(res.Bytes(), "errno").Int()
 	switch erron {
 	case 0:
 		break

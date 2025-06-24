@@ -8,8 +8,8 @@ import (
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/internal/driver"
-	"github.com/dongdio/OpenList/internal/errs"
 	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/pkg/errs"
 	"github.com/dongdio/OpenList/pkg/utils"
 )
 
@@ -83,8 +83,8 @@ func (d *LenovoNasShare) getStoken() error { // 获取stoken
 	if err != nil {
 		return err
 	}
-	d.stoken = utils.Json.Get(resp, "data", "stoken").ToString()
-	d.expireAt = utils.Json.Get(resp, "data", "expires_in").ToInt64() + time.Now().Unix() - 60
+	d.stoken = utils.GetBytes(resp, "data", "stoken").String()
+	d.expireAt = utils.GetBytes(resp, "data", "expires_in").Int() + time.Now().Unix() - 60
 	return nil
 }
 
@@ -101,7 +101,7 @@ func (d *LenovoNasShare) Link(ctx context.Context, file model.Obj, args model.Li
 	if err != nil {
 		return nil, err
 	}
-	downloadUrl := d.Host + "/oneproxy/api/share/v1/file/download?code=" + d.ShareId + "&dtoken=" + utils.Json.Get(resp, "data", "param", "dtoken").ToString()
+	downloadUrl := d.Host + "/oneproxy/api/share/v1/file/download?code=" + d.ShareId + "&dtoken=" + utils.GetBytes(resp, "data", "param", "dtoken").String()
 
 	link := model.Link{
 		URL: downloadUrl,

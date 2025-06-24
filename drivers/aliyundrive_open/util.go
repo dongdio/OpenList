@@ -10,7 +10,6 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/tidwall/gjson"
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/drivers/base"
@@ -71,7 +70,7 @@ func (d *AliyundriveOpen) _refreshToken() (string, string, error) {
 	if e.Code != "" {
 		return "", "", fmt.Errorf("failed to refresh token: %s", e.Message)
 	}
-	refresh, access := gjson.GetBytes(res.Bytes(), "refresh_token").String(), gjson.GetBytes(res.Bytes(), "access_token").String()
+	refresh, access := utils.GetBytes(res.Bytes(), "refresh_token").String(), utils.GetBytes(res.Bytes(), "access_token").String()
 	if refresh == "" {
 		return "", "", fmt.Errorf("failed to refresh token: refresh token is empty, resp: %s", res.String())
 	}
@@ -98,7 +97,7 @@ func getSub(token string) (string, error) {
 	if err != nil {
 		return "", errors.New("failed to decode jwt token")
 	}
-	return utils.Json.Get(bs, "sub").ToString(), nil
+	return utils.GetBytes(bs, "sub").String(), nil
 }
 
 func (d *AliyundriveOpen) refreshToken() error {

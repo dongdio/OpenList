@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/dongdio/OpenList/pkg/utils"
 )
 
 func ErrorLogging() gin.HandlerFunc {
@@ -20,7 +21,7 @@ func ErrorLogging() gin.HandlerFunc {
 				Code    int    `json:"code"`
 				Message string `json:"message"`
 			}
-			if err := sonic.ConfigDefault.Unmarshal(w.body.Bytes(), &jsonBody); err == nil {
+			if err := utils.Json.Unmarshal(w.body.Bytes(), &jsonBody); err == nil {
 				if jsonBody.Code != 200 {
 					errorMsg = fmt.Sprintf(" error: code=%d, message=%s", jsonBody.Code, jsonBody.Message)
 				}

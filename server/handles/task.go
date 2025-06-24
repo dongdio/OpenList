@@ -4,14 +4,13 @@ import (
 	"math"
 	"time"
 
-	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/internal/task"
-
 	"github.com/gin-gonic/gin"
 	"github.com/xhofe/tache"
 
 	"github.com/dongdio/OpenList/internal/fs"
+	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/offline_download/tool"
+	task2 "github.com/dongdio/OpenList/pkg/task"
 	"github.com/dongdio/OpenList/pkg/utils"
 	"github.com/dongdio/OpenList/server/common"
 )
@@ -30,7 +29,7 @@ type TaskInfo struct {
 	Error       string      `json:"error"`
 }
 
-func getTaskInfo[T task.TaskExtensionInfo](task T) TaskInfo {
+func getTaskInfo[T task2.TaskExtensionInfo](task T) TaskInfo {
 	errMsg := ""
 	if task.GetErr() != nil {
 		errMsg = task.GetErr().Error()
@@ -61,7 +60,7 @@ func getTaskInfo[T task.TaskExtensionInfo](task T) TaskInfo {
 	}
 }
 
-func getTaskInfos[T task.TaskExtensionInfo](tasks []T) []TaskInfo {
+func getTaskInfos[T task2.TaskExtensionInfo](tasks []T) []TaskInfo {
 	return utils.MustSliceConvert(tasks, getTaskInfo[T])
 }
 
@@ -77,7 +76,7 @@ func getUserInfo(c *gin.Context) (bool, uint, bool) {
 	}
 }
 
-func getTargetedHandler[T task.TaskExtensionInfo](manager task.Manager[T], callback func(c *gin.Context, task T)) gin.HandlerFunc {
+func getTargetedHandler[T task2.TaskExtensionInfo](manager task2.Manager[T], callback func(c *gin.Context, task T)) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		isAdmin, uid, ok := getUserInfo(c)
 		if !ok {
@@ -99,7 +98,7 @@ func getTargetedHandler[T task.TaskExtensionInfo](manager task.Manager[T], callb
 	}
 }
 
-func getBatchHandler[T task.TaskExtensionInfo](manager task.Manager[T], callback func(task T)) gin.HandlerFunc {
+func getBatchHandler[T task2.TaskExtensionInfo](manager task2.Manager[T], callback func(task T)) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		isAdmin, uid, ok := getUserInfo(c)
 		if !ok {
@@ -124,7 +123,7 @@ func getBatchHandler[T task.TaskExtensionInfo](manager task.Manager[T], callback
 	}
 }
 
-func taskRoute[T task.TaskExtensionInfo](g *gin.RouterGroup, manager task.Manager[T]) {
+func taskRoute[T task2.TaskExtensionInfo](g *gin.RouterGroup, manager task2.Manager[T]) {
 	g.GET("/undone", func(c *gin.Context) {
 		isAdmin, uid, ok := getUserInfo(c)
 		if !ok {

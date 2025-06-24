@@ -27,7 +27,7 @@ func (d *ILanZou) login() error {
 	if err != nil {
 		return err
 	}
-	d.Token = utils.Json.Get(res, "data", "appToken").ToString()
+	d.Token = utils.GetBytes(res, "data", "appToken").String()
 	if d.Token == "" {
 		return fmt.Errorf("failed to login: token is empty, resp: %s", res)
 	}
@@ -94,10 +94,10 @@ func (d *ILanZou) request(pathname, method string, callback base.ReqCallback, pr
 	}
 	isRetry := len(retry) > 0 && retry[0]
 	body := res.Bytes()
-	code := utils.Json.Get(body, "code").ToInt()
-	msg := utils.Json.Get(body, "msg").ToString()
+	code := utils.GetBytes(body, "code").Int()
+	msg := utils.GetBytes(body, "msg").String()
 	if code != 200 {
-		if !isRetry && proved && (utils.SliceContains([]int{-1, -2}, code) || d.Token == "") {
+		if !isRetry && proved && (utils.SliceContains([]int{-1, -2}, int(code)) || d.Token == "") {
 			err = d.login()
 			if err != nil {
 				return nil, err

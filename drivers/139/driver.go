@@ -12,12 +12,13 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	streamPkg "github.com/dongdio/OpenList/pkg/stream"
+
 	"github.com/dongdio/OpenList/drivers/base"
 	"github.com/dongdio/OpenList/internal/driver"
-	"github.com/dongdio/OpenList/internal/errs"
 	"github.com/dongdio/OpenList/internal/model"
-	streamPkg "github.com/dongdio/OpenList/internal/stream"
 	"github.com/dongdio/OpenList/pkg/cron"
+	"github.com/dongdio/OpenList/pkg/errs"
 	"github.com/dongdio/OpenList/pkg/utils"
 	"github.com/dongdio/OpenList/pkg/utils/random"
 )

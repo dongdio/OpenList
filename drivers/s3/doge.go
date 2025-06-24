@@ -5,10 +5,10 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 
-	"github.com/bytedance/sonic"
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/drivers/base"
+	"github.com/dongdio/OpenList/pkg/utils"
 )
 
 type TmpTokenResponse struct {
@@ -31,7 +31,7 @@ type Credentials struct {
 func getCredentials(AccessKey, SecretKey string) (rst Credentials, err error) {
 	apiPath := "/auth/tmp_token.json"
 	var reqBody []byte
-	reqBody, err = sonic.ConfigDefault.Marshal(map[string]any{"channel": "OSS_FULL", "scopes": []string{"*"}})
+	reqBody, err = utils.Json.Marshal(map[string]any{"channel": "OSS_FULL", "scopes": []string{"*"}})
 	if err != nil {
 		return
 	}
@@ -53,7 +53,7 @@ func getCredentials(AccessKey, SecretKey string) (rst Credentials, err error) {
 	}
 
 	var tmpTokenResp TmpTokenResponse
-	err = sonic.ConfigDefault.Unmarshal(resp.Bytes(), &tmpTokenResp)
+	err = utils.Json.Unmarshal(resp.Bytes(), &tmpTokenResp)
 	if err != nil {
 		return rst, err
 	}

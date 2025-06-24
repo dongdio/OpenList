@@ -2,14 +2,14 @@ name: release_linux_musl
 
 on:
   release:
-    types: [published]
+    types: [ published ]
 
 permissions: write-all
 
 jobs:
   release_linux_musl:
     # 等待主发布工作流完成
-    needs: [] # GitHub Actions不支持跨文件的依赖，但可以通过API或其他方式等待
+    needs: [ ] # GitHub Actions不支持跨文件的依赖，但可以通过API或其他方式等待
     runs-on: ubuntu-latest
     steps:
       - name: Setup Go

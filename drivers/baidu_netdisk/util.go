@@ -15,9 +15,9 @@ import (
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/drivers/base"
-	"github.com/dongdio/OpenList/internal/errs"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
+	"github.com/dongdio/OpenList/pkg/errs"
 	"github.com/dongdio/OpenList/pkg/utils"
 )
 
@@ -110,9 +110,9 @@ func (d *BaiduNetdisk) request(furl string, method string, callback base.ReqCall
 			return err
 		}
 		log.Debugf("[baidu_netdisk] req: %s, resp: %s", furl, res.String())
-		errno := utils.Json.Get(res.Bytes(), "errno").ToInt()
+		errno := utils.GetBytes(res.Bytes(), "errno").Int()
 		if errno != 0 {
-			if utils.SliceContains([]int{111, -6}, errno) {
+			if utils.SliceContains([]int{111, -6}, int(errno)) {
 				log.Info("refreshing baidu_netdisk token.")
 				err2 := d.refreshToken()
 				if err2 != nil {
@@ -263,7 +263,7 @@ func (d *BaiduNetdisk) linkCrackVideo(file model.Obj, _ model.LinkArgs) (*model.
 	}
 
 	return &model.Link{
-		URL: utils.Json.Get(resp, "info", "dlink").ToString(),
+		URL: utils.GetBytes(resp, "info", "dlink").String(),
 		Header: http.Header{
 			"User-Agent": []string{d.CustomCrackUA},
 		},

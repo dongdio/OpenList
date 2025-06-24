@@ -42,7 +42,7 @@ func (d *Dropbox) Init(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	result := utils.Json.Get(res, "result").ToString()
+	result := utils.GetBytes(res, "result").String()
 	if result != query {
 		return fmt.Errorf("failed to check user: %s", string(res))
 	}
@@ -90,7 +90,7 @@ func (d *Dropbox) Link(ctx context.Context, file model.Obj, args model.LinkArgs)
 	if err != nil {
 		return nil, err
 	}
-	url := utils.Json.Get(res, "link").ToString()
+	url := utils.GetBytes(res, "link").String()
 	exp := time.Hour
 	return &model.Link{
 		URL:        url,

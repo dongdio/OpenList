@@ -5,11 +5,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/bytedance/sonic"
 	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/pkg/errors"
 
-	"github.com/dongdio/OpenList/internal/errs"
+	"github.com/dongdio/OpenList/pkg/errs"
 	"github.com/dongdio/OpenList/pkg/utils"
 	"github.com/dongdio/OpenList/pkg/utils/random"
 )
@@ -170,7 +169,7 @@ func (u *User) WebAuthnDisplayName() string {
 
 func (u *User) WebAuthnCredentials() []webauthn.Credential {
 	var res []webauthn.Credential
-	err := sonic.ConfigDefault.Unmarshal([]byte(u.Authn), &res)
+	err := utils.Json.Unmarshal([]byte(u.Authn), &res)
 	if err != nil {
 		fmt.Println(err)
 	}

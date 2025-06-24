@@ -238,7 +238,7 @@ func (d *Cloud189) oldUpload(dstDir model.Obj, file model.FileStreamer) error {
 	if err != nil {
 		return err
 	}
-	if utils.Json.Get(res.Bytes(), "MD5").ToString() != "" {
+	if utils.GetBytes(res.Bytes(), "MD5").String() != "" {
 		return nil
 	}
 	log.Debugf(res.String())
@@ -250,7 +250,7 @@ func (d *Cloud189) getSessionKey() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	sessionKey := utils.Json.Get(resp, "sessionKey").ToString()
+	sessionKey := utils.GetBytes(resp, "sessionKey").String()
 	return sessionKey, nil
 }
 
@@ -263,9 +263,9 @@ func (d *Cloud189) getResKey() (string, string, error) {
 	if err != nil {
 		return "", "", err
 	}
-	pubKey, pkId := utils.Json.Get(resp, "pubKey").ToString(), utils.Json.Get(resp, "pkId").ToString()
+	pubKey, pkId := utils.GetBytes(resp, "pubKey").String(), utils.GetBytes(resp, "pkId").String()
 	d.rsa.PubKey, d.rsa.PkId = pubKey, pkId
-	d.rsa.Expire = utils.Json.Get(resp, "expire").ToInt64()
+	d.rsa.Expire = utils.GetBytes(resp, "expire").Int()
 	return pubKey, pkId, nil
 }
 
@@ -306,7 +306,7 @@ func (d *Cloud189) uploadRequest(uri string, form map[string]string, resp any) (
 		return nil, err
 	}
 	data = res.Bytes()
-	if utils.Json.Get(data, "code").ToString() != "SUCCESS" {
+	if utils.GetBytes(data, "code").String() != "SUCCESS" {
 		return nil, errors.New(uri + "---" + jsoniter.Get(data, "msg").ToString())
 	}
 	return data, nil

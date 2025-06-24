@@ -18,9 +18,9 @@ import (
 	"github.com/dongdio/OpenList/drivers/base"
 	"github.com/dongdio/OpenList/internal/conf"
 	"github.com/dongdio/OpenList/internal/driver"
-	"github.com/dongdio/OpenList/internal/errs"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/pkg/errgroup"
+	"github.com/dongdio/OpenList/pkg/errs"
 	"github.com/dongdio/OpenList/pkg/utils"
 )
 
@@ -57,7 +57,7 @@ func (d *BaiduNetdisk) Init(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	d.vipType = utils.Json.Get(res, "vip_type").ToInt()
+	d.vipType = int(utils.GetBytes(res, "vip_type").Int())
 	return nil
 }
 
@@ -356,8 +356,8 @@ func (d *BaiduNetdisk) uploadSlice(ctx context.Context, params map[string]string
 		return err
 	}
 	log.Debugln(res.RawResponse.Status + res.String())
-	errCode := utils.Json.Get(res.Bytes(), "error_code").ToInt()
-	errNo := utils.Json.Get(res.Bytes(), "errno").ToInt()
+	errCode := utils.GetBytes(res.Bytes(), "error_code").Int()
+	errNo := utils.GetBytes(res.Bytes(), "errno").Int()
 	if errCode != 0 || errNo != 0 {
 		return errs.NewErr(errs.StreamIncomplete, "error in uploading to baidu, will retry. response=%s", res.String())
 	}

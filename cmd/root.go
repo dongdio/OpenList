@@ -10,8 +10,8 @@ import (
 	// Import required packages to register their initialization functions
 	_ "github.com/dongdio/OpenList/drivers"
 	"github.com/dongdio/OpenList/global"
-	_ "github.com/dongdio/OpenList/internal/archive"
 	_ "github.com/dongdio/OpenList/internal/offline_download"
+	_ "github.com/dongdio/OpenList/pkg/archive"
 )
 
 // Default CLI descriptions

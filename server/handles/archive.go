@@ -5,20 +5,19 @@ import (
 	"net/url"
 	stdpath "path"
 
-	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/dongdio/OpenList/internal/archive/tool"
 	"github.com/dongdio/OpenList/internal/conf"
-	"github.com/dongdio/OpenList/internal/errs"
 	"github.com/dongdio/OpenList/internal/fs"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
 	"github.com/dongdio/OpenList/internal/setting"
 	"github.com/dongdio/OpenList/internal/sign"
-	"github.com/dongdio/OpenList/internal/task"
+	"github.com/dongdio/OpenList/pkg/archive/tool"
+	"github.com/dongdio/OpenList/pkg/errs"
+	"github.com/dongdio/OpenList/pkg/task"
 	"github.com/dongdio/OpenList/pkg/utils"
 	"github.com/dongdio/OpenList/server/common"
 )
@@ -214,12 +213,12 @@ type StringOrArray []string
 
 func (s *StringOrArray) UnmarshalJSON(data []byte) error {
 	var value string
-	if err := sonic.ConfigDefault.Unmarshal(data, &value); err == nil {
+	if err := utils.Json.Unmarshal(data, &value); err == nil {
 		*s = []string{value}
 		return nil
 	}
 	var sliceValue []string
-	if err := sonic.ConfigDefault.Unmarshal(data, &sliceValue); err != nil {
+	if err := utils.Json.Unmarshal(data, &sliceValue); err != nil {
 		return err
 	}
 	*s = sliceValue

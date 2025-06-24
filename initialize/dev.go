@@ -7,9 +7,9 @@ import (
 
 	"github.com/dongdio/OpenList/global"
 	"github.com/dongdio/OpenList/internal/db"
-	"github.com/dongdio/OpenList/internal/message"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
+	"github.com/dongdio/OpenList/pkg/message"
 )
 
 func initDevData() {

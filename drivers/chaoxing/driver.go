@@ -12,15 +12,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bytedance/sonic"
 	"google.golang.org/appengine/log"
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/internal/driver"
-	"github.com/dongdio/OpenList/internal/errs"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
 	"github.com/dongdio/OpenList/pkg/cron"
+	"github.com/dongdio/OpenList/pkg/errs"
 	"github.com/dongdio/OpenList/pkg/utils"
 )
 
@@ -273,7 +272,7 @@ func (d *ChaoXing) Put(ctx context.Context, dstDir model.Obj, file model.FileStr
 		return err
 	}
 	var fileRsp UploadFileDataRsp
-	err = sonic.ConfigDefault.Unmarshal(bodys, &fileRsp)
+	err = utils.Json.Unmarshal(bodys, &fileRsp)
 	if err != nil {
 		return err
 	}
@@ -281,7 +280,7 @@ func (d *ChaoXing) Put(ctx context.Context, dstDir model.Obj, file model.FileStr
 		return errors.New(fileRsp.Msg)
 	}
 	uploadDoneParam := UploadDoneParam{Key: fileRsp.ObjectID, Cataid: "100000019", Param: fileRsp.Data}
-	params, err := sonic.ConfigDefault.Marshal(uploadDoneParam)
+	params, err := utils.Json.Marshal(uploadDoneParam)
 	if err != nil {
 		return err
 	}

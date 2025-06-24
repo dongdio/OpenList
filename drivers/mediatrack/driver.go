@@ -79,7 +79,7 @@ func (d *MediaTrack) Link(ctx context.Context, file model.Obj, args model.LinkAr
 	if err != nil {
 		return nil, err
 	}
-	token := utils.Json.Get(body, "data", "token").ToString()
+	token := utils.GetBytes(body, "data", "token").String()
 	url = "https://kayn.api.mediatrack.cn/v1/download/redirect?token=" + token
 	res, err := base.NoRedirectClient.R().Get(url)
 	if err != nil {

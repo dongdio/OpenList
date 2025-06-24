@@ -64,7 +64,7 @@ func (d *LanZou) post(url string, callback base.ReqCallback, resp any) ([]byte, 
 func (d *LanZou) _post(url string, callback base.ReqCallback, resp any, up bool) ([]byte, error) {
 	data, err := d.request(url, http.MethodPost, func(req *resty.Request) {
 		req.AddRetryConditions(func(r *resty.Response, err error) bool {
-			if utils.Json.Get(r.Bytes(), "zt").ToInt() == 4 {
+			if utils.GetBytes(r.Bytes(), "zt").Int() == 4 {
 				time.Sleep(time.Second)
 				return true
 			}
@@ -77,7 +77,7 @@ func (d *LanZou) _post(url string, callback base.ReqCallback, resp any, up bool)
 	if err != nil {
 		return data, err
 	}
-	switch utils.Json.Get(data, "zt").ToInt() {
+	switch utils.GetBytes(data, "zt").Int() {
 	case 1, 2, 4:
 		if resp != nil {
 			// 返回类型不统一,忽略错误
@@ -87,9 +87,9 @@ func (d *LanZou) _post(url string, callback base.ReqCallback, resp any, up bool)
 	case 9: // 登录过期
 		return data, ErrCookieExpiration
 	default:
-		info := utils.Json.Get(data, "inf").ToString()
+		info := utils.GetBytes(data, "inf").String()
 		if info == "" {
-			info = utils.Json.Get(data, "info").ToString()
+			info = utils.GetBytes(data, "info").String()
 		}
 		return data, fmt.Errorf(info)
 	}
@@ -143,7 +143,7 @@ func (d *LanZou) Login() ([]*http.Cookie, error) {
 	if err != nil {
 		return nil, err
 	}
-	if utils.Json.Get(resp.Bytes(), "zt").ToInt() != 1 {
+	if utils.GetBytes(resp.Bytes(), "zt").Int() != 1 {
 		return nil, fmt.Errorf("login err: %s", resp.Bytes())
 	}
 	d.Cookie = CookieToString(resp.Cookies())
@@ -456,7 +456,7 @@ func (d *LanZou) getFilesByShareUrl(shareID, pwd string, sharePageData string) (
 		if err != nil {
 			return nil, err
 		}
-		file.Url = utils.Json.Get(data, "url").ToString()
+		file.Url = utils.GetBytes(data, "url").String()
 	}
 	return &file, nil
 }

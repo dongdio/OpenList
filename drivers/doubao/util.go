@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"github.com/avast/retry-go"
-	"github.com/bytedance/sonic"
+
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
@@ -86,7 +86,7 @@ func (d *Doubao) request(path string, method string, callback base.ReqCallback, 
 
 	body := res.Bytes()
 	// 先解析为通用响应
-	if err = sonic.ConfigDefault.Unmarshal(body, &commonResp); err != nil {
+	if err = utils.Json.Unmarshal(body, &commonResp); err != nil {
 		return nil, err
 	}
 	// 检查响应是否成功
@@ -95,7 +95,7 @@ func (d *Doubao) request(path string, method string, callback base.ReqCallback, 
 	}
 
 	if resp != nil {
-		if err = sonic.ConfigDefault.Unmarshal(body, resp); err != nil {
+		if err = utils.Json.Unmarshal(body, resp); err != nil {
 			return body, err
 		}
 	}
@@ -763,7 +763,7 @@ func (d *Doubao) commitMultipartUpload(uploadConfig *UploadConfig) error {
 
 	videoCommitUploadResp := VideoCommitUploadResp{}
 
-	jsonBytes, err := sonic.ConfigDefault.Marshal(map[string]any{
+	jsonBytes, err := utils.Json.Marshal(map[string]any{
 		"SessionKey": uploadConfig.InnerUploadAddress.UploadNodes[0].SessionKey,
 		"Functions":  []base.Json{},
 	})

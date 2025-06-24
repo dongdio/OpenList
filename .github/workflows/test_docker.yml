@@ -92,7 +92,7 @@ jobs:
       packages: write
     strategy:
       matrix:
-        image: ['latest']
+        image: [ 'latest' ]
         include:
           - image: 'latest'
             build_arg: ''

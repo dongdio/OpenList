@@ -2,17 +2,18 @@ package utils
 
 import (
 	"os"
+	"strings"
 
 	"github.com/bytedance/sonic"
-	json "github.com/json-iterator/go"
 	log "github.com/sirupsen/logrus"
+	"github.com/tidwall/gjson"
 )
 
-var Json = json.ConfigCompatibleWithStandardLibrary
+var Json = sonic.ConfigDefault
 
 // WriteJsonToFile write struct to json file
 func WriteJsonToFile(dst string, data any) bool {
-	str, err := sonic.ConfigDefault.MarshalIndent(data, "", "  ")
+	str, err := Json.MarshalIndent(data, "", "  ")
 	if err != nil {
 		log.Errorf("failed convert Conf to []byte:%s", err.Error())
 		return false
@@ -23,4 +24,8 @@ func WriteJsonToFile(dst string, data any) bool {
 		return false
 	}
 	return true
+}
+
+func GetBytes(b []byte, path ...string) gjson.Result {
+	return gjson.GetBytes(b, strings.Join(path, "."))
 }

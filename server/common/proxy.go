@@ -12,10 +12,11 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	"github.com/dongdio/OpenList/pkg/stream"
+
 	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/internal/net"
-	"github.com/dongdio/OpenList/internal/stream"
 	"github.com/dongdio/OpenList/pkg/http_range"
+	net2 "github.com/dongdio/OpenList/pkg/net"
 	"github.com/dongdio/OpenList/pkg/utils"
 )
 
@@ -39,7 +40,7 @@ func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.
 		return nil
 	} else if link.RangeReadCloser != nil {
 		attachHeader(w, file)
-		return net.ServeHTTP(w, r, file.GetName(), file.ModTime(), file.GetSize(), &stream.RateLimitRangeReadCloser{
+		return net2.ServeHTTP(w, r, file.GetName(), file.ModTime(), file.GetSize(), &stream.RateLimitRangeReadCloser{
 			RangeReadCloserIF: link.RangeReadCloser,
 			Limiter:           stream.ServerDownloadLimit,
 		})
@@ -51,12 +52,12 @@ func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.
 			if requestHeader == nil {
 				requestHeader = http.Header{}
 			}
-			header := net.ProcessHeader(requestHeader.(http.Header), link.Header)
-			down := net.NewDownloader(func(d *net.Downloader) {
+			header := net2.ProcessHeader(requestHeader.(http.Header), link.Header)
+			down := net2.NewDownloader(func(d *net2.Downloader) {
 				d.Concurrency = link.Concurrency
 				d.PartSize = link.PartSize
 			})
-			req := &net.HttpRequestParams{
+			req := &net2.HttpRequestParams{
 				URL:       link.URL,
 				Range:     httpRange,
 				Size:      size,
@@ -65,14 +66,14 @@ func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.
 			rc, err := down.Download(ctx, req)
 			return rc, err
 		}
-		return net.ServeHTTP(w, r, file.GetName(), file.ModTime(), file.GetSize(), &stream.RateLimitRangeReadCloser{
+		return net2.ServeHTTP(w, r, file.GetName(), file.ModTime(), file.GetSize(), &stream.RateLimitRangeReadCloser{
 			RangeReadCloserIF: &model.RangeReadCloser{RangeReader: rangeReader},
 			Limiter:           stream.ServerDownloadLimit,
 		})
 	} else {
 		// transparent proxy
-		header := net.ProcessHeader(r.Header, link.Header)
-		res, err := net.RequestHttp(r.Context(), r.Method, header, link.URL)
+		header := net2.ProcessHeader(r.Header, link.Header)
+		res, err := net2.RequestHttp(r.Context(), r.Method, header, link.URL)
 		if err != nil {
 			return err
 		}

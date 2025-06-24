@@ -197,7 +197,7 @@ func (d *AliDrive) batch(srcId, dstId string, url string) error {
 	if err != nil {
 		return err
 	}
-	status := utils.Json.Get(res, "responses", 0, "status").ToInt()
+	status := utils.GetBytes(res, "responses.0.status").Int()
 	if status < 400 && status >= 100 {
 		return nil
 	}

@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/dongdio/OpenList/internal/errs"
+	"github.com/dongdio/OpenList/pkg/errs"
 
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"

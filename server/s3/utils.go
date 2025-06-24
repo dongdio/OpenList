@@ -5,14 +5,14 @@ import (
 	"strings"
 
 	"github.com/OpenListTeam/gofakes3"
-	"github.com/bytedance/sonic"
 
 	"github.com/dongdio/OpenList/internal/conf"
-	"github.com/dongdio/OpenList/internal/errs"
 	"github.com/dongdio/OpenList/internal/fs"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
 	"github.com/dongdio/OpenList/internal/setting"
+	"github.com/dongdio/OpenList/pkg/errs"
+	"github.com/dongdio/OpenList/pkg/utils"
 )
 
 // Bucket represents an S3 bucket configuration
@@ -24,7 +24,7 @@ type Bucket struct {
 // getAndParseBuckets retrieves and parses the S3 bucket configurations
 func getAndParseBuckets() ([]Bucket, error) {
 	var buckets []Bucket
-	err := sonic.ConfigDefault.Unmarshal([]byte(setting.GetStr(conf.S3Buckets)), &buckets)
+	err := utils.Json.Unmarshal([]byte(setting.GetStr(conf.S3Buckets)), &buckets)
 	return buckets, err
 }
 

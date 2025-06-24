@@ -81,7 +81,7 @@ func (d *Terabox) request(rurl string, method string, callback base.ReqCallback,
 	if err != nil {
 		return nil, err
 	}
-	errno := utils.Json.Get(res.Bytes(), "errno").ToInt()
+	errno := utils.GetBytes(res.Bytes(), "errno").Int()
 	if errno == 4000023 {
 		// reget jsToken
 		err = d.resetJsToken()

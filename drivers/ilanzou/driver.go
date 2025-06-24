@@ -16,11 +16,12 @@ import (
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
 
+	"github.com/dongdio/OpenList/pkg/stream"
+
 	"github.com/dongdio/OpenList/drivers/base"
 	"github.com/dongdio/OpenList/internal/driver"
-	"github.com/dongdio/OpenList/internal/errs"
 	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/internal/stream"
+	"github.com/dongdio/OpenList/pkg/errs"
 	"github.com/dongdio/OpenList/pkg/utils"
 )
 
@@ -50,14 +51,14 @@ func (d *ILanZou) Init(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		d.UUID = utils.Json.Get(res, "uuid").ToString()
+		d.UUID = utils.GetBytes(res, "uuid").String()
 	}
 	res, err := d.proved("/user/account/map", http.MethodGet, nil)
 	if err != nil {
 		return err
 	}
-	d.userID = utils.Json.Get(res, "map", "userId").ToString()
-	d.account = utils.Json.Get(res, "map", "account").ToString()
+	d.userID = utils.GetBytes(res, "map", "userId").String()
+	d.account = utils.GetBytes(res, "map", "account").String()
 	log.Debugf("[ilanzou] init response: %s", res)
 	return nil
 }
@@ -167,7 +168,7 @@ func (d *ILanZou) Link(ctx context.Context, file model.Obj, args model.LinkArgs)
 	if res.StatusCode() == 302 {
 		realURL = res.Header().Get("location")
 	} else {
-		return nil, fmt.Errorf("redirect failed, status: %d, msg: %s", res.StatusCode(), utils.Json.Get(res.Bytes(), "msg").ToString())
+		return nil, fmt.Errorf("redirect failed, status: %d, msg: %s", res.StatusCode(), utils.GetBytes(res.Bytes(), "msg").String())
 	}
 	link := model.Link{URL: realURL}
 	return &link, nil
@@ -185,7 +186,7 @@ func (d *ILanZou) MakeDir(ctx context.Context, parentDir model.Obj, dirName stri
 		return nil, err
 	}
 	return &model.Object{
-		ID: utils.Json.Get(res, "list", 0, "id").ToString(),
+		ID: utils.GetBytes(res, "list.0.id").String(),
 		// Path:     "",
 		Name:     dirName,
 		Size:     0,
@@ -296,7 +297,7 @@ func (d *ILanZou) Put(ctx context.Context, dstDir model.Obj, s model.FileStreame
 	if err != nil {
 		return nil, err
 	}
-	upToken := utils.Json.Get(res, "upToken").ToString()
+	upToken := utils.GetBytes(res, "upToken").String()
 	now := time.Now()
 	key := fmt.Sprintf("disk/%d/%d/%d/%s/%016d", now.Year(), now.Month(), now.Day(), d.account, now.UnixMilli())
 	reader := driver.NewLimitedUploadStream(ctx, &driver.ReaderUpdatingProgress{
@@ -317,14 +318,14 @@ func (d *ILanZou) Put(ctx context.Context, dstDir model.Obj, s model.FileStreame
 		if err != nil {
 			return nil, err
 		}
-		token = utils.Json.Get(res.Bytes(), "token").ToString()
+		token = utils.GetBytes(res.Bytes(), "token").String()
 	} else {
 		keyBase64 := base64.URLEncoding.EncodeToString([]byte(key))
 		res, err := d.upClient.R().SetHeader("Authorization", "UpToken "+upToken).Post(fmt.Sprintf("https://upload.qiniup.com/buckets/%s/objects/%s/uploads", d.conf.bucket, keyBase64))
 		if err != nil {
 			return nil, err
 		}
-		uploadId := utils.Json.Get(res.Bytes(), "uploadId").ToString()
+		uploadId := utils.GetBytes(res.Bytes(), "uploadId").String()
 		parts := make([]Part, 0)
 		partNum := (s.GetSize() + DefaultPartSize - 1) / DefaultPartSize
 		for i := 1; i <= int(partNum); i++ {
@@ -333,7 +334,7 @@ func (d *ILanZou) Put(ctx context.Context, dstDir model.Obj, s model.FileStreame
 			if err != nil {
 				return nil, err
 			}
-			etag := utils.Json.Get(res.Bytes(), "etag").ToString()
+			etag := utils.GetBytes(res.Bytes(), "etag").String()
 			parts = append(parts, Part{
 				PartNumber: i,
 				ETag:       etag,
@@ -346,7 +347,7 @@ func (d *ILanZou) Put(ctx context.Context, dstDir model.Obj, s model.FileStreame
 		if err != nil {
 			return nil, err
 		}
-		token = utils.Json.Get(res.Bytes(), "token").ToString()
+		token = utils.GetBytes(res.Bytes(), "token").String()
 	}
 	// commit upload
 	var resp UploadResultResp

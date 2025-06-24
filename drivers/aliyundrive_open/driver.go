@@ -14,8 +14,8 @@ import (
 
 	"github.com/dongdio/OpenList/drivers/base"
 	"github.com/dongdio/OpenList/internal/driver"
-	"github.com/dongdio/OpenList/internal/errs"
 	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/pkg/errs"
 	"github.com/dongdio/OpenList/pkg/utils"
 )
 
@@ -49,7 +49,7 @@ func (d *AliyundriveOpen) Init(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	d.DriveId = utils.Json.Get(res, d.DriveType+"_drive_id").ToString()
+	d.DriveId = utils.GetBytes(res, d.DriveType+"_drive_id").String()
 	d.limitList = rateg.LimitFnCtx(d.list, rateg.LimitFnOption{
 		Limit:  4,
 		Bucket: 1,
@@ -119,12 +119,12 @@ func (d *AliyundriveOpen) link(ctx context.Context, file model.Obj) (*model.Link
 	if err != nil {
 		return nil, err
 	}
-	url := utils.Json.Get(res, "url").ToString()
+	url := utils.GetBytes(res, "url").String()
 	if url == "" {
 		if utils.Ext(file.GetName()) != "livp" {
 			return nil, errors.New("get download url failed: " + string(res))
 		}
-		url = utils.Json.Get(res, "streamsUrl", d.LIVPDownloadFormat).ToString()
+		url = utils.GetBytes(res, "streamsUrl", d.LIVPDownloadFormat).String()
 	}
 	exp := time.Minute
 	return &model.Link{

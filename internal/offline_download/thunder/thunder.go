@@ -10,10 +10,10 @@ import (
 	"github.com/dongdio/OpenList/internal/setting"
 
 	"github.com/dongdio/OpenList/drivers/thunder"
-	"github.com/dongdio/OpenList/internal/errs"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/offline_download/tool"
 	"github.com/dongdio/OpenList/internal/op"
+	"github.com/dongdio/OpenList/pkg/errs"
 )
 
 type Thunder struct {

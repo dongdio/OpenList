@@ -12,10 +12,9 @@ import (
 	"io"
 	"iter"
 
-	"github.com/bytedance/sonic"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/dongdio/OpenList/internal/errs"
+	"github.com/dongdio/OpenList/pkg/errs"
 )
 
 func GetMD5EncodeStr(data string) string {
@@ -200,7 +199,7 @@ func NewHashInfo(ht *HashType, str string) HashInfo {
 }
 
 func (hi HashInfo) String() string {
-	result, err := sonic.ConfigDefault.Marshal(hi.h)
+	result, err := Json.Marshal(hi.h)
 	if err != nil {
 		return ""
 	}
@@ -209,7 +208,7 @@ func (hi HashInfo) String() string {
 func FromString(str string) HashInfo {
 	hi := NewHashInfo(nil, "")
 	var tmp map[string]string
-	err := sonic.ConfigDefault.Unmarshal([]byte(str), &tmp)
+	err := Json.Unmarshal([]byte(str), &tmp)
 	if err != nil {
 		log.Warnf("failed to unmarsh HashInfo from string=%s", str)
 	} else {
