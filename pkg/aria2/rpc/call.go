@@ -2,7 +2,6 @@ package rpc
 
 import (
 	"context"
-	"errors"
 	"net"
 	"net/http"
 	"net/url"
@@ -14,12 +13,14 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// caller is the interface for making RPC calls to aria2 daemon
 type caller interface {
 	// Call sends a request of rpc to aria2 daemon
-	Call(method string, params, reply any) (err error)
+	Call(method string, params, reply interface{}) (err error)
 	Close() error
 }
 
+// httpCaller implements caller interface using HTTP
 type httpCaller struct {
 	uri    string
 	c      *http.Client
@@ -28,6 +29,7 @@ type httpCaller struct {
 	once   sync.Once
 }
 
+// newHTTPCaller creates a new HTTP-based RPC caller
 func newHTTPCaller(ctx context.Context, u *url.URL, timeout time.Duration, notifier Notifier) *httpCaller {
 	c := &http.Client{
 		Transport: &http.Transport{
@@ -51,6 +53,7 @@ func newHTTPCaller(ctx context.Context, u *url.URL, timeout time.Duration, notif
 	return h
 }
 
+// Close shuts down the HTTP caller
 func (h *httpCaller) Close() (err error) {
 	h.once.Do(func() {
 		h.cancel()
@@ -59,6 +62,7 @@ func (h *httpCaller) Close() (err error) {
 	return
 }
 
+// setNotifier establishes a WebSocket connection for notifications
 func (h *httpCaller) setNotifier(ctx context.Context, u url.URL, notifier Notifier) (err error) {
 	u.Scheme = "ws"
 	conn, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
@@ -74,7 +78,7 @@ func (h *httpCaller) setNotifier(ctx context.Context, u url.URL, notifier Notifi
 			conn.SetWriteDeadline(time.Now().Add(time.Second))
 			if err := conn.WriteMessage(websocket.CloseMessage,
 				websocket.FormatCloseMessage(websocket.CloseNormalClosure, "")); err != nil {
-				log.Printf("sending websocket close message: %v", err)
+				log.WithError(err).Warn("Failed to send websocket close message")
 			}
 			return
 		}
@@ -96,31 +100,17 @@ func (h *httpCaller) setNotifier(ctx context.Context, u url.URL, notifier Notifi
 					return
 				default:
 				}
-				log.Printf("conn.ReadJSON|err:%v", err.Error())
+				log.WithError(err).Error("Failed to read JSON from websocket")
 				return
 			}
-			switch request.Method {
-			case "aria2.onDownloadStart":
-				notifier.OnDownloadStart(request.Params)
-			case "aria2.onDownloadPause":
-				notifier.OnDownloadPause(request.Params)
-			case "aria2.onDownloadStop":
-				notifier.OnDownloadStop(request.Params)
-			case "aria2.onDownloadComplete":
-				notifier.OnDownloadComplete(request.Params)
-			case "aria2.onDownloadError":
-				notifier.OnDownloadError(request.Params)
-			case "aria2.onBtDownloadComplete":
-				notifier.OnBtDownloadComplete(request.Params)
-			default:
-				log.Printf("unexpected notification: %s", request.Method)
-			}
+			processNotification(request, notifier)
 		}
 	}()
 	return
 }
 
-func (h httpCaller) Call(method string, params, reply any) (err error) {
+// Call makes an RPC call using HTTP
+func (h httpCaller) Call(method string, params, reply interface{}) (err error) {
 	payload, err := EncodeClientRequest(method, params)
 	if err != nil {
 		return
@@ -129,11 +119,12 @@ func (h httpCaller) Call(method string, params, reply any) (err error) {
 	if err != nil {
 		return
 	}
-	err = DecodeClientResponse(r.Body, &reply)
-	r.Body.Close()
+	defer r.Body.Close()
+	err = DecodeClientResponse(r.Body, reply)
 	return
 }
 
+// websocketCaller implements caller interface using WebSocket
 type websocketCaller struct {
 	conn     *websocket.Conn
 	sendChan chan *sendRequest
@@ -143,6 +134,7 @@ type websocketCaller struct {
 	timeout  time.Duration
 }
 
+// newWebsocketCaller creates a new WebSocket-based RPC caller
 func newWebsocketCaller(ctx context.Context, uri string, timeout time.Duration, notifier Notifier) (*websocketCaller, error) {
 	var header = http.Header{}
 	conn, _, err := websocket.DefaultDialer.Dial(uri, header)
@@ -172,27 +164,12 @@ func newWebsocketCaller(ctx context.Context, uri string, timeout time.Duration, 
 					return
 				default:
 				}
-				log.Printf("conn.ReadJSON|err:%v", err.Error())
+				log.WithError(err).Error("Failed to read JSON from websocket")
 				return
 			}
-			if resp.Id == nil { // RPC notifications
+			if resp.ID == nil { // RPC notifications
 				if notifier != nil {
-					switch resp.Method {
-					case "aria2.onDownloadStart":
-						notifier.OnDownloadStart(resp.Params)
-					case "aria2.onDownloadPause":
-						notifier.OnDownloadPause(resp.Params)
-					case "aria2.onDownloadStop":
-						notifier.OnDownloadStop(resp.Params)
-					case "aria2.onDownloadComplete":
-						notifier.OnDownloadComplete(resp.Params)
-					case "aria2.onDownloadError":
-						notifier.OnDownloadError(resp.Params)
-					case "aria2.onBtDownloadComplete":
-						notifier.OnBtDownloadComplete(resp.Params)
-					default:
-						log.Printf("unexpected notification: %s", resp.Method)
-					}
+					processNotification(resp, notifier)
 				}
 				continue
 			}
@@ -210,17 +187,19 @@ func newWebsocketCaller(ctx context.Context, uri string, timeout time.Duration, 
 			case <-ctx.Done():
 				if err := w.conn.WriteMessage(websocket.CloseMessage,
 					websocket.FormatCloseMessage(websocket.CloseNormalClosure, "")); err != nil {
-					log.Printf("sending websocket close message: %v", err)
+					log.WithError(err).Warn("Failed to send websocket close message")
 				}
 				return
 			case req := <-sendChan:
-				processor.Add(req.request.Id, func(resp clientResponse) error {
+				processor.Add(req.request.ID, func(resp clientResponse) error {
 					err := resp.decode(req.reply)
 					req.cancel()
 					return err
 				})
 				w.conn.SetWriteDeadline(time.Now().Add(timeout))
-				w.conn.WriteJSON(req.request)
+				if err := w.conn.WriteJSON(req.request); err != nil {
+					log.WithError(err).Error("Failed to write JSON to websocket")
+				}
 			}
 		}
 	}()
@@ -228,6 +207,7 @@ func newWebsocketCaller(ctx context.Context, uri string, timeout time.Duration, 
 	return w, nil
 }
 
+// Close shuts down the WebSocket caller
 func (w *websocketCaller) Close() (err error) {
 	w.once.Do(func() {
 		w.cancel()
@@ -236,7 +216,8 @@ func (w *websocketCaller) Close() (err error) {
 	return
 }
 
-func (w websocketCaller) Call(method string, params, reply any) (err error) {
+// Call makes an RPC call using WebSocket
+func (w websocketCaller) Call(method string, params, reply interface{}) (err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), w.timeout)
 	defer cancel()
 	select {
@@ -244,28 +225,44 @@ func (w websocketCaller) Call(method string, params, reply any) (err error) {
 		Version: "2.0",
 		Method:  method,
 		Params:  params,
-		Id:      reqid(),
+		ID:      reqid(),
 	}, reply: reply}:
-
-	default:
-		return errors.New("sending channel blocking")
-	}
-
-	select {
+		return
 	case <-ctx.Done():
-		if err := ctx.Err(); err == context.DeadlineExceeded {
-			return err
-		}
+		return errConnTimeout
 	}
-	return
 }
 
+// processNotification handles notification events from aria2
+func processNotification(resp websocketResponse, notifier Notifier) {
+	switch resp.Method {
+	case "aria2.onDownloadStart":
+		notifier.OnDownloadStart(resp.Params)
+	case "aria2.onDownloadPause":
+		notifier.OnDownloadPause(resp.Params)
+	case "aria2.onDownloadStop":
+		notifier.OnDownloadStop(resp.Params)
+	case "aria2.onDownloadComplete":
+		notifier.OnDownloadComplete(resp.Params)
+	case "aria2.onDownloadError":
+		notifier.OnDownloadError(resp.Params)
+	case "aria2.onBtDownloadComplete":
+		notifier.OnBtDownloadComplete(resp.Params)
+	default:
+		log.WithField("method", resp.Method).Warn("Unexpected notification method")
+	}
+}
+
+// sendRequest represents a request to be sent via WebSocket
 type sendRequest struct {
 	cancel  context.CancelFunc
 	request *clientRequest
-	reply   any
+	reply   interface{}
 }
 
+// generateReqID returns a function that generates unique request IDs.
+// It is implemented as a closure to ensure that the counter is thread-safe
+// and initialized only once.
 var reqid = func() func() uint64 {
 	var id = uint64(time.Now().UnixNano())
 	return func() uint64 {

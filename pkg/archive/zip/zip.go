@@ -77,24 +77,23 @@ func (Zip) List(ss []*stream.SeekableStream, args model.ArchiveInnerArgs) ([]mod
 			ret = append(ret, dir)
 		}
 		return ret, nil
-	} else {
-		innerPath := strings.TrimPrefix(args.InnerPath, "/") + "/"
-		ret := make([]model.Obj, 0)
-		exist := false
-		for _, file := range zipReader.File {
-			name := decodeName(file.Name)
-			dir := stdpath.Dir(strings.TrimSuffix(name, "/")) + "/"
-			if dir != innerPath {
-				continue
-			}
-			exist = true
-			ret = append(ret, tool2.MakeModelObj(&WrapFileInfo{file.FileInfo()}))
-		}
-		if !exist {
-			return nil, errs.ObjectNotFound
-		}
-		return ret, nil
 	}
+	innerPath := strings.TrimPrefix(args.InnerPath, "/") + "/"
+	ret := make([]model.Obj, 0)
+	exist := false
+	for _, file := range zipReader.File {
+		name := decodeName(file.Name)
+		dir := stdpath.Dir(strings.TrimSuffix(name, "/")) + "/"
+		if dir != innerPath {
+			continue
+		}
+		exist = true
+		ret = append(ret, tool2.MakeModelObj(&WrapFileInfo{file.FileInfo()}))
+	}
+	if !exist {
+		return nil, errs.ObjectNotFound
+	}
+	return ret, nil
 }
 
 func (Zip) Extract(ss []*stream.SeekableStream, args model.ArchiveInnerArgs) (io.ReadCloser, int64, error) {
@@ -104,16 +103,17 @@ func (Zip) Extract(ss []*stream.SeekableStream, args model.ArchiveInnerArgs) (io
 	}
 	innerPath := strings.TrimPrefix(args.InnerPath, "/")
 	for _, file := range zipReader.File {
-		if decodeName(file.Name) == innerPath {
-			if file.IsEncrypted() {
-				file.SetPassword(args.Password)
-			}
-			r, e := file.Open()
-			if e != nil {
-				return nil, 0, e
-			}
-			return r, file.FileInfo().Size(), nil
+		if decodeName(file.Name) != innerPath {
+			continue
 		}
+		if file.IsEncrypted() {
+			file.SetPassword(args.Password)
+		}
+		r, e := file.Open()
+		if e != nil {
+			return nil, 0, e
+		}
+		return r, file.FileInfo().Size(), nil
 	}
 	return nil, 0, errs.ObjectNotFound
 }

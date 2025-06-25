@@ -79,18 +79,17 @@ func makeOpts(ss []*stream.SeekableStream) (string, rardecode.Option, error) {
 			fileName: {SStreamReadAtSeeker: reader, name: fileName},
 		}}
 		return fileName, rardecode.FileSystem(fsys), nil
-	} else {
-		parts := make(map[string]*VolumeFile, len(ss))
-		for i, s := range ss {
-			reader, err := stream.NewReadAtSeeker(s, 0)
-			if err != nil {
-				return "", nil, err
-			}
-			fileName := fmt.Sprintf("file.part%d.rar", i+1)
-			parts[fileName] = &VolumeFile{SStreamReadAtSeeker: reader, name: fileName}
-		}
-		return "file.part1.rar", rardecode.FileSystem(&VolumeFs{parts: parts}), nil
 	}
+	parts := make(map[string]*VolumeFile, len(ss))
+	for i, s := range ss {
+		reader, err := stream.NewReadAtSeeker(s, 0)
+		if err != nil {
+			return "", nil, err
+		}
+		fileName := fmt.Sprintf("file.part%d.rar", i+1)
+		parts[fileName] = &VolumeFile{SStreamReadAtSeeker: reader, name: fileName}
+	}
+	return "file.part1.rar", rardecode.FileSystem(&VolumeFs{parts: parts}), nil
 }
 
 type WrapReader struct {

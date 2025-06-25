@@ -4,6 +4,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// Event represents an aria2 download event notification
 type Event struct {
 	Gid string `json:"gid"` // GID of the download
 }
@@ -12,6 +13,7 @@ type Event struct {
 // Notifications is unidirectional, therefore the client which receives the notification must not respond to it.
 // The method signature of a notification is much like a normal method request but lacks the id key
 
+// websocketResponse represents a websocket notification response from aria2
 type websocketResponse struct {
 	clientResponse
 	Method string  `json:"method"`
@@ -34,11 +36,47 @@ type Notifier interface {
 	OnBtDownloadComplete([]Event)
 }
 
+// DummyNotifier implements Notifier interface with simple logging
 type DummyNotifier struct{}
 
-func (DummyNotifier) OnDownloadStart(events []Event)      { log.Printf("%s started.", events) }
-func (DummyNotifier) OnDownloadPause(events []Event)      { log.Printf("%s paused.", events) }
-func (DummyNotifier) OnDownloadStop(events []Event)       { log.Printf("%s stopped.", events) }
-func (DummyNotifier) OnDownloadComplete(events []Event)   { log.Printf("%s completed.", events) }
-func (DummyNotifier) OnDownloadError(events []Event)      { log.Printf("%s error.", events) }
-func (DummyNotifier) OnBtDownloadComplete(events []Event) { log.Printf("bt %s completed.", events) }
+// OnDownloadStart logs when downloads start
+func (DummyNotifier) OnDownloadStart(events []Event) {
+	for _, event := range events {
+		log.WithField("gid", event.Gid).Info("Download started")
+	}
+}
+
+// OnDownloadPause logs when downloads are paused
+func (DummyNotifier) OnDownloadPause(events []Event) {
+	for _, event := range events {
+		log.WithField("gid", event.Gid).Info("Download paused")
+	}
+}
+
+// OnDownloadStop logs when downloads are stopped
+func (DummyNotifier) OnDownloadStop(events []Event) {
+	for _, event := range events {
+		log.WithField("gid", event.Gid).Info("Download stopped")
+	}
+}
+
+// OnDownloadComplete logs when downloads complete
+func (DummyNotifier) OnDownloadComplete(events []Event) {
+	for _, event := range events {
+		log.WithField("gid", event.Gid).Info("Download completed")
+	}
+}
+
+// OnDownloadError logs when downloads error
+func (DummyNotifier) OnDownloadError(events []Event) {
+	for _, event := range events {
+		log.WithField("gid", event.Gid).Error("Download error")
+	}
+}
+
+// OnBtDownloadComplete logs when BitTorrent downloads complete
+func (DummyNotifier) OnBtDownloadComplete(events []Event) {
+	for _, event := range events {
+		log.WithField("gid", event.Gid).Info("BitTorrent download completed")
+	}
+}

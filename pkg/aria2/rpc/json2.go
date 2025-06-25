@@ -29,11 +29,11 @@ type clientRequest struct {
 	Method string `json:"method"`
 
 	// Object to pass as request parameter to the method.
-	Params any `json:"params"`
+	Params interface{} `json:"params"`
 
 	// The request id. This can be of any type. It is used to match the
 	// response with the request that it is replying to.
-	Id uint64 `json:"id"`
+	ID uint64 `json:"id"`
 }
 
 // clientResponse represents a JSON-RPC response returned to a client.
@@ -41,17 +41,17 @@ type clientResponse struct {
 	Version string           `json:"jsonrpc"`
 	Result  *json.RawMessage `json:"result"`
 	Error   *json.RawMessage `json:"error"`
-	Id      *uint64          `json:"id"`
+	ID      *uint64          `json:"id"`
 }
 
 // EncodeClientRequest encodes parameters for a JSON-RPC client request.
-func EncodeClientRequest(method string, args any) (*bytes.Buffer, error) {
+func EncodeClientRequest(method string, args interface{}) (*bytes.Buffer, error) {
 	var buf bytes.Buffer
 	c := &clientRequest{
 		Version: "2.0",
 		Method:  method,
 		Params:  args,
-		Id:      reqid(),
+		ID:      reqid(),
 	}
 	if err := utils.Json.NewEncoder(&buf).Encode(c); err != nil {
 		return nil, err
@@ -59,12 +59,12 @@ func EncodeClientRequest(method string, args any) (*bytes.Buffer, error) {
 	return &buf, nil
 }
 
-func (c clientResponse) decode(reply any) error {
+func (c clientResponse) decode(reply interface{}) error {
 	if c.Error != nil {
 		jsonErr := &Error{}
 		if err := utils.Json.Unmarshal(*c.Error, jsonErr); err != nil {
 			return &Error{
-				Code:    E_SERVER,
+				Code:    ErrServer,
 				Message: string(*c.Error),
 			}
 		}
@@ -80,7 +80,7 @@ func (c clientResponse) decode(reply any) error {
 
 // DecodeClientResponse decodes the response body of a client request into
 // the interface reply.
-func DecodeClientResponse(r io.Reader, reply any) error {
+func DecodeClientResponse(r io.Reader, reply interface{}) error {
 	var c clientResponse
 	if err := utils.Json.NewDecoder(r).Decode(&c); err != nil {
 		return err
@@ -88,19 +88,28 @@ func DecodeClientResponse(r io.Reader, reply any) error {
 	return c.decode(reply)
 }
 
+// ErrorCode represents JSON-RPC error codes
 type ErrorCode int
 
 const (
-	E_PARSE       ErrorCode = -32700
-	E_INVALID_REQ ErrorCode = -32600
-	E_NO_METHOD   ErrorCode = -32601
-	E_BAD_PARAMS  ErrorCode = -32602
-	E_INTERNAL    ErrorCode = -32603
-	E_SERVER      ErrorCode = -32000
+	// ErrParse is returned when the server cannot parse the request
+	ErrParse ErrorCode = -32700
+	// ErrInvalidReq is returned when the request is invalid
+	ErrInvalidReq ErrorCode = -32600
+	// ErrNoMethod is returned when the method does not exist
+	ErrNoMethod ErrorCode = -32601
+	// ErrBadParams is returned when the parameters are invalid
+	ErrBadParams ErrorCode = -32602
+	// ErrInternal is returned when there is an internal error
+	ErrInternal ErrorCode = -32603
+	// ErrServer is returned when there is a server error
+	ErrServer ErrorCode = -32000
 )
 
+// ErrNullResult is returned when the result is null
 var ErrNullResult = errors.New("result is null")
 
+// Error represents a JSON-RPC error
 type Error struct {
 	// A Number that indicates the error type that occurred.
 	Code ErrorCode `json:"code"` /* required */
@@ -110,9 +119,10 @@ type Error struct {
 	Message string `json:"message"` /* required */
 
 	// A Primitive or Structured value that contains additional information about the error.
-	Data any `json:"data"` /* optional */
+	Data interface{} `json:"data"` /* optional */
 }
 
+// Error returns the error message
 func (e *Error) Error() string {
 	return e.Message
 }

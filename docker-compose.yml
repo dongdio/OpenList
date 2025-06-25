@@ -1,15 +1,36 @@
 services:
   openlist:
-    restart: always
-    volumes:
-      - '/etc/openlist:/opt/openlist/data'
-    ports:
-      - '5244:5244'
-      - '5245:5245'
+    image: ghcr.io/openlistteam/openlist-git:beta-aio
+    container_name: openlist
+    depends_on:
+      - qbittorrentee
     environment:
       - PUID=0
       - PGID=0
       - UMASK=022
-      - TZ=UTC
-    container_name: openlist
-    image: 'openlistteam/openlistteam/openlist:latest'
+      - TZ=Asia/Shanghai
+    ports:
+      - 5244:5244
+    volumes:
+      - /opt/openlist/data:/opt/openlist/data
+      - /opt/openlist/data/temp/qBittorrent:/opt/openlist/data/temp/qBittorrent
+    restart: unless-stopped
+
+  qbittorrentee:
+    image: superng6/qbittorrentee:latest
+    container_name: qbittorrentee
+    environment:
+      - PUID=0
+      - PGID=0
+      - TZ=Asia/Shanghai
+      - WEBUIPORT=6699
+      - ENABLE_DOWNLOADS_PERM_FIX=true
+    volumes:
+      - /opt/qbittorrentee/config:/config
+      - /opt/qbittorrentee/downloads:/downloads
+      - /opt/openlist/data/temp/qBittorrent:/opt/openlist/data/temp/qBittorrent
+    ports:
+      - 6881:6881
+      - 6881:6881/udp
+      - 6699:6699
+    restart: unless-stopped

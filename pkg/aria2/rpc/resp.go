@@ -92,11 +92,11 @@ type VersionInfo struct {
 
 // SessionInfo represents response of aria2.getSessionInfo
 type SessionInfo struct {
-	Id string `json:"sessionId"` // Session ID, which is generated each time when aria2 is invoked.
+	ID string `json:"sessionId"` // Session ID, which is generated each time when aria2 is invoked.
 }
 
 // Method is an element of parameters used in system.multicall
 type Method struct {
-	Name   string `json:"methodName"` // Method name to call
-	Params []any  `json:"params"`     // Array containing parameters to the method call
+	Name   string        `json:"methodName"` // Method name to call
+	Params []interface{} `json:"params"`     // Array containing parameters to the method call
 }

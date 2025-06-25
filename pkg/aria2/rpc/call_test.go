@@ -15,9 +15,9 @@ func TestWebsocketCaller(t *testing.T) {
 	defer c.Close()
 
 	var info VersionInfo
-	if err := c.Call(aria2GetVersion, []any{}, &info); err != nil {
+	if err := c.Call(aria2GetVersion, []interface{}{}, &info); err != nil {
 		t.Error(err.Error())
 	} else {
-		println(info.Version)
+		t.Logf("Version: %s", info.Version)
 	}
 }
