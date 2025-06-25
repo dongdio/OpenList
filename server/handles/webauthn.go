@@ -19,15 +19,45 @@ import (
 	"github.com/dongdio/OpenList/server/common"
 )
 
+// WebAuthn 相关常量
+const (
+	// 会话数据头名称
+	HeaderSessionData = "Session"
+	// 用户名查询参数
+	QueryUsername = "username"
+	// 错误消息
+	ErrWebAuthnNotEnabled = "WebAuthn 未启用"
+	// 成功消息
+	MsgRegisteredSuccess = "注册成功"
+	MsgDeletedSuccess    = "删除成功"
+)
+
+// DeleteAuthnRequest WebAuthn 凭证删除请求
+type DeleteAuthnRequest struct {
+	ID string `json:"id" binding:"required"` // 凭证ID
+}
+
+// WebAuthnCredential WebAuthn 凭证信息
+type WebAuthnCredential struct {
+	ID          []byte `json:"id"`          // 凭证ID
+	FingerPrint string `json:"fingerprint"` // 指纹（AAGUID的十六进制表示）
+}
+
+// BeginAuthnLogin 开始 WebAuthn 登录流程
+// 支持两种模式：
+// 1. 用户名登录：通过查询参数提供用户名
+// 2. 可发现凭证登录：不提供用户名，由客户端选择凭证
 func BeginAuthnLogin(c *gin.Context) {
-	enabled := setting.GetBool(conf.WebauthnLoginEnabled)
-	if !enabled {
-		common.ErrorStrResp(c, "WebAuthn is not enabled", 403)
+	// 检查 WebAuthn 是否启用
+	if !setting.GetBool(conf.WebauthnLoginEnabled) {
+		common.ErrorStrResp(c, ErrWebAuthnNotEnabled, 403)
 		return
 	}
+
+	// 创建 WebAuthn 实例
 	authnInstance, err := authn.NewAuthnInstance(c.Request)
 	if err != nil {
-		common.ErrorResp(c, err, 400)
+		common.ErrorResp(c, fmt.Errorf("创建 WebAuthn 实例失败: %w", err), 400)
 		return
 	}
 
@@ -35,205 +65,267 @@ func BeginAuthnLogin(c *gin.Context) {
 		options     *protocol.CredentialAssertion
 		sessionData *webauthn.SessionData
 	)
-	if username := c.Query("username"); username != "" {
-		var user *model.User
-		user, err = db.GetUserByName(username)
-		if err == nil {
-			options, sessionData, err = authnInstance.BeginLogin(user)
+
+	// 根据是否提供用户名选择登录模式
+	username := c.Query(QueryUsername)
+	if username != "" {
+		// 用户名登录模式
+		user, err := db.GetUserByName(username)
+		if err != nil {
+			common.ErrorResp(c, fmt.Errorf("获取用户信息失败: %w", err), 400)
+			return
 		}
-	} else { // client-side discoverable login
+		options, sessionData, err = authnInstance.BeginLogin(user)
+	} else {
+		// 可发现凭证登录模式
 		options, sessionData, err = authnInstance.BeginDiscoverableLogin()
 	}
+
 	if err != nil {
-		common.ErrorResp(c, err, 400)
+		common.ErrorResp(c, fmt.Errorf("开始登录流程失败: %w", err), 400)
 		return
 	}
 
-	val, err := utils.Json.Marshal(sessionData)
+	// 序列化会话数据
+	sessionBytes, err := utils.Json.Marshal(sessionData)
 	if err != nil {
-		common.ErrorResp(c, err, 400)
+		common.ErrorResp(c, fmt.Errorf("序列化会话数据失败: %w", err), 400)
 		return
 	}
+
+	// 返回登录选项和会话数据
 	common.SuccessResp(c, gin.H{
 		"options": options,
-		"session": val,
+		"session": sessionBytes,
 	})
 }
 
+// FinishAuthnLogin 完成 WebAuthn 登录流程
+// 验证客户端提供的凭证，成功后生成登录令牌
 func FinishAuthnLogin(c *gin.Context) {
-	enabled := setting.GetBool(conf.WebauthnLoginEnabled)
-	if !enabled {
-		common.ErrorStrResp(c, "WebAuthn is not enabled", 403)
-		return
-	}
-	authnInstance, err := authn.NewAuthnInstance(c.Request)
-	if err != nil {
-		common.ErrorResp(c, err, 400)
+	// 检查 WebAuthn 是否启用
+	if !setting.GetBool(conf.WebauthnLoginEnabled) {
+		common.ErrorStrResp(c, ErrWebAuthnNotEnabled, 403)
 		return
 	}
 
-	sessionDataString := c.GetHeader("session")
+	// 创建 WebAuthn 实例
+	authnInstance, err := authn.NewAuthnInstance(c.Request)
+	if err != nil {
+		common.ErrorResp(c, fmt.Errorf("创建 WebAuthn 实例失败: %w", err), 400)
+		return
+	}
+
+	// 获取并解析会话数据
+	sessionDataString := c.GetHeader(HeaderSessionData)
+	if sessionDataString == "" {
+		common.ErrorStrResp(c, "缺少会话数据", 400)
+		return
+	}
+
 	sessionDataBytes, err := base64.StdEncoding.DecodeString(sessionDataString)
 	if err != nil {
-		common.ErrorResp(c, err, 400)
+		common.ErrorResp(c, fmt.Errorf("解码会话数据失败: %w", err), 400)
 		return
 	}
 
 	var sessionData webauthn.SessionData
 	if err = utils.Json.Unmarshal(sessionDataBytes, &sessionData); err != nil {
-		common.ErrorResp(c, err, 400)
+		common.ErrorResp(c, fmt.Errorf("解析会话数据失败: %w", err), 400)
 		return
 	}
 
 	var user *model.User
-	if username := c.Query("username"); username != "" {
+	username := c.Query(QueryUsername)
+	if username != "" {
+		// 用户名登录模式
 		user, err = db.GetUserByName(username)
 		if err != nil {
-			common.ErrorResp(c, err, 400)
+			common.ErrorResp(c, fmt.Errorf("获取用户信息失败: %w", err), 400)
 			return
 		}
 		_, err = authnInstance.FinishLogin(user, sessionData, c.Request)
-	} else { // client-side discoverable login
+	} else {
+		// 可发现凭证登录模式
 		_, err = authnInstance.FinishDiscoverableLogin(func(_, userHandle []byte) (webauthn.User, error) {
-			// first param `rawID` in this callback function is equal to ID in webauthn.Credential,
-			// but it's unnnecessary to check it.
-			// userHandle param is equal to (User).WebAuthnID().
+			// userHandle 参数等同于 (User).WebAuthnID()
 			userID := uint(binary.LittleEndian.Uint64(userHandle))
 			user, err = db.GetUserById(userID)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("通过用户ID获取用户失败: %w", err)
 			}
-
 			return user, nil
 		}, sessionData, c.Request)
 	}
+
 	if err != nil {
-		common.ErrorResp(c, err, 400)
+		common.ErrorResp(c, fmt.Errorf("完成登录流程失败: %w", err), 400)
 		return
 	}
 
+	// 生成登录令牌
 	token, err := common.GenerateToken(user)
 	if err != nil {
-		common.ErrorResp(c, err, 400, true)
+		common.ErrorResp(c, fmt.Errorf("生成令牌失败: %w", err), 400)
 		return
 	}
+
 	common.SuccessResp(c, gin.H{"token": token})
 }
 
+// BeginAuthnRegistration 开始 WebAuthn 注册流程
+// 为当前用户生成注册选项
 func BeginAuthnRegistration(c *gin.Context) {
-	enabled := setting.GetBool(conf.WebauthnLoginEnabled)
-	if !enabled {
-		common.ErrorStrResp(c, "WebAuthn is not enabled", 403)
+	// 检查 WebAuthn 是否启用
+	if !setting.GetBool(conf.WebauthnLoginEnabled) {
+		common.ErrorStrResp(c, ErrWebAuthnNotEnabled, 403)
 		return
 	}
+
+	// 获取当前用户
 	user := c.MustGet("user").(*model.User)
 
+	// 创建 WebAuthn 实例
 	authnInstance, err := authn.NewAuthnInstance(c.Request)
 	if err != nil {
-		common.ErrorResp(c, err, 400)
+		common.ErrorResp(c, fmt.Errorf("创建 WebAuthn 实例失败: %w", err), 400)
+		return
 	}
 
+	// 开始注册流程
 	options, sessionData, err := authnInstance.BeginRegistration(user)
-
 	if err != nil {
-		common.ErrorResp(c, err, 400)
+		common.ErrorResp(c, fmt.Errorf("开始注册流程失败: %w", err), 400)
+		return
 	}
 
-	val, err := utils.Json.Marshal(sessionData)
+	// 序列化会话数据
+	sessionBytes, err := utils.Json.Marshal(sessionData)
 	if err != nil {
-		common.ErrorResp(c, err, 400)
+		common.ErrorResp(c, fmt.Errorf("序列化会话数据失败: %w", err), 400)
+		return
 	}
 
+	// 返回注册选项和会话数据
 	common.SuccessResp(c, gin.H{
 		"options": options,
-		"session": val,
+		"session": sessionBytes,
 	})
 }
 
+// FinishAuthnRegistration 完成 WebAuthn 注册流程
+// 验证并保存客户端提供的凭证
 func FinishAuthnRegistration(c *gin.Context) {
-	enabled := setting.GetBool(conf.WebauthnLoginEnabled)
-	if !enabled {
-		common.ErrorStrResp(c, "WebAuthn is not enabled", 403)
+	// 检查 WebAuthn 是否启用
+	if !setting.GetBool(conf.WebauthnLoginEnabled) {
+		common.ErrorStrResp(c, ErrWebAuthnNotEnabled, 403)
 		return
 	}
-	user := c.MustGet("user").(*model.User)
-	sessionDataString := c.GetHeader("Session")
 
+	// 获取当前用户
+	user := c.MustGet("user").(*model.User)
+
+	// 获取会话数据
+	sessionDataString := c.GetHeader(HeaderSessionData)
+	if sessionDataString == "" {
+		common.ErrorStrResp(c, "缺少会话数据", 400)
+		return
+	}
+
+	// 创建 WebAuthn 实例
 	authnInstance, err := authn.NewAuthnInstance(c.Request)
 	if err != nil {
-		common.ErrorResp(c, err, 400)
+		common.ErrorResp(c, fmt.Errorf("创建 WebAuthn 实例失败: %w", err), 400)
 		return
 	}
 
+	// 解码会话数据
 	sessionDataBytes, err := base64.StdEncoding.DecodeString(sessionDataString)
 	if err != nil {
-		common.ErrorResp(c, err, 400)
+		common.ErrorResp(c, fmt.Errorf("解码会话数据失败: %w", err), 400)
 		return
 	}
 
+	// 解析会话数据
 	var sessionData webauthn.SessionData
 	if err = utils.Json.Unmarshal(sessionDataBytes, &sessionData); err != nil {
-		common.ErrorResp(c, err, 400)
+		common.ErrorResp(c, fmt.Errorf("解析会话数据失败: %w", err), 400)
 		return
 	}
 
+	// 完成注册流程
 	credential, err := authnInstance.FinishRegistration(user, sessionData, c.Request)
+	if err != nil {
+		common.ErrorResp(c, fmt.Errorf("完成注册流程失败: %w", err), 400)
+		return
+	}
 
-	if err != nil {
-		common.ErrorResp(c, err, 400)
+	// 保存凭证
+	if err = db.RegisterAuthn(user, credential); err != nil {
+		common.ErrorResp(c, fmt.Errorf("保存凭证失败: %w", err), 400)
 		return
 	}
-	err = db.RegisterAuthn(user, credential)
-	if err != nil {
-		common.ErrorResp(c, err, 400)
+
+	// 清除用户缓存
+	if err = op.DelUserCache(user.Username); err != nil {
+		common.ErrorResp(c, fmt.Errorf("清除用户缓存失败: %w", err), 400)
 		return
 	}
-	err = op.DelUserCache(user.Username)
-	if err != nil {
-		common.ErrorResp(c, err, 400)
-		return
-	}
-	common.SuccessResp(c, "Registered Successfully")
+
+	common.SuccessResp(c, MsgRegisteredSuccess)
 }
 
+// DeleteAuthnLogin 删除 WebAuthn 登录凭证
 func DeleteAuthnLogin(c *gin.Context) {
+	// 获取当前用户
 	user := c.MustGet("user").(*model.User)
-	type DeleteAuthnReq struct {
-		ID string `json:"id"`
-	}
-	var req DeleteAuthnReq
-	err := c.ShouldBind(&req)
-	if err != nil {
-		common.ErrorResp(c, err, 400)
+
+	// 解析请求
+	var req DeleteAuthnRequest
+	if err := c.ShouldBind(&req); err != nil {
+		common.ErrorResp(c, fmt.Errorf("解析请求失败: %w", err), 400)
 		return
 	}
-	err = db.RemoveAuthn(user, req.ID)
-	if err != nil {
-		common.ErrorResp(c, err, 400)
+
+	// 检查ID是否为空
+	if req.ID == "" {
+		common.ErrorStrResp(c, "凭证ID不能为空", 400)
 		return
 	}
-	err = op.DelUserCache(user.Username)
-	if err != nil {
-		common.ErrorResp(c, err, 400)
+
+	// 删除凭证
+	if err := db.RemoveAuthn(user, req.ID); err != nil {
+		common.ErrorResp(c, fmt.Errorf("删除凭证失败: %w", err), 400)
 		return
 	}
-	common.SuccessResp(c, "Deleted Successfully")
+
+	// 清除用户缓存
+	if err := op.DelUserCache(user.Username); err != nil {
+		common.ErrorResp(c, fmt.Errorf("清除用户缓存失败: %w", err), 400)
+		return
+	}
+
+	common.SuccessResp(c, MsgDeletedSuccess)
 }
 
+// GetAuthnCredentials 获取用户的 WebAuthn 凭证列表
 func GetAuthnCredentials(c *gin.Context) {
-	type WebAuthnCredentials struct {
-		ID          []byte `json:"id"`
-		FingerPrint string `json:"fingerprint"`
-	}
+	// 获取当前用户
 	user := c.MustGet("user").(*model.User)
+
+	// 获取用户凭证
 	credentials := user.WebAuthnCredentials()
-	res := make([]WebAuthnCredentials, 0, len(credentials))
-	for _, v := range credentials {
-		credential := WebAuthnCredentials{
-			ID:          v.ID,
-			FingerPrint: fmt.Sprintf("% X", v.Authenticator.AAGUID),
-		}
-		res = append(res, credential)
+
+	// 预分配结果切片容量
+	result := make([]WebAuthnCredential, 0, len(credentials))
+
+	// 转换凭证格式
+	for _, credential := range credentials {
+		result = append(result, WebAuthnCredential{
+			ID:          credential.ID,
+			FingerPrint: fmt.Sprintf("% X", credential.Authenticator.AAGUID),
+		})
 	}
-	common.SuccessResp(c, res)
+
+	common.SuccessResp(c, result)
 }

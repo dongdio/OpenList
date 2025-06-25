@@ -13,13 +13,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"resty.dev/v3"
 
-	"github.com/dongdio/OpenList/pkg/stream"
-
 	"github.com/dongdio/OpenList/drivers/base"
 	"github.com/dongdio/OpenList/internal/driver"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
 	"github.com/dongdio/OpenList/pkg/errs"
+	"github.com/dongdio/OpenList/pkg/stream"
 	"github.com/dongdio/OpenList/pkg/utils"
 	hash_extend "github.com/dongdio/OpenList/pkg/utils/hash"
 )
@@ -60,7 +59,7 @@ func (x *Thunder) Init(ctx context.Context) (err error) {
 				},
 				DeviceID: func() string {
 					if len(x.DeviceID) != 32 {
-						return utils.GetMD5EncodeStr(x.DeviceID)
+						return utils.GetMD5EncodeStr(x.Username + x.Password)
 					}
 					return x.DeviceID
 				}(),

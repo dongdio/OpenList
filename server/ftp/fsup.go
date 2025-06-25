@@ -12,13 +12,12 @@ import (
 	ftpserver "github.com/fclairamb/ftpserverlib"
 	"github.com/pkg/errors"
 
-	"github.com/dongdio/OpenList/pkg/stream"
-
 	"github.com/dongdio/OpenList/internal/conf"
 	"github.com/dongdio/OpenList/internal/fs"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
 	"github.com/dongdio/OpenList/pkg/errs"
+	"github.com/dongdio/OpenList/pkg/stream"
 	"github.com/dongdio/OpenList/server/common"
 )
 

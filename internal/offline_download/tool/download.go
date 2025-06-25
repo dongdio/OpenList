@@ -88,10 +88,13 @@ outer:
 	if t.tool.Name() == "Thunder" {
 		return nil
 	}
+	if t.tool.Name() == "ThunderBrowser" {
+		return nil
+	}
 	if t.tool.Name() == "115 Cloud" {
 		// hack for 115
 		<-time.After(time.Second * 1)
-		err := t.tool.Remove(t)
+		err = t.tool.Remove(t)
 		if err != nil {
 			log.Errorln(err.Error())
 		}
@@ -104,7 +107,7 @@ outer:
 		if seedTime >= 0 {
 			t.Status = "offline download completed, waiting for seeding"
 			<-time.After(time.Minute * time.Duration(seedTime))
-			err := t.tool.Remove(t)
+			err = t.tool.Remove(t)
 			if err != nil {
 				log.Errorln(err.Error())
 			}
@@ -117,7 +120,7 @@ outer:
 		if seedTime >= 0 {
 			t.Status = "offline download completed, waiting for seeding"
 			<-time.After(time.Minute * time.Duration(seedTime))
-			err := t.tool.Remove(t)
+			err = t.tool.Remove(t)
 			if err != nil {
 				log.Errorln(err.Error())
 			}
@@ -160,7 +163,7 @@ func (t *DownloadTask) Update() (bool, error) {
 
 func (t *DownloadTask) Transfer() error {
 	toolName := t.tool.Name()
-	if toolName == "115 Cloud" || toolName == "PikPak" || toolName == "Thunder" {
+	if toolName == "115 Cloud" || toolName == "PikPak" || toolName == "Thunder" || toolName == "ThunderBrowser" {
 		// 如果不是直接下载到目标路径，则进行转存
 		if t.TempDir != t.DstDirPath {
 			return transferObj(t.Ctx(), t.TempDir, t.DstDirPath, t.DeletePolicy)

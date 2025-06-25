@@ -1,0 +1,108 @@
+<script>
+    const originalConsole = window.console;
+    Object.defineProperty(window, 'console', {
+        get: _ => {
+            return {
+                log: _ => { },
+                warn: _ => { },
+                info: _ => { },
+                debug: _ => { },
+            };
+        }
+    });
+    setTimeout(_ => {
+        Object.defineProperty(window, 'console', {
+            get: _ => {
+                return originalConsole;
+            }
+        });
+    }, 8000);
+    document.querySelector('html').removeAttribute('translate');
+    setTimeout(_ => {
+        document.querySelector("head > script[src='https://g.alicdn.com/IMM/office-js/1.1.5/aliyun-web-office-sdk.min.js']").remove();
+        document.querySelector("head > meta[name='apple-mobile-web-app-capable']").remove();
+        document.querySelector("head > meta[name='apple-mobile-web-app-title']").remove();
+        document.querySelector("head > link[rel='apple-touch-icon']").remove();
+        document.querySelector("head > meta[name='generator']").remove();
+        document.querySelector("head > meta[name='google']").remove();
+        document.querySelector("head > meta[name='theme-color']").remove();
+    }, 1);
+    let headObserve = new MutationObserver(_ => {
+        try { document.querySelector("head > link[href='https://registry.npmmirror.com/katex/0.16.11/files/dist/katex.min.css']").remove(); } catch (e) { }
+        try { document.querySelector("head > link[rel='manifest']").remove(); } catch (e) { }
+    });
+    headObserve.observe(document.head, { childList: true, subtree: true });
+    setTimeout(_ => {
+        headObserve.disconnect();
+    }, 3000);
+</script>
+
+<link rel="dns-prefetch" href="https://fonts.googleapis.com">
+<link rel="dns-prefetch" href="https://fonts.gstatic.com">
+<link rel="dns-prefetch" href="https://cdn.jsdmirror.com">
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin="anonymous">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link rel="preconnect" href="https://cdn.jsdmirror.com" crossorigin="anonymous">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@100..900&display=swap" crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap" crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="https://cdn.jsdmirror.com/gh/kasuie/alist-customize@main/v3/css/index.min.css" type="text/css" crossorigin="anonymous">
+
+<style>
+    * {
+        font-family: "JetBrains Mono", "Noto Sans SC", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", system-ui, -apple-system, emoji, monospace !important;
+        font-feature-settings: "liga" off, "calt" off !important;
+        -webkit-font-smoothing: antialiased !important;
+        text-rendering: optimizeLegibility !important;
+    }
+
+    body {
+        <!-- background-image: url(""); -->
+        background-position: center center;
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+    }
+
+    div:has(> div.markdown > div.markdown-body) {
+        backdrop-filter: blur(8px);
+        background-color: rgba(32, 36, 37, 0.8);
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        border-bottom: 0 !important;
+    }
+
+    div.obj-box {
+        backdrop-filter: blur(8px);
+        background-color: rgba(32, 36, 37, 0.8);
+    }
+
+    nav[aria-label="breadcrumb"] {
+        backdrop-filter: blur(8px);
+        background-color: rgba(21, 23, 24, 0.8);
+        padding: .5rem 1rem;
+        border-radius: var(--hope-radii-xl);
+    }
+
+    #root>div.header {
+        display: none !important;
+    }
+
+    #root>div.hope-container>div.body {
+        min-height: unset !important;
+    }
+
+    #root>div.hope-center>div:nth-child(2) {
+        display: none !important;
+    }
+
+    #root>div.hope-center>div.hope-stack>div:nth-child(7) {
+        display: none !important;
+    }
+</style>

@@ -12,6 +12,7 @@ import (
 	_115 "github.com/dongdio/OpenList/drivers/115"
 	"github.com/dongdio/OpenList/drivers/pikpak"
 	"github.com/dongdio/OpenList/drivers/thunder"
+	"github.com/dongdio/OpenList/drivers/thunder_browser"
 	"github.com/dongdio/OpenList/internal/conf"
 	"github.com/dongdio/OpenList/internal/fs"
 	"github.com/dongdio/OpenList/internal/model"
@@ -103,6 +104,13 @@ func AddURL(ctx context.Context, args *AddURLArgs) (task.TaskExtensionInfo, erro
 			tempDir = args.DstDirPath
 		} else {
 			tempDir = filepath.Join(setting.GetStr(conf.ThunderTempDir), uid)
+		}
+	case "ThunderBrowser":
+		switch storage.(type) {
+		case *thunder_browser.ThunderBrowser, *thunder_browser.ThunderBrowserExpert:
+			tempDir = args.DstDirPath
+		default:
+			tempDir = filepath.Join(setting.GetStr(conf.ThunderBrowserTempDir), uid)
 		}
 	}
 

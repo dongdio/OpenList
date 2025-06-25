@@ -87,7 +87,8 @@ func ParseToken(tokenString string) (*UserClaims, error) {
 
 	// 处理解析错误
 	if err != nil {
-		if ve, ok := err.(*jwt.ValidationError); ok {
+		var ve *jwt.ValidationError
+		if errors.As(err, &ve) {
 			if ve.Errors&jwt.ValidationErrorMalformed != 0 {
 				return nil, errors.New("令牌格式不正确")
 			} else if ve.Errors&jwt.ValidationErrorExpired != 0 {

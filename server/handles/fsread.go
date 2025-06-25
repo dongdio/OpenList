@@ -20,19 +20,22 @@ import (
 	"github.com/dongdio/OpenList/server/common"
 )
 
+// ListReq 文件列表请求参数
 type ListReq struct {
 	model.PageReq
-	Path     string `json:"path" form:"path"`
+	Path     string `json:"path" form:"path" binding:"required"`
 	Password string `json:"password" form:"password"`
 	Refresh  bool   `json:"refresh"`
 }
 
+// DirReq 目录请求参数
 type DirReq struct {
-	Path      string `json:"path" form:"path"`
+	Path      string `json:"path" form:"path" binding:"required"`
 	Password  string `json:"password" form:"password"`
 	ForceRoot bool   `json:"force_root" form:"force_root"`
 }
 
+// ObjResp 对象响应结构
 type ObjResp struct {
 	Id          string                     `json:"id"`
 	Path        string                     `json:"path"`
@@ -48,6 +51,7 @@ type ObjResp struct {
 	HashInfo    map[*utils.HashType]string `json:"hash_info"`
 }
 
+// FsListResp 文件列表响应结构
 type FsListResp struct {
 	Content  []ObjResp `json:"content"`
 	Total    int64     `json:"total"`
@@ -57,46 +61,63 @@ type FsListResp struct {
 	Provider string    `json:"provider"`
 }
 
+// FsList 获取文件列表
 func FsList(c *gin.Context) {
 	var req ListReq
 	if err := c.ShouldBind(&req); err != nil {
 		common.ErrorResp(c, err, 400)
 		return
 	}
+
+	// 验证分页参数
 	req.Validate()
+
+	// 获取用户和路径
 	user := c.MustGet("user").(*model.User)
 	reqPath, err := user.JoinPath(req.Path)
 	if err != nil {
 		common.ErrorResp(c, err, 403)
 		return
 	}
+
+	// 获取元数据
 	meta, err := op.GetNearestMeta(reqPath)
-	if err != nil {
-		if !errors.Is(errors.Cause(err), errs.MetaNotFound) {
-			common.ErrorResp(c, err, 500, true)
-			return
-		}
+	if err != nil && !errors.Is(errors.Cause(err), errs.MetaNotFound) {
+		common.ErrorResp(c, err, 500, true)
+		return
 	}
 	c.Set("meta", meta)
+
+	// 检查访问权限
 	if !common.CanAccess(user, meta, reqPath, req.Password) {
 		common.ErrorStrResp(c, "password is incorrect or you have no permission", 403)
 		return
 	}
+
+	// 检查刷新权限
 	if !user.CanWrite() && !common.CanWrite(meta, reqPath) && req.Refresh {
 		common.ErrorStrResp(c, "Refresh without permission", 403)
 		return
 	}
+
+	// 获取文件列表
 	objs, err := fs.List(c, reqPath, &fs.ListArgs{Refresh: req.Refresh})
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}
+
+	// 分页处理
 	total, objs := pagination(objs, &req.PageReq)
+
+	// 获取存储提供者信息
 	provider := "unknown"
 	storage, err := fs.GetStorage(reqPath, &fs.GetStoragesArgs{})
 	if err == nil {
 		provider = storage.GetStorage().Driver
 	}
+
+	// 返回结果
 	common.SuccessResp(c, FsListResp{
 		Content:  toObjsResp(objs, reqPath, isEncrypt(meta, reqPath)),
 		Total:    int64(total),
@@ -107,13 +128,18 @@ func FsList(c *gin.Context) {
 	})
 }
 
+// FsDirs 获取目录列表
 func FsDirs(c *gin.Context) {
 	var req DirReq
 	if err := c.ShouldBind(&req); err != nil {
 		common.ErrorResp(c, err, 400)
 		return
 	}
+
+	// 获取用户
 	user := c.MustGet("user").(*model.User)
+
+	// 处理路径
 	reqPath := req.Path
 	if req.ForceRoot {
 		if !user.IsAdmin() {
@@ -128,34 +154,42 @@ func FsDirs(c *gin.Context) {
 		}
 		reqPath = tmp
 	}
+
+	// 获取元数据
 	meta, err := op.GetNearestMeta(reqPath)
-	if err != nil {
-		if !errors.Is(errors.Cause(err), errs.MetaNotFound) {
-			common.ErrorResp(c, err, 500, true)
-			return
-		}
+	if err != nil && !errors.Is(errors.Cause(err), errs.MetaNotFound) {
+		common.ErrorResp(c, err, 500, true)
+		return
 	}
 	c.Set("meta", meta)
+
+	// 检查访问权限
 	if !common.CanAccess(user, meta, reqPath, req.Password) {
 		common.ErrorStrResp(c, "password is incorrect or you have no permission", 403)
 		return
 	}
+
+	// 获取文件列表
 	objs, err := fs.List(c, reqPath, &fs.ListArgs{})
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}
+
+	// 过滤出目录
 	dirs := filterDirs(objs)
 	common.SuccessResp(c, dirs)
 }
 
+// DirResp 目录响应结构
 type DirResp struct {
 	Name     string    `json:"name"`
 	Modified time.Time `json:"modified"`
 }
 
+// filterDirs 过滤目录
 func filterDirs(objs []model.Obj) []DirResp {
-	var dirs []DirResp
+	dirs := make([]DirResp, 0, len(objs))
 	for _, obj := range objs {
 		if obj.IsDir() {
 			dirs = append(dirs, DirResp{
@@ -167,6 +201,7 @@ func filterDirs(objs []model.Obj) []DirResp {
 	return dirs
 }
 
+// getReadme 获取README内容
 func getReadme(meta *model.Meta, path string) string {
 	if meta != nil && (utils.PathEqual(meta.Path, path) || meta.RSub) {
 		return meta.Readme
@@ -174,6 +209,7 @@ func getReadme(meta *model.Meta, path string) string {
 	return ""
 }
 
+// getHeader 获取Header内容
 func getHeader(meta *model.Meta, path string) string {
 	if meta != nil && (utils.PathEqual(meta.Path, path) || meta.HeaderSub) {
 		return meta.Header
@@ -181,6 +217,7 @@ func getHeader(meta *model.Meta, path string) string {
 	return ""
 }
 
+// isEncrypt 检查路径是否加密
 func isEncrypt(meta *model.Meta, path string) bool {
 	if common.IsStorageSignEnabled(path) {
 		return true
@@ -194,22 +231,30 @@ func isEncrypt(meta *model.Meta, path string) bool {
 	return true
 }
 
+// pagination 分页处理
 func pagination(objs []model.Obj, req *model.PageReq) (int, []model.Obj) {
 	pageIndex, pageSize := req.Page, req.PerPage
 	total := len(objs)
+
+	// 计算起始位置
 	start := (pageIndex - 1) * pageSize
-	if start > total {
+	if start >= total {
 		return total, []model.Obj{}
 	}
+
+	// 计算结束位置
 	end := start + pageSize
 	if end > total {
 		end = total
 	}
+
 	return total, objs[start:end]
 }
 
+// toObjsResp 转换对象为响应格式
 func toObjsResp(objs []model.Obj, parent string, encrypt bool) []ObjResp {
-	var resp []ObjResp
+	resp := make([]ObjResp, 0, len(objs))
+
 	for _, obj := range objs {
 		thumb, _ := model.GetThumb(obj)
 		resp = append(resp, ObjResp{
@@ -227,14 +272,17 @@ func toObjsResp(objs []model.Obj, parent string, encrypt bool) []ObjResp {
 			Type:        utils.GetObjType(obj.GetName(), obj.IsDir()),
 		})
 	}
+
 	return resp
 }
 
+// FsGetReq 获取文件请求参数
 type FsGetReq struct {
-	Path     string `json:"path" form:"path"`
+	Path     string `json:"path" form:"path" binding:"required"`
 	Password string `json:"password" form:"password"`
 }
 
+// FsGetResp 获取文件响应结构
 type FsGetResp struct {
 	ObjResp
 	RawURL   string    `json:"raw_url"`
@@ -244,55 +292,68 @@ type FsGetResp struct {
 	Related  []ObjResp `json:"related"`
 }
 
+// FsGet 获取文件信息
 func FsGet(c *gin.Context) {
 	var req FsGetReq
 	if err := c.ShouldBind(&req); err != nil {
 		common.ErrorResp(c, err, 400)
 		return
 	}
+
+	// 获取用户和路径
 	user := c.MustGet("user").(*model.User)
 	reqPath, err := user.JoinPath(req.Path)
 	if err != nil {
 		common.ErrorResp(c, err, 403)
 		return
 	}
+
+	// 获取元数据
 	meta, err := op.GetNearestMeta(reqPath)
-	if err != nil {
-		if !errors.Is(errors.Cause(err), errs.MetaNotFound) {
-			common.ErrorResp(c, err, 500)
-			return
-		}
+	if err != nil && !errors.Is(errors.Cause(err), errs.MetaNotFound) {
+		common.ErrorResp(c, err, 500)
+		return
 	}
 	c.Set("meta", meta)
+
+	// 检查访问权限
 	if !common.CanAccess(user, meta, reqPath, req.Password) {
 		common.ErrorStrResp(c, "password is incorrect or you have no permission", 403)
 		return
 	}
+
+	// 获取文件对象
 	obj, err := fs.Get(c, reqPath, &fs.GetArgs{})
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}
-	var rawURL string
 
+	// 获取存储提供者信息
+	var rawURL string
 	storage, err := fs.GetStorage(reqPath, &fs.GetStoragesArgs{})
 	provider := "unknown"
 	if err == nil {
 		provider = storage.Config().Name
+	} else {
+		common.ErrorResp(c, err, 500)
+		return
 	}
+
+	// 处理非目录文件
 	if !obj.IsDir() {
-		if err != nil {
-			common.ErrorResp(c, err, 500)
-			return
-		}
 		if storage.Config().MustProxy() || storage.GetStorage().WebProxy {
+			// 处理需要代理的情况
 			query := ""
 			if isEncrypt(meta, reqPath) || setting.GetBool(conf.SignAll) {
 				query = "?sign=" + sign.Sign(reqPath)
 			}
+
+			// 使用下载代理URL或默认API URL
 			if storage.GetStorage().DownProxyUrl != "" {
+				proxyUrls := strings.Split(storage.GetStorage().DownProxyUrl, "\n")
 				rawURL = fmt.Sprintf("%s%s?sign=%s",
-					strings.Split(storage.GetStorage().DownProxyUrl, "\n")[0],
+					proxyUrls[0],
 					utils.EncodePath(reqPath, true),
 					sign.Sign(reqPath))
 			} else {
@@ -302,11 +363,11 @@ func FsGet(c *gin.Context) {
 					query)
 			}
 		} else {
-			// file have raw url
+			// 文件有原始URL
 			if url, ok := model.GetUrl(obj); ok {
 				rawURL = url
 			} else {
-				// if storage is not proxy, use raw url by fs.Link
+				// 如果存储不是代理，使用fs.Link获取原始URL
 				link, _, err := fs.Link(c, reqPath, model.LinkArgs{
 					IP:       c.ClientIP(),
 					Header:   c.Request.Header,
@@ -321,14 +382,20 @@ func FsGet(c *gin.Context) {
 			}
 		}
 	}
+
+	// 获取相关文件
 	var related []model.Obj
 	parentPath := stdpath.Dir(reqPath)
 	sameLevelFiles, err := fs.List(c, parentPath, &fs.ListArgs{})
 	if err == nil {
 		related = filterRelated(sameLevelFiles, obj)
 	}
+
+	// 获取父目录元数据
 	parentMeta, _ := op.GetNearestMeta(parentPath)
 	thumb, _ := model.GetThumb(obj)
+
+	// 返回结果
 	common.SuccessResp(c, FsGetResp{
 		ObjResp: ObjResp{
 			Id:          obj.GetID(),
@@ -352,9 +419,11 @@ func FsGet(c *gin.Context) {
 	})
 }
 
+// filterRelated 过滤相关文件
 func filterRelated(objs []model.Obj, obj model.Obj) []model.Obj {
 	var related []model.Obj
 	nameWithoutExt := strings.TrimSuffix(obj.GetName(), stdpath.Ext(obj.GetName()))
+
 	for _, o := range objs {
 		if o.GetName() == obj.GetName() {
 			continue
@@ -363,20 +432,25 @@ func filterRelated(objs []model.Obj, obj model.Obj) []model.Obj {
 			related = append(related, o)
 		}
 	}
+
 	return related
 }
 
+// FsOtherReq 其他文件系统操作请求参数
 type FsOtherReq struct {
 	model.FsOtherArgs
 	Password string `json:"password" form:"password"`
 }
 
+// FsOther 处理其他文件系统操作
 func FsOther(c *gin.Context) {
 	var req FsOtherReq
 	if err := c.ShouldBind(&req); err != nil {
 		common.ErrorResp(c, err, 400)
 		return
 	}
+
+	// 获取用户和路径
 	user := c.MustGet("user").(*model.User)
 	var err error
 	req.Path, err = user.JoinPath(req.Path)
@@ -384,22 +458,27 @@ func FsOther(c *gin.Context) {
 		common.ErrorResp(c, err, 403)
 		return
 	}
+
+	// 获取元数据
 	meta, err := op.GetNearestMeta(req.Path)
-	if err != nil {
-		if !errors.Is(errors.Cause(err), errs.MetaNotFound) {
-			common.ErrorResp(c, err, 500)
-			return
-		}
+	if err != nil && !errors.Is(errors.Cause(err), errs.MetaNotFound) {
+		common.ErrorResp(c, err, 500)
+		return
 	}
 	c.Set("meta", meta)
+
+	// 检查访问权限
 	if !common.CanAccess(user, meta, req.Path, req.Password) {
 		common.ErrorStrResp(c, "password is incorrect or you have no permission", 403)
 		return
 	}
+
+	// 执行其他操作
 	res, err := fs.Other(c, req.FsOtherArgs)
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}
+
 	common.SuccessResp(c, res)
 }

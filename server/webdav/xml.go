@@ -4,7 +4,7 @@
 
 package webdav
 
-// The XML encoding is covered by Section 14.
+// XML 编码相关实现，遵循 WebDAV 规范第 14 节
 // http://www.webdav.org/specs/rfc4918.html#xml.element.definitions
 
 import (
@@ -17,46 +17,44 @@ import (
 
 	"github.com/pkg/errors"
 
-	// As of https://go-review.googlesource.com/#/c/12772/ which was submitted
-	// in July 2015, this package uses an internal fork of the standard
-	// library's encoding/xml package, due to changes in the way namespaces
-	// were encoded. Such changes were introduced in the Go 1.5 cycle, but were
-	// rolled back in response to https://github.com/golang/go/issues/11841
+	// 由于 Go 1.5 中对命名空间编码方式的变更（后来在 Go 1.6 中被回滚），
+	// 本包使用了标准库 encoding/xml 的内部分支。
+	// 这是因为 https://github.com/golang/go/issues/11841 问题的存在。
 	//
-	// However, this package's exported API, specifically the Property and
-	// DeadPropsHolder types, need to refer to the standard library's version
-	// of the xml.Name type, as code that imports this package cannot refer to
-	// the internal version.
+	// 然而，本包的导出 API（特别是 Property 和 DeadPropsHolder 类型）
+	// 需要引用标准库版本的 xml.Name 类型，因为导入本包的代码无法引用内部版本。
 	//
-	// This file therefore imports both the internal and external versions, as
-	// ixml and xml, and converts between them.
+	// 因此，本文件同时导入内部版本和外部版本，分别命名为 ixml 和 xml，并在它们之间进行转换。
 	//
-	// In the long term, this package should use the standard library's version
-	// only, and the internal fork deleted, once
-	// https://github.com/golang/go/issues/13400 is resolved.
+	// 长期来看，一旦 https://github.com/golang/go/issues/13400 得到解决，
+	// 本包应该只使用标准库版本，并删除内部分支。
 	ixml "github.com/dongdio/OpenList/server/webdav/internal/xml"
 )
 
+// lockInfo 表示锁定信息
 // http://www.webdav.org/specs/rfc4918.html#ELEMENT_lockinfo
 type lockInfo struct {
 	XMLName   ixml.Name `xml:"lockinfo"`
-	Exclusive *struct{} `xml:"lockscope>exclusive"`
-	Shared    *struct{} `xml:"lockscope>shared"`
-	Write     *struct{} `xml:"locktype>write"`
-	Owner     owner     `xml:"owner"`
+	Exclusive *struct{} `xml:"lockscope>exclusive"` // 独占锁
+	Shared    *struct{} `xml:"lockscope>shared"`    // 共享锁
+	Write     *struct{} `xml:"locktype>write"`      // 写锁
+	Owner     owner     `xml:"owner"`               // 锁所有者
 }
 
+// owner 表示锁的所有者
 // http://www.webdav.org/specs/rfc4918.html#ELEMENT_owner
 type owner struct {
-	InnerXML string `xml:",innerxml"`
+	InnerXML string `xml:",innerxml"` // 所有者的 XML 表示
 }
 
+// readLockInfo 从请求体中读取锁定信息
+// 返回锁定信息、HTTP 状态码和错误
 func readLockInfo(r io.Reader) (li lockInfo, status int, err error) {
 	c := &countingReader{r: r}
 	if err = ixml.NewDecoder(c).Decode(&li); err != nil {
 		if err == io.EOF {
 			if c.n == 0 {
-				// An empty body means to refresh the lock.
+				// 空请求体表示刷新锁
 				// http://www.webdav.org/specs/rfc4918.html#refreshing-locks
 				return lockInfo{}, 0, nil
 			}
@@ -64,31 +62,38 @@ func readLockInfo(r io.Reader) (li lockInfo, status int, err error) {
 		}
 		return lockInfo{}, http.StatusBadRequest, err
 	}
-	// We only support exclusive (non-shared) write locks. In practice, these are
-	// the only types of locks that seem to matter.
+
+	// 我们只支持独占（非共享）写锁
+	// 实际上，这些是唯一重要的锁类型
 	if li.Exclusive == nil || li.Shared != nil || li.Write == nil {
 		return lockInfo{}, http.StatusNotImplemented, errUnsupportedLockInfo
 	}
 	return li, 0, nil
 }
 
+// countingReader 是一个计数读取器，记录读取的字节数
 type countingReader struct {
-	n int
-	r io.Reader
+	n int       // 已读取的字节数
+	r io.Reader // 底层读取器
 }
 
+// Read 实现 io.Reader 接口
 func (c *countingReader) Read(p []byte) (int, error) {
 	n, err := c.r.Read(p)
 	c.n += n
 	return n, err
 }
 
+// writeLockInfo 将锁信息写入响应
+// 返回写入的字节数和错误
 func writeLockInfo(w io.Writer, token string, ld LockDetails) (int, error) {
 	depth := "infinity"
 	if ld.ZeroDepth {
 		depth = "0"
 	}
 	timeout := ld.Duration / time.Second
+
+	// 生成锁信息的 XML 表示
 	return fmt.Fprintf(w, "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"+
 		"<D:prop xmlns:D=\"DAV:\"><D:lockdiscovery><D:activelock>\n"+
 		"	<D:locktype><D:write/></D:locktype>\n"+
@@ -103,7 +108,9 @@ func writeLockInfo(w io.Writer, token string, ld LockDetails) (int, error) {
 	)
 }
 
+// escape 对字符串进行 XML 转义
 func escape(s string) string {
+	// 检查是否需要转义
 	for i := 0; i < len(s); i++ {
 		switch s[i] {
 		case '"', '&', '\'', '<', '>':
@@ -115,9 +122,8 @@ func escape(s string) string {
 	return s
 }
 
-// Next returns the next token, if any, in the XML stream of d.
-// RFC 4918 requires to ignore comments, processing instructions
-// and directives.
+// next 返回 XML 流中的下一个标记（如果有）
+// RFC 4918 要求忽略注释、处理指令和指令
 // http://www.webdav.org/specs/rfc4918.html#property_values
 // http://www.webdav.org/specs/rfc4918.html#xml-extensibility
 func next(d *ixml.Decoder) (ixml.Token, error) {
@@ -128,6 +134,7 @@ func next(d *ixml.Decoder) (ixml.Token, error) {
 		}
 		switch t.(type) {
 		case ixml.Comment, ixml.Directive, ixml.ProcInst:
+			// 跳过这些标记类型
 			continue
 		default:
 			return t, nil
@@ -135,13 +142,14 @@ func next(d *ixml.Decoder) (ixml.Token, error) {
 	}
 }
 
+// propfindProps 表示 PROPFIND 请求中的属性列表
 // http://www.webdav.org/specs/rfc4918.html#ELEMENT_prop (for propfind)
 type propfindProps []xml.Name
 
-// UnmarshalXML appends the property names enclosed within start to pn.
+// UnmarshalXML 将 start 元素中包含的属性名称追加到 pn
 //
-// It returns an error if start does not contain any properties or if
-// properties contain values. Character data between properties is ignored.
+// 如果 start 不包含任何属性或者属性包含值，则返回错误
+// 属性之间的字符数据将被忽略
 func (pn *propfindProps) UnmarshalXML(d *ixml.Decoder, start ixml.StartElement) error {
 	for {
 		t, err := next(d)
@@ -151,7 +159,7 @@ func (pn *propfindProps) UnmarshalXML(d *ixml.Decoder, start ixml.StartElement) 
 		switch t.(type) {
 		case ixml.EndElement:
 			if len(*pn) == 0 {
-				return errors.Errorf("%s must not be empty", start.Name.Local)
+				return errors.Errorf("%s 不能为空", start.Name.Local)
 			}
 			return nil
 		case ixml.StartElement:
@@ -161,28 +169,31 @@ func (pn *propfindProps) UnmarshalXML(d *ixml.Decoder, start ixml.StartElement) 
 				return err
 			}
 			if _, ok := t.(ixml.EndElement); !ok {
-				return errors.Errorf("unexpected token %T", t)
+				return errors.Errorf("意外的标记 %T", t)
 			}
 			*pn = append(*pn, xml.Name(name))
 		}
 	}
 }
 
+// propfind 表示 PROPFIND 请求
 // http://www.webdav.org/specs/rfc4918.html#ELEMENT_propfind
 type propfind struct {
 	XMLName  ixml.Name     `xml:"DAV: propfind"`
-	Allprop  *struct{}     `xml:"DAV: allprop"`
-	Propname *struct{}     `xml:"DAV: propname"`
-	Prop     propfindProps `xml:"DAV: prop"`
-	Include  propfindProps `xml:"DAV: include"`
+	Allprop  *struct{}     `xml:"DAV: allprop"`  // 请求所有属性
+	Propname *struct{}     `xml:"DAV: propname"` // 仅请求属性名
+	Prop     propfindProps `xml:"DAV: prop"`     // 请求特定属性
+	Include  propfindProps `xml:"DAV: include"`  // 包含的属性
 }
 
+// readPropfind 从请求体中读取 PROPFIND 请求
+// 返回 propfind 结构、HTTP 状态码和错误
 func readPropfind(r io.Reader) (pf propfind, status int, err error) {
 	c := countingReader{r: r}
 	if err = ixml.NewDecoder(&c).Decode(&pf); err != nil {
 		if err == io.EOF {
 			if c.n == 0 {
-				// An empty body means to propfind allprop.
+				// 空请求体表示 allprop
 				// http://www.webdav.org/specs/rfc4918.html#METHOD_PROPFIND
 				return propfind{Allprop: new(struct{})}, 0, nil
 			}
@@ -191,6 +202,7 @@ func readPropfind(r io.Reader) (pf propfind, status int, err error) {
 		return propfind{}, http.StatusBadRequest, err
 	}
 
+	// 验证请求的有效性
 	if pf.Allprop == nil && pf.Include != nil {
 		return propfind{}, http.StatusBadRequest, errInvalidPropfind
 	}
@@ -206,52 +218,50 @@ func readPropfind(r io.Reader) (pf propfind, status int, err error) {
 	return pf, 0, nil
 }
 
-// Property represents a single DAV resource property as defined in RFC 4918.
-// See http://www.webdav.org/specs/rfc4918.html#data.model.for.resource.properties
+// Property 表示 RFC 4918 中定义的单个 DAV 资源属性
+// 参见 http://www.webdav.org/specs/rfc4918.html#data.model.for.resource.properties
 type Property struct {
-	// XMLName is the fully qualified name that identifies this property.
+	// XMLName 是标识此属性的完全限定名称
 	XMLName xml.Name
 
-	// Lang is an optional xml:lang attribute.
+	// Lang 是可选的 xml:lang 属性
 	Lang string `xml:"xml:lang,attr,omitempty"`
 
-	// InnerXML contains the XML representation of the property value.
-	// See http://www.webdav.org/specs/rfc4918.html#property_values
+	// InnerXML 包含属性值的 XML 表示
+	// 参见 http://www.webdav.org/specs/rfc4918.html#property_values
 	//
-	// Property values of complex type or mixed-content must have fully
-	// expanded XML namespaces or be self-contained with according
-	// XML namespace declarations. They must not rely on any XML
-	// namespace declarations within the scope of the XML document,
-	// even including the DAV: namespace.
+	// 复杂类型或混合内容的属性值必须具有完全展开的 XML 命名空间
+	// 或者是带有相应 XML 命名空间声明的自包含内容。它们不能依赖于
+	// XML 文档范围内的任何 XML 命名空间声明，甚至包括 DAV: 命名空间。
 	InnerXML []byte `xml:",innerxml"`
 }
 
-// ixmlProperty is the same as the Property type except it holds an ixml.Name
-// instead of an xml.Name.
+// ixmlProperty 与 Property 类型相同，但它持有 ixml.Name 而不是 xml.Name
 type ixmlProperty struct {
 	XMLName  ixml.Name
 	Lang     string `xml:"xml:lang,attr,omitempty"`
 	InnerXML []byte `xml:",innerxml"`
 }
 
+// xmlError 表示 XML 错误
 // http://www.webdav.org/specs/rfc4918.html#ELEMENT_error
-// See multistatusWriter for the "D:" namespace prefix.
+// 参见 multistatusWriter 了解 "D:" 命名空间前缀
 type xmlError struct {
 	XMLName  ixml.Name `xml:"D:error"`
 	InnerXML []byte    `xml:",innerxml"`
 }
 
+// propstat 表示属性状态
 // http://www.webdav.org/specs/rfc4918.html#ELEMENT_propstat
-// See multistatusWriter for the "D:" namespace prefix.
+// 参见 multistatusWriter 了解 "D:" 命名空间前缀
 type propstat struct {
-	Prop                []Property `xml:"D:prop>_ignored_"`
-	Status              string     `xml:"D:status"`
-	Error               *xmlError  `xml:"D:error"`
-	ResponseDescription string     `xml:"D:responsedescription,omitempty"`
+	Prop                []Property `xml:"D:prop>_ignored_"`                // 属性列表
+	Status              string     `xml:"D:status"`                        // 状态码
+	Error               *xmlError  `xml:"D:error"`                         // 错误信息
+	ResponseDescription string     `xml:"D:responsedescription,omitempty"` // 响应描述
 }
 
-// ixmlPropstat is the same as the propstat type except it holds an ixml.Name
-// instead of an xml.Name.
+// ixmlPropstat 与 propstat 类型相同，但它持有 ixml.Name 而不是 xml.Name
 type ixmlPropstat struct {
 	Prop                []ixmlProperty `xml:"D:prop>_ignored_"`
 	Status              string         `xml:"D:status"`
@@ -259,10 +269,10 @@ type ixmlPropstat struct {
 	ResponseDescription string         `xml:"D:responsedescription,omitempty"`
 }
 
-// MarshalXML prepends the "D:" namespace prefix on properties in the DAV: namespace
-// before encoding. See multistatusWriter.
+// MarshalXML 在编码前为 DAV: 命名空间中的属性添加 "D:" 命名空间前缀
+// 参见 multistatusWriter
 func (ps propstat) MarshalXML(e *ixml.Encoder, start ixml.StartElement) error {
-	// Convert from a propstat to an ixmlPropstat.
+	// 将 propstat 转换为 ixmlPropstat
 	ixmlPs := ixmlPropstat{
 		Prop:                make([]ixmlProperty, len(ps.Prop)),
 		Status:              ps.Status,
@@ -277,57 +287,53 @@ func (ps propstat) MarshalXML(e *ixml.Encoder, start ixml.StartElement) error {
 		}
 	}
 
+	// 为 DAV: 命名空间中的属性添加 "D:" 前缀
 	for k, prop := range ixmlPs.Prop {
 		if prop.XMLName.Space == "DAV:" {
 			prop.XMLName = ixml.Name{Space: "", Local: "D:" + prop.XMLName.Local}
 			ixmlPs.Prop[k] = prop
 		}
 	}
-	// Distinct type to avoid infinite recursion of MarshalXML.
+	// 使用不同的类型避免 MarshalXML 的无限递归
 	type newpropstat ixmlPropstat
 	return e.EncodeElement(newpropstat(ixmlPs), start)
 }
 
+// response 表示 WebDAV 响应
 // http://www.webdav.org/specs/rfc4918.html#ELEMENT_response
-// See multistatusWriter for the "D:" namespace prefix.
+// 参见 multistatusWriter 了解 "D:" 命名空间前缀
 type response struct {
 	XMLName             ixml.Name  `xml:"D:response"`
-	Href                []string   `xml:"D:href"`
-	Propstat            []propstat `xml:"D:propstat"`
-	Status              string     `xml:"D:status,omitempty"`
-	Error               *xmlError  `xml:"D:error"`
-	ResponseDescription string     `xml:"D:responsedescription,omitempty"`
+	Href                []string   `xml:"D:href"`                          // 资源 URL
+	Propstat            []propstat `xml:"D:propstat"`                      // 属性状态
+	Status              string     `xml:"D:status,omitempty"`              // 状态码
+	Error               *xmlError  `xml:"D:error"`                         // 错误信息
+	ResponseDescription string     `xml:"D:responsedescription,omitempty"` // 响应描述
 }
 
-// MultistatusWriter marshals one or more Responses into a XML
-// multistatus response.
-// See http://www.webdav.org/specs/rfc4918.html#ELEMENT_multistatus
-// TODO(rsto, mpl): As a workaround, the "D:" namespace prefix, defined as
-// "DAV:" on this element, is prepended on the nested response, as well as on all
-// its nested elements. All property names in the DAV: namespace are prefixed as
-// well. This is because some versions of Mini-Redirector (on windows 7) ignore
-// elements with a default namespace (no prefixed namespace). A less intrusive fix
-// should be possible after golang.org/cl/11074. See https://golang.org/issue/11177
+// MultistatusWriter 将一个或多个 Response 编组为 XML 多状态响应
+// 参见 http://www.webdav.org/specs/rfc4918.html#ELEMENT_multistatus
+// 注意：作为一种解决方法，"D:" 命名空间前缀（在此元素上定义为 "DAV:"）
+// 也被添加到嵌套的 response 元素及其所有嵌套元素上。DAV: 命名空间中的
+// 所有属性名称也都加上了前缀。这是因为某些版本的 Mini-Redirector（在 Windows 7 上）
+// 忽略具有默认命名空间（无前缀命名空间）的元素。
 type multistatusWriter struct {
-	// ResponseDescription contains the optional responsedescription
-	// of the multistatus XML element. Only the latest content before
-	// close will be emitted. Empty response descriptions are not
-	// written.
+	// ResponseDescription 包含多状态 XML 元素的可选 responsedescription
+	// 只有关闭前的最新内容才会被发送。空的响应描述不会被写入。
 	responseDescription string
 
-	w   http.ResponseWriter
-	enc *ixml.Encoder
+	w   http.ResponseWriter // 底层 HTTP 响应写入器
+	enc *ixml.Encoder       // XML 编码器
 }
 
-// Write validates and emits a DAV response as part of a multistatus response
-// element.
+// Write 验证并发送 DAV 响应作为多状态响应元素的一部分
 //
-// It sets the HTTP status code of its underlying http.ResponseWriter to 207
-// (Multi-Status) and populates the Content-Type header. If r is the
-// first, valid response to be written, Write prepends the XML representation
-// of r with a multistatus tag. Callers must call close after the last response
-// has been written.
+// 它将底层 http.ResponseWriter 的 HTTP 状态码设置为 207（多状态）
+// 并填充 Content-Type 标头。如果 r 是要写入的第一个有效响应，
+// Write 会在 r 的 XML 表示前添加一个多状态标签。调用者必须在
+// 最后一个响应写入后调用 close。
 func (w *multistatusWriter) write(r *response) error {
+	// 验证响应的有效性
 	switch len(r.Href) {
 	case 0:
 		return errInvalidResponse
@@ -340,27 +346,39 @@ func (w *multistatusWriter) write(r *response) error {
 			return errInvalidResponse
 		}
 	}
+
+	// 写入头部信息
 	err := w.writeHeader()
 	if err != nil {
 		return err
 	}
+
+	// 编码响应
 	return w.enc.Encode(r)
 }
 
-// writeHeader writes a XML multistatus start element on w's underlying
-// http.ResponseWriter and returns the result of the write operation.
-// After the first write attempt, writeHeader becomes a no-op.
+// writeHeader 在 w 的底层 http.ResponseWriter 上写入 XML 多状态开始元素
+// 并返回写操作的结果。在第一次写入尝试后，writeHeader 变为空操作。
 func (w *multistatusWriter) writeHeader() error {
+	// 如果编码器已存在，则不需要再次写入头部
 	if w.enc != nil {
 		return nil
 	}
+
+	// 设置 HTTP 头部和状态码
 	w.w.Header().Add("Content-Type", "text/xml; charset=utf-8")
 	w.w.WriteHeader(StatusMulti)
+
+	// 写入 XML 声明
 	_, err := fmt.Fprintf(w.w, `<?xml version="1.0" encoding="UTF-8"?>`)
 	if err != nil {
 		return err
 	}
+
+	// 创建 XML 编码器
 	w.enc = ixml.NewEncoder(w.w)
+
+	// 写入多状态开始标签
 	return w.enc.EncodeToken(ixml.StartElement{
 		Name: ixml.Name{
 			Space: "DAV:",
@@ -373,15 +391,17 @@ func (w *multistatusWriter) writeHeader() error {
 	})
 }
 
-// Close completes the marshalling of the multistatus response. It returns
-// an error if the multistatus response could not be completed. If both the
-// return value and field enc of w are nil, then no multistatus response has
-// been written.
+// Close 完成多状态响应的编组。如果多状态响应无法完成，则返回错误。
+// 如果 w 的返回值和字段 enc 都为 nil，则表示尚未写入多状态响应。
 func (w *multistatusWriter) close() error {
 	if w.enc == nil {
 		return nil
 	}
+
+	// 准备结束标记
 	var end []ixml.Token
+
+	// 如果有响应描述，则添加
 	if w.responseDescription != "" {
 		name := ixml.Name{Space: "DAV:", Local: "responsedescription"}
 		end = append(end,
@@ -390,20 +410,29 @@ func (w *multistatusWriter) close() error {
 			ixml.EndElement{Name: name},
 		)
 	}
+
+	// 添加多状态结束标记
 	end = append(end, ixml.EndElement{
 		Name: ixml.Name{Space: "DAV:", Local: "multistatus"},
 	})
+
+	// 编码所有结束标记
 	for _, t := range end {
 		err := w.enc.EncodeToken(t)
 		if err != nil {
 			return err
 		}
 	}
+
+	// 刷新编码器
 	return w.enc.Flush()
 }
 
+// XML 语言名称常量
 var xmlLangName = ixml.Name{Space: "http://www.w3.org/XML/1998/namespace", Local: "lang"}
 
+// xmlLang 获取 XML 元素的语言属性值
+// 如果未找到，则返回默认值 d
 func xmlLang(s ixml.StartElement, d string) string {
 	for _, attr := range s.Attr {
 		if attr.Name == xmlLangName {
@@ -413,15 +442,18 @@ func xmlLang(s ixml.StartElement, d string) string {
 	return d
 }
 
+// xmlValue 表示 XML 值
 type xmlValue []byte
 
+// UnmarshalXML 将属性的 XML 值解组
+// 属性的 XML 值可以是任意的混合内容 XML
+// 为了确保解组后的值包含所有必需的命名空间，
+// 我们将所有属性值 XML 标记编码到缓冲区中
+// 这迫使编码器重新声明任何使用的命名空间
 func (v *xmlValue) UnmarshalXML(d *ixml.Decoder, start ixml.StartElement) error {
-	// The XML value of a property can be arbitrary, mixed-content XML.
-	// To make sure that the unmarshalled value contains all required
-	// namespaces, we encode all the property value XML tokens into a
-	// buffer. This forces the encoder to redeclare any used namespaces.
 	var b bytes.Buffer
 	e := ixml.NewEncoder(&b)
+
 	for {
 		t, err := next(d)
 		if err != nil {
@@ -434,25 +466,26 @@ func (v *xmlValue) UnmarshalXML(d *ixml.Decoder, start ixml.StartElement) error 
 			return err
 		}
 	}
+
 	err := e.Flush()
 	if err != nil {
 		return err
 	}
+
 	*v = b.Bytes()
 	return nil
 }
 
+// proppatchProps 表示 PROPPATCH 请求中的属性列表
 // http://www.webdav.org/specs/rfc4918.html#ELEMENT_prop (for proppatch)
 type proppatchProps []Property
 
-// UnmarshalXML appends the property names and values enclosed within start
-// to ps.
+// UnmarshalXML 将 start 元素中包含的属性名称和值追加到 ps
 //
-// An xml:lang attribute that is defined either on the DAV:prop or property
-// name XML element is propagated to the property's Lang field.
+// 在 DAV:prop 或属性名称 XML 元素上定义的 xml:lang 属性
+// 将传播到属性的 Lang 字段
 //
-// UnmarshalXML returns an error if start does not contain any properties or if
-// property values contain syntactically incorrect XML.
+// 如果 start 不包含任何属性或者属性值包含语法不正确的 XML，则返回错误
 func (ps *proppatchProps) UnmarshalXML(d *ixml.Decoder, start ixml.StartElement) error {
 	lang := xmlLang(start, "")
 	for {
@@ -463,7 +496,7 @@ func (ps *proppatchProps) UnmarshalXML(d *ixml.Decoder, start ixml.StartElement)
 		switch elem := t.(type) {
 		case ixml.EndElement:
 			if len(*ps) == 0 {
-				return errors.Errorf("%s must not be empty", start.Name.Local)
+				return errors.Errorf("%s 不能为空", start.Name.Local)
 			}
 			return nil
 		case ixml.StartElement:
@@ -480,32 +513,42 @@ func (ps *proppatchProps) UnmarshalXML(d *ixml.Decoder, start ixml.StartElement)
 	}
 }
 
+// setRemove 表示属性设置或移除操作
 // http://www.webdav.org/specs/rfc4918.html#ELEMENT_set
 // http://www.webdav.org/specs/rfc4918.html#ELEMENT_remove
 type setRemove struct {
-	XMLName ixml.Name
-	Lang    string         `xml:"xml:lang,attr,omitempty"`
-	Prop    proppatchProps `xml:"DAV: prop"`
+	XMLName ixml.Name      // 操作类型（set 或 remove）
+	Lang    string         `xml:"xml:lang,attr,omitempty"` // 语言
+	Prop    proppatchProps `xml:"DAV: prop"`               // 属性列表
 }
 
+// propertyupdate 表示属性更新请求
 // http://www.webdav.org/specs/rfc4918.html#ELEMENT_propertyupdate
 type propertyupdate struct {
 	XMLName   ixml.Name   `xml:"DAV: propertyupdate"`
-	Lang      string      `xml:"xml:lang,attr,omitempty"`
-	SetRemove []setRemove `xml:",any"`
+	Lang      string      `xml:"xml:lang,attr,omitempty"` // 语言
+	SetRemove []setRemove `xml:",any"`                    // 设置或移除操作列表
 }
 
+// readProppatch 从请求体中读取 PROPPATCH 请求
+// 返回补丁列表、HTTP 状态码和错误
 func readProppatch(r io.Reader) (patches []Proppatch, status int, err error) {
 	var pu propertyupdate
 	if err = ixml.NewDecoder(r).Decode(&pu); err != nil {
 		return nil, http.StatusBadRequest, err
 	}
+
+	// 预分配结果切片
+	patches = make([]Proppatch, 0, len(pu.SetRemove))
+
+	// 处理每个设置或移除操作
 	for _, op := range pu.SetRemove {
 		remove := false
 		switch op.XMLName {
 		case ixml.Name{Space: "DAV:", Local: "set"}:
-			// No-op.
+			// 设置操作，无需特殊处理
 		case ixml.Name{Space: "DAV:", Local: "remove"}:
+			// 移除操作，验证属性值为空
 			for _, p := range op.Prop {
 				if len(p.InnerXML) > 0 {
 					return nil, http.StatusBadRequest, errInvalidProppatch
@@ -513,9 +556,11 @@ func readProppatch(r io.Reader) (patches []Proppatch, status int, err error) {
 			}
 			remove = true
 		default:
+			// 不支持的操作类型
 			return nil, http.StatusBadRequest, errInvalidProppatch
 		}
 		patches = append(patches, Proppatch{Remove: remove, Props: op.Prop})
 	}
+
 	return patches, 0, nil
 }

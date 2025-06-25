@@ -6,24 +6,23 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
-
-	"golang.org/x/time/rate"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/time/rate"
 	"resty.dev/v3"
-
-	"github.com/dongdio/OpenList/pkg/stream"
 
 	"github.com/dongdio/OpenList/drivers/base"
 	"github.com/dongdio/OpenList/internal/driver"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/pkg/errs"
+	"github.com/dongdio/OpenList/pkg/stream"
 	"github.com/dongdio/OpenList/pkg/utils"
 )
 
@@ -197,7 +196,7 @@ func (d *Pan123) Put(ctx context.Context, dstDir model.Obj, file model.FileStrea
 	data := base.Json{
 		"driveId":      0,
 		"duplicate":    2, // 2->覆盖 1->重命名 0->默认
-		"etag":         etag,
+		"etag":         strings.ToLower(etag),
 		"fileName":     file.GetName(),
 		"parentFileId": dstDir.GetID(),
 		"size":         file.GetSize(),

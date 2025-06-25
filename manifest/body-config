@@ -1,0 +1,114 @@
+<div id="temp" style="display: none; visibility: hidden;">
+    <style>
+        .fcr {
+            display: flex;
+            flex-direction: column;
+
+            &>.box {
+                backdrop-filter: blur(8px);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                width: var(--hope-sizes-full);
+                border-radius: var(--hope-radii-xl);
+                padding: var(--hope-space-4);
+                background-color: rgba(32, 36, 37, 0.8);
+                box-shadow: var(--hope-shadows-lg);
+                margin-bottom: var(--hope-space-4);
+
+                &>.row {
+                    display: flex;
+                }
+            }
+
+            a {
+                &:hover {
+                    text-decoration: underline;
+                }
+            }
+        }
+    </style>
+    <div class="fcr">
+        <div class="box">
+            <span>🔒 Private use only.</span>
+        </div>
+        <div id="IPINFO" class="box" style="display: none;">
+            <span id="IP"></span>
+            <span id="LOC"></span>
+            <span id="LAT"></span>
+        </div>
+        <div class="box">
+            <div class="row">
+                <span><a href="https://www..com/policies/privacy" rel="privacy-policy">Privacy</a></span>
+                <span>&nbsp;|&nbsp;</span>
+                <span><a href="https://www..com/policies/terms" rel="terms-of-service">Terms</a></span>
+            </div>
+            <span>Copyright &copy; 2025</span>
+            <span><a href="https://www..com" style="font-weight: 800;"></a> All rights reserved.</span>
+            <span><a href="https://beian.miit.gov.cn/" target="_blank" rel="external noopener noreferrer nofollow">ICP备号</a></span>
+            <span><a href="https://www.beian.gov.cn/portal/registerSystemInfo?recordcode=" target="_blank" rel="external noopener noreferrer nofollow">公网安备号</a></span>
+        </div>
+        <div class="box">
+            <span>Delivered by <a target="_blank" rel="external noopener noreferrer nofollow" href="https://www.aliyun.com/minisite/goods?userCode=smzmcy90">AliYun</a></span>
+            <span>Hosted on <a target="_blank" rel="external noopener noreferrer nofollow" href="https://js.189.cn/">NKG Telecom</a></span>
+            <span>Powered by <a target="_blank" rel="external noopener noreferrer nofollow" href="https://github.com/OpenListTeam/OpenList">OpenList</a></span>
+        </div>
+    </div>
+</div>
+
+<script>
+    let observes = [];
+    observes[1] = new MutationObserver(
+        _ => {
+            if (document.querySelector("div.left-toolbar-box")) {
+                observes[1].disconnect();
+                document.querySelector("div.left-toolbar-box").parentElement.remove();
+            }
+        }
+    );
+    observes[2] = new MutationObserver(
+        _ => {
+            if (document.querySelector("#root > div.footer.hope-stack")) {
+                observes[2].disconnect();
+                let footer = document.querySelector("#root > div.footer.hope-stack");
+                let temp = document.querySelector("#temp");
+                footer.class = "footer";
+                footer.innerHTML = temp.innerHTML;
+                temp.remove();
+            }
+        }
+    );
+    observes[3] = new MutationObserver(
+        _ => {
+            if (document.querySelectorAll('.markdown-body')) {
+                document.querySelectorAll('.markdown-body').forEach((element) => {
+                    element.style.textAlign = 'center';
+                });
+            }
+        }
+    );
+
+    observes.forEach((observer) => {
+        observer.observe(document.body, { childList: true, subtree: true });
+    });
+</script>
+<script>
+    const showIP = (ipInfo) => {
+        const ipElement = document.getElementById('IP');
+        ipElement.textContent = ipInfo.ip;
+        const locElement = document.getElementById('LOC');
+        locElement.textContent = `${ipInfo.city}, ${ipInfo.province}, ${ipInfo.country} ${ipInfo.asn_name}`;
+        const latElement = document.getElementById('LAT');
+        latElement.textContent = `${ipInfo.latitude}, ${ipInfo.longitude}`;
+        const ipInfoElement = document.getElementById('IPINFO');
+        ipInfoElement.style.display = 'flex';
+    };
+    fetch('https://api.ip.cc')
+        .then(response => response.json())
+        .then(data => {
+            if (data.ip !== "") {
+                showIP(data);
+            }
+        });
+</script>
+<script src="https://cdn.jsdmirror.com/gh/kasuie/alist-customize@main/v3/js/index.min.js"></script>

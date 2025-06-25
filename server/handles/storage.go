@@ -136,11 +136,11 @@ func LoadAllStorages(c *gin.Context) {
 				continue
 			}
 			// drop the storage in the driver
-			if err := storageDriver.Drop(context.Background()); err != nil {
+			if err = storageDriver.Drop(context.Background()); err != nil {
 				log.Errorf("failed drop storage: %+v", err)
 				continue
 			}
-			if err := op.LoadStorage(context.Background(), storage); err != nil {
+			if err = op.LoadStorage(context.Background(), storage); err != nil {
 				log.Errorf("failed get enabled storages: %+v", err)
 				continue
 			}

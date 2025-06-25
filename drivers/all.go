@@ -51,6 +51,7 @@ import (
 	_ "github.com/dongdio/OpenList/drivers/openlist"
 	_ "github.com/dongdio/OpenList/drivers/pikpak"
 	_ "github.com/dongdio/OpenList/drivers/pikpak_share"
+	_ "github.com/dongdio/OpenList/drivers/quark_open"
 	_ "github.com/dongdio/OpenList/drivers/quark_uc"
 	_ "github.com/dongdio/OpenList/drivers/quark_uc_tv"
 	_ "github.com/dongdio/OpenList/drivers/s3"

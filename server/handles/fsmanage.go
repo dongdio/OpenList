@@ -2,11 +2,7 @@ package handles
 
 import (
 	"fmt"
-	"io"
 	stdpath "path"
-
-	"github.com/dongdio/OpenList/pkg/generic"
-	"github.com/dongdio/OpenList/pkg/task"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
@@ -17,177 +13,210 @@ import (
 	"github.com/dongdio/OpenList/internal/op"
 	"github.com/dongdio/OpenList/internal/sign"
 	"github.com/dongdio/OpenList/pkg/errs"
+	"github.com/dongdio/OpenList/pkg/generic"
+	"github.com/dongdio/OpenList/pkg/task"
 	"github.com/dongdio/OpenList/pkg/utils"
 	"github.com/dongdio/OpenList/server/common"
 )
 
+// MkdirOrLinkReq 创建目录或获取链接请求
 type MkdirOrLinkReq struct {
-	Path string `json:"path" form:"path"`
+	Path string `json:"path" form:"path" binding:"required"`
 }
 
+// FsMkdir 创建目录处理函数
 func FsMkdir(c *gin.Context) {
 	var req MkdirOrLinkReq
 	if err := c.ShouldBind(&req); err != nil {
 		common.ErrorResp(c, err, 400)
 		return
 	}
+
 	user := c.MustGet("user").(*model.User)
 	reqPath, err := user.JoinPath(req.Path)
 	if err != nil {
 		common.ErrorResp(c, err, 403)
 		return
 	}
+
+	// 检查用户权限
 	if !user.CanWrite() {
 		meta, err := op.GetNearestMeta(stdpath.Dir(reqPath))
-		if err != nil {
-			if !errors.Is(errors.Cause(err), errs.MetaNotFound) {
-				common.ErrorResp(c, err, 500, true)
-				return
-			}
+		if err != nil && !errors.Is(errors.Cause(err), errs.MetaNotFound) {
+			common.ErrorResp(c, err, 500, true)
+			return
 		}
+
 		if !common.CanWrite(meta, reqPath) {
 			common.ErrorResp(c, errs.PermissionDenied, 403)
 			return
 		}
 	}
+
 	if err := fs.MakeDir(c, reqPath); err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}
+
 	common.SuccessResp(c)
 }
 
+// MoveCopyReq 移动或复制请求
 type MoveCopyReq struct {
-	SrcDir    string   `json:"src_dir"`
-	DstDir    string   `json:"dst_dir"`
-	Names     []string `json:"names"`
+	SrcDir    string   `json:"src_dir" binding:"required"`
+	DstDir    string   `json:"dst_dir" binding:"required"`
+	Names     []string `json:"names" binding:"required"`
 	Overwrite bool     `json:"overwrite"`
 }
 
+// FsMove 文件移动处理函数
 func FsMove(c *gin.Context) {
 	var req MoveCopyReq
 	if err := c.ShouldBind(&req); err != nil {
 		common.ErrorResp(c, err, 400)
 		return
 	}
+
 	if len(req.Names) == 0 {
 		common.ErrorStrResp(c, "Empty file names", 400)
 		return
 	}
+
 	user := c.MustGet("user").(*model.User)
 	if !user.CanMove() {
 		common.ErrorResp(c, errs.PermissionDenied, 403)
 		return
 	}
+
 	srcDir, err := user.JoinPath(req.SrcDir)
 	if err != nil {
 		common.ErrorResp(c, err, 403)
 		return
 	}
+
 	dstDir, err := user.JoinPath(req.DstDir)
 	if err != nil {
 		common.ErrorResp(c, err, 403)
 		return
 	}
-	if !req.Overwrite {
-		for _, name := range req.Names {
-			if res, _ := fs.Get(c, stdpath.Join(dstDir, name), &fs.GetArgs{NoLog: true}); res != nil {
-				common.ErrorStrResp(c, fmt.Sprintf("file [%s] exists", name), 403)
-				return
-			}
-		}
-	}
-	var addedTasks = make([]task.TaskExtensionInfo, 0, len(req.Names))
+
+	// 创建所有任务，所有验证将在后台异步进行
+	addedTasks := make([]task.TaskExtensionInfo, 0, len(req.Names))
 	for i, name := range req.Names {
-		t, err := fs.MoveWithTask(c, stdpath.Join(srcDir, name), dstDir, len(req.Names) > i+1)
-		if t != nil {
-			addedTasks = append(addedTasks, t)
-		}
+		// 最后一个参数表示是否懒加载缓存（当有多个文件时）
+		isLazyCache := len(req.Names) > i+1
+		t, err := fs.MoveWithTaskAndValidation(c, stdpath.Join(srcDir, name), dstDir, !req.Overwrite, isLazyCache)
 		if err != nil {
 			common.ErrorResp(c, err, 500)
 			return
 		}
+
+		if t != nil {
+			addedTasks = append(addedTasks, t)
+		}
 	}
+
 	if len(addedTasks) > 0 {
 		common.SuccessResp(c, gin.H{
-			"tasks": getTaskInfos(addedTasks),
+			"message": fmt.Sprintf("Successfully created %d move task(s)", len(addedTasks)),
+			"tasks":   getTaskInfos(addedTasks),
 		})
-	} else {
-		common.SuccessResp(c)
+		return
 	}
+
+	common.SuccessResp(c, gin.H{
+		"message": "Move operations completed immediately",
+	})
 }
 
+// FsCopy 文件复制处理函数
 func FsCopy(c *gin.Context) {
 	var req MoveCopyReq
 	if err := c.ShouldBind(&req); err != nil {
 		common.ErrorResp(c, err, 400)
 		return
 	}
+
 	if len(req.Names) == 0 {
 		common.ErrorStrResp(c, "Empty file names", 400)
 		return
 	}
+
 	user := c.MustGet("user").(*model.User)
 	if !user.CanCopy() {
 		common.ErrorResp(c, errs.PermissionDenied, 403)
 		return
 	}
+
 	srcDir, err := user.JoinPath(req.SrcDir)
 	if err != nil {
 		common.ErrorResp(c, err, 403)
 		return
 	}
+
 	dstDir, err := user.JoinPath(req.DstDir)
 	if err != nil {
 		common.ErrorResp(c, err, 403)
 		return
 	}
-	if !req.Overwrite {
-		for _, name := range req.Names {
-			if res, _ := fs.Get(c, stdpath.Join(dstDir, name), &fs.GetArgs{NoLog: true}); res != nil {
-				common.ErrorStrResp(c, fmt.Sprintf("file [%s] exists", name), 403)
-				return
-			}
-		}
-	}
-	var addedTasks []task.TaskExtensionInfo
+
+	// 创建所有任务，所有验证将在后台异步进行
+	addedTasks := make([]task.TaskExtensionInfo, 0, len(req.Names))
 	for i, name := range req.Names {
-		t, err := fs.Copy(c, stdpath.Join(srcDir, name), dstDir, len(req.Names) > i+1)
-		if t != nil {
-			addedTasks = append(addedTasks, t)
-		}
+		// 最后一个参数表示是否懒加载缓存（当有多个文件时）
+		isLazyCache := len(req.Names) > i+1
+		t, err := fs.Copy(c, stdpath.Join(srcDir, name), dstDir, isLazyCache)
 		if err != nil {
 			common.ErrorResp(c, err, 500)
 			return
 		}
+
+		if t != nil {
+			addedTasks = append(addedTasks, t)
+		}
 	}
-	common.SuccessResp(c, gin.H{
-		"tasks": getTaskInfos(addedTasks),
-	})
+
+	// 立即返回任务信息
+	if len(addedTasks) > 0 {
+		common.SuccessResp(c, gin.H{
+			"message": fmt.Sprintf("Successfully created %d copy task(s)", len(addedTasks)),
+			"tasks":   getTaskInfos(addedTasks),
+		})
+	} else {
+		common.SuccessResp(c, gin.H{
+			"message": "Copy operations completed immediately",
+		})
+	}
 }
 
+// RenameReq 重命名请求
 type RenameReq struct {
-	Path      string `json:"path"`
-	Name      string `json:"name"`
+	Path      string `json:"path" binding:"required"`
+	Name      string `json:"name" binding:"required"`
 	Overwrite bool   `json:"overwrite"`
 }
 
+// FsRename 文件重命名处理函数
 func FsRename(c *gin.Context) {
 	var req RenameReq
 	if err := c.ShouldBind(&req); err != nil {
 		common.ErrorResp(c, err, 400)
 		return
 	}
+
 	user := c.MustGet("user").(*model.User)
 	if !user.CanRename() {
 		common.ErrorResp(c, errs.PermissionDenied, 403)
 		return
 	}
+
 	reqPath, err := user.JoinPath(req.Path)
 	if err != nil {
 		common.ErrorResp(c, err, 403)
 		return
 	}
+
+	// 检查是否存在同名文件（如果不允许覆盖）
 	if !req.Overwrite {
 		dstPath := stdpath.Join(stdpath.Dir(reqPath), req.Name)
 		if dstPath != reqPath {
@@ -197,53 +226,64 @@ func FsRename(c *gin.Context) {
 			}
 		}
 	}
+
 	if err := fs.Rename(c, reqPath, req.Name); err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}
+
 	common.SuccessResp(c)
 }
 
+// RemoveReq 删除文件请求
 type RemoveReq struct {
-	Dir   string   `json:"dir"`
-	Names []string `json:"names"`
+	Dir   string   `json:"dir" binding:"required"`
+	Names []string `json:"names" binding:"required"`
 }
 
+// FsRemove 文件删除处理函数
 func FsRemove(c *gin.Context) {
 	var req RemoveReq
 	if err := c.ShouldBind(&req); err != nil {
 		common.ErrorResp(c, err, 400)
 		return
 	}
+
 	if len(req.Names) == 0 {
 		common.ErrorStrResp(c, "Empty file names", 400)
 		return
 	}
+
 	user := c.MustGet("user").(*model.User)
 	if !user.CanRemove() {
 		common.ErrorResp(c, errs.PermissionDenied, 403)
 		return
 	}
+
 	reqDir, err := user.JoinPath(req.Dir)
 	if err != nil {
 		common.ErrorResp(c, err, 403)
 		return
 	}
+
 	for _, name := range req.Names {
-		err := fs.Remove(c, stdpath.Join(reqDir, name))
+		filePath := stdpath.Join(reqDir, name)
+		err := fs.Remove(c, filePath)
 		if err != nil {
 			common.ErrorResp(c, err, 500)
 			return
 		}
 	}
-	// fs.ClearCache(req.Dir)
+
 	common.SuccessResp(c)
 }
 
+// RemoveEmptyDirectoryReq 删除空目录请求
 type RemoveEmptyDirectoryReq struct {
-	SrcDir string `json:"src_dir"`
+	SrcDir string `json:"src_dir" binding:"required"`
 }
 
+// FsRemoveEmptyDirectory 删除空目录处理函数
 func FsRemoveEmptyDirectory(c *gin.Context) {
 	var req RemoveEmptyDirectoryReq
 	if err := c.ShouldBind(&req); err != nil {
@@ -256,6 +296,7 @@ func FsRemoveEmptyDirectory(c *gin.Context) {
 		common.ErrorResp(c, errs.PermissionDenied, 403)
 		return
 	}
+
 	srcDir, err := user.JoinPath(req.SrcDir)
 	if err != nil {
 		common.ErrorResp(c, err, 403)
@@ -263,11 +304,9 @@ func FsRemoveEmptyDirectory(c *gin.Context) {
 	}
 
 	meta, err := op.GetNearestMeta(srcDir)
-	if err != nil {
-		if !errors.Is(errors.Cause(err), errs.MetaNotFound) {
-			common.ErrorResp(c, err, 500, true)
-			return
-		}
+	if err != nil && !errors.Is(errors.Cause(err), errs.MetaNotFound) {
+		common.ErrorResp(c, err, 500, true)
+		return
 	}
 	c.Set("meta", meta)
 
@@ -277,14 +316,16 @@ func FsRemoveEmptyDirectory(c *gin.Context) {
 		return
 	}
 
-	// record the file path
+	// 记录文件路径
 	filePathMap := make(map[model.Obj]string)
-	// record the parent file
+	// 记录父文件
 	fileParentMap := make(map[model.Obj]model.Obj)
-	// removing files
+	// 待删除文件队列
 	removingFiles := generic.NewQueue[model.Obj]()
-	// removed files
+	// 已删除文件记录
 	removedFiles := make(map[string]bool)
+
+	// 初始化队列，添加所有顶层目录
 	for _, file := range rootFiles {
 		if !file.IsDir() {
 			continue
@@ -293,10 +334,10 @@ func FsRemoveEmptyDirectory(c *gin.Context) {
 		filePathMap[file] = srcDir
 	}
 
+	// 递归处理空目录
 	for !removingFiles.IsEmpty() {
-
 		removingFile := removingFiles.Pop()
-		removingFilePath := fmt.Sprintf("%s/%s", filePathMap[removingFile], removingFile.GetName())
+		removingFilePath := stdpath.Join(filePathMap[removingFile], removingFile.GetName())
 
 		if removedFiles[removingFilePath] {
 			continue
@@ -309,21 +350,21 @@ func FsRemoveEmptyDirectory(c *gin.Context) {
 		}
 
 		if len(subFiles) == 0 {
-			// remove empty directory
+			// 删除空目录
 			err = fs.Remove(c, removingFilePath)
-			removedFiles[removingFilePath] = true
 			if err != nil {
 				common.ErrorResp(c, err, 500)
 				return
 			}
-			// recheck parent folder
+			removedFiles[removingFilePath] = true
+
+			// 重新检查父文件夹
 			parentFile, exist := fileParentMap[removingFile]
 			if exist {
 				removingFiles.Push(parentFile)
 			}
-
 		} else {
-			// recursive remove
+			// 递归处理子目录
 			for _, subFile := range subFiles {
 				if !subFile.IsDir() {
 					continue
@@ -333,28 +374,28 @@ func FsRemoveEmptyDirectory(c *gin.Context) {
 				fileParentMap[subFile] = removingFile
 			}
 		}
-
 	}
 
 	common.SuccessResp(c)
 }
 
-// Link return real link, just for proxy program, it may contain cookie, so just allowed for admin
+// Link 返回真实链接，仅供代理程序使用，可能包含cookie，因此仅允许管理员使用
 func Link(c *gin.Context) {
 	var req MkdirOrLinkReq
 	if err := c.ShouldBind(&req); err != nil {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	// user := c.MustGet("user").(*model.User)
-	// rawPath := stdpath.Join(user.BasePath, req.Path)
-	// why need not join base_path? because it's always the full path
+
+	// 不需要连接base_path，因为它始终是完整路径
 	rawPath := req.Path
 	storage, err := fs.GetStorage(rawPath, &fs.GetStoragesArgs{})
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}
+
+	// 如果是仅本地存储，生成签名URL
 	if storage.Config().OnlyLocal {
 		common.SuccessResp(c, model.Link{
 			URL: fmt.Sprintf("%s/p%s?d&sign=%s",
@@ -364,19 +405,26 @@ func Link(c *gin.Context) {
 		})
 		return
 	}
-	link, _, err := fs.Link(c, rawPath, model.LinkArgs{IP: c.ClientIP(), Header: c.Request.Header, HttpReq: c.Request})
+
+	// 获取存储链接
+	link, _, err := fs.Link(c, rawPath, model.LinkArgs{
+		IP:      c.ClientIP(),
+		Header:  c.Request.Header,
+		HttpReq: c.Request,
+	})
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}
+
+	// 确保关闭文件
 	if link.MFile != nil {
-		defer func(ReadSeekCloser io.ReadCloser) {
-			err := ReadSeekCloser.Close()
-			if err != nil {
+		defer func() {
+			if err := link.MFile.Close(); err != nil {
 				log.Errorf("close link data error: %v", err)
 			}
-		}(link.MFile)
+		}()
 	}
+
 	common.SuccessResp(c, link)
-	return
 }

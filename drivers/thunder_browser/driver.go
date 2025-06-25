@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -14,12 +15,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"resty.dev/v3"
 
-	streamPkg "github.com/dongdio/OpenList/pkg/stream"
-
 	"github.com/dongdio/OpenList/drivers/base"
 	"github.com/dongdio/OpenList/internal/driver"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
+	streamPkg "github.com/dongdio/OpenList/pkg/stream"
 	"github.com/dongdio/OpenList/pkg/utils"
 	hash_extend "github.com/dongdio/OpenList/pkg/utils/hash"
 )
@@ -67,6 +67,7 @@ func (x *ThunderBrowser) Init(ctx context.Context) (err error) {
 				UserAgent:         BuildCustomUserAgent(utils.GetMD5EncodeStr(x.Username+x.Password), PackageName, SdkVersion, ClientVersion, PackageName),
 				DownloadUserAgent: DownloadUserAgent,
 				UseVideoUrl:       x.UseVideoUrl,
+				UseFluentPlay:     x.UseFluentPlay,
 				RemoveWay:         x.Addition.RemoveWay,
 				refreshCTokenCk: func(token string) {
 					x.CaptchaToken = token
@@ -83,6 +84,8 @@ func (x *ThunderBrowser) Init(ctx context.Context) (err error) {
 						x.GetStorage().SetStatus(fmt.Sprintf("%+v", err.Error()))
 						op.MustSaveDriverStorage(x)
 					}
+					// 清空 信任密钥
+					x.Addition.CreditKey = ""
 				}
 				x.SetTokenResp(token)
 				return err
@@ -95,10 +98,20 @@ func (x *ThunderBrowser) Init(ctx context.Context) (err error) {
 	if ctoekn != "" {
 		x.SetCaptchaToken(ctoekn)
 	}
-	if x.DeviceID == "" {
-		x.SetDeviceID(utils.GetMD5EncodeStr(x.Username + x.Password))
+
+	if x.Addition.CreditKey != "" {
+		x.SetCreditKey(x.Addition.CreditKey)
 	}
+
+	if x.Addition.DeviceID != "" {
+		x.Common.DeviceID = x.Addition.DeviceID
+	} else {
+		x.Addition.DeviceID = x.Common.DeviceID
+		op.MustSaveDriverStorage(x)
+	}
+
 	x.XunLeiBrowserCommon.UseVideoUrl = x.UseVideoUrl
+	x.XunLeiBrowserCommon.UseFluentPlay = x.UseFluentPlay
 	x.Addition.RootFolderID = x.RootFolderID
 	// 防止重复登录
 	identity := x.GetIdentity()
@@ -109,6 +122,8 @@ func (x *ThunderBrowser) Init(ctx context.Context) (err error) {
 		if err != nil {
 			return err
 		}
+		// 清空 信任密钥
+		x.Addition.CreditKey = ""
 		x.SetTokenResp(token)
 	}
 
@@ -189,8 +204,9 @@ func (x *ThunderBrowserExpert) Init(ctx context.Context) (err error) {
 					}
 					return DownloadUserAgent
 				}(),
-				UseVideoUrl: x.UseVideoUrl,
-				RemoveWay:   x.ExpertAddition.RemoveWay,
+				UseVideoUrl:   x.UseVideoUrl,
+				UseFluentPlay: x.UseFluentPlay,
+				RemoveWay:     x.ExpertAddition.RemoveWay,
 				refreshCTokenCk: func(token string) {
 					x.CaptchaToken = token
 					op.MustSaveDriverStorage(x)
@@ -202,7 +218,13 @@ func (x *ThunderBrowserExpert) Init(ctx context.Context) (err error) {
 			x.SetCaptchaToken(x.ExpertAddition.CaptchaToken)
 			op.MustSaveDriverStorage(x)
 		}
-		if x.Common.DeviceID != "" {
+		if x.ExpertAddition.CreditKey != "" {
+			x.SetCreditKey(x.ExpertAddition.CreditKey)
+		}
+
+		if x.ExpertAddition.DeviceID != "" {
+			x.Common.DeviceID = x.ExpertAddition.DeviceID
+		} else {
 			x.ExpertAddition.DeviceID = x.Common.DeviceID
 			op.MustSaveDriverStorage(x)
 		}
@@ -215,6 +237,7 @@ func (x *ThunderBrowserExpert) Init(ctx context.Context) (err error) {
 			op.MustSaveDriverStorage(x)
 		}
 		x.XunLeiBrowserCommon.UseVideoUrl = x.UseVideoUrl
+		x.XunLeiBrowserCommon.UseFluentPlay = x.UseFluentPlay
 		x.ExpertAddition.RootFolderID = x.RootFolderID
 		// 签名方法
 		if x.SignType == "captcha_sign" {
@@ -255,6 +278,8 @@ func (x *ThunderBrowserExpert) Init(ctx context.Context) (err error) {
 			if err != nil {
 				return err
 			}
+			// 清空 信任密钥
+			x.ExpertAddition.CreditKey = ""
 			x.SetTokenResp(token)
 			x.SetRefreshTokenFunc(func() error {
 				token, err := x.XunLeiBrowserCommon.RefreshToken(x.TokenResp.RefreshToken)
@@ -263,6 +288,8 @@ func (x *ThunderBrowserExpert) Init(ctx context.Context) (err error) {
 					if err != nil {
 						x.GetStorage().SetStatus(fmt.Sprintf("%+v", err.Error()))
 					}
+					// 清空 信任密钥
+					x.ExpertAddition.CreditKey = ""
 				}
 				x.SetTokenResp(token)
 				op.MustSaveDriverStorage(x)
@@ -288,6 +315,7 @@ func (x *ThunderBrowserExpert) Init(ctx context.Context) (err error) {
 		x.XunLeiBrowserCommon.UserAgent = x.UserAgent
 		x.XunLeiBrowserCommon.DownloadUserAgent = x.DownloadUserAgent
 		x.XunLeiBrowserCommon.UseVideoUrl = x.UseVideoUrl
+		x.XunLeiBrowserCommon.UseFluentPlay = x.UseFluentPlay
 		x.ExpertAddition.RootFolderID = x.RootFolderID
 	}
 
@@ -307,7 +335,8 @@ func (x *ThunderBrowserExpert) SetTokenResp(token *TokenResp) {
 
 type XunLeiBrowserCommon struct {
 	*Common
-	*TokenResp // 登录信息
+	*TokenResp     // 登录信息
+	*CoreLoginResp // core登录信息
 
 	refreshTokenFunc func() error
 }
@@ -525,7 +554,8 @@ func (xc *XunLeiBrowserCommon) getFiles(ctx context.Context, dir model.Obj, path
 			folderSpace = dirF.GetSpace()
 		default:
 			// 处理 根目录的情况
-			folderSpace = ThunderBrowserDriveSpace
+			// folderSpace = ThunderBrowserDriveSpace
+			folderSpace = ThunderDriveSpace // 迅雷浏览器已经合并到迅雷云盘，因此变更根目录
 		}
 		params := map[string]string{
 			"parent_id":      dir.GetID(),
@@ -571,13 +601,18 @@ func (xc *XunLeiBrowserCommon) SetTokenResp(tr *TokenResp) {
 	xc.TokenResp = tr
 }
 
+// SetCoreTokenResp 设置CoreToken
+func (xc *XunLeiBrowserCommon) SetCoreTokenResp(tr *CoreLoginResp) {
+	xc.CoreLoginResp = tr
+}
+
 // SetSpaceTokenResp 设置Token
 func (xc *XunLeiBrowserCommon) SetSpaceTokenResp(spaceToken string) {
 	xc.TokenResp.Token = spaceToken
 }
 
 // Request 携带Authorization和CaptchaToken的请求
-func (xc *XunLeiBrowserCommon) Request(url string, method string, callback base.ReqCallback, resp any) ([]byte, error) {
+func (xc *XunLeiBrowserCommon) Request(url string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
 	data, err := xc.Common.Request(url, method, func(req *resty.Request) {
 		req.SetHeaders(map[string]string{
 			"Authorization":         xc.GetToken(),
@@ -616,14 +651,24 @@ func (xc *XunLeiBrowserCommon) Request(url string, method string, callback base.
 		}
 		if errResp.ErrorMsg == "captcha_invalid" {
 			// 验证码token过期
-			if err = xc.RefreshCaptchaTokenAtLogin(GetAction(method, url), xc.UserID); err != nil {
+			if err = xc.RefreshCaptchaTokenAtLogin(GetAction(method, url), xc.TokenResp.UserID); err != nil {
 				return nil, err
 			}
 		}
-		return nil, err
+
+		return nil, errors.New(errResp.ErrorMsg)
 	default:
+		// 处理未捕获到的验证码错误
+		if errResp.ErrorMsg == "captcha_invalid" {
+			// 验证码token过期
+			if err = xc.RefreshCaptchaTokenAtLogin(GetAction(method, url), xc.TokenResp.UserID); err != nil {
+				return nil, err
+			}
+		}
+
 		return nil, err
 	}
+
 	return xc.Request(url, method, callback, resp)
 }
 
@@ -669,20 +714,25 @@ func (xc *XunLeiBrowserCommon) GetSafeAccessToken(safePassword string) (string, 
 
 // Login 登录
 func (xc *XunLeiBrowserCommon) Login(username, password string) (*TokenResp, error) {
-	url := XLUSER_API_URL + "/auth/signin"
-	err := xc.RefreshCaptchaTokenInLogin(GetAction(http.MethodPost, url), username)
+	// v3 login拿到 sessionID
+	sessionID, err := xc.CoreLogin(username, password)
 	if err != nil {
+		return nil, err
+	}
+	// v1 login拿到令牌
+	url := XLUSER_API_URL + "/auth/signin/token"
+	if err = xc.RefreshCaptchaTokenInLogin(GetAction(http.MethodPost, url), username); err != nil {
 		return nil, err
 	}
 
 	var resp TokenResp
 	_, err = xc.Common.Request(url, http.MethodPost, func(req *resty.Request) {
+		req.SetPathParam("client_id", xc.ClientID)
 		req.SetBody(&SignInRequest{
-			CaptchaToken: xc.GetCaptchaToken(),
 			ClientID:     xc.ClientID,
 			ClientSecret: xc.ClientSecret,
-			Username:     username,
-			Password:     password,
+			Provider:     SignProvider,
+			SigninToken:  sessionID,
 		})
 	}, &resp)
 	if err != nil {
@@ -697,4 +747,158 @@ func (xc *XunLeiBrowserCommon) IsLogin() bool {
 	}
 	_, err := xc.Request(XLUSER_API_URL+"/user/me", http.MethodGet, nil, nil)
 	return err == nil
+}
+
+// OfflineDownload 离线下载文件
+func (xc *XunLeiBrowserCommon) OfflineDownload(ctx context.Context, fileUrl string, parentDir model.Obj, fileName string) (*OfflineTask, error) {
+	var resp OfflineDownloadResp
+
+	body := base.Json{}
+
+	from := "cloudadd/"
+
+	if xc.UseFluentPlay {
+		body = base.Json{
+			"kind": FILE,
+			"name": fileName,
+			// 流畅播接口 强制将文件放在 "SPACE_FAVORITE" 文件夹
+			// "parent_id":   parentDir.GetID(),
+			"upload_type": UPLOAD_TYPE_URL,
+			"url": base.Json{
+				"url": fileUrl,
+				// "files": []string{"0"}, // 0 表示只下载第一个文件
+			},
+			"params": base.Json{
+				"cookie":      "null",
+				"web_title":   "",
+				"lastSession": "",
+				"flags":       "9",
+				"scene":       "smart_spot_panel",
+				"referer":     "https://x.xunlei.com",
+				"dedup_index": "0",
+			},
+			"need_dedup":  true,
+			"folder_type": "FAVORITE",
+			"space":       ThunderBrowserDriveFluentPlayFolderType,
+		}
+
+		from = "FLUENT_PLAY/sniff_ball/fluent_play/SPACE_FAVORITE"
+	} else {
+		body = base.Json{
+			"kind":        FILE,
+			"name":        fileName,
+			"parent_id":   parentDir.GetID(),
+			"upload_type": UPLOAD_TYPE_URL,
+			"url": base.Json{
+				"url": fileUrl,
+			},
+		}
+
+		if files, ok := parentDir.(*Files); ok {
+			body["space"] = files.GetSpace()
+		} else {
+			// 如果不是 Files 类型，则默认使用 ThunderDriveSpace
+			body["space"] = ThunderDriveSpace
+		}
+	}
+
+	_, err := xc.Request(FILE_API_URL, http.MethodPost, func(r *resty.Request) {
+		r.SetContext(ctx)
+		r.SetQueryParam("_from", from)
+		r.SetBody(&body)
+	}, &resp)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp.Task, err
+}
+
+// OfflineList 获取离线下载任务列表
+func (xc *XunLeiBrowserCommon) OfflineList(ctx context.Context, nextPageToken string) ([]OfflineTask, error) {
+	res := make([]OfflineTask, 0)
+
+	var resp OfflineListResp
+	_, err := xc.Request(TASK_API_URL, http.MethodGet, func(req *resty.Request) {
+		req.SetContext(ctx).
+			SetQueryParams(map[string]string{
+				"type":       "offline",
+				"limit":      "10000",
+				"page_token": nextPageToken,
+				"space":      "default/*",
+			})
+	}, &resp)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get offline list: %w", err)
+	}
+	res = append(res, resp.Tasks...)
+
+	return res, nil
+}
+
+func (xc *XunLeiBrowserCommon) DeleteOfflineTasks(ctx context.Context, taskIDs []string) error {
+	queryParams := map[string]string{
+		"task_ids": strings.Join(taskIDs, ","),
+		"_t":       fmt.Sprintf("%d", time.Now().UnixMilli()),
+	}
+	if xc.UseFluentPlay {
+		queryParams["space"] = ThunderBrowserDriveFluentPlayFolderType
+	}
+
+	_, err := xc.Request(TASK_API_URL, http.MethodDelete, func(req *resty.Request) {
+		req.SetContext(ctx).
+			SetQueryParams(queryParams)
+	}, nil)
+	if err != nil {
+		return fmt.Errorf("failed to delete tasks %v: %w", taskIDs, err)
+	}
+
+	return nil
+}
+
+func (xc *XunLeiBrowserCommon) CoreLogin(username string, password string) (sessionID string, err error) {
+	url := XLUSER_API_BASE_URL + "/xluser.core.login/v3/login"
+	var resp CoreLoginResp
+	res, err := xc.Common.Request(url, http.MethodPost, func(req *resty.Request) {
+		req.SetHeader("User-Agent", "android-ok-http-client/xl-acc-sdk/version-5.0.9.509300")
+		req.SetBody(&CoreLoginRequest{
+			ProtocolVersion: "301",
+			SequenceNo:      "1000010",
+			PlatformVersion: "10",
+			IsCompressed:    "0",
+			Appid:           APPID,
+			ClientVersion:   xc.Common.ClientVersion,
+			PeerID:          "00000000000000000000000000000000",
+			AppName:         "ANDROID-com.xunlei.browser",
+			SdkVersion:      "509300",
+			Devicesign:      generateDeviceSign(xc.DeviceID, xc.PackageName),
+			NetWorkType:     "WIFI",
+			ProviderName:    "NONE",
+			DeviceModel:     "M2004J7AC",
+			DeviceName:      "Xiaomi_M2004j7ac",
+			OSVersion:       "12",
+			Creditkey:       xc.GetCreditKey(),
+			Hl:              "zh-CN",
+			UserName:        username,
+			PassWord:        password,
+			VerifyKey:       "",
+			VerifyCode:      "",
+			IsMd5Pwd:        "0",
+		})
+	}, nil)
+	if err != nil {
+		return "", err
+	}
+
+	if err = utils.Json.Unmarshal(res, &resp); err != nil {
+		return "", err
+	}
+
+	xc.SetCoreTokenResp(&resp)
+
+	sessionID = resp.SessionID
+
+	return sessionID, nil
 }
