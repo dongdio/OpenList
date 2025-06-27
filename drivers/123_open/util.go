@@ -11,7 +11,7 @@ import (
 
 	"github.com/dongdio/OpenList/drivers/base"
 	"github.com/dongdio/OpenList/internal/op"
-	"github.com/dongdio/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 var ( // 不同情况下获取的AccessTokenQPS限制不同 如下模块化易于拓展

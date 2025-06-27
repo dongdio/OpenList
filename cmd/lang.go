@@ -14,11 +14,11 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
+	"github.com/dongdio/OpenList/consts"
 	_ "github.com/dongdio/OpenList/drivers"
 	"github.com/dongdio/OpenList/initialize"
-	"github.com/dongdio/OpenList/internal/conf"
 	"github.com/dongdio/OpenList/internal/op"
-	"github.com/dongdio/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 type KV[V any] map[string]V
@@ -100,7 +100,7 @@ func generateDriversJson() {
 			if item.Help != "" {
 				items[fmt.Sprintf("%s-tips", item.Name)] = item.Help
 			}
-			if item.Type == conf.TypeSelect && len(item.Options) > 0 {
+			if item.Type == consts.TypeSelect && len(item.Options) > 0 {
 				options := make(KV[string])
 				_options := strings.Split(item.Options, ",")
 				for _, o := range _options {
@@ -122,7 +122,7 @@ func generateSettingsJson() {
 		if setting.Help != "" {
 			settingsLang[fmt.Sprintf("%s-tips", setting.Key)] = setting.Help
 		}
-		if setting.Type == conf.TypeSelect && len(setting.Options) > 0 {
+		if setting.Type == consts.TypeSelect && len(setting.Options) > 0 {
 			options := make(KV[string])
 			_options := strings.Split(setting.Options, ",")
 			for _, o := range _options {

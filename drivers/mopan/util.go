@@ -6,7 +6,7 @@ import (
 	"github.com/foxxorcat/mopan-sdk-go"
 
 	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 func fileToObj(f mopan.File) model.Obj {

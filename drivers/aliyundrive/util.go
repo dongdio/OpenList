@@ -3,17 +3,17 @@ package aliyundrive
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/dustinxie/ecc"
 	"github.com/google/uuid"
+	"github.com/pkg/errors"
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/drivers/base"
 	"github.com/dongdio/OpenList/internal/op"
-	"github.com/dongdio/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 func (d *AliDrive) createSession() error {
@@ -89,7 +89,7 @@ func (d *AliDrive) request(url, method string, callback base.ReqCallback, resp a
 		if url == "https://api.alipan.com/v2/user/get" {
 			state = &State{}
 		} else {
-			return nil, fmt.Errorf("can't load user state, user_id: %s", d.UserID), RespErr{}
+			return nil, errors.Errorf("can't load user state, user_id: %s", d.UserID), RespErr{}
 		}
 	}
 	req.SetHeaders(map[string]string{

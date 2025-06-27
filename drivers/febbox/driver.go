@@ -7,11 +7,11 @@ import (
 	"golang.org/x/oauth2/clientcredentials"
 
 	"github.com/dongdio/OpenList/internal/op"
-	"github.com/dongdio/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/utility/utils"
 
 	"github.com/dongdio/OpenList/internal/driver"
 	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/pkg/errs"
+	"github.com/dongdio/OpenList/utility/errs"
 )
 
 type FebBox struct {

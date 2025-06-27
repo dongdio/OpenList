@@ -2,21 +2,21 @@ package aliyundrive_open
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"path/filepath"
 	"time"
 
 	"github.com/Xhofe/rateg"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/drivers/base"
 	"github.com/dongdio/OpenList/internal/driver"
 	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/pkg/errs"
-	"github.com/dongdio/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/utility/errs"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 type AliyundriveOpen struct {

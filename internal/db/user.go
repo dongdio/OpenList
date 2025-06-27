@@ -7,7 +7,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 func GetUserByRole(role int) (*model.User, error) {

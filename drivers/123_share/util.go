@@ -13,11 +13,10 @@ import (
 	"strings"
 	"time"
 
-	jsoniter "github.com/json-iterator/go"
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/drivers/base"
-	"github.com/dongdio/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 const (
@@ -80,7 +79,7 @@ func (d *Pan123Share) request(url string, method string, callback base.ReqCallba
 	body := res.Bytes()
 	code := utils.GetBytes(body, "code").Int()
 	if code != 0 {
-		return nil, errors.New(jsoniter.Get(body, "message").ToString())
+		return nil, errors.New(utils.GetBytes(body, "message").String())
 	}
 	return body, nil
 }

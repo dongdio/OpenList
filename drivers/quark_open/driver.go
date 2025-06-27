@@ -15,9 +15,9 @@ import (
 	"github.com/dongdio/OpenList/drivers/base"
 	"github.com/dongdio/OpenList/internal/driver"
 	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/pkg/errs"
-	streamPkg "github.com/dongdio/OpenList/pkg/stream"
-	"github.com/dongdio/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/utility/errs"
+	streamPkg "github.com/dongdio/OpenList/utility/stream"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 type QuarkOpen struct {
@@ -36,7 +36,18 @@ func (d *QuarkOpen) GetAddition() driver.Additional {
 }
 
 func (d *QuarkOpen) Init(ctx context.Context) error {
-	_, err := d.request(ctx, "/open/v1/user/info", http.MethodGet, nil, nil)
+	var resp UserInfoResp
+
+	_, err := d.request(ctx, "/open/v1/user/info", http.MethodGet, nil, &resp)
+	if err != nil {
+		return err
+	}
+
+	if resp.Data.UserID != "" {
+		d.conf.userId = resp.Data.UserID
+	} else {
+		return errors.New("failed to get user id")
+	}
 	return err
 }
 
@@ -62,6 +73,7 @@ func (d *QuarkOpen) Link(ctx context.Context, file model.Obj, args model.LinkArg
 	_, err := d.request(ctx, "/open/v1/file/get_download_url", http.MethodPost, func(req *resty.Request) {
 		req.SetBody(data)
 	}, &resp)
+
 	if err != nil {
 		return nil, err
 	}
@@ -163,6 +175,13 @@ func (d *QuarkOpen) Put(ctx context.Context, dstDir model.Obj, stream model.File
 	if err != nil {
 		return err
 	}
+
+	// 如果预上传已经完成，则直接返回 --秒传
+	if pre.Data.Finish {
+		up(100)
+		return nil
+	}
+
 	// get part info
 	partInfo := d._getPartInfo(stream, pre.Data.PartSize)
 	// get upload url info

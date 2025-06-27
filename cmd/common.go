@@ -10,7 +10,7 @@ import (
 
 	"github.com/dongdio/OpenList/initialize"
 	"github.com/dongdio/OpenList/internal/db"
-	"github.com/dongdio/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 const (

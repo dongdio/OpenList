@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 type ApiInfo struct {

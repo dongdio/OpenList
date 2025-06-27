@@ -7,7 +7,7 @@ import (
 
 	"github.com/dongdio/OpenList/drivers/webdav/odrvcookie"
 	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/pkg/gowebdav"
+	"github.com/dongdio/OpenList/utility/gowebdav"
 )
 
 // do others that not defined in Driver interface

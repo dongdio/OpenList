@@ -3,7 +3,7 @@ package LenovoNasShare
 import (
 	"time"
 
-	"github.com/dongdio/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/utility/utils"
 
 	_ "github.com/dongdio/OpenList/internal/model"
 )

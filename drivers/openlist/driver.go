@@ -13,13 +13,13 @@ import (
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
 
+	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/drivers/base"
-	"github.com/dongdio/OpenList/internal/conf"
 	"github.com/dongdio/OpenList/internal/driver"
 	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/pkg/errs"
-	"github.com/dongdio/OpenList/pkg/utils"
 	"github.com/dongdio/OpenList/server/common"
+	"github.com/dongdio/OpenList/utility/errs"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 type OpenList struct {
@@ -64,7 +64,7 @@ func (d *OpenList) Init(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		allowMounted := utils.GetBytes(res.Bytes(), "data", conf.AllowMounted).String() == "true"
+		allowMounted := utils.GetBytes(res.Bytes(), "data", consts.AllowMounted).String() == "true"
 		if !allowMounted {
 			return errors.Errorf("the site does not allow mounted")
 		}

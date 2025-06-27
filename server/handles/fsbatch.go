@@ -13,9 +13,9 @@ import (
 	"github.com/dongdio/OpenList/internal/fs"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
-	"github.com/dongdio/OpenList/pkg/errs"
-	"github.com/dongdio/OpenList/pkg/generic"
 	"github.com/dongdio/OpenList/server/common"
+	"github.com/dongdio/OpenList/utility/errs"
+	"github.com/dongdio/OpenList/utility/generic"
 )
 
 // RecursiveMoveReq 递归移动请求参数

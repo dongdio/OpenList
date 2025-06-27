@@ -18,21 +18,20 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dongdio/OpenList/pkg/stream"
-
+	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/drivers/base"
 	"github.com/dongdio/OpenList/internal/conf"
 	"github.com/dongdio/OpenList/internal/driver"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
 	"github.com/dongdio/OpenList/internal/setting"
-	"github.com/dongdio/OpenList/pkg/errgroup"
-	"github.com/dongdio/OpenList/pkg/errs"
-	"github.com/dongdio/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/utility/errgroup"
+	"github.com/dongdio/OpenList/utility/errs"
+	"github.com/dongdio/OpenList/utility/stream"
+	"github.com/dongdio/OpenList/utility/utils"
 
 	"github.com/avast/retry-go"
 	"github.com/google/uuid"
-	jsoniter "github.com/json-iterator/go"
 	"github.com/pkg/errors"
 	"resty.dev/v3"
 )
@@ -175,7 +174,7 @@ func (y *Cloud189PC) put(ctx context.Context, url string, headers map[string]str
 	}
 
 	var erron RespErr
-	_ = jsoniter.Unmarshal(body, &erron)
+	_ = utils.Json.Unmarshal(body, &erron)
 	_ = xml.Unmarshal(body, &erron)
 	if erron.HasError() {
 		return nil, &erron
@@ -412,15 +411,15 @@ func (y *Cloud189PC) initLoginParam() error {
 		return fmt.Errorf("failed to obtain verification code")
 	}
 	if imgRes.Size() > 20 {
-		if setting.GetStr(conf.OcrApi) != "" && !y.NoUseOcr {
+		if setting.GetStr(consts.OcrApi) != "" && !y.NoUseOcr {
 			vRes, err := base.RestyClient.R().
 				SetMultipartField("image", "validateCode.png", "image/png", bytes.NewReader(imgRes.Bytes())).
-				Post(setting.GetStr(conf.OcrApi))
+				Post(setting.GetStr(consts.OcrApi))
 			if err != nil {
 				return err
 			}
-			if jsoniter.Get(vRes.Bytes(), "status").ToInt() == 200 {
-				y.VCode = jsoniter.Get(vRes.Bytes(), "result").ToString()
+			if utils.GetBytes(vRes.Bytes(), "status").Int() == 200 {
+				y.VCode = utils.GetBytes(vRes.Bytes(), "result").String()
 				return nil
 			}
 		}
@@ -603,7 +602,7 @@ func (y *Cloud189PC) RapidUpload(ctx context.Context, dstDir model.Obj, stream m
 	return y.OldUploadCommit(ctx, uploadInfo.FileCommitUrl, uploadInfo.UploadFileId, isFamily, overwrite)
 }
 
-// 快传
+// FastUpload 快传
 func (y *Cloud189PC) FastUpload(ctx context.Context, dstDir model.Obj, file model.FileStreamer, up driver.UpdateProgress, isFamily bool, overwrite bool) (model.Obj, error) {
 	var (
 		cache = file.GetFile()
@@ -776,7 +775,7 @@ func (y *Cloud189PC) FastUpload(ctx context.Context, dstDir model.Obj, file mode
 	return resp.toFile(), nil
 }
 
-// 获取上传切片信息
+// GetMultiUploadUrls 获取上传切片信息
 // 对http body有大小限制，分片信息太多会出错
 func (y *Cloud189PC) GetMultiUploadUrls(ctx context.Context, isFamily bool, uploadFileId string, partInfo ...string) ([]UploadUrlInfo, error) {
 	fullUrl := UPLOAD_URL

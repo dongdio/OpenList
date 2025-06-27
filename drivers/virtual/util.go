@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/pkg/utils/random"
+	"github.com/dongdio/OpenList/utility/utils/random"
 )
 
 func (d *Virtual) genObj(dir bool) model.Obj {

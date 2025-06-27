@@ -14,13 +14,13 @@ import (
 
 	"resty.dev/v3"
 
+	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/drivers/base"
-	"github.com/dongdio/OpenList/internal/conf"
 	"github.com/dongdio/OpenList/internal/driver"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/setting"
-	"github.com/dongdio/OpenList/pkg/cookie"
-	"github.com/dongdio/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/utility/cookie"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 // do others that not defined in Driver interface
@@ -127,7 +127,7 @@ func (d *Cloudreve) doLogin(needCaptcha bool) error {
 		vRes, err := base.RestyClient.R().
 			SetMultipartField(
 				"image", "validateCode.png", "image/png", dec).
-			Post(setting.GetStr(conf.OcrApi))
+			Post(setting.GetStr(consts.OcrApi))
 		if err != nil {
 			return err
 		}

@@ -3,12 +3,12 @@ package qbit
 import (
 	"github.com/pkg/errors"
 
-	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/offline_download/tool"
 	"github.com/dongdio/OpenList/internal/setting"
-	"github.com/dongdio/OpenList/pkg/errs"
-	"github.com/dongdio/OpenList/pkg/qbittorrent"
+	"github.com/dongdio/OpenList/utility/errs"
+	"github.com/dongdio/OpenList/utility/qbittorrent"
 )
 
 type QBittorrent struct {
@@ -26,14 +26,14 @@ func (a *QBittorrent) Name() string {
 func (a *QBittorrent) Items() []model.SettingItem {
 	// qBittorrent settings
 	return []model.SettingItem{
-		{Key: conf.QbittorrentUrl, Value: "http://admin:adminadmin@localhost:8080/", Type: conf.TypeString, Group: model.OFFLINE_DOWNLOAD, Flag: model.PRIVATE},
-		{Key: conf.QbittorrentSeedtime, Value: "0", Type: conf.TypeNumber, Group: model.OFFLINE_DOWNLOAD, Flag: model.PRIVATE},
+		{Key: consts.QbittorrentUrl, Value: "http://admin:adminadmin@localhost:8080/", Type: consts.TypeString, Group: model.OFFLINE_DOWNLOAD, Flag: model.PRIVATE},
+		{Key: consts.QbittorrentSeedtime, Value: "0", Type: consts.TypeNumber, Group: model.OFFLINE_DOWNLOAD, Flag: model.PRIVATE},
 	}
 }
 
 func (a *QBittorrent) Init() (string, error) {
 	a.client = nil
-	url := setting.GetStr(conf.QbittorrentUrl)
+	url := setting.GetStr(consts.QbittorrentUrl)
 	qbClient, err := qbittorrent.New(url)
 	if err != nil {
 		return "", err

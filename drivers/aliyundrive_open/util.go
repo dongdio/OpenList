@@ -3,19 +3,18 @@ package aliyundrive_open
 import (
 	"context"
 	"encoding/base64"
-	"errors"
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/drivers/base"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
-	"github.com/dongdio/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 // do others that not defined in Driver interface
@@ -41,15 +40,15 @@ func (d *AliyundriveOpen) _refreshToken() (string, string, error) {
 		}
 		if resp.RefreshToken == "" || resp.AccessToken == "" {
 			if resp.ErrorMessage != "" {
-				return "", "", fmt.Errorf("failed to refresh token: %s", resp.ErrorMessage)
+				return "", "", errors.Errorf("failed to refresh token: %s", resp.ErrorMessage)
 			}
-			return "", "", fmt.Errorf("empty token returned from official API")
+			return "", "", errors.Errorf("empty token returned from official API")
 		}
 		return resp.AccessToken, resp.RefreshToken, nil
 	}
 	// 本地刷新逻辑必须要求client_id和client_secret
 	if d.ClientID == "" || d.ClientSecret == "" {
-		return "", "", fmt.Errorf("empty ClientID or ClientSecret")
+		return "", "", errors.Errorf("empty ClientID or ClientSecret")
 	}
 	url := API_URL + "/oauth/access_token"
 	var e ErrResp
@@ -68,11 +67,11 @@ func (d *AliyundriveOpen) _refreshToken() (string, string, error) {
 	}
 	log.Debugf("[ali_open] refresh token response: %s", res.String())
 	if e.Code != "" {
-		return "", "", fmt.Errorf("failed to refresh token: %s", e.Message)
+		return "", "", errors.Errorf("failed to refresh token: %s", e.Message)
 	}
 	refresh, access := utils.GetBytes(res.Bytes(), "refresh_token").String(), utils.GetBytes(res.Bytes(), "access_token").String()
 	if refresh == "" {
-		return "", "", fmt.Errorf("failed to refresh token: refresh token is empty, resp: %s", res.String())
+		return "", "", errors.Errorf("failed to refresh token: refresh token is empty, resp: %s", res.String())
 	}
 	curSub, err := getSub(d.RefreshToken)
 	if err != nil {
@@ -105,7 +104,7 @@ func (d *AliyundriveOpen) refreshToken() error {
 		return d.ref.refreshToken()
 	}
 	refresh, access, err := d._refreshToken()
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		if err == nil {
 			break
 		} else {
@@ -155,7 +154,7 @@ func (d *AliyundriveOpen) requestReturnErrResp(uri, method string, callback base
 			}
 			return d.requestReturnErrResp(uri, method, callback, true)
 		}
-		return nil, fmt.Errorf("%s:%s", e.Code, e.Message), &e
+		return nil, errors.Errorf("%s:%s", e.Code, e.Message), &e
 	}
 	return res.Bytes(), nil, nil
 }

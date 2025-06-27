@@ -7,10 +7,11 @@ import (
 
 	"resty.dev/v3"
 
+	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/internal/conf"
 	"github.com/dongdio/OpenList/internal/op"
 	"github.com/dongdio/OpenList/internal/setting"
-	"github.com/dongdio/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 func DelAdminCacheOnline() {
@@ -24,7 +25,7 @@ func DelAdminCacheOnline() {
 
 func DelUserCacheOnline(username string) {
 	client := resty.New().SetTimeout(1 * time.Second).SetTLSClientConfig(&tls.Config{InsecureSkipVerify: conf.Conf.TlsInsecureSkipVerify})
-	token := setting.GetStr(conf.Token)
+	token := setting.GetStr(consts.Token)
 	port := conf.Conf.Scheme.HttpPort
 	u := fmt.Sprintf("http://localhost:%d/api/admin/user/del_cache", port)
 	if port == -1 {

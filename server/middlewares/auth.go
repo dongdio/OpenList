@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
 	"github.com/dongdio/OpenList/internal/setting"
@@ -20,7 +20,7 @@ func Auth(c *gin.Context) {
 	token := c.GetHeader("Authorization")
 
 	// 检查是否使用管理员令牌
-	if subtle.ConstantTimeCompare([]byte(token), []byte(setting.GetStr(conf.Token))) == 1 {
+	if subtle.ConstantTimeCompare([]byte(token), []byte(setting.GetStr(consts.Token))) == 1 {
 		admin, err := op.GetAdmin()
 		if err != nil {
 			common.ErrorResp(c, err, 500)
@@ -93,7 +93,7 @@ func Authn(c *gin.Context) {
 	token := c.GetHeader("Authorization")
 
 	// 检查是否使用管理员令牌
-	if subtle.ConstantTimeCompare([]byte(token), []byte(setting.GetStr(conf.Token))) == 1 {
+	if subtle.ConstantTimeCompare([]byte(token), []byte(setting.GetStr(consts.Token))) == 1 {
 		admin, err := op.GetAdmin()
 		if err != nil {
 			common.ErrorResp(c, err, 500)

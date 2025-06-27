@@ -13,8 +13,8 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/dongdio/OpenList/pkg/utils"
-	"github.com/dongdio/OpenList/pkg/utils/random"
+	"github.com/dongdio/OpenList/utility/utils"
+	"github.com/dongdio/OpenList/utility/utils/random"
 )
 
 var (

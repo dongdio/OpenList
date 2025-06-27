@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/dongdio/OpenList/internal/conf"
-	"github.com/dongdio/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 type SiteConfig struct {

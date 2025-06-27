@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dongdio/OpenList/pkg/errs"
-	"github.com/dongdio/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/utility/errs"
+	"github.com/dongdio/OpenList/utility/utils"
 
 	"resty.dev/v3"
 

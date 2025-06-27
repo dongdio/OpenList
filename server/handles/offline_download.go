@@ -3,16 +3,16 @@ package handles
 import (
 	"github.com/gin-gonic/gin"
 
+	"github.com/dongdio/OpenList/consts"
 	_115 "github.com/dongdio/OpenList/drivers/115"
 	"github.com/dongdio/OpenList/drivers/pikpak"
 	"github.com/dongdio/OpenList/drivers/thunder"
 	"github.com/dongdio/OpenList/drivers/thunder_browser"
-	"github.com/dongdio/OpenList/internal/conf"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/offline_download/tool"
 	"github.com/dongdio/OpenList/internal/op"
-	"github.com/dongdio/OpenList/pkg/task"
 	"github.com/dongdio/OpenList/server/common"
+	"github.com/dongdio/OpenList/utility/task"
 )
 
 // SetAria2Req Aria2设置请求
@@ -31,8 +31,8 @@ func SetAria2(c *gin.Context) {
 
 	// 保存设置
 	items := []model.SettingItem{
-		{Key: conf.Aria2Uri, Value: req.Uri, Type: conf.TypeString, Group: model.OFFLINE_DOWNLOAD, Flag: model.PRIVATE},
-		{Key: conf.Aria2Secret, Value: req.Secret, Type: conf.TypeString, Group: model.OFFLINE_DOWNLOAD, Flag: model.PRIVATE},
+		{Key: consts.Aria2Uri, Value: req.Uri, Type: consts.TypeString, Group: model.OFFLINE_DOWNLOAD, Flag: model.PRIVATE},
+		{Key: consts.Aria2Secret, Value: req.Secret, Type: consts.TypeString, Group: model.OFFLINE_DOWNLOAD, Flag: model.PRIVATE},
 	}
 	if err := op.SaveSettingItems(items); err != nil {
 		common.ErrorResp(c, err, 500)
@@ -71,8 +71,8 @@ func SetQbittorrent(c *gin.Context) {
 
 	// 保存设置
 	items := []model.SettingItem{
-		{Key: conf.QbittorrentUrl, Value: req.Url, Type: conf.TypeString, Group: model.OFFLINE_DOWNLOAD, Flag: model.PRIVATE},
-		{Key: conf.QbittorrentSeedtime, Value: req.Seedtime, Type: conf.TypeNumber, Group: model.OFFLINE_DOWNLOAD, Flag: model.PRIVATE},
+		{Key: consts.QbittorrentUrl, Value: req.Url, Type: consts.TypeString, Group: model.OFFLINE_DOWNLOAD, Flag: model.PRIVATE},
+		{Key: consts.QbittorrentSeedtime, Value: req.Seedtime, Type: consts.TypeNumber, Group: model.OFFLINE_DOWNLOAD, Flag: model.PRIVATE},
 	}
 	if err := op.SaveSettingItems(items); err != nil {
 		common.ErrorResp(c, err, 500)
@@ -110,8 +110,8 @@ func SetTransmission(c *gin.Context) {
 
 	// 保存设置
 	items := []model.SettingItem{
-		{Key: conf.TransmissionUri, Value: req.Uri, Type: conf.TypeString, Group: model.OFFLINE_DOWNLOAD, Flag: model.PRIVATE},
-		{Key: conf.TransmissionSeedtime, Value: req.Seedtime, Type: conf.TypeNumber, Group: model.OFFLINE_DOWNLOAD, Flag: model.PRIVATE},
+		{Key: consts.TransmissionUri, Value: req.Uri, Type: consts.TypeString, Group: model.OFFLINE_DOWNLOAD, Flag: model.PRIVATE},
+		{Key: consts.TransmissionSeedtime, Value: req.Seedtime, Type: consts.TypeNumber, Group: model.OFFLINE_DOWNLOAD, Flag: model.PRIVATE},
 	}
 	if err := op.SaveSettingItems(items); err != nil {
 		common.ErrorResp(c, err, 500)
@@ -167,7 +167,7 @@ func Set115(c *gin.Context) {
 
 	// 保存设置
 	items := []model.SettingItem{
-		{Key: conf.Pan115TempDir, Value: req.TempDir, Type: conf.TypeString, Group: model.OFFLINE_DOWNLOAD, Flag: model.PRIVATE},
+		{Key: consts.Pan115TempDir, Value: req.TempDir, Type: consts.TypeString, Group: model.OFFLINE_DOWNLOAD, Flag: model.PRIVATE},
 	}
 	if err := op.SaveSettingItems(items); err != nil {
 		common.ErrorResp(c, err, 500)
@@ -223,7 +223,7 @@ func SetPikPak(c *gin.Context) {
 
 	// 保存设置
 	items := []model.SettingItem{
-		{Key: conf.PikPakTempDir, Value: req.TempDir, Type: conf.TypeString, Group: model.OFFLINE_DOWNLOAD, Flag: model.PRIVATE},
+		{Key: consts.PikPakTempDir, Value: req.TempDir, Type: consts.TypeString, Group: model.OFFLINE_DOWNLOAD, Flag: model.PRIVATE},
 	}
 	if err := op.SaveSettingItems(items); err != nil {
 		common.ErrorResp(c, err, 500)
@@ -279,7 +279,7 @@ func SetThunder(c *gin.Context) {
 
 	// 保存设置
 	items := []model.SettingItem{
-		{Key: conf.ThunderTempDir, Value: req.TempDir, Type: conf.TypeString, Group: model.OFFLINE_DOWNLOAD, Flag: model.PRIVATE},
+		{Key: consts.ThunderTempDir, Value: req.TempDir, Type: consts.TypeString, Group: model.OFFLINE_DOWNLOAD, Flag: model.PRIVATE},
 	}
 	if err := op.SaveSettingItems(items); err != nil {
 		common.ErrorResp(c, err, 500)
@@ -339,7 +339,7 @@ func SetThunderBrowser(c *gin.Context) {
 
 	// 保存设置
 	items := []model.SettingItem{
-		{Key: conf.ThunderBrowserTempDir, Value: req.TempDir, Type: conf.TypeString, Group: model.OFFLINE_DOWNLOAD, Flag: model.PRIVATE},
+		{Key: consts.ThunderBrowserTempDir, Value: req.TempDir, Type: consts.TypeString, Group: model.OFFLINE_DOWNLOAD, Flag: model.PRIVATE},
 	}
 	if err := op.SaveSettingItems(items); err != nil {
 		common.ErrorResp(c, err, 500)

@@ -8,7 +8,7 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 type AuthService struct {

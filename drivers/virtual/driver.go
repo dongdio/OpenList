@@ -7,7 +7,7 @@ import (
 
 	"github.com/dongdio/OpenList/internal/driver"
 	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/pkg/utils/random"
+	"github.com/dongdio/OpenList/utility/utils/random"
 )
 
 type Virtual struct {

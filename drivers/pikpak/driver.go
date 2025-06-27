@@ -14,8 +14,8 @@ import (
 	"github.com/dongdio/OpenList/internal/driver"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
-	"github.com/dongdio/OpenList/pkg/utils"
-	hash_extend "github.com/dongdio/OpenList/pkg/utils/hash"
+	"github.com/dongdio/OpenList/utility/utils"
+	hash_extend "github.com/dongdio/OpenList/utility/utils/hash"
 )
 
 type PikPak struct {

@@ -6,7 +6,7 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
 )
@@ -30,7 +30,7 @@ func WalkFS(ctx context.Context, depth int, name string, info model.Obj, walkFn 
 	}
 	meta, _ := op.GetNearestMeta(name)
 	// Read directory names.
-	objs, err := List(context.WithValue(ctx, conf.MetaKey, meta), name, &ListArgs{})
+	objs, err := List(context.WithValue(ctx, consts.MetaKey, meta), name, &ListArgs{})
 	if err != nil {
 		return walkFnErr
 	}

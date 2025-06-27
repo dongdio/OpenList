@@ -8,10 +8,11 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/internal/conf"
 	"github.com/dongdio/OpenList/internal/driver"
 	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 // ObjsUpdateHook is a function type for hooks that process objects after they are updated
@@ -44,35 +45,35 @@ type SettingItemHook func(item *model.SettingItem) error
 // settingItemHooks maps setting keys to their processing hooks
 var settingItemHooks = map[string]SettingItemHook{
 	// Process file type settings
-	conf.VideoTypes: func(item *model.SettingItem) error {
-		conf.SlicesMap[conf.VideoTypes] = strings.Split(item.Value, ",")
+	consts.VideoTypes: func(item *model.SettingItem) error {
+		conf.SlicesMap[consts.VideoTypes] = strings.Split(item.Value, ",")
 		return nil
 	},
-	conf.AudioTypes: func(item *model.SettingItem) error {
-		conf.SlicesMap[conf.AudioTypes] = strings.Split(item.Value, ",")
+	consts.AudioTypes: func(item *model.SettingItem) error {
+		conf.SlicesMap[consts.AudioTypes] = strings.Split(item.Value, ",")
 		return nil
 	},
-	conf.ImageTypes: func(item *model.SettingItem) error {
-		conf.SlicesMap[conf.ImageTypes] = strings.Split(item.Value, ",")
+	consts.ImageTypes: func(item *model.SettingItem) error {
+		conf.SlicesMap[consts.ImageTypes] = strings.Split(item.Value, ",")
 		return nil
 	},
-	conf.TextTypes: func(item *model.SettingItem) error {
-		conf.SlicesMap[conf.TextTypes] = strings.Split(item.Value, ",")
+	consts.TextTypes: func(item *model.SettingItem) error {
+		conf.SlicesMap[consts.TextTypes] = strings.Split(item.Value, ",")
 		return nil
 	},
 
 	// Process proxy settings
-	conf.ProxyTypes: func(item *model.SettingItem) error {
-		conf.SlicesMap[conf.ProxyTypes] = strings.Split(item.Value, ",")
+	consts.ProxyTypes: func(item *model.SettingItem) error {
+		conf.SlicesMap[consts.ProxyTypes] = strings.Split(item.Value, ",")
 		return nil
 	},
-	conf.ProxyIgnoreHeaders: func(item *model.SettingItem) error {
-		conf.SlicesMap[conf.ProxyIgnoreHeaders] = strings.Split(item.Value, ",")
+	consts.ProxyIgnoreHeaders: func(item *model.SettingItem) error {
+		conf.SlicesMap[consts.ProxyIgnoreHeaders] = strings.Split(item.Value, ",")
 		return nil
 	},
 
 	// Process privacy settings
-	conf.PrivacyRegs: func(item *model.SettingItem) error {
+	consts.PrivacyRegs: func(item *model.SettingItem) error {
 		regStrs := strings.Split(item.Value, "\n")
 		regs := make([]*regexp.Regexp, 0, len(regStrs))
 
@@ -94,7 +95,7 @@ var settingItemHooks = map[string]SettingItemHook{
 	},
 
 	// Process filename character mapping
-	conf.FilenameCharMapping: func(item *model.SettingItem) error {
+	consts.FilenameCharMapping: func(item *model.SettingItem) error {
 		err := utils.Json.UnmarshalFromString(item.Value, &conf.FilenameCharMap)
 		if err != nil {
 			return errors.Wrap(err, "failed to parse filename character mapping")
@@ -104,8 +105,8 @@ var settingItemHooks = map[string]SettingItemHook{
 	},
 
 	// Process direct link parameters
-	conf.IgnoreDirectLinkParams: func(item *model.SettingItem) error {
-		conf.SlicesMap[conf.IgnoreDirectLinkParams] = strings.Split(item.Value, ",")
+	consts.IgnoreDirectLinkParams: func(item *model.SettingItem) error {
+		conf.SlicesMap[consts.IgnoreDirectLinkParams] = strings.Split(item.Value, ",")
 		return nil
 	},
 }

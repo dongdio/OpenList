@@ -14,7 +14,7 @@ import (
 	"github.com/dhowden/tag"
 
 	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 type token struct {

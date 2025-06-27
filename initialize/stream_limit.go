@@ -5,10 +5,10 @@ import (
 
 	"golang.org/x/time/rate"
 
-	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/internal/op"
 	"github.com/dongdio/OpenList/internal/setting"
-	"github.com/dongdio/OpenList/pkg/stream"
+	"github.com/dongdio/OpenList/utility/stream"
 )
 
 type blockBurstLimiter struct {
@@ -48,8 +48,8 @@ func initLimiter(limiter *stream.Limiter, s string) {
 }
 
 func initStreamLimit() {
-	initLimiter(&stream.ClientDownloadLimit, conf.StreamMaxClientDownloadSpeed)
-	initLimiter(&stream.ClientUploadLimit, conf.StreamMaxClientUploadSpeed)
-	initLimiter(&stream.ServerDownloadLimit, conf.StreamMaxServerDownloadSpeed)
-	initLimiter(&stream.ServerUploadLimit, conf.StreamMaxServerUploadSpeed)
+	initLimiter(&stream.ClientDownloadLimit, consts.StreamMaxClientDownloadSpeed)
+	initLimiter(&stream.ClientUploadLimit, consts.StreamMaxClientUploadSpeed)
+	initLimiter(&stream.ServerDownloadLimit, consts.StreamMaxServerDownloadSpeed)
+	initLimiter(&stream.ServerUploadLimit, consts.StreamMaxServerUploadSpeed)
 }

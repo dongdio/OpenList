@@ -9,15 +9,15 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 
-	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/internal/fs"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
 	"github.com/dongdio/OpenList/internal/setting"
 	"github.com/dongdio/OpenList/internal/sign"
-	"github.com/dongdio/OpenList/pkg/errs"
-	"github.com/dongdio/OpenList/pkg/utils"
 	"github.com/dongdio/OpenList/server/common"
+	"github.com/dongdio/OpenList/utility/errs"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 // ListReq 文件列表请求参数
@@ -345,7 +345,7 @@ func FsGet(c *gin.Context) {
 		if storage.Config().MustProxy() || storage.GetStorage().WebProxy {
 			// 处理需要代理的情况
 			query := ""
-			if isEncrypt(meta, reqPath) || setting.GetBool(conf.SignAll) {
+			if isEncrypt(meta, reqPath) || setting.GetBool(consts.SignAll) {
 				query = "?sign=" + sign.Sign(reqPath)
 			}
 

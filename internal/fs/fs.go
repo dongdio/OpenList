@@ -10,8 +10,8 @@ import (
 	"github.com/dongdio/OpenList/internal/driver"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
-	"github.com/dongdio/OpenList/pkg/errs"
-	"github.com/dongdio/OpenList/pkg/task"
+	"github.com/dongdio/OpenList/utility/errs"
+	"github.com/dongdio/OpenList/utility/task"
 )
 
 // 文件系统操作包
@@ -192,7 +192,7 @@ func GetStorage(path string, args *GetStoragesArgs) (driver.Driver, error) {
 }
 
 // Other 执行其他文件系统操作
-func Other(ctx context.Context, args model.FsOtherArgs) (interface{}, error) {
+func Other(ctx context.Context, args model.FsOtherArgs) (any, error) {
 	res, err := other(ctx, args)
 	if err != nil {
 		log.Errorf("failed to execute other operation on %s: %+v", args.Path, err)

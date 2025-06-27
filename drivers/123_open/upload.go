@@ -12,9 +12,9 @@ import (
 	"github.com/dongdio/OpenList/drivers/base"
 	"github.com/dongdio/OpenList/internal/driver"
 	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/pkg/errgroup"
-	"github.com/dongdio/OpenList/pkg/http_range"
-	"github.com/dongdio/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/utility/errgroup"
+	"github.com/dongdio/OpenList/utility/http_range"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 func (d *Open123) create(parentFileID int64, filename string, etag string, size int64, duplicate int, containDir bool) (*UploadCreateResp, error) {
@@ -133,7 +133,7 @@ func (d *Open123) Upload(ctx context.Context, file model.FileStreamer, createRes
 	if err != nil {
 		return err
 	}
-	if uploadCompleteResp.Data.Async == false || uploadCompleteResp.Data.Completed {
+	if !uploadCompleteResp.Data.Async || uploadCompleteResp.Data.Completed {
 		return nil
 	}
 

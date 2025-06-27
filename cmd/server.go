@@ -26,15 +26,9 @@ import (
 	"github.com/dongdio/OpenList/initialize"
 	"github.com/dongdio/OpenList/internal/conf"
 	"github.com/dongdio/OpenList/internal/fs"
-	"github.com/dongdio/OpenList/pkg/utils"
 	"github.com/dongdio/OpenList/server"
 	"github.com/dongdio/OpenList/server/middlewares"
-)
-
-// Constants for server operation
-const (
-	// GracefulShutdownTimeout is the time to wait for server shutdown before forcing
-	GracefulShutdownTimeout = 1 * time.Second
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 // ServerCmd represents the server command that starts the OpenList server

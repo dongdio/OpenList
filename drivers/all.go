@@ -19,7 +19,6 @@ import (
 	_ "github.com/dongdio/OpenList/drivers/azure_blob"
 	_ "github.com/dongdio/OpenList/drivers/baidu_netdisk"
 	_ "github.com/dongdio/OpenList/drivers/baidu_photo"
-	_ "github.com/dongdio/OpenList/drivers/baidu_share"
 	_ "github.com/dongdio/OpenList/drivers/chaoxing"
 	_ "github.com/dongdio/OpenList/drivers/cloudreve"
 	_ "github.com/dongdio/OpenList/drivers/cloudreve_v4"

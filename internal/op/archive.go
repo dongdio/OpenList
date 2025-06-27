@@ -15,11 +15,11 @@ import (
 
 	"github.com/dongdio/OpenList/internal/driver"
 	"github.com/dongdio/OpenList/internal/model"
-	tool2 "github.com/dongdio/OpenList/pkg/archive/tool"
-	"github.com/dongdio/OpenList/pkg/errs"
-	"github.com/dongdio/OpenList/pkg/singleflight"
-	"github.com/dongdio/OpenList/pkg/stream"
-	"github.com/dongdio/OpenList/pkg/utils"
+	tool2 "github.com/dongdio/OpenList/utility/archive/tool"
+	"github.com/dongdio/OpenList/utility/errs"
+	"github.com/dongdio/OpenList/utility/singleflight"
+	"github.com/dongdio/OpenList/utility/stream"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 // Cache for archive metadata to reduce repeated processing

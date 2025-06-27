@@ -17,13 +17,13 @@ import (
 	"gorm.io/gorm"
 	"resty.dev/v3"
 
-	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/internal/db"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/setting"
-	"github.com/dongdio/OpenList/pkg/utils"
-	"github.com/dongdio/OpenList/pkg/utils/random"
 	"github.com/dongdio/OpenList/server/common"
+	"github.com/dongdio/OpenList/utility/utils"
+	"github.com/dongdio/OpenList/utility/utils/random"
 )
 
 // SSO相关常量
@@ -99,16 +99,16 @@ func SSOLoginRedirect(c *gin.Context) {
 	}
 
 	// 检查SSO是否启用
-	enabled := setting.GetBool(conf.SSOLoginEnabled)
+	enabled := setting.GetBool(consts.SSOLoginEnabled)
 	if !enabled {
 		common.ErrorStrResp(c, "Single sign-on is not enabled", 403)
 		return
 	}
 
 	// 获取SSO配置
-	useCompatibility := setting.GetBool(conf.SSOCompatibilityMode)
-	clientId := setting.GetStr(conf.SSOClientId)
-	platform := setting.GetStr(conf.SSOLoginPlatform)
+	useCompatibility := setting.GetBool(consts.SSOCompatibilityMode)
+	clientId := setting.GetStr(consts.SSOClientId)
+	platform := setting.GetStr(consts.SSOLoginPlatform)
 
 	// 构建重定向URL
 	redirectUri := ssoRedirectUri(c, useCompatibility, method)
@@ -145,7 +145,7 @@ func SSOLoginRedirect(c *gin.Context) {
 		c.Redirect(http.StatusFound, authURL+urlValues.Encode())
 
 	case PlatformCasdoor:
-		endpoint := strings.TrimSuffix(setting.GetStr(conf.SSOEndpointName), "/")
+		endpoint := strings.TrimSuffix(setting.GetStr(consts.SSOEndpointName), "/")
 		authURL := endpoint + "/login/oauth/authorize?"
 		urlValues.Add("scope", "profile")
 		urlValues.Add("state", endpoint)
@@ -173,7 +173,7 @@ func GetOIDCClient(c *gin.Context, useCompatibility bool, redirectUri, method st
 	}
 
 	// 获取OIDC配置
-	endpoint := setting.GetStr(conf.SSOEndpointName)
+	endpoint := setting.GetStr(consts.SSOEndpointName)
 	if endpoint == "" {
 		return nil, errors.New("OIDC endpoint not configured")
 	}
@@ -185,12 +185,12 @@ func GetOIDCClient(c *gin.Context, useCompatibility bool, redirectUri, method st
 	}
 
 	// 获取客户端配置
-	clientId := setting.GetStr(conf.SSOClientId)
-	clientSecret := setting.GetStr(conf.SSOClientSecret)
+	clientId := setting.GetStr(consts.SSOClientId)
+	clientSecret := setting.GetStr(consts.SSOClientSecret)
 
 	// 处理额外的作用域
 	extraScopes := []string{}
-	if extraScopesStr := setting.GetStr(conf.SSOExtraScopes); extraScopesStr != "" {
+	if extraScopesStr := setting.GetStr(consts.SSOExtraScopes); extraScopesStr != "" {
 		extraScopes = strings.Split(extraScopesStr, " ")
 	}
 
@@ -208,7 +208,7 @@ func GetOIDCClient(c *gin.Context, useCompatibility bool, redirectUri, method st
 // 当用户不存在且启用了自动注册时，创建新用户
 func autoRegister(username, userID string, err error) (*model.User, error) {
 	// 如果错误不是"记录未找到"或者未启用自动注册，则返回错误
-	if !errors.Is(err, gorm.ErrRecordNotFound) || !setting.GetBool(conf.SSOAutoRegister) {
+	if !errors.Is(err, gorm.ErrRecordNotFound) || !setting.GetBool(consts.SSOAutoRegister) {
 		return nil, err
 	}
 
@@ -222,8 +222,8 @@ func autoRegister(username, userID string, err error) (*model.User, error) {
 		ID:         0,
 		Username:   username,
 		Password:   random.String(16),
-		Permission: int32(setting.GetInt(conf.SSODefaultPermission, 0)),
-		BasePath:   setting.GetStr(conf.SSODefaultDir),
+		Permission: int32(setting.GetInt(consts.SSODefaultPermission, 0)),
+		BasePath:   setting.GetStr(consts.SSODefaultDir),
 		Role:       0,
 		Disabled:   false,
 		SsoID:      userID,
@@ -288,7 +288,7 @@ window.close()
 // OIDCLoginCallback 处理OIDC登录回调
 func OIDCLoginCallback(c *gin.Context) {
 	// 获取配置
-	useCompatibility := setting.GetBool(conf.SSOCompatibilityMode)
+	useCompatibility := setting.GetBool(consts.SSOCompatibilityMode)
 	method := c.Query("method")
 	if useCompatibility {
 		method = path.Base(c.Request.URL.Path)
@@ -301,8 +301,8 @@ func OIDCLoginCallback(c *gin.Context) {
 	}
 
 	// 获取OIDC配置
-	clientId := setting.GetStr(conf.SSOClientId)
-	endpoint := setting.GetStr(conf.SSOEndpointName)
+	clientId := setting.GetStr(consts.SSOClientId)
+	endpoint := setting.GetStr(consts.SSOEndpointName)
 
 	// 创建OIDC提供者
 	provider, err := oidc.NewProvider(c, endpoint)
@@ -356,7 +356,7 @@ func OIDCLoginCallback(c *gin.Context) {
 	}
 
 	// 获取用户ID
-	usernameKey := setting.GetStr(conf.SSOOIDCUsernameKey, "name")
+	usernameKey := setting.GetStr(consts.SSOOIDCUsernameKey, "name")
 	userID := utils.GetBytes(payload, usernameKey).String()
 	if userID == "" {
 		common.ErrorStrResp(c, "cannot get username from OIDC provider", 400)
@@ -410,14 +410,14 @@ func OIDCLoginCallback(c *gin.Context) {
 // SSOLoginCallback 处理SSO登录回调
 func SSOLoginCallback(c *gin.Context) {
 	// 检查SSO是否启用
-	enabled := setting.GetBool(conf.SSOLoginEnabled)
+	enabled := setting.GetBool(consts.SSOLoginEnabled)
 	if !enabled {
 		common.ErrorStrResp(c, "single sign-on is disabled", 403)
 		return
 	}
 
 	// 获取配置
-	useCompatibility := setting.GetBool(conf.SSOCompatibilityMode)
+	useCompatibility := setting.GetBool(consts.SSOCompatibilityMode)
 
 	// 获取方法
 	method := c.Query("method")
@@ -432,9 +432,9 @@ func SSOLoginCallback(c *gin.Context) {
 	}
 
 	// 获取SSO配置
-	clientId := setting.GetStr(conf.SSOClientId)
-	platform := setting.GetStr(conf.SSOLoginPlatform)
-	clientSecret := setting.GetStr(conf.SSOClientSecret)
+	clientId := setting.GetStr(consts.SSOClientId)
+	platform := setting.GetStr(consts.SSOLoginPlatform)
+	clientSecret := setting.GetStr(consts.SSOClientSecret)
 
 	// 对于OIDC平台，使用专门的处理函数
 	if platform == PlatformOIDC {
@@ -481,7 +481,7 @@ func SSOLoginCallback(c *gin.Context) {
 		usernameField = "nick"
 
 	case PlatformCasdoor:
-		endpoint := strings.TrimSuffix(setting.GetStr(conf.SSOEndpointName), "/")
+		endpoint := strings.TrimSuffix(setting.GetStr(consts.SSOEndpointName), "/")
 		tokenUrl = endpoint + "/api/login/oauth/access_token"
 		userUrl = endpoint + "/api/userinfo"
 		additionalForm["grant_type"] = "authorization_code"

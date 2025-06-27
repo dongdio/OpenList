@@ -6,11 +6,12 @@ import (
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/internal/conf"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/setting"
-	search2 "github.com/dongdio/OpenList/pkg/search"
 	"github.com/dongdio/OpenList/server/common"
+	search2 "github.com/dongdio/OpenList/utility/search"
 )
 
 type UpdateIndexReq struct {
@@ -32,7 +33,7 @@ func BuildIndex(c *gin.Context) {
 			return
 		}
 		err = search2.BuildIndex(context.Background(), []string{"/"},
-			conf.SlicesMap[conf.IgnorePaths], setting.GetInt(conf.MaxIndexDepth, 20), true)
+			conf.SlicesMap[consts.IgnorePaths], setting.GetInt(consts.MaxIndexDepth, 20), true)
 		if err != nil {
 			log.Errorf("build index error: %+v", err)
 		}
@@ -64,7 +65,7 @@ func UpdateIndex(c *gin.Context) {
 			}
 		}
 		err := search2.BuildIndex(context.Background(), req.Paths,
-			conf.SlicesMap[conf.IgnorePaths], req.MaxDepth, false)
+			conf.SlicesMap[consts.IgnorePaths], req.MaxDepth, false)
 		if err != nil {
 			log.Errorf("update index error: %+v", err)
 		}

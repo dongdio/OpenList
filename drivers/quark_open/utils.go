@@ -2,12 +2,15 @@ package quark_open
 
 import (
 	"context"
+	"crypto/md5"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -18,24 +21,34 @@ import (
 	"github.com/dongdio/OpenList/drivers/base"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
+	"github.com/dongdio/OpenList/utility/http_range"
 )
 
-func (d *QuarkOpen) request(ctx context.Context, pathname string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+func (d *QuarkOpen) request(ctx context.Context, pathname string, method string, callback base.ReqCallback, resp any, manualSign ...*ManualSign) ([]byte, error) {
 	u := d.conf.api + pathname
-	tm, token, reqID := d.generateReqSign(method, pathname, d.Addition.SignKey)
-	req := base.RestyClient.R()
-	req.SetContext(ctx)
-	req.SetHeaders(map[string]string{
-		"Accept":          "application/json, text/plain, */*",
-		"User-Agent":      d.conf.ua,
-		"x-pan-tm":        tm,
-		"x-pan-token":     token,
-		"x-pan-client-id": d.Addition.AppID,
-	})
-	req.SetQueryParams(map[string]string{
-		"req_id":       reqID,
-		"access_token": d.Addition.AccessToken,
-	})
+	var tm, token, reqID string
+
+	// 检查是否手动传入签名参数
+	if len(manualSign) > 0 && manualSign[0] != nil {
+		tm, token, reqID = manualSign[0].Tm, manualSign[0].Token, manualSign[0].ReqID
+	} else {
+		// 自动生成签名参数
+		tm, token, reqID = d.generateReqSign(method, pathname, d.SignKey)
+	}
+
+	req := base.RestyClient.R().
+		SetContext(ctx).
+		SetHeaders(map[string]string{
+			"Accept":          "application/json, text/plain, */*",
+			"User-Agent":      d.conf.ua,
+			"x-pan-tm":        tm,
+			"x-pan-token":     token,
+			"x-pan-client-id": d.AppID,
+		}).
+		SetQueryParams(map[string]string{
+			"req_id":       reqID,
+			"access_token": d.AccessToken,
+		})
 	if callback != nil {
 		callback(req)
 	}
@@ -49,7 +62,7 @@ func (d *QuarkOpen) request(ctx context.Context, pathname string, method string,
 		return nil, err
 	}
 	// 判断 是否需要 刷新 access_token
-	if e.Status == -1 && (e.Errno == 11001 || e.Errno == 14001) {
+	if e.Status == -1 && (e.Errno == 11001 || (e.Errno == 14001 && strings.Contains(e.ErrorInfo, "access_token"))) {
 		// token 过期
 		err = d.refreshToken()
 		if err != nil {
@@ -72,7 +85,7 @@ func (d *QuarkOpen) GetFiles(ctx context.Context, parent string) ([]File, error)
 	var queryCursor QueryCursor
 
 	for {
-		reqBody := map[string]interface{}{
+		reqBody := map[string]any{
 			"parent_fid": parent,
 			"size":       100,             // 默认每页100个文件
 			"sort":       "file_name:asc", // 基本排序方式
@@ -106,7 +119,16 @@ func (d *QuarkOpen) GetFiles(ctx context.Context, parent string) ([]File, error)
 	return files, nil
 }
 
-func (d *QuarkOpen) upPre(ctx context.Context, file model.FileStreamer, parentId, md5, sha1 string) (UpPreResp, error) {
+func (d *QuarkOpen) upPre(ctx context.Context, file model.FileStreamer, parentID, md5, sha1 string) (UpPreResp, error) {
+
+	apiPath := "/open/v1/file/upload_pre"
+	tm, xPanToken, reqID := d.generateReqSign(http.MethodPost, apiPath, d.SignKey)
+
+	// 生成proof相关字段，传入 x-pan-token
+	proofVersion, proofSeed1, proofSeed2, proofCode1, proofCode2, err := d.generateProof(file, xPanToken)
+	if err != nil {
+		return UpPreResp{}, fmt.Errorf("failed to generate proof: %w", err)
+	}
 	now := time.Now()
 	data := base.Json{
 		"file_name":       file.GetName(),
@@ -116,15 +138,139 @@ func (d *QuarkOpen) upPre(ctx context.Context, file model.FileStreamer, parentId
 		"sha1":            sha1,
 		"l_created_at":    now.UnixMilli(),
 		"l_updated_at":    now.UnixMilli(),
-		"pdir_fid":        parentId,
+		"pdir_fid":        parentID,
 		"same_path_reuse": true,
+		"proof_version":   proofVersion,
+		"proof_seed1":     proofSeed1,
+		"proof_seed2":     proofSeed2,
+		"proof_code1":     proofCode1,
+		"proof_code2":     proofCode2,
 	}
+	// 使用手动生成的签名参数
+	manualSign := &ManualSign{
+		Tm:    tm,
+		Token: xPanToken,
+		ReqID: reqID,
+	}
+
 	var resp UpPreResp
-	_, err := d.request(ctx, "/open/v1/file/upload_pre", http.MethodPost, func(req *resty.Request) {
+	_, err = d.request(ctx, "/open/v1/file/upload_pre", http.MethodPost, func(req *resty.Request) {
 		req.SetBody(data)
-	}, &resp)
+	}, &resp, manualSign)
 
 	return resp, err
+}
+
+// generateProof 生成夸克云盘文件上传的proof验证信息
+func (d *QuarkOpen) generateProof(file model.FileStreamer, xPanToken string) (proofVersion, proofSeed1, proofSeed2, proofCode1, proofCode2 string, err error) {
+	// 获取文件大小
+	fileSize := file.GetSize()
+	// 设置proof_version (固定为"v1")
+	proofVersion = "v1"
+	// 生成proof_seed1 - 算法: md5(userid+x-pan-token)
+	proofSeed1 = d.generateProofSeed1(xPanToken)
+	// 生成proof_seed2 - 算法: md5(fileSize)
+	proofSeed2 = d.generateProofSeed2(fileSize)
+	// 生成proof_code1和proof_code2
+	proofCode1, err = d.generateProofCode(file, proofSeed1, fileSize)
+	if err != nil {
+		return "", "", "", "", "", fmt.Errorf("failed to generate proof_code1: %w", err)
+	}
+
+	proofCode2, err = d.generateProofCode(file, proofSeed2, fileSize)
+	if err != nil {
+		return "", "", "", "", "", fmt.Errorf("failed to generate proof_code2: %w", err)
+	}
+
+	return proofVersion, proofSeed1, proofSeed2, proofCode1, proofCode2, nil
+}
+
+// generateProofSeed1 生成proof_seed1，基于 userId、x-pan-token
+func (d *QuarkOpen) generateProofSeed1(xPanToken string) string {
+	concatString := d.conf.userId + xPanToken
+	md5Hash := md5.Sum([]byte(concatString))
+	return hex.EncodeToString(md5Hash[:])
+}
+
+// generateProofSeed2 生成proof_seed2，基于 fileSize
+func (d *QuarkOpen) generateProofSeed2(fileSize int64) string {
+	md5Hash := md5.Sum([]byte(strconv.FormatInt(fileSize, 10)))
+	return hex.EncodeToString(md5Hash[:])
+}
+
+type ProofRange struct {
+	Start int64
+	End   int64
+}
+
+// generateProofCode 根据proof_seed和文件大小生成proof_code
+func (d *QuarkOpen) generateProofCode(file model.FileStreamer, proofSeed string, fileSize int64) (string, error) {
+	// 获取读取范围
+	proofRange, err := d.getProofRange(proofSeed, fileSize)
+	if err != nil {
+		return "", fmt.Errorf("failed to get proof range: %w", err)
+	}
+
+	// 计算需要读取的长度
+	length := proofRange.End - proofRange.Start
+	if length == 0 {
+		return "", nil
+	}
+
+	// 使用FileStreamer的RangeRead方法读取特定范围的数据
+	reader, err := file.RangeRead(http_range.Range{
+		Start:  proofRange.Start,
+		Length: length,
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to range read: %w", err)
+	}
+	defer func() {
+		if closer, ok := reader.(io.Closer); ok {
+			closer.Close()
+		}
+	}()
+
+	// 读取数据
+	buf := make([]byte, length)
+	n, err := io.ReadFull(reader, buf)
+	if errors.Is(err, io.ErrUnexpectedEOF) {
+		return "", fmt.Errorf("can't read data, expected=%d, got=%d", length, n)
+	}
+	if err != nil {
+		return "", fmt.Errorf("failed to read data: %w", err)
+	}
+
+	// Base64编码
+	return base64.StdEncoding.EncodeToString(buf), nil
+}
+
+// getProofRange 根据proof_seed和文件大小计算需要读取的文件范围
+func (d *QuarkOpen) getProofRange(proofSeed string, fileSize int64) (*ProofRange, error) {
+	if fileSize == 0 {
+		return &ProofRange{}, nil
+	}
+	// 对 proofSeed 进行 MD5 处理，取前16个字符
+	md5Hash := md5.Sum([]byte(proofSeed))
+	tmpStr := hex.EncodeToString(md5Hash[:])[:16]
+	// 转为 uint64
+	tmpInt, err := strconv.ParseUint(tmpStr, 16, 64)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse hex string: %w", err)
+	}
+	// 计算索引位置
+	index := tmpInt % uint64(fileSize)
+
+	pr := &ProofRange{
+		Start: int64(index),
+		End:   int64(index) + 8,
+	}
+	// 确保 End 不超过文件大小
+	if pr.End > fileSize {
+		pr.End = fileSize
+	}
+
+	return pr, nil
 }
 
 func (d *QuarkOpen) _getPartInfo(stream model.FileStreamer, partSize int64) []base.Json {
@@ -136,10 +282,7 @@ func (d *QuarkOpen) _getPartInfo(stream model.FileStreamer, partSize int64) []ba
 
 	// 计算每个分片的大小和编号
 	for left > 0 {
-		size := partSize
-		if left < partSize {
-			size = left
-		}
+		size := min(left, partSize)
 
 		partInfo = append(partInfo, base.Json{
 			"part_number": partNumber,
@@ -174,32 +317,27 @@ func (d *QuarkOpen) upUrl(ctx context.Context, pre UpPreResp, partInfo []base.Js
 }
 
 func (d *QuarkOpen) upPart(ctx context.Context, upUrlInfo UpUrlInfo, partNumber int, bytes io.Reader) (string, error) {
-	// 创建请求
-	req, err := http.NewRequestWithContext(ctx, http.MethodPut, upUrlInfo.UploadUrls[partNumber].UploadURL, bytes)
+
+	resp, err := base.RestyClient.R().
+		SetContext(ctx).
+		SetHeaders(map[string]string{
+			"Authorization":        upUrlInfo.UploadUrls[partNumber].SignatureInfo.Signature,
+			"X-Oss-Date":           upUrlInfo.CommonHeaders.XOssDate,
+			"X-Oss-Content-Sha256": upUrlInfo.CommonHeaders.XOssContentSha256,
+			"Accept-Encoding":      "gzip",
+		}).
+		SetBody(bytes).
+		Put(upUrlInfo.UploadUrls[partNumber].UploadURL)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "failed to upload part")
 	}
 
-	req.Header.Set("Authorization", upUrlInfo.UploadUrls[partNumber].SignatureInfo.Signature)
-	req.Header.Set("X-Oss-Date", upUrlInfo.CommonHeaders.XOssDate)
-	req.Header.Set("X-Oss-Content-Sha256", upUrlInfo.CommonHeaders.XOssContentSha256)
-	req.Header.Set("Accept-Encoding", "gzip")
-	req.Header.Set("User-Agent", "Go-http-client/1.1")
-
-	// 发送请求
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return "", err
+	if resp.StatusCode() != 200 {
+		return "", errors.Errorf("up status: %d, error: %s", resp.StatusCode(), resp.String())
 	}
-	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
-		body, _ := io.ReadAll(resp.Body)
-		return "", errors.Errorf("up status: %d, error: %s", resp.StatusCode, string(body))
-	}
 	// 返回 Etag 作为分片上传的标识
-	return resp.Header.Get("Etag"), nil
+	return resp.Header().Get("Etag"), nil
 }
 
 func (d *QuarkOpen) upFinish(ctx context.Context, pre UpPreResp, partInfo []base.Json, etags []string) error {
@@ -233,11 +371,18 @@ func (d *QuarkOpen) upFinish(ctx context.Context, pre UpPreResp, partInfo []base
 		return err
 	}
 
-	if resp.Data.Finish != true {
+	if !resp.Data.Finish {
 		return errors.Errorf("upload finish failed, task_id: %s", resp.Data.TaskID)
 	}
 
 	return nil
+}
+
+// ManualSign 用于手动签名URL的结构体
+type ManualSign struct {
+	Tm    string
+	Token string
+	ReqID string
 }
 
 func (d *QuarkOpen) generateReqSign(method string, pathname string, signKey string) (string, string, string) {
@@ -305,6 +450,5 @@ func (d *QuarkOpen) _refreshToken() (string, string, error) {
 
 // 生成认证 Cookie
 func (d *QuarkOpen) generateAuthCookie() string {
-	return fmt.Sprintf("x_pan_client_id=%s; x_pan_access_token=%s",
-		d.Addition.AppID, d.Addition.AccessToken)
+	return fmt.Sprintf("x_pan_client_id=%s; x_pan_access_token=%s", d.AppID, d.AccessToken)
 }

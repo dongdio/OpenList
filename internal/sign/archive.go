@@ -4,16 +4,16 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/internal/setting"
-	"github.com/dongdio/OpenList/pkg/sign"
+	"github.com/dongdio/OpenList/utility/sign"
 )
 
 var onceArchive sync.Once
 var instanceArchive sign.Sign
 
 func SignArchive(data string) string {
-	expire := setting.GetInt(conf.LinkExpiration, 0)
+	expire := setting.GetInt(consts.LinkExpiration, 0)
 	if expire == 0 {
 		return NotExpiredArchive(data)
 	} else {
@@ -37,5 +37,5 @@ func VerifyArchive(data string, sign string) error {
 }
 
 func InstanceArchive() {
-	instanceArchive = sign.NewHMACSign([]byte(setting.GetStr(conf.Token) + "-archive"))
+	instanceArchive = sign.NewHMACSign([]byte(setting.GetStr(consts.Token) + "-archive"))
 }

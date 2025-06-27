@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/dongdio/OpenList/internal/conf"
-	"github.com/dongdio/OpenList/pkg/patch"
-	"github.com/dongdio/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/utility/patch"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 func safeCall(v string, i int, f func()) {

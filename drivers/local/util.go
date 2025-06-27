@@ -13,9 +13,9 @@ import (
 	"github.com/disintegration/imaging"
 	ffmpeg "github.com/u2takey/ffmpeg-go"
 
-	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 func isSymlinkDir(f fs.FileInfo, path string) bool {
@@ -118,7 +118,7 @@ func (d *Local) getThumb(file model.Obj) (*bytes.Buffer, *string, error) {
 		}
 	}
 	var srcBuf *bytes.Buffer
-	if utils.GetFileType(file.GetName()) == conf.VIDEO {
+	if utils.GetFileType(file.GetName()) == consts.VIDEO {
 		videoBuf, err := d.GetSnapshot(fullPath)
 		if err != nil {
 			return nil, nil, err

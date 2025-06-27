@@ -9,13 +9,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/dongdio/OpenList/pkg/stream"
-
 	"github.com/dongdio/OpenList/internal/fs"
 	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/pkg/task"
-	"github.com/dongdio/OpenList/pkg/utils"
 	"github.com/dongdio/OpenList/server/common"
+	"github.com/dongdio/OpenList/utility/stream"
+	"github.com/dongdio/OpenList/utility/task"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 // 获取上传文件的最后修改时间

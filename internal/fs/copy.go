@@ -10,14 +10,14 @@ import (
 	"github.com/pkg/errors"
 	"github.com/xhofe/tache"
 
-	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/internal/driver"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
-	"github.com/dongdio/OpenList/pkg/errs"
-	"github.com/dongdio/OpenList/pkg/stream"
-	"github.com/dongdio/OpenList/pkg/task"
-	"github.com/dongdio/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/utility/errs"
+	"github.com/dongdio/OpenList/utility/stream"
+	"github.com/dongdio/OpenList/utility/task"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 // CopyTask represents an asynchronous file/directory copy operation
@@ -105,7 +105,7 @@ func _copy(ctx context.Context, srcObjPath, dstDirPath string, lazyCache ...bool
 	}
 
 	// Handle no-task context flag for synchronous copy
-	if ctx.Value(conf.NoTaskKey) != nil {
+	if ctx.Value(consts.NoTaskKey) != nil {
 		return handleSynchronousCopy(ctx, srcStorage, dstStorage, srcObjPath, srcObjActualPath, dstDirActualPath)
 	}
 

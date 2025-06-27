@@ -27,8 +27,8 @@ import (
 	"github.com/dongdio/OpenList/internal/conf"
 	"github.com/dongdio/OpenList/internal/driver"
 	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/pkg/http_range"
-	"github.com/dongdio/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/utility/http_range"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 // var UserAgent = driver115.UA115Browser

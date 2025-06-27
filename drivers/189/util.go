@@ -15,15 +15,14 @@ import (
 	"strings"
 	"time"
 
-	jsoniter "github.com/json-iterator/go"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/drivers/base"
 	"github.com/dongdio/OpenList/internal/driver"
 	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/pkg/utils"
-	myrand "github.com/dongdio/OpenList/pkg/utils/random"
+	"github.com/dongdio/OpenList/utility/utils"
+	myrand "github.com/dongdio/OpenList/utility/utils/random"
 )
 
 // do others that not defined in Driver interface
@@ -95,10 +94,10 @@ import (
 //		if err != nil {
 //			return err
 //		}
-//		if jsoniter.Get(vres.Bytes(), "status").ToInt() != 200 {
-//			return errors.New("ocr error:" + jsoniter.Get(vres.Bytes(), "msg").ToString())
+//		if utils.GetBytes(vres.Bytes(), "status").Int() != 200 {
+//			return errors.New("ocr error:" + utils.GetBytes(vres.Bytes(), "msg").String())
 //		}
-//		vCodeRS = jsoniter.Get(vres.Bytes(), "result").ToString()
+//		vCodeRS = utils.GetBytes(vres.Bytes(), "result").String()
 //		log.Debugln("code: ", vCodeRS)
 //	}
 //	userRsa := RsaEncode([]byte(d.Username), jRsakey, true)
@@ -170,8 +169,8 @@ func (d *Cloud189) request(url string, method string, callback base.ReqCallback,
 			return d.request(url, method, callback, resp)
 		}
 	}
-	if jsoniter.Get(res.Bytes(), "res_code").ToInt() != 0 {
-		err = errors.New(jsoniter.Get(res.Bytes(), "res_message").ToString())
+	if utils.GetBytes(res.Bytes(), "res_code").Int() != 0 {
+		err = errors.New(utils.GetBytes(res.Bytes(), "res_message").String())
 	}
 	return res.Bytes(), err
 }
@@ -307,7 +306,7 @@ func (d *Cloud189) uploadRequest(uri string, form map[string]string, resp any) (
 	}
 	data = res.Bytes()
 	if utils.GetBytes(data, "code").String() != "SUCCESS" {
-		return nil, errors.New(uri + "---" + jsoniter.Get(data, "msg").ToString())
+		return nil, errors.New(uri + "---" + utils.GetBytes(data, "msg").String())
 	}
 	return data, nil
 }
@@ -331,7 +330,7 @@ func (d *Cloud189) newUpload(ctx context.Context, dstDir model.Obj, file model.F
 	if err != nil {
 		return err
 	}
-	uploadFileId := jsoniter.Get(res, "data", "uploadFileId").ToString()
+	uploadFileId := utils.GetBytes(res, "data", "uploadFileId").String()
 	// _, err = d.uploadRequest("/person/getUploadedPartsInfo", map[string]string{
 	//	"uploadFileId": uploadFileId,
 	// }, nil)

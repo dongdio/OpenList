@@ -12,13 +12,12 @@ import (
 	"strings"
 	"time"
 
-	jsoniter "github.com/json-iterator/go"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/drivers/base"
-	"github.com/dongdio/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 // do others that not defined in Driver interface
@@ -53,7 +52,7 @@ func signPath(path string, os string, version string) (k string, v string) {
 	now := time.Now().In(time.FixedZone("CST", 8*3600))
 	timestamp := fmt.Sprint(now.Unix())
 	nowStr := []byte(now.Format("200601021504"))
-	for i := 0; i < len(nowStr); i++ {
+	for i := range nowStr {
 		nowStr[i] = table[nowStr[i]-48]
 	}
 	timeSign := fmt.Sprint(crc32.ChecksumIEEE(nowStr))
@@ -174,7 +173,7 @@ func (d *Pan123) login() error {
 		return err
 	}
 	if utils.GetBytes(res.Bytes(), "code").Int() != 200 {
-		err = errors.Errorf(utils.GetBytes(res.Bytes(), "message").String())
+		err = errors.New(utils.GetBytes(res.Bytes(), "message").String())
 	} else {
 		d.AccessToken = utils.GetBytes(res.Bytes(), "data", "token").String()
 	}
@@ -234,7 +233,7 @@ do:
 			isRetry = true
 			goto do
 		}
-		return nil, errors.New(jsoniter.Get(body, "message").ToString())
+		return nil, errors.New(utils.GetBytes(body, "message").String())
 	}
 	return body, nil
 }

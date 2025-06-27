@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	jsoniter "github.com/json-iterator/go"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
@@ -19,8 +18,8 @@ import (
 	"github.com/dongdio/OpenList/drivers/base"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
-	"github.com/dongdio/OpenList/pkg/utils"
-	"github.com/dongdio/OpenList/pkg/utils/random"
+	"github.com/dongdio/OpenList/utility/utils"
+	"github.com/dongdio/OpenList/utility/utils/random"
 )
 
 // do others that not defined in Driver interface
@@ -30,12 +29,12 @@ func (d *Yun139) isFamily() bool {
 
 func encodeURIComponent(str string) string {
 	r := url.QueryEscape(str)
-	r = strings.Replace(r, "+", "%20", -1)
-	r = strings.Replace(r, "%21", "!", -1)
-	r = strings.Replace(r, "%27", "'", -1)
-	r = strings.Replace(r, "%28", "(", -1)
-	r = strings.Replace(r, "%29", ")", -1)
-	r = strings.Replace(r, "%2A", "*", -1)
+	r = strings.ReplaceAll(r, "+", "%20")
+	r = strings.ReplaceAll(r, "%21", "!")
+	r = strings.ReplaceAll(r, "%27", "'")
+	r = strings.ReplaceAll(r, "%28", "(")
+	r = strings.ReplaceAll(r, "%29", ")")
+	r = strings.ReplaceAll(r, "%2A", "*")
 	return r
 }
 
@@ -420,7 +419,7 @@ func (d *Yun139) getLink(contentId string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return jsoniter.Get(res, "data", "downloadURL").ToString(), nil
+	return utils.GetBytes(res, "data", "downloadURL").String(), nil
 }
 func (d *Yun139) familyGetLink(contentId string, path string) (string, error) {
 	data := d.newJson(base.Json{
@@ -432,7 +431,7 @@ func (d *Yun139) familyGetLink(contentId string, path string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return jsoniter.Get(res, "data", "downloadURL").ToString(), nil
+	return utils.GetBytes(res, "data", "downloadURL").String(), nil
 }
 
 func (d *Yun139) groupGetLink(contentId string, path string) (string, error) {
@@ -446,7 +445,7 @@ func (d *Yun139) groupGetLink(contentId string, path string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return jsoniter.Get(res, "data", "downloadURL").ToString(), nil
+	return utils.GetBytes(res, "data", "downloadURL").String(), nil
 }
 
 func unicode(str string) string {
@@ -604,12 +603,11 @@ func (d *Yun139) personalGetLink(fileId string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	var cdnUrl = jsoniter.Get(res, "data", "cdnUrl").ToString()
+	var cdnUrl = utils.GetBytes(res, "data", "cdnUrl").String()
 	if cdnUrl != "" {
 		return cdnUrl, nil
-	} else {
-		return jsoniter.Get(res, "data", "url").ToString(), nil
 	}
+	return utils.GetBytes(res, "data", "url").String(), nil
 }
 
 func (d *Yun139) getAuthorization() string {
@@ -618,12 +616,14 @@ func (d *Yun139) getAuthorization() string {
 	}
 	return d.Authorization
 }
+
 func (d *Yun139) getAccount() string {
 	if d.ref != nil {
 		return d.ref.getAccount()
 	}
 	return d.Account
 }
+
 func (d *Yun139) getPersonalCloudHost() string {
 	if d.ref != nil {
 		return d.ref.getPersonalCloudHost()

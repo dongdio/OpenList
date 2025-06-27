@@ -10,15 +10,15 @@ import (
 	"github.com/pquerna/otp/totp"
 	"github.com/rclone/rclone/lib/readers"
 
-	"github.com/dongdio/OpenList/pkg/http_range"
+	"github.com/dongdio/OpenList/utility/http_range"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/t3rm1n4l/go-mega"
 
 	"github.com/dongdio/OpenList/internal/driver"
 	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/pkg/errs"
-	"github.com/dongdio/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/utility/errs"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 type Mega struct {

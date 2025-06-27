@@ -11,9 +11,9 @@ import (
 
 	"github.com/dongdio/OpenList/internal/db"
 	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/pkg/errs"
-	"github.com/dongdio/OpenList/pkg/singleflight"
-	"github.com/dongdio/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/utility/errs"
+	"github.com/dongdio/OpenList/utility/singleflight"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 // Default cache expiration time for metadata

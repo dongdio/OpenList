@@ -13,14 +13,15 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/yuin/goldmark"
 
+	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/internal/conf"
 	"github.com/dongdio/OpenList/internal/driver"
 	"github.com/dongdio/OpenList/internal/fs"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/setting"
 	"github.com/dongdio/OpenList/internal/sign"
-	"github.com/dongdio/OpenList/pkg/utils"
 	"github.com/dongdio/OpenList/server/common"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 // Down 处理文件下载请求
@@ -125,11 +126,11 @@ func down(c *gin.Context, link *model.Link) {
 	c.Header("Cache-Control", "max-age=0, no-cache, no-store, must-revalidate")
 
 	// 处理URL参数转发
-	if setting.GetBool(conf.ForwardDirectLinkParams) {
+	if setting.GetBool(consts.ForwardDirectLinkParams) {
 		query := c.Request.URL.Query()
 
 		// 移除忽略的参数
-		for _, paramName := range conf.SlicesMap[conf.IgnoreDirectLinkParams] {
+		for _, paramName := range conf.SlicesMap[consts.IgnoreDirectLinkParams] {
 			query.Del(paramName)
 		}
 
@@ -149,11 +150,11 @@ func down(c *gin.Context, link *model.Link) {
 // localProxy 本地代理文件下载
 func localProxy(c *gin.Context, link *model.Link, file model.Obj, proxyRange bool) {
 	// 处理URL参数转发
-	if link.URL != "" && setting.GetBool(conf.ForwardDirectLinkParams) {
+	if link.URL != "" && setting.GetBool(consts.ForwardDirectLinkParams) {
 		query := c.Request.URL.Query()
 
 		// 移除忽略的参数
-		for _, paramName := range conf.SlicesMap[conf.IgnoreDirectLinkParams] {
+		for _, paramName := range conf.SlicesMap[consts.IgnoreDirectLinkParams] {
 			query.Del(paramName)
 		}
 
@@ -176,7 +177,7 @@ func localProxy(c *gin.Context, link *model.Link, file model.Obj, proxyRange boo
 	var err error
 
 	// 特殊处理Markdown文件
-	if utils.Ext(file.GetName()) == "md" && setting.GetBool(conf.FilterReadMeScripts) {
+	if utils.Ext(file.GetName()) == "md" && setting.GetBool(consts.FilterReadMeScripts) {
 		// 预先分配合适大小的缓冲区
 		buf := bytes.NewBuffer(make([]byte, 0, file.GetSize()))
 		interceptWriter := &common.InterceptResponseWriter{ResponseWriter: writer, Writer: buf}
@@ -243,11 +244,11 @@ func canProxy(storage driver.Driver, filename string) bool {
 
 	// 检查文件类型
 	fileExt := utils.Ext(filename)
-	if utils.SliceContains(conf.SlicesMap[conf.ProxyTypes], fileExt) {
+	if utils.SliceContains(conf.SlicesMap[consts.ProxyTypes], fileExt) {
 		return true
 	}
 
-	if utils.SliceContains(conf.SlicesMap[conf.TextTypes], fileExt) {
+	if utils.SliceContains(conf.SlicesMap[consts.TextTypes], fileExt) {
 		return true
 	}
 

@@ -9,7 +9,7 @@ import (
 
 	"github.com/t3rm1n4l/go-mega"
 
-	"github.com/dongdio/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 // do others that not defined in Driver interface

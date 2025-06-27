@@ -17,6 +17,17 @@ type CommonRsp struct {
 	ReqID  string `json:"req_id"`
 }
 
+type UserInfo struct {
+	UserID    string `json:"user_id"`
+	Nickname  string `json:"nickname"`
+	AvatarURL string `json:"avatar_url"`
+}
+
+type UserInfoResp struct {
+	CommonRsp
+	Data UserInfo `json:"data"`
+}
+
 type RefreshTokenOnlineAPIResp struct {
 	RefreshToken string `json:"refresh_token"`
 	AccessToken  string `json:"access_token"`
@@ -38,13 +49,17 @@ type File struct {
 	UpdatedAt    int64  `json:"updated_at"`
 }
 
-func fileToObj(f File) *model.Object {
-	return &model.Object{
-		ID:       f.Fid,
-		Name:     f.FileName,
-		Size:     f.Size,
-		Modified: time.UnixMilli(f.UpdatedAt),
-		IsFolder: f.FileType == "0",
+func fileToObj(f File) *model.ObjThumb {
+	return &model.ObjThumb{
+		Object: model.Object{
+			ID:       f.Fid,
+			Name:     f.FileName,
+			Size:     f.Size,
+			Modified: time.UnixMilli(f.UpdatedAt),
+			IsFolder: f.FileType == "0",
+			Ctime:    time.UnixMilli(f.CreatedAt),
+		},
+		Thumbnail: model.Thumbnail{Thumbnail: f.ThumbnailURL},
 	}
 }
 

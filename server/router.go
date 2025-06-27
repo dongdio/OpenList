@@ -7,13 +7,13 @@ import (
 	"github.com/dongdio/OpenList/global"
 	"github.com/dongdio/OpenList/internal/conf"
 	"github.com/dongdio/OpenList/internal/sign"
-	"github.com/dongdio/OpenList/pkg/message"
-	"github.com/dongdio/OpenList/pkg/stream"
-	"github.com/dongdio/OpenList/pkg/utils"
 	"github.com/dongdio/OpenList/server/common"
 	"github.com/dongdio/OpenList/server/handles"
 	"github.com/dongdio/OpenList/server/middlewares"
 	"github.com/dongdio/OpenList/server/static"
+	"github.com/dongdio/OpenList/utility/message"
+	"github.com/dongdio/OpenList/utility/stream"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 func Init(e *gin.Engine) {

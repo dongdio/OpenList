@@ -7,13 +7,13 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/drivers/thunder_browser"
-	"github.com/dongdio/OpenList/internal/conf"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/offline_download/tool"
 	"github.com/dongdio/OpenList/internal/op"
 	"github.com/dongdio/OpenList/internal/setting"
-	"github.com/dongdio/OpenList/pkg/errs"
+	"github.com/dongdio/OpenList/utility/errs"
 )
 
 type ThunderBrowser struct {
@@ -38,7 +38,7 @@ func (t *ThunderBrowser) Init() (string, error) {
 }
 
 func (t *ThunderBrowser) IsReady() bool {
-	tempDir := setting.GetStr(conf.ThunderBrowserTempDir)
+	tempDir := setting.GetStr(consts.ThunderBrowserTempDir)
 	if tempDir == "" {
 		return false
 	}

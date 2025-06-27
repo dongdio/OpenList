@@ -9,8 +9,8 @@ import (
 
 	"github.com/dlclark/regexp2"
 
-	"github.com/dongdio/OpenList/pkg/http_range"
-	"github.com/dongdio/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/utility/http_range"
+	"github.com/dongdio/OpenList/utility/utils"
 
 	mapset "github.com/deckarep/golang-set/v2"
 

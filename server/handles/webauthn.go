@@ -9,14 +9,14 @@ import (
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
 
-	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/internal/db"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
 	"github.com/dongdio/OpenList/internal/setting"
-	"github.com/dongdio/OpenList/pkg/authn"
-	"github.com/dongdio/OpenList/pkg/utils"
 	"github.com/dongdio/OpenList/server/common"
+	"github.com/dongdio/OpenList/utility/authn"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 // WebAuthn 相关常量
@@ -49,7 +49,7 @@ type WebAuthnCredential struct {
 // 2. 可发现凭证登录：不提供用户名，由客户端选择凭证
 func BeginAuthnLogin(c *gin.Context) {
 	// 检查 WebAuthn 是否启用
-	if !setting.GetBool(conf.WebauthnLoginEnabled) {
+	if !setting.GetBool(consts.WebauthnLoginEnabled) {
 		common.ErrorStrResp(c, ErrWebAuthnNotEnabled, 403)
 		return
 	}
@@ -104,7 +104,7 @@ func BeginAuthnLogin(c *gin.Context) {
 // 验证客户端提供的凭证，成功后生成登录令牌
 func FinishAuthnLogin(c *gin.Context) {
 	// 检查 WebAuthn 是否启用
-	if !setting.GetBool(conf.WebauthnLoginEnabled) {
+	if !setting.GetBool(consts.WebauthnLoginEnabled) {
 		common.ErrorStrResp(c, ErrWebAuthnNotEnabled, 403)
 		return
 	}
@@ -177,7 +177,7 @@ func FinishAuthnLogin(c *gin.Context) {
 // 为当前用户生成注册选项
 func BeginAuthnRegistration(c *gin.Context) {
 	// 检查 WebAuthn 是否启用
-	if !setting.GetBool(conf.WebauthnLoginEnabled) {
+	if !setting.GetBool(consts.WebauthnLoginEnabled) {
 		common.ErrorStrResp(c, ErrWebAuthnNotEnabled, 403)
 		return
 	}
@@ -217,7 +217,7 @@ func BeginAuthnRegistration(c *gin.Context) {
 // 验证并保存客户端提供的凭证
 func FinishAuthnRegistration(c *gin.Context) {
 	// 检查 WebAuthn 是否启用
-	if !setting.GetBool(conf.WebauthnLoginEnabled) {
+	if !setting.GetBool(consts.WebauthnLoginEnabled) {
 		common.ErrorStrResp(c, ErrWebAuthnNotEnabled, 403)
 		return
 	}

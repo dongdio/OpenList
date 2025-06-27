@@ -6,7 +6,7 @@ import (
 
 	"github.com/dongdio/OpenList/internal/driver"
 	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/pkg/errs"
+	"github.com/dongdio/OpenList/utility/errs"
 )
 
 type Misskey struct {

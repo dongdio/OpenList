@@ -9,14 +9,15 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
 
+	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/global"
 	"github.com/dongdio/OpenList/internal/conf"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
 	"github.com/dongdio/OpenList/internal/setting"
-	"github.com/dongdio/OpenList/pkg/utils"
 	"github.com/dongdio/OpenList/server/ftp"
 	"github.com/dongdio/OpenList/server/sftp"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 type SftpDriver struct {
@@ -27,7 +28,7 @@ type SftpDriver struct {
 func NewSftpDriver() (*SftpDriver, error) {
 	sftp.InitHostKey(global.DataDir)
 	header := &http.Header{}
-	header.Add("User-Agent", setting.GetStr(conf.FTPProxyUserAgent))
+	header.Add("User-Agent", setting.GetStr(consts.FTPProxyUserAgent))
 	return &SftpDriver{
 		proxyHeader: header,
 	}, nil
@@ -139,5 +140,5 @@ func (d *SftpDriver) AuthLogCallback(conn ssh.ConnMetadata, method string, err e
 }
 
 func (d *SftpDriver) GetBanner(_ ssh.ConnMetadata) string {
-	return setting.GetStr(conf.Announcement)
+	return setting.GetStr(consts.Announcement)
 }

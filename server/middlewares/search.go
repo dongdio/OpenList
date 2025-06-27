@@ -3,10 +3,10 @@ package middlewares
 import (
 	"github.com/gin-gonic/gin"
 
-	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/internal/setting"
-	"github.com/dongdio/OpenList/pkg/errs"
 	"github.com/dongdio/OpenList/server/common"
+	"github.com/dongdio/OpenList/utility/errs"
 )
 
 // SearchIndex 中间件，检查搜索索引是否可用
@@ -16,7 +16,7 @@ import (
 //   - c: Gin上下文
 func SearchIndex(c *gin.Context) {
 	// 获取搜索索引模式设置
-	mode := setting.GetStr(conf.SearchIndex)
+	mode := setting.GetStr(consts.SearchIndex)
 
 	// 检查是否禁用了搜索
 	if mode == "none" {

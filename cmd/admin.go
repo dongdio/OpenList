@@ -4,11 +4,11 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/internal/op"
 	"github.com/dongdio/OpenList/internal/setting"
-	"github.com/dongdio/OpenList/pkg/utils"
-	"github.com/dongdio/OpenList/pkg/utils/random"
+	"github.com/dongdio/OpenList/utility/utils"
+	"github.com/dongdio/OpenList/utility/utils/random"
 )
 
 // Constants for admin-related functionality
@@ -77,7 +77,7 @@ var ShowTokenCmd = &cobra.Command{
 		Init()
 		defer Release()
 
-		token := setting.GetStr(conf.Token)
+		token := setting.GetStr(consts.Token)
 		utils.Log.Infof("Admin token: %s", token)
 	},
 }

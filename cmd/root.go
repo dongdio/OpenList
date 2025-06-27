@@ -11,7 +11,7 @@ import (
 	_ "github.com/dongdio/OpenList/drivers"
 	"github.com/dongdio/OpenList/global"
 	_ "github.com/dongdio/OpenList/internal/offline_download"
-	_ "github.com/dongdio/OpenList/pkg/archive"
+	_ "github.com/dongdio/OpenList/utility/archive"
 )
 
 // Default CLI descriptions

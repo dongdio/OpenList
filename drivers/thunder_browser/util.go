@@ -14,7 +14,7 @@ import (
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/drivers/base"
-	"github.com/dongdio/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 const (
@@ -206,7 +206,7 @@ func (c *Common) refreshCaptchaToken(action string, metas map[string]string) err
 }
 
 // Request 只有基础信息的请求
-func (c *Common) Request(url, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+func (c *Common) Request(url, method string, callback base.ReqCallback, resp any) ([]byte, error) {
 	req := c.client.R().SetHeaders(map[string]string{
 		"user-agent":       c.UserAgent,
 		"accept":           "application/json;charset=UTF-8",

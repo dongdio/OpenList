@@ -6,13 +6,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
 	"github.com/dongdio/OpenList/internal/sign"
-	"github.com/dongdio/OpenList/pkg/utils/random"
 	"github.com/dongdio/OpenList/server/common"
 	"github.com/dongdio/OpenList/server/static"
+	"github.com/dongdio/OpenList/utility/utils/random"
 )
 
 // ResetToken 重置系统令牌
@@ -24,7 +24,7 @@ func ResetToken(c *gin.Context) {
 	item := model.SettingItem{
 		Key:   "token",
 		Value: token,
-		Type:  conf.TypeString,
+		Type:  consts.TypeString,
 		Group: model.SINGLE,
 		Flag:  model.PRIVATE,
 	}

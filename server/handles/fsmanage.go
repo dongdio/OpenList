@@ -12,11 +12,11 @@ import (
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
 	"github.com/dongdio/OpenList/internal/sign"
-	"github.com/dongdio/OpenList/pkg/errs"
-	"github.com/dongdio/OpenList/pkg/generic"
-	"github.com/dongdio/OpenList/pkg/task"
-	"github.com/dongdio/OpenList/pkg/utils"
 	"github.com/dongdio/OpenList/server/common"
+	"github.com/dongdio/OpenList/utility/errs"
+	"github.com/dongdio/OpenList/utility/generic"
+	"github.com/dongdio/OpenList/utility/task"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 // MkdirOrLinkReq 创建目录或获取链接请求

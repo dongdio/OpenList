@@ -10,14 +10,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-ldap/ldap/v3"
 
-	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/internal/db"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
 	"github.com/dongdio/OpenList/internal/setting"
-	"github.com/dongdio/OpenList/pkg/utils"
-	"github.com/dongdio/OpenList/pkg/utils/random"
 	"github.com/dongdio/OpenList/server/common"
+	"github.com/dongdio/OpenList/utility/utils"
+	"github.com/dongdio/OpenList/utility/utils/random"
 )
 
 func LoginLdap(c *gin.Context) {
@@ -35,7 +35,7 @@ const (
 )
 
 func loginLdap(c *gin.Context, req *LoginRequest) {
-	enabled := setting.GetBool(conf.LdapLoginEnabled)
+	enabled := setting.GetBool(consts.LdapLoginEnabled)
 	if !enabled {
 		common.ErrorStrResp(c, "ldap is not enabled", 403)
 		return
@@ -51,11 +51,11 @@ func loginLdap(c *gin.Context, req *LoginRequest) {
 	}
 
 	// Auth start
-	ldapServer := setting.GetStr(conf.LdapServer)
-	ldapManagerDN := setting.GetStr(conf.LdapManagerDN)
-	ldapManagerPassword := setting.GetStr(conf.LdapManagerPassword)
-	ldapUserSearchBase := setting.GetStr(conf.LdapUserSearchBase)
-	ldapUserSearchFilter := setting.GetStr(conf.LdapUserSearchFilter) // (uid=%s)
+	ldapServer := setting.GetStr(consts.LdapServer)
+	ldapManagerDN := setting.GetStr(consts.LdapManagerDN)
+	ldapManagerPassword := setting.GetStr(consts.LdapManagerPassword)
+	ldapUserSearchBase := setting.GetStr(consts.LdapUserSearchBase)
+	ldapUserSearchFilter := setting.GetStr(consts.LdapUserSearchFilter) // (uid=%s)
 
 	// Connect to LdapServer
 	l, err := dial(ldapServer)
@@ -136,8 +136,8 @@ func ladpRegister(username string) (*model.User, error) {
 		ID:         0,
 		Username:   username,
 		Password:   random.String(16),
-		Permission: int32(setting.GetInt(conf.LdapDefaultPermission, 0)),
-		BasePath:   setting.GetStr(conf.LdapDefaultDir),
+		Permission: int32(setting.GetInt(consts.LdapDefaultPermission, 0)),
+		BasePath:   setting.GetStr(consts.LdapDefaultDir),
 		Role:       0,
 		Disabled:   false,
 	}

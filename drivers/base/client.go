@@ -11,7 +11,7 @@ import (
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/internal/conf"
-	"github.com/dongdio/OpenList/pkg/net"
+	"github.com/dongdio/OpenList/utility/net"
 )
 
 var (

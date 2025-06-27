@@ -8,7 +8,7 @@ import (
 
 	"github.com/dongdio/OpenList/drivers/thunder_browser"
 	"github.com/dongdio/OpenList/internal/op"
-	"github.com/dongdio/OpenList/pkg/singleflight"
+	"github.com/dongdio/OpenList/utility/singleflight"
 )
 
 var taskCache = cache.NewMemCache(cache.WithShards[[]thunder_browser.OfflineTask](16))

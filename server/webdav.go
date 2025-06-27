@@ -10,7 +10,8 @@ import (
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/dongdio/OpenList/pkg/stream"
+	"github.com/dongdio/OpenList/consts"
+	"github.com/dongdio/OpenList/utility/stream"
 
 	"github.com/dongdio/OpenList/internal/conf"
 	"github.com/dongdio/OpenList/internal/model"
@@ -59,7 +60,7 @@ func WebDAVAuth(c *gin.Context) {
 		log.Debugf("[webdav auth] token: %s", bt)
 		if strings.HasPrefix(bt, "Bearer") {
 			bt = strings.TrimPrefix(bt, "Bearer ")
-			token := setting.GetStr(conf.Token)
+			token := setting.GetStr(consts.Token)
 			if token != "" && subtle.ConstantTimeCompare([]byte(bt), []byte(token)) == 1 {
 				admin, err := op.GetAdmin()
 				if err != nil {

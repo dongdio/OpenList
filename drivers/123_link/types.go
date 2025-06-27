@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/pkg/errs"
+	"github.com/dongdio/OpenList/utility/errs"
 )
 
 // Node is a node in the folder tree

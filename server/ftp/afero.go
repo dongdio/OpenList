@@ -12,7 +12,7 @@ import (
 
 	"github.com/dongdio/OpenList/internal/fs"
 	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/pkg/errs"
+	"github.com/dongdio/OpenList/utility/errs"
 )
 
 // AferoAdapter 实现了afero.Fs接口，用于将OpenList的文件系统操作适配到Afero接口

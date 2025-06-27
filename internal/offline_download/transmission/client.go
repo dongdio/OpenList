@@ -13,12 +13,12 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/offline_download/tool"
 	"github.com/dongdio/OpenList/internal/setting"
-	"github.com/dongdio/OpenList/pkg/errs"
-	"github.com/dongdio/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/utility/errs"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 type Transmission struct {
@@ -36,14 +36,14 @@ func (t *Transmission) Name() string {
 func (t *Transmission) Items() []model.SettingItem {
 	// transmission settings
 	return []model.SettingItem{
-		{Key: conf.TransmissionUri, Value: "http://localhost:9091/transmission/rpc", Type: conf.TypeString, Group: model.OFFLINE_DOWNLOAD, Flag: model.PRIVATE},
-		{Key: conf.TransmissionSeedtime, Value: "0", Type: conf.TypeNumber, Group: model.OFFLINE_DOWNLOAD, Flag: model.PRIVATE},
+		{Key: consts.TransmissionUri, Value: "http://localhost:9091/transmission/rpc", Type: consts.TypeString, Group: model.OFFLINE_DOWNLOAD, Flag: model.PRIVATE},
+		{Key: consts.TransmissionSeedtime, Value: "0", Type: consts.TypeNumber, Group: model.OFFLINE_DOWNLOAD, Flag: model.PRIVATE},
 	}
 }
 
 func (t *Transmission) Init() (string, error) {
 	t.client = nil
-	uri := setting.GetStr(conf.TransmissionUri)
+	uri := setting.GetStr(consts.TransmissionUri)
 	endpoint, err := url.Parse(uri)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to init transmission client")

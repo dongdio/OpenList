@@ -11,7 +11,7 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/internal/fs"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
@@ -128,7 +128,7 @@ func copyFiles(ctx context.Context, src, dst string, overwrite bool) (status int
 	dstDir := path.Dir(dst)
 
 	// 执行复制操作，设置NoTask标志避免创建任务
-	noTaskCtx := context.WithValue(ctx, conf.NoTaskKey, struct{}{})
+	noTaskCtx := context.WithValue(ctx, consts.NoTaskKey, struct{}{})
 	_, err = fs.Copy(noTaskCtx, src, dstDir)
 	if err != nil {
 		return http.StatusInternalServerError, err
@@ -182,7 +182,7 @@ func walkFS(ctx context.Context, depth int, name string, info model.Obj, walkFn 
 	meta, _ := op.GetNearestMeta(name)
 
 	// 创建带元数据的上下文
-	metaCtx := context.WithValue(ctx, conf.MetaKey, meta)
+	metaCtx := context.WithValue(ctx, consts.MetaKey, meta)
 
 	// 列出目录内容
 	objs, err := fs.List(metaCtx, name, &fs.ListArgs{})

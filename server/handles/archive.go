@@ -9,17 +9,17 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/internal/fs"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
 	"github.com/dongdio/OpenList/internal/setting"
 	"github.com/dongdio/OpenList/internal/sign"
-	"github.com/dongdio/OpenList/pkg/archive/tool"
-	"github.com/dongdio/OpenList/pkg/errs"
-	"github.com/dongdio/OpenList/pkg/task"
-	"github.com/dongdio/OpenList/pkg/utils"
 	"github.com/dongdio/OpenList/server/common"
+	"github.com/dongdio/OpenList/utility/archive/tool"
+	"github.com/dongdio/OpenList/utility/errs"
+	"github.com/dongdio/OpenList/utility/task"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 // ArchiveMetaReq 归档文件元数据请求参数
@@ -140,7 +140,7 @@ func FsArchiveMeta(c *gin.Context) {
 
 	// 生成签名
 	signature := ""
-	if isEncrypt(meta, reqPath) || setting.GetBool(conf.SignAll) {
+	if isEncrypt(meta, reqPath) || setting.GetBool(consts.SignAll) {
 		signature = sign.SignArchive(reqPath)
 	}
 

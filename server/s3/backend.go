@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/hex"
 	"io"
+	"maps"
 	"path"
 	"strings"
 	"sync"
@@ -17,14 +18,13 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/dongdio/OpenList/pkg/stream"
-
 	"github.com/dongdio/OpenList/internal/fs"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
-	"github.com/dongdio/OpenList/pkg/errs"
-	"github.com/dongdio/OpenList/pkg/http_range"
-	"github.com/dongdio/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/utility/errs"
+	"github.com/dongdio/OpenList/utility/http_range"
+	"github.com/dongdio/OpenList/utility/stream"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 var (
@@ -134,9 +134,7 @@ func (b *s3Backend) HeadObject(ctx context.Context, bucketName, objectName strin
 	// Add custom metadata if available
 	if val, ok := b.meta.Load(objectPath); ok {
 		metaMap := val.(map[string]string)
-		for k, v := range metaMap {
-			meta[k] = v
-		}
+		maps.Copy(meta, metaMap)
 	}
 
 	return &gofakes3.Object{
@@ -246,9 +244,7 @@ func (b *s3Backend) GetObject(ctx context.Context, bucketName, objectName string
 	// Add custom metadata if available
 	if val, ok := b.meta.Load(objectPath); ok {
 		metaMap := val.(map[string]string)
-		for k, v := range metaMap {
-			meta[k] = v
-		}
+		maps.Copy(meta, metaMap)
 	}
 
 	return &gofakes3.Object{

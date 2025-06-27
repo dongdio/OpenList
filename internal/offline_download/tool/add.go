@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 
+	"github.com/dongdio/OpenList/consts"
 	_115 "github.com/dongdio/OpenList/drivers/115"
 	"github.com/dongdio/OpenList/drivers/pikpak"
 	"github.com/dongdio/OpenList/drivers/thunder"
@@ -18,8 +19,8 @@ import (
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
 	"github.com/dongdio/OpenList/internal/setting"
-	"github.com/dongdio/OpenList/pkg/errs"
-	"github.com/dongdio/OpenList/pkg/task"
+	"github.com/dongdio/OpenList/utility/errs"
+	"github.com/dongdio/OpenList/utility/task"
 )
 
 type DeletePolicy string
@@ -91,26 +92,26 @@ func AddURL(ctx context.Context, args *AddURLArgs) (task.TaskExtensionInfo, erro
 		if _, ok := storage.(*_115.Pan115); ok {
 			tempDir = args.DstDirPath
 		} else {
-			tempDir = filepath.Join(setting.GetStr(conf.Pan115TempDir), uid)
+			tempDir = filepath.Join(setting.GetStr(consts.Pan115TempDir), uid)
 		}
 	case "PikPak":
 		if _, ok := storage.(*pikpak.PikPak); ok {
 			tempDir = args.DstDirPath
 		} else {
-			tempDir = filepath.Join(setting.GetStr(conf.PikPakTempDir), uid)
+			tempDir = filepath.Join(setting.GetStr(consts.PikPakTempDir), uid)
 		}
 	case "Thunder":
 		if _, ok := storage.(*thunder.Thunder); ok {
 			tempDir = args.DstDirPath
 		} else {
-			tempDir = filepath.Join(setting.GetStr(conf.ThunderTempDir), uid)
+			tempDir = filepath.Join(setting.GetStr(consts.ThunderTempDir), uid)
 		}
 	case "ThunderBrowser":
 		switch storage.(type) {
 		case *thunder_browser.ThunderBrowser, *thunder_browser.ThunderBrowserExpert:
 			tempDir = args.DstDirPath
 		default:
-			tempDir = filepath.Join(setting.GetStr(conf.ThunderBrowserTempDir), uid)
+			tempDir = filepath.Join(setting.GetStr(consts.ThunderBrowserTempDir), uid)
 		}
 	}
 

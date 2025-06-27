@@ -6,16 +6,16 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/dongdio/OpenList/pkg/errs"
+	"github.com/dongdio/OpenList/consts"
+	"github.com/dongdio/OpenList/utility/errs"
 
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/dongdio/OpenList/internal/conf"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/offline_download/tool"
 	"github.com/dongdio/OpenList/internal/setting"
-	"github.com/dongdio/OpenList/pkg/aria2/rpc"
+	"github.com/dongdio/OpenList/utility/aria2/rpc"
 )
 
 var notify = NewNotify()
@@ -35,15 +35,15 @@ func (a *Aria2) Name() string {
 func (a *Aria2) Items() []model.SettingItem {
 	// aria2 settings
 	return []model.SettingItem{
-		{Key: conf.Aria2Uri, Value: "http://localhost:6800/jsonrpc", Type: conf.TypeString, Group: model.OFFLINE_DOWNLOAD, Flag: model.PRIVATE},
-		{Key: conf.Aria2Secret, Value: "", Type: conf.TypeString, Group: model.OFFLINE_DOWNLOAD, Flag: model.PRIVATE},
+		{Key: consts.Aria2Uri, Value: "http://localhost:6800/jsonrpc", Type: consts.TypeString, Group: model.OFFLINE_DOWNLOAD, Flag: model.PRIVATE},
+		{Key: consts.Aria2Secret, Value: "", Type: consts.TypeString, Group: model.OFFLINE_DOWNLOAD, Flag: model.PRIVATE},
 	}
 }
 
 func (a *Aria2) Init() (string, error) {
 	a.client = nil
-	uri := setting.GetStr(conf.Aria2Uri)
-	secret := setting.GetStr(conf.Aria2Secret)
+	uri := setting.GetStr(consts.Aria2Uri)
+	secret := setting.GetStr(consts.Aria2Secret)
 	c, err := rpc.New(context.Background(), uri, secret, 4*time.Second, notify)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to init aria2 client")

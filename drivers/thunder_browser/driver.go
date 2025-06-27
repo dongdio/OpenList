@@ -19,9 +19,9 @@ import (
 	"github.com/dongdio/OpenList/internal/driver"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
-	streamPkg "github.com/dongdio/OpenList/pkg/stream"
-	"github.com/dongdio/OpenList/pkg/utils"
-	hash_extend "github.com/dongdio/OpenList/pkg/utils/hash"
+	streamPkg "github.com/dongdio/OpenList/utility/stream"
+	"github.com/dongdio/OpenList/utility/utils"
+	hash_extend "github.com/dongdio/OpenList/utility/utils/hash"
 )
 
 type ThunderBrowser struct {
@@ -612,7 +612,7 @@ func (xc *XunLeiBrowserCommon) SetSpaceTokenResp(spaceToken string) {
 }
 
 // Request 携带Authorization和CaptchaToken的请求
-func (xc *XunLeiBrowserCommon) Request(url string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+func (xc *XunLeiBrowserCommon) Request(url string, method string, callback base.ReqCallback, resp any) ([]byte, error) {
 	data, err := xc.Common.Request(url, method, func(req *resty.Request) {
 		req.SetHeaders(map[string]string{
 			"Authorization":         xc.GetToken(),

@@ -6,14 +6,14 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/internal/setting"
 
 	"github.com/dongdio/OpenList/drivers/thunder"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/offline_download/tool"
 	"github.com/dongdio/OpenList/internal/op"
-	"github.com/dongdio/OpenList/pkg/errs"
+	"github.com/dongdio/OpenList/utility/errs"
 )
 
 type Thunder struct {
@@ -38,7 +38,7 @@ func (t *Thunder) Init() (string, error) {
 }
 
 func (t *Thunder) IsReady() bool {
-	tempDir := setting.GetStr(conf.ThunderTempDir)
+	tempDir := setting.GetStr(consts.ThunderTempDir)
 	if tempDir == "" {
 		return false
 	}

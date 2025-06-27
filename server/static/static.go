@@ -11,10 +11,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/internal/conf"
 	"github.com/dongdio/OpenList/internal/setting"
-	"github.com/dongdio/OpenList/pkg/utils"
 	"github.com/dongdio/OpenList/public"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 // staticFS 存储静态文件系统
@@ -84,11 +85,11 @@ func initIndexHTML() {
 // 将设置中的配置项应用到HTML模板中
 func UpdateIndexHTML() {
 	// 获取设置
-	favicon := setting.GetStr(conf.Favicon)
-	title := setting.GetStr(conf.SiteTitle)
-	customizeHead := setting.GetStr(conf.CustomizeHead)
-	customizeBody := setting.GetStr(conf.CustomizeBody)
-	mainColor := setting.GetStr(conf.MainColor)
+	favicon := setting.GetStr(consts.Favicon)
+	title := setting.GetStr(consts.SiteTitle)
+	customizeHead := setting.GetStr(consts.CustomizeHead)
+	customizeBody := setting.GetStr(consts.CustomizeBody)
+	mainColor := setting.GetStr(consts.MainColor)
 
 	// 首先更新管理页面HTML
 	conf.ManageHtml = conf.RawIndexHtml

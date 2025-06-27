@@ -8,10 +8,10 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/xhofe/tache"
 
-	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/internal/setting"
-	"github.com/dongdio/OpenList/pkg/errs"
-	"github.com/dongdio/OpenList/pkg/task"
+	"github.com/dongdio/OpenList/utility/errs"
+	"github.com/dongdio/OpenList/utility/task"
 )
 
 type DownloadTask struct {
@@ -103,7 +103,7 @@ outer:
 	t.Status = "offline download completed, maybe transferring"
 	// hack for qBittorrent
 	if t.tool.Name() == "qBittorrent" {
-		seedTime := setting.GetInt(conf.QbittorrentSeedtime, 0)
+		seedTime := setting.GetInt(consts.QbittorrentSeedtime, 0)
 		if seedTime >= 0 {
 			t.Status = "offline download completed, waiting for seeding"
 			<-time.After(time.Minute * time.Duration(seedTime))
@@ -116,7 +116,7 @@ outer:
 
 	if t.tool.Name() == "Transmission" {
 		// hack for transmission
-		seedTime := setting.GetInt(conf.TransmissionSeedtime, 0)
+		seedTime := setting.GetInt(consts.TransmissionSeedtime, 0)
 		if seedTime >= 0 {
 			t.Status = "offline download completed, waiting for seeding"
 			<-time.After(time.Minute * time.Duration(seedTime))

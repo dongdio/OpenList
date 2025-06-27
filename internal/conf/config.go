@@ -4,118 +4,118 @@ import (
 	"path/filepath"
 
 	"github.com/dongdio/OpenList/global"
-	"github.com/dongdio/OpenList/pkg/utils/random"
+	"github.com/dongdio/OpenList/utility/utils/random"
 )
 
 type Database struct {
-	Type        string `json:"type" env:"TYPE"`
-	Host        string `json:"host" env:"HOST"`
-	Port        int    `json:"port" env:"PORT"`
-	User        string `json:"user" env:"USER"`
-	Password    string `json:"password" env:"PASS"`
-	Name        string `json:"name" env:"NAME"`
-	DBFile      string `json:"db_file" env:"FILE"`
-	TablePrefix string `json:"table_prefix" env:"TABLE_PREFIX"`
-	SSLMode     string `json:"ssl_mode" env:"SSL_MODE"`
-	DSN         string `json:"dsn" env:"DSN"`
+	Type        string `json:"type"`
+	Host        string `json:"host"`
+	Port        int    `json:"port"`
+	User        string `json:"user"`
+	Password    string `json:"password"`
+	Name        string `json:"name"`
+	DBFile      string `json:"db_file"`
+	TablePrefix string `json:"table_prefix"`
+	SSLMode     string `json:"ssl_mode"`
+	DSN         string `json:"dsn"`
 }
 
 type Meilisearch struct {
-	Host        string `json:"host" env:"HOST"`
-	APIKey      string `json:"api_key" env:"API_KEY"`
-	IndexPrefix string `json:"index_prefix" env:"INDEX_PREFIX"`
+	Host        string `json:"host"`
+	APIKey      string `json:"api_key"`
+	IndexPrefix string `json:"index_prefix"`
 }
 
 type Scheme struct {
-	Address      string `json:"address" env:"ADDR"`
-	HttpPort     int    `json:"http_port" env:"HTTP_PORT"`
-	HttpsPort    int    `json:"https_port" env:"HTTPS_PORT"`
-	ForceHttps   bool   `json:"force_https" env:"FORCE_HTTPS"`
-	CertFile     string `json:"cert_file" env:"CERT_FILE"`
-	KeyFile      string `json:"key_file" env:"KEY_FILE"`
-	UnixFile     string `json:"unix_file" env:"UNIX_FILE"`
-	UnixFilePerm string `json:"unix_file_perm" env:"UNIX_FILE_PERM"`
-	EnableH2c    bool   `json:"enable_h2c" env:"ENABLE_H2C"`
+	Address      string `json:"address"`
+	HttpPort     int    `json:"http_port"`
+	HttpsPort    int    `json:"https_port"`
+	ForceHttps   bool   `json:"force_https"`
+	CertFile     string `json:"cert_file"`
+	KeyFile      string `json:"key_file"`
+	UnixFile     string `json:"unix_file"`
+	UnixFilePerm string `json:"unix_file_perm"`
+	EnableH2c    bool   `json:"enable_h2c"`
 }
 
 type LogConfig struct {
-	Enable     bool   `json:"enable" env:"LOG_ENABLE"`
-	Name       string `json:"name" env:"LOG_NAME"`
-	MaxSize    int    `json:"max_size" env:"MAX_SIZE"`
-	MaxBackups int    `json:"max_backups" env:"MAX_BACKUPS"`
-	MaxAge     int    `json:"max_age" env:"MAX_AGE"`
-	Compress   bool   `json:"compress" env:"COMPRESS"`
+	Enable     bool   `json:"enable"`
+	Name       string `json:"name"`
+	MaxSize    int    `json:"max_size"`
+	MaxBackups int    `json:"max_backups"`
+	MaxAge     int    `json:"max_age"`
+	Compress   bool   `json:"compress"`
 }
 
 type TaskConfig struct {
-	Workers        int  `json:"workers" env:"WORKERS"`
-	MaxRetry       int  `json:"max_retry" env:"MAX_RETRY"`
-	TaskPersistant bool `json:"task_persistant" env:"TASK_PERSISTANT"`
+	Workers        int  `json:"workers"`
+	MaxRetry       int  `json:"max_retry"`
+	TaskPersistant bool `json:"task_persistant"`
 }
 
 type TasksConfig struct {
-	Download           TaskConfig `json:"download" envPrefix:"DOWNLOAD_"`
-	Transfer           TaskConfig `json:"transfer" envPrefix:"TRANSFER_"`
-	Upload             TaskConfig `json:"upload" envPrefix:"UPLOAD_"`
-	Copy               TaskConfig `json:"copy" envPrefix:"COPY_"`
-	Move               TaskConfig `json:"move" envPrefix:"MOVE_"`
-	Decompress         TaskConfig `json:"decompress" envPrefix:"DECOMPRESS_"`
-	DecompressUpload   TaskConfig `json:"decompress_upload" envPrefix:"DECOMPRESS_UPLOAD_"`
-	AllowRetryCanceled bool       `json:"allow_retry_canceled" env:"ALLOW_RETRY_CANCELED"`
+	Download           TaskConfig `json:"download"`
+	Transfer           TaskConfig `json:"transfer"`
+	Upload             TaskConfig `json:"upload"`
+	Copy               TaskConfig `json:"copy"`
+	Move               TaskConfig `json:"move"`
+	Decompress         TaskConfig `json:"decompress"`
+	DecompressUpload   TaskConfig `json:"decompress_upload"`
+	AllowRetryCanceled bool       `json:"allow_retry_canceled"`
 }
 
 type Cors struct {
-	AllowOrigins []string `json:"allow_origins" env:"ALLOW_ORIGINS"`
-	AllowMethods []string `json:"allow_methods" env:"ALLOW_METHODS"`
-	AllowHeaders []string `json:"allow_headers" env:"ALLOW_HEADERS"`
+	AllowOrigins []string `json:"allow_origins"`
+	AllowMethods []string `json:"allow_methods"`
+	AllowHeaders []string `json:"allow_headers"`
 }
 
 type S3 struct {
-	Enable bool `json:"enable" env:"ENABLE"`
-	Port   int  `json:"port" env:"PORT"`
-	SSL    bool `json:"ssl" env:"SSL"`
+	Enable bool `json:"enable"`
+	Port   int  `json:"port"`
+	SSL    bool `json:"ssl"`
 }
 
 type FTP struct {
-	Enable                  bool   `json:"enable" env:"ENABLE"`
-	Listen                  string `json:"listen" env:"LISTEN"`
-	FindPasvPortAttempts    int    `json:"find_pasv_port_attempts" env:"FIND_PASV_PORT_ATTEMPTS"`
-	ActiveTransferPortNon20 bool   `json:"active_transfer_port_non_20" env:"ACTIVE_TRANSFER_PORT_NON_20"`
-	IdleTimeout             int    `json:"idle_timeout" env:"IDLE_TIMEOUT"`
-	ConnectionTimeout       int    `json:"connection_timeout" env:"CONNECTION_TIMEOUT"`
-	DisableActiveMode       bool   `json:"disable_active_mode" env:"DISABLE_ACTIVE_MODE"`
-	DefaultTransferBinary   bool   `json:"default_transfer_binary" env:"DEFAULT_TRANSFER_BINARY"`
-	EnableActiveConnIPCheck bool   `json:"enable_active_conn_ip_check" env:"ENABLE_ACTIVE_CONN_IP_CHECK"`
-	EnablePasvConnIPCheck   bool   `json:"enable_pasv_conn_ip_check" env:"ENABLE_PASV_CONN_IP_CHECK"`
+	Enable                  bool   `json:"enable"`
+	Listen                  string `json:"listen"`
+	FindPasvPortAttempts    int    `json:"find_pasv_port_attempts"`
+	ActiveTransferPortNon20 bool   `json:"active_transfer_port_non_20"`
+	IdleTimeout             int    `json:"idle_timeout"`
+	ConnectionTimeout       int    `json:"connection_timeout"`
+	DisableActiveMode       bool   `json:"disable_active_mode"`
+	DefaultTransferBinary   bool   `json:"default_transfer_binary"`
+	EnableActiveConnIPCheck bool   `json:"enable_active_conn_ip_check"`
+	EnablePasvConnIPCheck   bool   `json:"enable_pasv_conn_ip_check"`
 }
 
 type SFTP struct {
-	Enable bool   `json:"enable" env:"ENABLE"`
-	Listen string `json:"listen" env:"LISTEN"`
+	Enable bool   `json:"enable"`
+	Listen string `json:"listen"`
 }
 
 type Config struct {
-	Force                 bool        `json:"force" env:"FORCE"`
-	SiteURL               string      `json:"site_url" env:"SITE_URL"`
-	Cdn                   string      `json:"cdn" env:"CDN"`
-	JwtSecret             string      `json:"jwt_secret" env:"JWT_SECRET"`
-	TokenExpiresIn        int         `json:"token_expires_in" env:"TOKEN_EXPIRES_IN"`
-	Database              Database    `json:"database" envPrefix:"DB_"`
-	Meilisearch           Meilisearch `json:"meilisearch" envPrefix:"MEILISEARCH_"`
+	Force                 bool        `json:"force"`
+	SiteURL               string      `json:"site_url"`
+	Cdn                   string      `json:"cdn"`
+	JwtSecret             string      `json:"jwt_secret"`
+	TokenExpiresIn        int         `json:"token_expires_in"`
+	Database              Database    `json:"database"`
+	Meilisearch           Meilisearch `json:"meilisearch"`
 	Scheme                Scheme      `json:"scheme"`
-	TempDir               string      `json:"temp_dir" env:"TEMP_DIR"`
-	BleveDir              string      `json:"bleve_dir" env:"BLEVE_DIR"`
+	TempDir               string      `json:"temp_dir"`
+	BleveDir              string      `json:"bleve_dir"`
 	DistDir               string      `json:"dist_dir"`
 	Log                   LogConfig   `json:"log"`
-	DelayedStart          int         `json:"delayed_start" env:"DELAYED_START"`
-	MaxConnections        int         `json:"max_connections" env:"MAX_CONNECTIONS"`
-	MaxConcurrency        int         `json:"max_concurrency" env:"MAX_CONCURRENCY"`
-	TlsInsecureSkipVerify bool        `json:"tls_insecure_skip_verify" env:"TLS_INSECURE_SKIP_VERIFY"`
-	Tasks                 TasksConfig `json:"tasks" envPrefix:"TASKS_"`
-	Cors                  Cors        `json:"cors" envPrefix:"CORS_"`
-	S3                    S3          `json:"s3" envPrefix:"S3_"`
-	FTP                   FTP         `json:"ftp" envPrefix:"FTP_"`
-	SFTP                  SFTP        `json:"sftp" envPrefix:"SFTP_"`
+	DelayedStart          int         `json:"delayed_start"`
+	MaxConnections        int         `json:"max_connections"`
+	MaxConcurrency        int         `json:"max_concurrency"`
+	TlsInsecureSkipVerify bool        `json:"tls_insecure_skip_verify"`
+	Tasks                 TasksConfig `json:"tasks"`
+	Cors                  Cors        `json:"cors"`
+	S3                    S3          `json:"s3"`
+	FTP                   FTP         `json:"ftp"`
+	SFTP                  SFTP        `json:"sftp"`
 	LastLaunchedVersion   string      `json:"last_launched_version"`
 }
 

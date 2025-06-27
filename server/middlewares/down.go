@@ -7,13 +7,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 
-	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
 	"github.com/dongdio/OpenList/internal/setting"
-	"github.com/dongdio/OpenList/pkg/errs"
-	"github.com/dongdio/OpenList/pkg/utils"
 	"github.com/dongdio/OpenList/server/common"
+	"github.com/dongdio/OpenList/utility/errs"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 // Down 中间件生成器，用于处理下载请求的验证
@@ -95,7 +95,7 @@ func parsePath(path string) string {
 //   - bool: 如果需要签名验证返回true，否则返回false
 func needSign(meta *model.Meta, path string) bool {
 	// 如果全局设置需要签名
-	if setting.GetBool(conf.SignAll) {
+	if setting.GetBool(consts.SignAll) {
 		return true
 	}
 

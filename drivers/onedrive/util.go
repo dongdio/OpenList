@@ -3,22 +3,21 @@ package onedrive
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	stdpath "path"
 	"time"
 
-	jsoniter "github.com/json-iterator/go"
+	"github.com/pkg/errors"
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/drivers/base"
 	"github.com/dongdio/OpenList/internal/driver"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
-	"github.com/dongdio/OpenList/pkg/errs"
-	"github.com/dongdio/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/utility/errs"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 var onedriveHostMap = map[string]Host{
@@ -41,7 +40,7 @@ var onedriveHostMap = map[string]Host{
 }
 
 func (d *Onedrive) GetMetaUrl(auth bool, path string) string {
-	host, _ := onedriveHostMap[d.Region]
+	host := onedriveHostMap[d.Region]
 	path = utils.EncodePath(path, true)
 	if auth {
 		return host.Oauth
@@ -63,7 +62,7 @@ func (d *Onedrive) GetMetaUrl(auth bool, path string) string {
 
 func (d *Onedrive) refreshToken() error {
 	var err error
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		err = d._refreshToken()
 		if err == nil {
 			break
@@ -94,9 +93,9 @@ func (d *Onedrive) _refreshToken() error {
 		}
 		if resp.RefreshToken == "" || resp.AccessToken == "" {
 			if resp.ErrorMessage != "" {
-				return fmt.Errorf("empty token returned from official API: %s", resp.ErrorMessage)
+				return errors.Errorf("empty token returned from official API: %s", resp.ErrorMessage)
 			}
-			return fmt.Errorf("empty token returned from official API")
+			return errors.Errorf("empty token returned from official API")
 		}
 		d.AccessToken = resp.AccessToken
 		d.RefreshToken = resp.RefreshToken
@@ -105,24 +104,27 @@ func (d *Onedrive) _refreshToken() error {
 	}
 	// 使用本地客户端的情况下检查是否为空
 	if d.ClientID == "" || d.ClientSecret == "" {
-		return fmt.Errorf("empty ClientID or ClientSecret")
+		return errors.Errorf("empty ClientID or ClientSecret")
 	}
 	// 走原有的刷新逻辑
 	url := d.GetMetaUrl(true, "") + "/common/oauth2/v2.0/token"
 	var resp base.TokenResp
 	var e TokenErr
-	_, err := base.RestyClient.R().SetResult(&resp).SetError(&e).SetFormData(map[string]string{
-		"grant_type":    "refresh_token",
-		"client_id":     d.ClientID,
-		"client_secret": d.ClientSecret,
-		"redirect_uri":  d.RedirectUri,
-		"refresh_token": d.RefreshToken,
-	}).Post(url)
+	_, err := base.RestyClient.R().
+		SetResult(&resp).
+		SetError(&e).
+		SetFormData(map[string]string{
+			"grant_type":    "refresh_token",
+			"client_id":     d.ClientID,
+			"client_secret": d.ClientSecret,
+			"redirect_uri":  d.RedirectUri,
+			"refresh_token": d.RefreshToken,
+		}).Post(url)
 	if err != nil {
 		return err
 	}
 	if e.Error != "" {
-		return fmt.Errorf("%s", e.ErrorDescription)
+		return errors.Errorf("%s", e.ErrorDescription)
 	}
 	if resp.RefreshToken == "" {
 		return errs.EmptyToken
@@ -191,13 +193,13 @@ func (d *Onedrive) upSmall(ctx context.Context, dstDir model.Obj, stream model.F
 		req.SetBody(driver.NewLimitedUploadStream(ctx, stream)).SetContext(ctx)
 	}, nil)
 	if err != nil {
-		return fmt.Errorf("onedrive: Failed to upload new file(path=%v): %w", filepath, err)
+		return errors.Errorf("onedrive: Failed to upload new file(path=%v): %w", filepath, err)
 	}
 
 	// 2. update metadata
 	err = d.updateMetadata(ctx, stream, filepath)
 	if err != nil {
-		return fmt.Errorf("onedrive: Failed to update file(path=%v) metadata: %w", filepath, err)
+		return errors.Errorf("onedrive: Failed to update file(path=%v) metadata: %w", filepath, err)
 	}
 	return nil
 }
@@ -237,7 +239,7 @@ func (d *Onedrive) upBig(ctx context.Context, dstDir model.Obj, stream model.Fil
 	if err != nil {
 		return err
 	}
-	uploadUrl := jsoniter.Get(res, "uploadUrl").ToString()
+	uploadUrl := utils.GetBytes(res, "uploadUrl").String()
 	var finish int64 = 0
 	DEFAULT := d.ChunkSize * 1024 * 1024
 	retryCount := 0
@@ -273,7 +275,7 @@ func (d *Onedrive) upBig(ctx context.Context, dstDir model.Obj, stream model.Fil
 			retryCount++
 			if retryCount > maxRetries {
 				res.Body.Close()
-				return fmt.Errorf("upload failed after %d retries due to server errors, error %d", maxRetries, res.StatusCode)
+				return errors.Errorf("upload failed after %d retries due to server errors, error %d", maxRetries, res.StatusCode)
 			}
 			backoff := time.Duration(1<<retryCount) * time.Second
 			utils.Log.Warnf("[Onedrive] server errors %d while uploading, retrying after %v...", res.StatusCode, backoff)

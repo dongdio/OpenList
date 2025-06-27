@@ -6,13 +6,13 @@ import (
 
 	"github.com/OpenListTeam/gofakes3"
 
-	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/internal/fs"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
 	"github.com/dongdio/OpenList/internal/setting"
-	"github.com/dongdio/OpenList/pkg/errs"
-	"github.com/dongdio/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/utility/errs"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 // Bucket represents an S3 bucket configuration
@@ -24,7 +24,7 @@ type Bucket struct {
 // getAndParseBuckets retrieves and parses the S3 bucket configurations
 func getAndParseBuckets() ([]Bucket, error) {
 	var buckets []Bucket
-	err := utils.Json.Unmarshal([]byte(setting.GetStr(conf.S3Buckets)), &buckets)
+	err := utils.Json.Unmarshal([]byte(setting.GetStr(consts.S3Buckets)), &buckets)
 	return buckets, err
 }
 
@@ -91,8 +91,8 @@ func prefixParser(p *gofakes3.Prefix) (path, remaining string) {
 // authlistResolver creates an authentication map from configuration
 // Returns nil if no credentials are configured
 func authlistResolver() map[string]string {
-	accessKeyID := setting.GetStr(conf.S3AccessKeyId)
-	secretAccessKey := setting.GetStr(conf.S3SecretAccessKey)
+	accessKeyID := setting.GetStr(consts.S3AccessKeyId)
+	secretAccessKey := setting.GetStr(consts.S3SecretAccessKey)
 
 	if accessKeyID == "" && secretAccessKey == "" {
 		return nil

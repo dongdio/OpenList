@@ -8,7 +8,7 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/internal/driver"
 )
 
@@ -101,18 +101,18 @@ func getMainItems(config driver.Config) []driver.Item {
 	items := []driver.Item{
 		{
 			Name:     "mount_path",
-			Type:     conf.TypeString,
+			Type:     consts.TypeString,
 			Required: true,
 			Help:     "The path you want to mount to, it is unique and cannot be repeated",
 		},
 		{
 			Name: "order",
-			Type: conf.TypeNumber,
+			Type: consts.TypeNumber,
 			Help: "Used to sort storages",
 		},
 		{
 			Name: "remark",
-			Type: conf.TypeText,
+			Type: consts.TypeText,
 			Help: "Optional notes about this storage",
 		},
 	}
@@ -121,7 +121,7 @@ func getMainItems(config driver.Config) []driver.Item {
 	if !config.NoCache {
 		items = append(items, driver.Item{
 			Name:     "cache_expiration",
-			Type:     conf.TypeNumber,
+			Type:     consts.TypeNumber,
 			Default:  "30",
 			Required: true,
 			Help:     "The cache expiration time in minutes for this storage",
@@ -133,12 +133,12 @@ func getMainItems(config driver.Config) []driver.Item {
 		items = append(items, []driver.Item{
 			{
 				Name: "web_proxy",
-				Type: conf.TypeBool,
+				Type: consts.TypeBool,
 				Help: "Enable web proxy for this storage",
 			},
 			{
 				Name:     "webdav_policy",
-				Type:     conf.TypeSelect,
+				Type:     consts.TypeSelect,
 				Options:  "302_redirect,use_proxy_url,native_proxy",
 				Default:  "302_redirect",
 				Required: true,
@@ -150,7 +150,7 @@ func getMainItems(config driver.Config) []driver.Item {
 		if config.ProxyRangeOption {
 			item := driver.Item{
 				Name: "proxy_range",
-				Type: conf.TypeBool,
+				Type: consts.TypeBool,
 				Help: "Enable range requests via proxy (requires web_proxy to be enabled)",
 			}
 			if config.Name == "139Yun" {
@@ -162,7 +162,7 @@ func getMainItems(config driver.Config) []driver.Item {
 		// For proxy-only or local-only drivers
 		items = append(items, driver.Item{
 			Name:     "webdav_policy",
-			Type:     conf.TypeSelect,
+			Type:     consts.TypeSelect,
 			Default:  "native_proxy",
 			Options:  "use_proxy_url,native_proxy",
 			Required: true,
@@ -173,7 +173,7 @@ func getMainItems(config driver.Config) []driver.Item {
 	// Add download proxy URL option
 	items = append(items, driver.Item{
 		Name: "down_proxy_url",
-		Type: conf.TypeText,
+		Type: consts.TypeText,
 		Help: "Optional proxy URL for downloads",
 	})
 
@@ -182,13 +182,13 @@ func getMainItems(config driver.Config) []driver.Item {
 		items = append(items, []driver.Item{
 			{
 				Name:    "order_by",
-				Type:    conf.TypeSelect,
+				Type:    consts.TypeSelect,
 				Options: "name,size,modified",
 				Help:    "Field to sort items by",
 			},
 			{
 				Name:    "order_direction",
-				Type:    conf.TypeSelect,
+				Type:    consts.TypeSelect,
 				Options: "asc,desc",
 				Help:    "Sort direction (ascending or descending)",
 			},
@@ -198,7 +198,7 @@ func getMainItems(config driver.Config) []driver.Item {
 	// Add extract folder option
 	items = append(items, driver.Item{
 		Name:    "extract_folder",
-		Type:    conf.TypeSelect,
+		Type:    consts.TypeSelect,
 		Options: "front,back",
 		Help:    "Where to place folders when listing (front or back)",
 	})
@@ -206,7 +206,7 @@ func getMainItems(config driver.Config) []driver.Item {
 	// Add index and sign options
 	items = append(items, driver.Item{
 		Name:     "disable_index",
-		Type:     conf.TypeBool,
+		Type:     consts.TypeBool,
 		Default:  "false",
 		Required: true,
 		Help:     "Disable indexing for this storage",
@@ -214,7 +214,7 @@ func getMainItems(config driver.Config) []driver.Item {
 
 	items = append(items, driver.Item{
 		Name:     "enable_sign",
-		Type:     conf.TypeBool,
+		Type:     consts.TypeBool,
 		Default:  "false",
 		Required: true,
 		Help:     "Enable request signing for this storage",

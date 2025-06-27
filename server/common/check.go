@@ -6,11 +6,12 @@ import (
 
 	"github.com/dlclark/regexp2"
 
+	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/internal/conf"
 	"github.com/dongdio/OpenList/internal/driver"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
-	"github.com/dongdio/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 // IsStorageSignEnabled 检查指定路径的存储是否启用了签名
@@ -137,7 +138,7 @@ func ShouldProxy(storage driver.Driver, filename string) bool {
 	}
 
 	// 检查文件扩展名是否在代理类型列表中
-	if utils.SliceContains(conf.SlicesMap[conf.ProxyTypes], utils.Ext(filename)) {
+	if utils.SliceContains(conf.SlicesMap[consts.ProxyTypes], utils.Ext(filename)) {
 		return true
 	}
 

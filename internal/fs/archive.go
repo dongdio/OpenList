@@ -20,13 +20,14 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/xhofe/tache"
 
+	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/internal/conf"
 	"github.com/dongdio/OpenList/internal/driver"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
-	"github.com/dongdio/OpenList/pkg/errs"
-	streamPkg "github.com/dongdio/OpenList/pkg/stream"
-	"github.com/dongdio/OpenList/pkg/task"
+	"github.com/dongdio/OpenList/utility/errs"
+	streamPkg "github.com/dongdio/OpenList/utility/stream"
+	"github.com/dongdio/OpenList/utility/task"
 )
 
 // ArchiveDownloadTask represents a task for downloading and decompressing archive files
@@ -509,7 +510,7 @@ func archiveDecompress(ctx context.Context, srcObjPath, dstDirPath string, args 
 	}
 
 	// Handle synchronous execution if requested
-	if ctx.Value(conf.NoTaskKey) != nil {
+	if ctx.Value(consts.NoTaskKey) != nil {
 		return handleSynchronousDecompression(ctx, downloadTask, srcObjPath)
 	}
 

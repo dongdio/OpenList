@@ -3,7 +3,7 @@ package common
 import (
 	stdpath "path"
 
-	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/setting"
 	"github.com/dongdio/OpenList/internal/sign"
@@ -23,7 +23,7 @@ import (
 func Sign(obj model.Obj, parent string, encrypt bool) string {
 	// 目录不需要签名
 	// 非加密对象且未开启全局签名时不需要签名
-	if obj.IsDir() || (!encrypt && !setting.GetBool(conf.SignAll)) {
+	if obj.IsDir() || (!encrypt && !setting.GetBool(consts.SignAll)) {
 		return ""
 	}
 

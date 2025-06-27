@@ -10,15 +10,14 @@ import (
 	stdpath "path"
 	"time"
 
-	jsoniter "github.com/json-iterator/go"
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/drivers/base"
 	"github.com/dongdio/OpenList/internal/driver"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
-	"github.com/dongdio/OpenList/pkg/errs"
-	"github.com/dongdio/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/utility/errs"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 var onedriveHostMap = map[string]Host{
@@ -152,7 +151,7 @@ func (d *OnedriveAPP) upBig(ctx context.Context, dstDir model.Obj, stream model.
 	if err != nil {
 		return err
 	}
-	uploadUrl := jsoniter.Get(res, "uploadUrl").ToString()
+	uploadUrl := utils.GetBytes(res, "uploadUrl").String()
 	var finish int64 = 0
 	DEFAULT := d.ChunkSize * 1024 * 1024
 	retryCount := 0

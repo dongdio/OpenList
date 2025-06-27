@@ -4,16 +4,16 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/internal/setting"
-	"github.com/dongdio/OpenList/pkg/sign"
+	"github.com/dongdio/OpenList/utility/sign"
 )
 
 var once sync.Once
 var instance sign.Sign
 
 func Sign(data string) string {
-	expire := setting.GetInt(conf.LinkExpiration, 0)
+	expire := setting.GetInt(consts.LinkExpiration, 0)
 	if expire == 0 {
 		return NotExpired(data)
 	} else {
@@ -37,5 +37,5 @@ func Verify(data string, sign string) error {
 }
 
 func Instance() {
-	instance = sign.NewHMACSign([]byte(setting.GetStr(conf.Token)))
+	instance = sign.NewHMACSign([]byte(setting.GetStr(consts.Token)))
 }

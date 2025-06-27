@@ -10,7 +10,7 @@ import (
 
 	"github.com/dongdio/OpenList/global"
 	"github.com/dongdio/OpenList/internal/conf"
-	"github.com/dongdio/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 func init() {

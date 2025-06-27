@@ -9,7 +9,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 var _ model.Obj = (*FileObj)(nil)

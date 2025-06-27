@@ -10,9 +10,9 @@ import (
 	"github.com/dongdio/OpenList/internal/fs"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/offline_download/tool"
-	task2 "github.com/dongdio/OpenList/pkg/task"
-	"github.com/dongdio/OpenList/pkg/utils"
 	"github.com/dongdio/OpenList/server/common"
+	task2 "github.com/dongdio/OpenList/utility/task"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 // TaskInfo 任务信息结构体

@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/pkg/utils"
-	hash_extend "github.com/dongdio/OpenList/pkg/utils/hash"
+	"github.com/dongdio/OpenList/utility/utils"
+	hash_extend "github.com/dongdio/OpenList/utility/utils/hash"
 )
 
 type Files struct {

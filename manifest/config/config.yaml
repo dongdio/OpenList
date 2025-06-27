@@ -1,0 +1,188 @@
+system:
+  # 应用配置文件
+  site_url: ""
+  cdn: ""
+  jwt_secret: ""
+  token_expires_in: 0
+  # 版本信息
+  last_launched_version: ""
+  path:
+    # 临时目录配置
+    temp_dir: ""
+    bleve_dir: ""
+    dist_dir: ""
+  # 启动配置
+  app:
+    delayed_start: 0
+    max_connections: 0
+    max_concurrency: 0
+    tls_insecure_skip_verify: false
+  # 飞书配置
+  feiShu:
+    appId: 'cli_a517452de5fa100e' # 飞书应用ID
+    appSecret: 'eFzbsNjTqgRncgotl3pwIghXHRuvMWqV' # 飞书应用密钥
+
+server:
+  address: ':5244'
+  #httpsAddr: ":443"  # TLS/HTTPS配置，同时需要配置证书和密钥。默认关闭。配置格式同上。
+  #httpsCertPath: "./manifest/tls/server.pem"  # TLS/HTTPS证书文件本地路径，建议使用绝对路径。默认关闭
+  #httpsKeyPath: "./manifest/tls/key.pem"   # TLS/HTTPS密钥文件本地路径，建议使用绝对路径。默认关闭
+  serverAgent: 'dong pan server'
+  clientMaxBodySize: '21m' # 服务器允许客户端上传文件的最大值，默认为8M
+  openapiPath: '/.dong/swagger/api.json'
+  swaggerPath: '/.dong/swagger'
+  dumpRouterMap: false # 是否在Server启动时打印所有的路由列表。默认为true
+  # 服务日志(包括访问日志和server错误日志)
+  logPath: '/.dong/cache/logs/'
+  logStdout: true
+  errorStack: true
+  errorLogEnabled: true
+  errorLogPattern: 'error-{Y-m-d}.log'
+  accessLogEnabled: true
+  accessLogPattern: 'access-{Y-m-d}.log'
+#  graceful: true              # 是否开启平滑重启特性，开启时将会在本地增加10000的本地TCP端口用于进程间通信。默认false
+#  gracefulTimeout: 10         # 父进程在平滑重启后多少秒退出，默认2秒。若请求耗时大于该值，可能会导致请求中断
+
+# 配置通过g.Log().Line()打印的通用日志, server服务日志需额外配置
+logger:
+  path: '/.dong/cache/logs/' # 日志文件路径。默认为空，表示关闭，仅输出到终端
+  file: '{Y-m-d}.log' # 日志文件格式. 默认为"{Y-m-d}.log"
+  level: 'all' # 日志输出级别
+  stdout: true # 日志是否同时输出到终端。默认true
+  flags: 44 # 日期 时:分:秒:毫秒 文件:行号
+  #rotateSize: "100M" #用于设置滚动切分时按照文件大小进行切分，该属性的单位为字节。只有当该属性值大于0时才会开启滚动切分的特性。
+  rotateExpire: '30m' # 用于设置滚动切分时按照文件超过一定时间没有修改时进行切分。只有当该属性值大于0时才会开启滚动切分的特性。
+  rotateBackupExpire: '10d' # 按照切分的文件有效期清理切分文件，当滚动切分特性开启时有效。默认为0，表示不备份，切分则删除
+  rotateBackupLimit: 10 # 按照切分的文件数量清理切分文件，当滚动切分特性开启时有效。默认为0，表示不备份，切分则删除
+  rotateCheckInterval: '1h' # 滚动切分的时间检测间隔，一般不需要设置。默认为1小时
+  rotateBackupCompress: 6 # 9 表示使用最大的压缩级别，使得切分后的文件最小化存储。但是需要注意，切分和压缩是两个不同的操作，文件压缩是一个异步操作，因此当文件被自动切分后，定时器通过一定的时间间隔定期检查后再自动将其压缩为 *.gz 文件。压缩级别设置得越高，会更多使用 CPU 资源
+  stdoutColorDisabled: false # 关闭终端的颜色打印。默认开启
+  writerColorEnable: false # 日志文件是否带上颜色。默认false，表示不带颜色
+
+# 数据库配置
+database:
+  logger:
+    path: '/.dong/cache/logs/'
+    file: 'sql-{Y-m-d}.log'
+    level: 'all'
+    stdout: true
+    rotateExpire: '1d'
+    rotateBackupExpire: '10d'
+    rotateBackupLimit: 10
+    rotateCheckInterval: '1h'
+  default:
+    host: '43.153.11.145'
+    port: '13306'
+    user: 'root'
+    pass: 'IQEGlEoHyTAunUoXMcayM7lTA4D1tMl3'
+    name: 'test'
+    type: 'mysql'
+    timezone: 'Asia/Shanghai'
+    charset: 'utf8mb4'
+    debug: true
+    dryRun: false #空跑
+    maxLifetime: '3h' #单位秒, 连接对象可重复使用的最长时间
+    maxIdle: 10 #允许维持的最大空闲连接数
+    maxOpen: 100 #允许打开的最大连接数
+    createdAt: 'create_at'
+    updatedAt: 'update_at'
+
+# Redis配置
+redis:
+  default:
+    address: '43.153.68.10:6380'
+    db: 0
+    pass: 'IQEGlEoHyTAunUoXMcayM7lTA4D1tMl3'
+    minIdle: '4' # 允许闲置的最小连接数
+    maxIdle: '8' # 允许闲置的最大连接数(0表示不限制)
+    maxActive: '16' # 最大连接数量限制(0表示不限制)
+    idleTimeout: '1m' # 连接最大空闲时间，使用时间字符串例如30s/1m/1d
+    waitTimeout: '1m' #等待连接池连接的超时时间，使用时间字符串例如30s/1m/1d
+    dialTimeout: '30s' #TCP连接的超时时间，使用时间字符串例如30s/1m/1d
+    readTimeout: '30s' #TCP的Read操作超时时间，使用时间字符串例如30s/1m/1d
+    writeTimeout: '30s' #TCP的Write操作超时时间，使用时间字符串例如30s/1m/1d
+
+# 邮件配置
+mail:
+  host: 'smtp.163.com'
+  from: '咚咚储<rxpe84@163.com>'
+  username: 'rxpe84@163.com'
+  password: 'FJDIIZRIFXYEQUHR'
+
+# Meilisearch配置
+meilisearch:
+  host: ""
+  api_key: ""
+  index_prefix: ""
+
+# 服务器协议配置
+scheme:
+  address: ""
+  http_port: 0
+  https_port: 0
+  force_https: false
+  cert_file: ""
+  key_file: ""
+  unix_file: ""
+  unix_file_perm: ""
+  enable_h2c: false
+
+# 任务配置
+tasks:
+  download:
+    workers: 0
+    max_retry: 0
+    task_persistant: false
+  transfer:
+    workers: 0
+    max_retry: 0
+    task_persistant: false
+  upload:
+    workers: 0
+    max_retry: 0
+    task_persistant: false
+  copy:
+    workers: 0
+    max_retry: 0
+    task_persistant: false
+  move:
+    workers: 0
+    max_retry: 0
+    task_persistant: false
+  decompress:
+    workers: 0
+    max_retry: 0
+    task_persistant: false
+  decompress_upload:
+    workers: 0
+    max_retry: 0
+    task_persistant: false
+  allow_retry_canceled: false
+
+# CORS配置
+cors:
+  allow_origins: [ ]
+  allow_methods: [ ]
+  allow_headers: [ ]
+
+# 服务配置
+s3:
+  enable: false
+  port: 0
+  ssl: false
+
+ftp:
+  enable: false
+  listen: ""
+  find_pasv_port_attempts: 0
+  active_transfer_port_non_20: false
+  idle_timeout: 0
+  connection_timeout: 0
+  disable_active_mode: false
+  default_transfer_binary: false
+  enable_active_conn_ip_check: false
+  enable_pasv_conn_ip_check: false
+
+sftp:
+  enable: false
+  listen: ""

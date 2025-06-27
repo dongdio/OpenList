@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/internal/setting"
 
 	"github.com/dongdio/OpenList/drivers/pikpak"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/offline_download/tool"
 	"github.com/dongdio/OpenList/internal/op"
-	"github.com/dongdio/OpenList/pkg/errs"
+	"github.com/dongdio/OpenList/utility/errs"
 )
 
 type PikPak struct {
@@ -37,7 +37,7 @@ func (p *PikPak) Init() (string, error) {
 }
 
 func (p *PikPak) IsReady() bool {
-	tempDir := setting.GetStr(conf.PikPakTempDir)
+	tempDir := setting.GetStr(consts.PikPakTempDir)
 	if tempDir == "" {
 		return false
 	}

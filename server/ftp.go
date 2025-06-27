@@ -14,12 +14,13 @@ import (
 	ftpserver "github.com/fclairamb/ftpserverlib"
 	"github.com/pkg/errors"
 
+	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/internal/conf"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
 	"github.com/dongdio/OpenList/internal/setting"
-	"github.com/dongdio/OpenList/pkg/utils"
 	"github.com/dongdio/OpenList/server/ftp"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 type FtpMainDriver struct {
@@ -33,7 +34,7 @@ type FtpMainDriver struct {
 
 func NewMainDriver() (*FtpMainDriver, error) {
 	header := &http.Header{}
-	header.Add("User-Agent", setting.GetStr(conf.FTPProxyUserAgent))
+	header.Add("User-Agent", setting.GetStr(consts.FTPProxyUserAgent))
 	transferType := ftpserver.TransferTypeASCII
 	if conf.Conf.FTP.DefaultTransferBinary {
 		transferType = ftpserver.TransferTypeBinary
@@ -47,27 +48,27 @@ func NewMainDriver() (*FtpMainDriver, error) {
 		pasvConnCheck = ftpserver.IPMatchRequired
 	}
 	tlsRequired := ftpserver.ClearOrEncrypted
-	if setting.GetBool(conf.FTPImplicitTLS) {
+	if setting.GetBool(consts.FTPImplicitTLS) {
 		tlsRequired = ftpserver.ImplicitEncryption
-	} else if setting.GetBool(conf.FTPMandatoryTLS) {
+	} else if setting.GetBool(consts.FTPMandatoryTLS) {
 		tlsRequired = ftpserver.MandatoryEncryption
 	}
-	tlsConf, err := getTlsConf(setting.GetStr(conf.FTPTLSPrivateKeyPath), setting.GetStr(conf.FTPTLSPublicCertPath))
+	tlsConf, err := getTlsConf(setting.GetStr(consts.FTPTLSPrivateKeyPath), setting.GetStr(consts.FTPTLSPublicCertPath))
 	if err != nil && tlsRequired != ftpserver.ClearOrEncrypted {
 		return nil, errors.Errorf("FTP mandatory TLS has been enabled, but the certificate failed to load: %w", err)
 	}
 	return &FtpMainDriver{
 		settings: &ftpserver.Settings{
 			ListenAddr:               conf.Conf.FTP.Listen,
-			PublicHost:               lookupIP(setting.GetStr(conf.FTPPublicHost)),
-			PassiveTransferPortRange: newPortMapper(setting.GetStr(conf.FTPPasvPortMap)),
+			PublicHost:               lookupIP(setting.GetStr(consts.FTPPublicHost)),
+			PassiveTransferPortRange: newPortMapper(setting.GetStr(consts.FTPPasvPortMap)),
 			ActiveTransferPortNon20:  conf.Conf.FTP.ActiveTransferPortNon20,
 			IdleTimeout:              conf.Conf.FTP.IdleTimeout,
 			ConnectionTimeout:        conf.Conf.FTP.ConnectionTimeout,
 			DisableMLSD:              false,
 			DisableMLST:              false,
 			DisableMFMT:              true,
-			Banner:                   setting.GetStr(conf.Announcement),
+			Banner:                   setting.GetStr(consts.Announcement),
 			TLSRequired:              tlsRequired,
 			DisableLISTArgs:          false,
 			DisableSite:              false,

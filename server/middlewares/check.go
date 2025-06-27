@@ -6,8 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/dongdio/OpenList/internal/conf"
-	"github.com/dongdio/OpenList/pkg/utils"
 	"github.com/dongdio/OpenList/server/common"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 // StoragesLoaded 中间件，检查存储是否已加载完成

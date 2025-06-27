@@ -7,14 +7,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/caarlos0/env/v9"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/dongdio/OpenList/drivers/base"
 	"github.com/dongdio/OpenList/global"
 	"github.com/dongdio/OpenList/internal/conf"
-	"github.com/dongdio/OpenList/pkg/net"
-	"github.com/dongdio/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/utility/net"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 const (
@@ -58,11 +57,6 @@ func InitConfig() {
 	// Configure concurrency limit if specified
 	if conf.Conf.MaxConcurrency > 0 {
 		net.DefaultConcurrencyLimit = &net.ConcurrencyLimit{Limit: conf.Conf.MaxConcurrency}
-	}
-
-	// Load configuration from environment variables if not forced to ignore
-	if !conf.Conf.Force {
-		loadConfigFromEnv()
 	}
 
 	// Ensure temp directory is absolute and exists
@@ -131,22 +125,6 @@ func updateConfigFile(configPath string) {
 	err = os.WriteFile(configPath, confBody, DefaultFileMode)
 	if err != nil {
 		log.Fatalf("failed to update config file: %v", err)
-	}
-}
-
-// loadConfigFromEnv loads configuration from environment variables
-func loadConfigFromEnv() {
-	prefix := "OPENLIST_"
-	if global.NoPrefix {
-		prefix = ""
-	}
-
-	log.Infof("loading config from environment variables with prefix: %s", prefix)
-
-	if err := env.ParseWithOptions(conf.Conf, env.Options{
-		Prefix: prefix,
-	}); err != nil {
-		log.Fatalf("failed to load config from environment: %v", err)
 	}
 }
 

@@ -4,14 +4,14 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/internal/setting"
 
 	_115 "github.com/dongdio/OpenList/drivers/115"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/offline_download/tool"
 	"github.com/dongdio/OpenList/internal/op"
-	"github.com/dongdio/OpenList/pkg/errs"
+	"github.com/dongdio/OpenList/utility/errs"
 )
 
 type Cloud115 struct {
@@ -36,7 +36,7 @@ func (p *Cloud115) Init() (string, error) {
 }
 
 func (p *Cloud115) IsReady() bool {
-	tempDir := setting.GetStr(conf.Pan115TempDir)
+	tempDir := setting.GetStr(consts.Pan115TempDir)
 	if tempDir == "" {
 		return false
 	}

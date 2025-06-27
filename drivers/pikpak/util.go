@@ -17,7 +17,6 @@ import (
 	"time"
 
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
-	jsoniter "github.com/json-iterator/go"
 	"github.com/pkg/errors"
 	"resty.dev/v3"
 
@@ -25,7 +24,7 @@ import (
 	"github.com/dongdio/OpenList/internal/driver"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
-	"github.com/dongdio/OpenList/pkg/utils"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 var AndroidAlgorithms = []string{
@@ -123,9 +122,9 @@ func (d *PikPak) login() error {
 		return &e
 	}
 	data := res.Bytes()
-	d.RefreshToken = jsoniter.Get(data, "refresh_token").ToString()
-	d.AccessToken = jsoniter.Get(data, "access_token").ToString()
-	d.Common.SetUserID(jsoniter.Get(data, "sub").ToString())
+	d.RefreshToken = utils.GetBytes(data, "refresh_token").String()
+	d.AccessToken = utils.GetBytes(data, "access_token").String()
+	d.Common.SetUserID(utils.GetBytes(data, "sub").String())
 	return nil
 }
 
@@ -160,9 +159,9 @@ func (d *PikPak) refreshToken(refreshToken string) error {
 	}
 	data := res.Bytes()
 	d.Status = "work"
-	d.RefreshToken = jsoniter.Get(data, "refresh_token").ToString()
-	d.AccessToken = jsoniter.Get(data, "access_token").ToString()
-	d.Common.SetUserID(jsoniter.Get(data, "sub").ToString())
+	d.RefreshToken = utils.GetBytes(data, "refresh_token").String()
+	d.AccessToken = utils.GetBytes(data, "access_token").String()
+	d.Common.SetUserID(utils.GetBytes(data, "sub").String())
 	d.Addition.RefreshToken = d.RefreshToken
 	op.MustSaveDriverStorage(d)
 	return nil
@@ -304,15 +303,15 @@ func BuildCustomUserAgent(deviceID, clientID, appName, sdkVersion, clientVersion
 	sb.WriteString(fmt.Sprintf("datetime/%d ", time.Now().UnixMilli()))
 	sb.WriteString(fmt.Sprintf("usrno/%s ", userID))
 	sb.WriteString(fmt.Sprintf("appname/android-%s ", appName))
-	sb.WriteString(fmt.Sprintf("session_origin/ "))
-	sb.WriteString(fmt.Sprintf("grant_type/ "))
-	sb.WriteString(fmt.Sprintf("appid/ "))
-	sb.WriteString(fmt.Sprintf("clientip/ "))
-	sb.WriteString(fmt.Sprintf("devicename/Xiaomi_M2004j7ac "))
-	sb.WriteString(fmt.Sprintf("osversion/13 "))
-	sb.WriteString(fmt.Sprintf("platformversion/10 "))
-	sb.WriteString(fmt.Sprintf("accessmode/ "))
-	sb.WriteString(fmt.Sprintf("devicemodel/M2004J7AC "))
+	sb.WriteString("session_origin/ ")
+	sb.WriteString("grant_type/ ")
+	sb.WriteString("appid/ ")
+	sb.WriteString("clientip/ ")
+	sb.WriteString("devicename/Xiaomi_M2004j7ac ")
+	sb.WriteString("osversion/13 ")
+	sb.WriteString("platformversion/10 ")
+	sb.WriteString("accessmode/ ")
+	sb.WriteString("devicemodel/M2004J7AC ")
 
 	return sb.String()
 }
@@ -503,7 +502,7 @@ func (d *PikPak) UploadByMultipart(ctx context.Context, params *S3Params, fileSi
 			}()
 			for chunk := range chunksCh {
 				var part oss.UploadPart // 出现错误就继续尝试，共尝试3次
-				for retry := 0; retry < 3; retry++ {
+				for range 3 {
 					select {
 					case <-ctx.Done():
 						break
@@ -607,7 +606,7 @@ func SplitFileByPartNum(fileSize int64, chunkNum int) ([]oss.FileChunk, error) {
 	var chunks []oss.FileChunk
 	chunk := oss.FileChunk{}
 	chunkN := (int64)(chunkNum)
-	for i := int64(0); i < chunkN; i++ {
+	for i := range chunkN {
 		chunk.Number = int(i + 1)
 		chunk.Offset = i * (fileSize / chunkN)
 		if i == chunkN-1 {

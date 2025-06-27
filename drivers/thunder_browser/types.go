@@ -6,15 +6,15 @@ import (
 	"time"
 
 	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/pkg/utils"
-	hash_extend "github.com/dongdio/OpenList/pkg/utils/hash"
+	"github.com/dongdio/OpenList/utility/utils"
+	hash_extend "github.com/dongdio/OpenList/utility/utils/hash"
 )
 
 type ErrResp struct {
 	ErrorCode        int64  `json:"error_code"`
 	ErrorMsg         string `json:"error"`
 	ErrorDescription string `json:"error_description"`
-	//	ErrorDetails   interface{} `json:"error_details"`
+	//	ErrorDetails   any `json:"error_details"`
 }
 
 func (e *ErrResp) IsError() bool {
@@ -223,17 +223,17 @@ type Files struct {
 	// Params            struct{} `json:"params"`
 	// OriginalFileIndex int    `json:"original_file_index"`
 	Space string `json:"space"`
-	// Apps              []interface{} `json:"apps"`
+	// Apps              []any `json:"apps"`
 	// Writable   bool   `json:"writable"`
 	FolderType string `json:"folder_type"`
-	// Collection interface{} `json:"collection"`
+	// Collection any `json:"collection"`
 	SortName         string     `json:"sort_name"`
 	UserModifiedTime CustomTime `json:"user_modified_time"`
-	// SpellName         []interface{} `json:"spell_name"`
+	// SpellName         []any `json:"spell_name"`
 	// FileCategory      string        `json:"file_category"`
-	// Tags              []interface{} `json:"tags"`
-	// ReferenceEvents   []interface{} `json:"reference_events"`
-	// ReferenceResource interface{}   `json:"reference_resource"`
+	// Tags              []any `json:"tags"`
+	// ReferenceEvents   []any `json:"reference_events"`
+	// ReferenceResource any   `json:"reference_resource"`
 	// Params0           struct {
 	//	PlatformIcon   string `json:"platform_icon"`
 	//	SmallThumbnail string `json:"small_thumbnail"`
