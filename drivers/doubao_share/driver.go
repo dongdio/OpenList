@@ -11,6 +11,7 @@ import (
 	"github.com/dongdio/OpenList/internal/driver"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/utility/errs"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 type DoubaoShare struct {
@@ -106,7 +107,7 @@ func (d *DoubaoShare) Link(ctx context.Context, file model.Obj, args model.LinkA
 		}
 
 		// 生成标准的Content-Disposition
-		contentDisposition := generateContentDisposition(u.Name)
+		contentDisposition := utils.GenerateContentDisposition(u.Name)
 
 		return &model.Link{
 			URL: downloadUrl,

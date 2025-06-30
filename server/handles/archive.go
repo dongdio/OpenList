@@ -2,7 +2,6 @@ package handles
 
 import (
 	"fmt"
-	"net/url"
 	stdpath "path"
 
 	"github.com/gin-gonic/gin"
@@ -484,7 +483,7 @@ func ArchiveInternalExtract(c *gin.Context) {
 
 	// 设置文件名
 	filename := stdpath.Base(innerPath)
-	headers["Content-Disposition"] = fmt.Sprintf(`attachment; filename="%s"; filename*=UTF-8''%s`, filename, url.PathEscape(filename))
+	headers["Content-Disposition"] = utils.GenerateContentDisposition(filename)
 
 	// 设置内容类型
 	contentType := c.Request.Header.Get("Content-Type")

@@ -18,7 +18,7 @@ import (
 // encryption and decryption command format for Crypt driver
 
 type options struct {
-	Op  string // decrypt or encrypt
+	op  string // decrypt or encrypt
 	src string // source dir or file
 	dst string // out destination
 
@@ -56,7 +56,7 @@ func init() {
 	// is called directly, e.g.:
 	CryptCmd.Flags().StringVarP(&opt.src, "src", "s", "", "src file or dir to encrypt/decrypt")
 	CryptCmd.Flags().StringVarP(&opt.dst, "dst", "d", "", "dst dir to output,if not set,output to src dir")
-	CryptCmd.Flags().StringVar(&opt.Op, "op", "", "de or en which stands for decrypt or encrypt")
+	CryptCmd.Flags().StringVar(&opt.op, "op", "", "de or en which stands for decrypt or encrypt")
 
 	CryptCmd.Flags().StringVar(&opt.pwd, "pwd", "", "password used to encrypt/decrypt,if not contain ___Obfuscated___ prefix,will be obfuscated before used")
 	CryptCmd.Flags().StringVar(&opt.salt, "salt", "", "salt used to encrypt/decrypt,if not contain ___Obfuscated___ prefix,will be obfuscated before used")
@@ -70,7 +70,7 @@ func (o *options) validate() {
 	if o.src == "" {
 		log.Fatal("src can not be empty")
 	}
-	if o.Op != "encrypt" && o.Op != "decrypt" && o.Op != "en" && o.Op != "de" {
+	if o.op != "encrypt" && o.op != "decrypt" && o.op != "en" && o.op != "de" {
 		log.Fatal("op must be encrypt or decrypt")
 	}
 	if o.filenameEncryption != "off" && o.filenameEncryption != "standard" && o.filenameEncryption != "obfuscate" {
@@ -129,24 +129,83 @@ func (o *options) cryptFileDir() {
 	// src is dir
 	if dst == "" {
 		// if src is dir and not set dst dir ,create ${src}_crypt dir as dst dir
-		dst = path.Join("./", fileInfo.Name()+"_crypt")
+		dst = path.Join(filepath.Dir(src), fileInfo.Name()+"_crypt")
 	}
 	log.Infof("dst : %v", dst)
+
+	dirnameMap := make(map[string]string)
+	pathSeparator := string(filepath.Separator)
+
 	filepath.Walk(src, func(p string, info os.FileInfo, err error) error {
 		if err != nil {
 			log.Errorf("get file %v info failed, err:%v", p, err)
 			return err
 		}
-		if info.IsDir() {
-			// create output dir
-			d := strings.Replace(p, src, dst, 1)
-			log.Infof("create output dir %v", d)
-			checkCreateDir(d)
-
+		if p == src {
 			return nil
 		}
-		d := strings.Replace(filepath.Dir(p), src, dst, 1)
-		o.cryptFile(cipher, p, d)
+		log.Infof("current path: %s", p)
+
+		rp := strings.ReplaceAll(p, src, "")
+		log.Infof("relative path: %s", rp)
+
+		rpds := strings.Split(rp, pathSeparator)
+		if info.IsDir() {
+			// absolute dst dir for current path
+			dd := ""
+
+			if o.dirnameEncryption == "true" {
+				if o.op == "encrypt" || o.op == "en" {
+					for i := range rpds {
+						oname := rpds[i]
+						if _, ok := dirnameMap[rpds[i]]; ok {
+							rpds[i] = dirnameMap[rpds[i]]
+						} else {
+							rpds[i] = cipher.EncryptDirName(rpds[i])
+							dirnameMap[oname] = rpds[i]
+						}
+					}
+					dd = path.Join(dst, strings.Join(rpds, pathSeparator))
+				} else {
+					for i := range rpds {
+						oname := rpds[i]
+						if _, ok := dirnameMap[rpds[i]]; ok {
+							rpds[i] = dirnameMap[rpds[i]]
+						} else {
+							dnn, err := cipher.DecryptDirName(rpds[i])
+							if err != nil {
+								log.Fatalf("decrypt dir name %v failed,err:%v", rpds[i], err)
+							}
+							rpds[i] = dnn
+							dirnameMap[oname] = dnn
+						}
+
+					}
+					dd = path.Join(dst, strings.Join(rpds, pathSeparator))
+				}
+
+			} else {
+				dd = path.Join(dst, rp)
+			}
+
+			log.Infof("create output dir %v", dd)
+			checkCreateDir(dd)
+			return nil
+		}
+		// file dst dir
+		fdd := dst
+		if o.dirnameEncryption == "true" {
+			for i := range rpds {
+				if i == len(rpds)-1 {
+					break
+				}
+				fdd = path.Join(fdd, dirnameMap[rpds[i]])
+			}
+		} else {
+			fdd = path.Join(fdd, strings.Join(rpds[:len(rpds)-1], pathSeparator))
+		}
+		log.Infof("file output dir %v", fdd)
+		o.cryptFile(cipher, p, fdd)
 		return nil
 	})
 
@@ -167,11 +226,13 @@ func (o *options) cryptFile(cipher *rcCrypt.Cipher, src string, dst string) {
 
 	var cryptSrcReader io.Reader
 	var outFile string
-	if o.Op == "encrypt" || o.Op == "en" {
+	if o.op == "encrypt" || o.op == "en" {
 		filename := fileInfo.Name()
 		if o.filenameEncryption != "off" {
 			filename = cipher.EncryptFileName(fileInfo.Name())
 			log.Infof("encrypt file name %v to %v", fileInfo.Name(), filename)
+		} else {
+			filename = fileInfo.Name() + o.suffix
 		}
 		cryptSrcReader, err = cipher.EncryptData(fd)
 		if err != nil {
@@ -187,12 +248,13 @@ func (o *options) cryptFile(cipher *rcCrypt.Cipher, src string, dst string) {
 				log.Fatalf("decrypt file name %v failed,err:%v", src, err)
 			}
 			log.Infof("decrypt file name %v to %v, ", fileInfo.Name(), filename)
+		} else {
+			filename = strings.TrimSuffix(filename, o.suffix)
 		}
 
 		cryptSrcReader, err = cipher.DecryptData(fd)
 		if err != nil {
 			log.Fatalf("decrypt file %v failed,err:%v", src, err)
-
 		}
 		outFile = path.Join(dst, filename)
 	}
@@ -200,7 +262,6 @@ func (o *options) cryptFile(cipher *rcCrypt.Cipher, src string, dst string) {
 	wr, err := os.OpenFile(outFile, os.O_CREATE|os.O_WRONLY, 0755)
 	if err != nil {
 		log.Fatalf("create file %v failed,err:%v", outFile, err)
-
 	}
 	defer wr.Close()
 
@@ -221,9 +282,9 @@ func checkCreateDir(dir string) {
 			log.Fatalf("create dir %v failed,err:%v", dir, err)
 		}
 		return
+	} else if err != nil {
+		log.Fatalf("read dir %v err: %v", dir, err)
 	}
-
-	log.Fatalf("read dir %v err: %v", dir, err)
 }
 
 func updateObfusParm(str string) string {

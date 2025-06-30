@@ -6,7 +6,7 @@ package s3
 import (
 	"fmt"
 
-	"github.com/OpenListTeam/gofakes3"
+	"github.com/itsHenry35/gofakes3"
 
 	"github.com/dongdio/OpenList/utility/utils"
 )

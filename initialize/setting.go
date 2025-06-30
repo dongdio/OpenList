@@ -116,7 +116,7 @@ func InitialSettings() []model.SettingItem {
 		{Key: consts.TextTypes, Value: "txt,htm,html,xml,java,properties,sql,js,md,json,conf,ini,vue,php,py,bat,gitignore,yml,go,sh,c,cpp,h,hpp,tsx,vtt,srt,ass,rs,lrc", Type: consts.TypeText, Group: model.PREVIEW, Flag: model.PRIVATE},
 		{Key: consts.AudioTypes, Value: "mp3,flac,ogg,m4a,wav,opus,wma", Type: consts.TypeText, Group: model.PREVIEW, Flag: model.PRIVATE},
 		{Key: consts.VideoTypes, Value: "mp4,mkv,avi,mov,rmvb,webm,flv,m3u8", Type: consts.TypeText, Group: model.PREVIEW, Flag: model.PRIVATE},
-		{Key: consts.ImageTypes, Value: "jpg,tiff,jpeg,png,gif,bmp,svg,ico,swf,webp", Type: consts.TypeText, Group: model.PREVIEW, Flag: model.PRIVATE},
+		{Key: consts.ImageTypes, Value: "jpg,tiff,jpeg,png,gif,bmp,svg,ico,swf,webp,avif", Type: consts.TypeText, Group: model.PREVIEW, Flag: model.PRIVATE},
 		// {Key: conf.OfficeTypes, Value: "doc,docx,xls,xlsx,ppt,pptx", Type: conf.TypeText, Group: model.PREVIEW, Flag: model.PRIVATE},
 		{Key: consts.ProxyTypes, Value: "m3u8,url", Type: consts.TypeText, Group: model.PREVIEW, Flag: model.PRIVATE},
 		{Key: consts.ProxyIgnoreHeaders, Value: "authorization,referer", Type: consts.TypeText, Group: model.PREVIEW, Flag: model.PRIVATE},

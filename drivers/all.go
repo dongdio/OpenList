@@ -10,6 +10,7 @@ import (
 	_ "github.com/dongdio/OpenList/drivers/123_share"
 	_ "github.com/dongdio/OpenList/drivers/139"
 	_ "github.com/dongdio/OpenList/drivers/189"
+	_ "github.com/dongdio/OpenList/drivers/189_tv"
 	_ "github.com/dongdio/OpenList/drivers/189pc"
 	_ "github.com/dongdio/OpenList/drivers/alias"
 	_ "github.com/dongdio/OpenList/drivers/alist_v2"

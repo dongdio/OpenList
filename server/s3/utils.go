@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/OpenListTeam/gofakes3"
+	"github.com/itsHenry35/gofakes3"
 
 	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/internal/fs"
@@ -14,6 +14,8 @@ import (
 	"github.com/dongdio/OpenList/utility/errs"
 	"github.com/dongdio/OpenList/utility/utils"
 )
+
+const emptyObjectName = "ThisIsAnEmptyFolderInTheS3Bucket"
 
 // Bucket represents an S3 bucket configuration
 type Bucket struct {

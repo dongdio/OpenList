@@ -21,7 +21,6 @@ import (
 	"time"
 
 	"github.com/avast/retry-go"
-
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
@@ -69,7 +68,7 @@ const (
 
 // do others that not defined in Driver interface
 func (d *Doubao) request(path string, method string, callback base.ReqCallback, resp any) ([]byte, error) {
-	reqUrl := BaseURL + path
+	reqURL := BaseURL + path
 	req := base.RestyClient.R()
 	req.SetHeader("Cookie", d.Cookie)
 	if callback != nil {
@@ -78,7 +77,7 @@ func (d *Doubao) request(path string, method string, callback base.ReqCallback, 
 
 	var commonResp CommonResp
 
-	res, err := req.Execute(method, reqUrl)
+	res, err := req.Execute(method, reqURL)
 	if err != nil {
 		return nil, err
 	}
@@ -153,8 +152,8 @@ func (d *Doubao) getUserInfo() (UserInfo, error) {
 }
 
 // 签名请求
-func (d *Doubao) signRequest(req *resty.Request, method, tokenType, uploadUrl string) error {
-	parsedUrl, err := url.Parse(uploadUrl)
+func (d *Doubao) signRequest(req *resty.Request, method, tokenType, uploadURL string) error {
+	parsedUrl, err := url.Parse(uploadURL)
 	if err != nil {
 		return fmt.Errorf("invalid URL format: %w", err)
 	}
@@ -328,13 +327,13 @@ func (d *Doubao) getUploadConfig(upConfig *UploadConfig, dataType string, file m
 	tokenType := dataType
 	// 配置参数函数
 	configureParams := func() (string, map[string]string) {
-		var uploadUrl string
+		var uploadURL string
 		var params map[string]string
 		// 根据数据类型设置不同的上传参数
 		switch dataType {
 		case VideoDataType:
 			// 音频/视频类型 - 使用uploadToken.Samantha的配置
-			uploadUrl = d.UploadToken.Samantha.UploadInfo.VideoHost
+			uploadURL = d.UploadToken.Samantha.UploadInfo.VideoHost
 			params = map[string]string{
 				"Action":       "ApplyUploadInner",
 				"Version":      "2020-11-19",
@@ -347,7 +346,7 @@ func (d *Doubao) getUploadConfig(upConfig *UploadConfig, dataType string, file m
 			}
 		case ImgDataType, FileDataType:
 			// 图片或其他文件类型 - 使用uploadToken.Alice对应配置
-			uploadUrl = "https://" + d.UploadToken.Alice[dataType].UploadHost
+			uploadURL = "https://" + d.UploadToken.Alice[dataType].UploadHost
 			params = map[string]string{
 				"Action":        "ApplyImageUpload",
 				"Version":       "2018-08-01",
@@ -358,11 +357,11 @@ func (d *Doubao) getUploadConfig(upConfig *UploadConfig, dataType string, file m
 				"s":             randomString(),
 			}
 		}
-		return uploadUrl, params
+		return uploadURL, params
 	}
 
 	// 获取初始参数
-	uploadUrl, params := configureParams()
+	uploadURL, params := configureParams()
 
 	tokenRefreshed := false
 	var configResp UploadConfigResp
@@ -370,7 +369,7 @@ func (d *Doubao) getUploadConfig(upConfig *UploadConfig, dataType string, file m
 	err := d._retryOperation("get upload_config", func() error {
 		configResp = UploadConfigResp{}
 
-		_, err := d.requestApi(uploadUrl, http.MethodGet, tokenType, func(req *resty.Request) {
+		_, err := d.requestApi(uploadURL, http.MethodGet, tokenType, func(req *resty.Request) {
 			req.SetQueryParams(params)
 		}, &configResp)
 		if err != nil {
@@ -392,7 +391,7 @@ func (d *Doubao) getUploadConfig(upConfig *UploadConfig, dataType string, file m
 
 			d.UploadToken = newToken
 			tokenRefreshed = true
-			uploadUrl, params = configureParams()
+			uploadURL, params = configureParams()
 
 			return retry.Error{errors.New("token refreshed, retry needed")}
 		}
@@ -462,11 +461,11 @@ func (d *Doubao) Upload(config *UploadConfig, dstDir model.Obj, file model.FileS
 	// 构建请求路径
 	uploadNode := config.InnerUploadAddress.UploadNodes[0]
 	storeInfo := uploadNode.StoreInfos[0]
-	uploadUrl := fmt.Sprintf("https://%s/upload/v1/%s", uploadNode.UploadHost, storeInfo.StoreURI)
+	uploadURL := fmt.Sprintf("https://%s/upload/v1/%s", uploadNode.UploadHost, storeInfo.StoreURI)
 
 	uploadResp := UploadResp{}
 
-	if _, err = d.uploadRequest(uploadUrl, http.MethodPost, storeInfo, func(req *resty.Request) {
+	if _, err = d.uploadRequest(uploadURL, http.MethodPost, storeInfo, func(req *resty.Request) {
 		req.SetHeaders(map[string]string{
 			"Content-Type":        "application/octet-stream",
 			"Content-Crc32":       crc32Value,
@@ -501,12 +500,12 @@ func (d *Doubao) UploadByMultipart(ctx context.Context, config *UploadConfig, fi
 	// 构建请求路径
 	uploadNode := config.InnerUploadAddress.UploadNodes[0]
 	storeInfo := uploadNode.StoreInfos[0]
-	uploadUrl := fmt.Sprintf("https://%s/upload/v1/%s", uploadNode.UploadHost, storeInfo.StoreURI)
+	uploadURL := fmt.Sprintf("https://%s/upload/v1/%s", uploadNode.UploadHost, storeInfo.StoreURI)
 	// 初始化分片上传
 	var uploadID string
 	err := d._retryOperation("Initialize multipart upload", func() error {
 		var err error
-		uploadID, err = d.initMultipartUpload(config, uploadUrl, storeInfo)
+		uploadID, err = d.initMultipartUpload(config, uploadURL, storeInfo)
 		return err
 	})
 	if err != nil {
@@ -561,7 +560,7 @@ func (d *Doubao) UploadByMultipart(ctx context.Context, config *UploadConfig, fi
 			var uploadPart UploadPart
 			if err = d._retryOperation(fmt.Sprintf("Upload part %d", partNumber), func() error {
 				var err error
-				uploadPart, err = d.uploadPart(config, uploadUrl, uploadID, partNumber, data, crc32Value)
+				uploadPart, err = d.uploadPart(config, uploadURL, uploadID, partNumber, data, crc32Value)
 				return err
 			}); err != nil {
 				return fmt.Errorf("part %d upload failed: %w", partNumber, err)
@@ -587,7 +586,7 @@ func (d *Doubao) UploadByMultipart(ctx context.Context, config *UploadConfig, fi
 	}
 	// 完成上传-分片合并
 	if err = d._retryOperation("Complete multipart upload", func() error {
-		return d.completeMultipartUpload(config, uploadUrl, uploadID, parts)
+		return d.completeMultipartUpload(config, uploadURL, uploadID, parts)
 	}); err != nil {
 		return nil, fmt.Errorf("failed to complete multipart upload: %w", err)
 	}
@@ -620,7 +619,7 @@ func (d *Doubao) UploadByMultipart(ctx context.Context, config *UploadConfig, fi
 }
 
 // 统一上传请求方法
-func (d *Doubao) uploadRequest(uploadUrl string, method string, storeInfo StoreInfo, callback base.ReqCallback, resp any) ([]byte, error) {
+func (d *Doubao) uploadRequest(uploadURL string, method string, storeInfo StoreInfo, callback base.ReqCallback, resp any) ([]byte, error) {
 	client := resty.New()
 	client.SetTransport(&http.Transport{
 		DisableKeepAlives: true,  // 禁用连接复用
@@ -630,7 +629,7 @@ func (d *Doubao) uploadRequest(uploadUrl string, method string, storeInfo StoreI
 
 	req := client.R()
 	req.SetHeaders(map[string]string{
-		"Host":          strings.Split(uploadUrl, "/")[2],
+		"Host":          strings.Split(uploadURL, "/")[2],
 		"Referer":       BaseURL + "/",
 		"Origin":        BaseURL,
 		"User-Agent":    UserAgent,
@@ -650,7 +649,7 @@ func (d *Doubao) uploadRequest(uploadUrl string, method string, storeInfo StoreI
 		req.SetResult(resp)
 	}
 
-	res, err := req.Execute(method, uploadUrl)
+	res, err := req.Execute(method, uploadURL)
 	if err != nil && err != io.EOF {
 		return nil, fmt.Errorf("upload request failed: %w", err)
 	}
@@ -659,10 +658,10 @@ func (d *Doubao) uploadRequest(uploadUrl string, method string, storeInfo StoreI
 }
 
 // 初始化分片上传
-func (d *Doubao) initMultipartUpload(config *UploadConfig, uploadUrl string, storeInfo StoreInfo) (uploadId string, err error) {
+func (d *Doubao) initMultipartUpload(config *UploadConfig, uploadURL string, storeInfo StoreInfo) (uploadId string, err error) {
 	uploadResp := UploadResp{}
 
-	_, err = d.uploadRequest(uploadUrl, http.MethodPost, storeInfo, func(req *resty.Request) {
+	_, err = d.uploadRequest(uploadURL, http.MethodPost, storeInfo, func(req *resty.Request) {
 		req.SetQueryParams(map[string]string{
 			"uploadmode": "part",
 			"phase":      "init",
@@ -681,11 +680,11 @@ func (d *Doubao) initMultipartUpload(config *UploadConfig, uploadUrl string, sto
 }
 
 // 分片上传实现
-func (d *Doubao) uploadPart(config *UploadConfig, uploadUrl, uploadID string, partNumber int64, data []byte, crc32Value string) (resp UploadPart, err error) {
+func (d *Doubao) uploadPart(config *UploadConfig, uploadURL, uploadID string, partNumber int64, data []byte, crc32Value string) (resp UploadPart, err error) {
 	uploadResp := UploadResp{}
 	storeInfo := config.InnerUploadAddress.UploadNodes[0].StoreInfos[0]
 
-	_, err = d.uploadRequest(uploadUrl, http.MethodPost, storeInfo, func(req *resty.Request) {
+	_, err = d.uploadRequest(uploadURL, http.MethodPost, storeInfo, func(req *resty.Request) {
 		req.SetHeaders(map[string]string{
 			"Content-Type":        "application/octet-stream",
 			"Content-Crc32":       crc32Value,
@@ -717,7 +716,7 @@ func (d *Doubao) uploadPart(config *UploadConfig, uploadUrl, uploadID string, pa
 }
 
 // 完成分片上传
-func (d *Doubao) completeMultipartUpload(config *UploadConfig, uploadUrl, uploadID string, parts []UploadPart) error {
+func (d *Doubao) completeMultipartUpload(config *UploadConfig, uploadURL, uploadID string, parts []UploadPart) error {
 	uploadResp := UploadResp{}
 
 	storeInfo := config.InnerUploadAddress.UploadNodes[0].StoreInfos[0]
@@ -725,7 +724,7 @@ func (d *Doubao) completeMultipartUpload(config *UploadConfig, uploadUrl, upload
 	body := _convertUploadParts(parts)
 
 	err := utils.Retry(MaxRetryAttempts, time.Second, func() (err error) {
-		_, err = d.uploadRequest(uploadUrl, http.MethodPost, storeInfo, func(req *resty.Request) {
+		_, err = d.uploadRequest(uploadURL, http.MethodPost, storeInfo, func(req *resty.Request) {
 			req.SetQueryParams(map[string]string{
 				"uploadid":   uploadID,
 				"phase":      "finish",
@@ -753,7 +752,7 @@ func (d *Doubao) completeMultipartUpload(config *UploadConfig, uploadUrl, upload
 }
 
 func (d *Doubao) commitMultipartUpload(uploadConfig *UploadConfig) error {
-	uploadUrl := d.UploadToken.Samantha.UploadInfo.VideoHost
+	uploadURL := d.UploadToken.Samantha.UploadInfo.VideoHost
 	params := map[string]string{
 		"Action":    "CommitUploadInner",
 		"Version":   "2020-11-19",
@@ -771,7 +770,7 @@ func (d *Doubao) commitMultipartUpload(uploadConfig *UploadConfig) error {
 		return fmt.Errorf("failed to marshal request data: %w", err)
 	}
 
-	_, err = d.requestApi(uploadUrl, http.MethodPost, tokenType, func(req *resty.Request) {
+	_, err = d.requestApi(uploadURL, http.MethodPost, tokenType, func(req *resty.Request) {
 		req.SetHeader("Content-Type", "application/json")
 		req.SetQueryParams(params)
 		req.SetBody(jsonBytes)
@@ -923,36 +922,6 @@ func getSigningKey(secretKey, dateStamp, region, service string) []byte {
 	kService := hmacSHA256(kRegion, service)
 	kSigning := hmacSHA256(kService, "aws4_request")
 	return kSigning
-}
-
-// generateContentDisposition 生成符合RFC 5987标准的Content-Disposition头部
-func generateContentDisposition(filename string) string {
-	// 按照RFC 2047进行编码，用于filename部分
-	encodedName := urlEncode(filename)
-
-	// 按照RFC 5987进行编码，用于filename*部分
-	encodedNameRFC5987 := encodeRFC5987(filename)
-
-	return fmt.Sprintf("attachment; filename=\"%s\"; filename*=utf-8''%s",
-		encodedName, encodedNameRFC5987)
-}
-
-// encodeRFC5987 按照RFC 5987规范编码字符串，适用于HTTP头部参数中的非ASCII字符
-func encodeRFC5987(s string) string {
-	var buf strings.Builder
-	for _, r := range []byte(s) {
-		// 根据RFC 5987，只有字母、数字和部分特殊符号可以不编码
-		if (r >= 'a' && r <= 'z') ||
-			(r >= 'A' && r <= 'Z') ||
-			(r >= '0' && r <= '9') ||
-			r == '-' || r == '.' || r == '_' || r == '~' {
-			buf.WriteByte(r)
-		} else {
-			// 其他字符都需要百分号编码
-			fmt.Fprintf(&buf, "%%%02X", r)
-		}
-	}
-	return buf.String()
 }
 
 func randomString() string {

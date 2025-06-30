@@ -312,7 +312,7 @@ and S3-compatible APIs as configured in the configuration file.`,
 		Release()
 
 		// Create context with timeout for graceful shutdown
-		ctx, cancel := context.WithTimeout(context.Background(), GracefulShutdownTimeout)
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 
 		// Use WaitGroup to wait for all servers to shutdown

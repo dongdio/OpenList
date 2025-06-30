@@ -12,6 +12,7 @@ import (
 	"github.com/dongdio/OpenList/internal/driver"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/utility/http_range"
+	streamPkg "github.com/dongdio/OpenList/utility/stream"
 	"github.com/dongdio/OpenList/utility/utils"
 )
 
@@ -186,11 +187,7 @@ func (p *Pan115) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 	preHash = strings.ToUpper(preHash)
 	fullHash := stream.GetHash().GetHash(utils.SHA1)
 	if len(fullHash) <= 0 {
-		tmpF, err := stream.CacheFullInTempFile()
-		if err != nil {
-			return nil, err
-		}
-		fullHash, err = utils.HashFile(utils.SHA1, tmpF)
+		_, fullHash, err = streamPkg.CacheFullInTempFileAndHash(stream, utils.SHA1)
 		if err != nil {
 			return nil, err
 		}

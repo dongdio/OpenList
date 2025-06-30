@@ -100,6 +100,15 @@ func FsMove(c *gin.Context) {
 		return
 	}
 
+	if !req.Overwrite {
+		for _, name := range req.Names {
+			if res, _ := fs.Get(c, stdpath.Join(dstDir, name), &fs.GetArgs{NoLog: true}); res != nil {
+				common.ErrorStrResp(c, fmt.Sprintf("file [%s] exists", name), 403)
+				return
+			}
+		}
+	}
+
 	// 创建所有任务，所有验证将在后台异步进行
 	addedTasks := make([]task.TaskExtensionInfo, 0, len(req.Names))
 	for i, name := range req.Names {
@@ -158,6 +167,15 @@ func FsCopy(c *gin.Context) {
 	if err != nil {
 		common.ErrorResp(c, err, 403)
 		return
+	}
+
+	if !req.Overwrite {
+		for _, name := range req.Names {
+			if res, _ := fs.Get(c, stdpath.Join(dstDir, name), &fs.GetArgs{NoLog: true}); res != nil {
+				common.ErrorStrResp(c, fmt.Sprintf("file [%s] exists", name), 403)
+				return
+			}
+		}
 	}
 
 	// 创建所有任务，所有验证将在后台异步进行

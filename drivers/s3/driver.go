@@ -15,12 +15,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/dongdio/OpenList/utility/stream"
-
 	"github.com/dongdio/OpenList/internal/driver"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/server/common"
 	"github.com/dongdio/OpenList/utility/cron"
+	"github.com/dongdio/OpenList/utility/stream"
 )
 
 type S3 struct {
@@ -83,17 +82,17 @@ func (d *S3) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]mo
 
 func (d *S3) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	path := getKey(file.GetPath(), false)
-	filename := stdpath.Base(path)
-	disposition := fmt.Sprintf(`attachment; filename*=UTF-8''%s`, url.PathEscape(filename))
-	if d.AddFilenameToDisposition {
-		disposition = fmt.Sprintf(`attachment; filename="%s"; filename*=UTF-8''%s`, filename, url.PathEscape(filename))
-	}
+	fileName := stdpath.Base(path)
 	input := &s3.GetObjectInput{
 		Bucket: &d.Bucket,
 		Key:    &path,
 		// ResponseContentDisposition: &disposition,
 	}
 	if d.CustomHost == "" {
+		disposition := fmt.Sprintf(`attachment; filename*=UTF-8''%s`, url.PathEscape(fileName))
+		if d.AddFilenameToDisposition {
+			disposition = fmt.Sprintf(`attachment; filename="%s"; filename*=UTF-8''%s`, fileName, url.PathEscape(fileName))
+		}
 		input.ResponseContentDisposition = &disposition
 	}
 	req, _ := d.linkClient.GetObjectRequest(input)
@@ -110,7 +109,7 @@ func (d *S3) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*mo
 			link.URL = strings.Replace(link.URL, "/"+d.Bucket, "", 1)
 		}
 	} else {
-		if common.ShouldProxy(d, filename) {
+		if common.ShouldProxy(d, fileName) {
 			err = req.Sign()
 			link.URL = req.HTTPRequest.URL.String()
 			link.Header = req.HTTPRequest.Header

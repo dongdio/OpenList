@@ -3,7 +3,6 @@ package _115_open
 import (
 	"context"
 	"fmt"
-	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -17,6 +16,8 @@ import (
 	"github.com/dongdio/OpenList/internal/driver"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
+	"github.com/dongdio/OpenList/utility/http_range"
+	"github.com/dongdio/OpenList/utility/stream"
 	"github.com/dongdio/OpenList/utility/utils"
 )
 
@@ -216,31 +217,27 @@ func (d *Open115) Remove(ctx context.Context, obj model.Obj) error {
 }
 
 func (d *Open115) Put(ctx context.Context, dstDir model.Obj, file model.FileStreamer, up driver.UpdateProgress) error {
-	if err := d.WaitLimit(ctx); err != nil {
-		return err
-	}
-	tempF, err := file.CacheFullInTempFile()
+	err := d.WaitLimit(ctx)
 	if err != nil {
 		return err
 	}
-	// cal full sha1
-	sha1, err := utils.HashReader(utils.SHA1, tempF)
+	sha1 := file.GetHash().GetHash(utils.SHA1)
+	if len(sha1) != utils.SHA1.Width {
+		_, sha1, err = stream.CacheFullInTempFileAndHash(file, utils.SHA1)
+		if err != nil {
+			return err
+		}
+	}
+	const PreHashSize int64 = 128 * utils.KB
+	hashSize := PreHashSize
+	if file.GetSize() < PreHashSize {
+		hashSize = file.GetSize()
+	}
+	reader, err := file.RangeRead(http_range.Range{Start: 0, Length: hashSize})
 	if err != nil {
 		return err
 	}
-	_, err = tempF.Seek(0, io.SeekStart)
-	if err != nil {
-		return err
-	}
-	// pre 128k sha1
-	sha1128k, err := utils.HashReader(utils.SHA1, io.LimitReader(tempF, 128*1024))
-	if err != nil {
-		return err
-	}
-	_, err = tempF.Seek(0, io.SeekStart)
-	if err != nil {
-		return err
-	}
+	sha1128k, err := utils.HashReader(utils.SHA1, reader)
 	// 1. Init
 	resp, err := d.client.UploadInit(ctx, &sdk.UploadInitReq{
 		FileName: file.GetName(),
@@ -266,15 +263,11 @@ func (d *Open115) Put(ctx context.Context, dstDir model.Obj, file model.FileStre
 		if err != nil {
 			return err
 		}
-		_, err = tempF.Seek(start, io.SeekStart)
+		reader, err = file.RangeRead(http_range.Range{Start: start, Length: end - start + 1})
 		if err != nil {
 			return err
 		}
-		signVal, err := utils.HashReader(utils.SHA1, io.LimitReader(tempF, end-start+1))
-		if err != nil {
-			return err
-		}
-		_, err = tempF.Seek(0, io.SeekStart)
+		signVal, err := utils.HashReader(utils.SHA1, reader)
 		if err != nil {
 			return err
 		}
@@ -300,7 +293,7 @@ func (d *Open115) Put(ctx context.Context, dstDir model.Obj, file model.FileStre
 		return err
 	}
 	// 4. upload
-	err = d.multpartUpload(ctx, tempF, file, up, tokenResp, resp)
+	err = d.multpartUpload(ctx, file, up, tokenResp, resp)
 	if err != nil {
 		return err
 	}

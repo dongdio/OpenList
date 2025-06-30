@@ -38,6 +38,7 @@ func (d *QuarkOpen) request(ctx context.Context, pathname string, method string,
 
 	req := base.RestyClient.R().
 		SetContext(ctx).
+		SetHeader("User-Agent", "Mozilla/5.0 (Macintosh; Apple macOS 15_5) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36 Chrome/138.0.0.0 Openlist/425.6.30").
 		SetHeaders(map[string]string{
 			"Accept":          "application/json, text/plain, */*",
 			"User-Agent":      d.conf.ua,

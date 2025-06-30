@@ -8,7 +8,7 @@ import (
 	"math/rand"
 	"net/http"
 
-	"github.com/OpenListTeam/gofakes3"
+	"github.com/itsHenry35/gofakes3"
 )
 
 // NewServer creates and configures a new S3 compatible server

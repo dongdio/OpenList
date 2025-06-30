@@ -6,7 +6,6 @@ import (
 	"io"
 	"maps"
 	"net/http"
-	"net/url"
 	"os"
 	"strings"
 
@@ -149,7 +148,7 @@ func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.
 func attachHeader(w http.ResponseWriter, file model.Obj) {
 	fileName := file.GetName()
 	// 设置Content-Disposition头，使浏览器将内容作为附件处理
-	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"; filename*=UTF-8''%s`, fileName, url.PathEscape(fileName)))
+	w.Header().Set("Content-Disposition", utils.GenerateContentDisposition(fileName))
 	// 设置内容类型
 	w.Header().Set("Content-Type", utils.GetMimeType(fileName))
 	// 设置ETag

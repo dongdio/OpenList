@@ -279,7 +279,7 @@ func (y *Cloud189PC) login() (err error) {
 		// 遇到错误，重新加载登陆参数(刷新验证码)
 		if err != nil && y.NoUseOcr {
 			if err1 := y.initLoginParam(); err1 != nil {
-				err = fmt.Errorf("err1: %s \nerr2: %s", err, err1)
+				err = errors.Errorf("err1: %s \nerr2: %s", err, err1)
 			}
 		}
 	}()
@@ -314,7 +314,7 @@ func (y *Cloud189PC) login() (err error) {
 		return err
 	}
 	if loginresp.ToUrl == "" {
-		return fmt.Errorf("login failed,No toUrl obtained, msg: %s", loginresp.Msg)
+		return errors.Errorf("login failed,No toUrl obtained, msg: %s", loginresp.Msg)
 	}
 
 	// 获取Session
@@ -323,7 +323,7 @@ func (y *Cloud189PC) login() (err error) {
 	_, err = y.client.R().
 		SetResult(&tokenInfo).SetError(&erron).
 		SetQueryParams(clientSuffix()).
-		SetQueryParam("redirectURL", url.QueryEscape(loginresp.ToUrl)).
+		SetQueryParam("redirectURL", loginresp.ToUrl).
 		Post(API_URL + "/getSessionForPC.action")
 	if err != nil {
 		return
@@ -333,7 +333,7 @@ func (y *Cloud189PC) login() (err error) {
 		return &erron
 	}
 	if tokenInfo.ResCode != 0 {
-		err = fmt.Errorf(tokenInfo.ResMessage)
+		err = errors.New(tokenInfo.ResMessage)
 		return
 	}
 	y.tokenInfo = &tokenInfo
@@ -408,7 +408,7 @@ func (y *Cloud189PC) initLoginParam() error {
 		}).
 		Get(AUTH_URL + "/api/logbox/oauth2/picCaptcha.do")
 	if err != nil {
-		return fmt.Errorf("failed to obtain verification code")
+		return errors.Errorf("failed to obtain verification code")
 	}
 	if imgRes.Size() > 20 {
 		if setting.GetStr(consts.OcrApi) != "" && !y.NoUseOcr {
@@ -425,7 +425,7 @@ func (y *Cloud189PC) initLoginParam() error {
 		}
 
 		// 返回验证码图片给前端
-		return fmt.Errorf(`need img validate code: <img src="data:image/png;base64,%s"/>`, base64.StdEncoding.EncodeToString(imgRes.Bytes()))
+		return errors.Errorf(`need img validate code: <img src="data:image/png;base64,%s"/>`, base64.StdEncoding.EncodeToString(imgRes.Bytes()))
 	}
 	return nil
 }
@@ -470,7 +470,7 @@ func (y *Cloud189PC) refreshSession() (err error) {
 	return
 }
 
-// 普通上传
+// StreamUpload 普通上传
 // 无法上传大小为0的文件
 func (y *Cloud189PC) StreamUpload(ctx context.Context, dstDir model.Obj, file model.FileStreamer, up driver.UpdateProgress, isFamily bool, overwrite bool) (model.Obj, error) {
 	size := file.GetSize()
@@ -799,7 +799,7 @@ func (y *Cloud189PC) GetMultiUploadUrls(ctx context.Context, isFamily bool, uplo
 	uploadUrls := uploadUrlsResp.Data
 
 	if len(uploadUrls) != len(partInfo) {
-		return nil, fmt.Errorf("uploadUrls get error, due to get length %d, real length %d", len(partInfo), len(uploadUrls))
+		return nil, errors.Errorf("uploadUrls get error, due to get length %d, real length %d", len(partInfo), len(uploadUrls))
 	}
 
 	uploadUrlInfos := make([]UploadUrlInfo, 0, len(uploadUrls))
@@ -820,7 +820,7 @@ func (y *Cloud189PC) GetMultiUploadUrls(ctx context.Context, isFamily bool, uplo
 	return uploadUrlInfos, nil
 }
 
-// 旧版本上传，家庭云不支持覆盖
+// OldUpload 旧版本上传，家庭云不支持覆盖
 func (y *Cloud189PC) OldUpload(ctx context.Context, dstDir model.Obj, file model.FileStreamer, up driver.UpdateProgress, isFamily bool, overwrite bool) (model.Obj, error) {
 	tempFile, fileMd5, err := stream.CacheFullInTempFileAndHash(file, utils.MD5)
 	if err != nil {
@@ -1047,7 +1047,7 @@ func (y *Cloud189PC) getFamilyID() (string, error) {
 		return "", err
 	}
 	if len(infos) == 0 {
-		return "", fmt.Errorf("cannot get automatically,please input family_id")
+		return "", errors.Errorf("cannot get automatically,please input family_id")
 	}
 	for _, info := range infos {
 		if strings.Contains(y.getTokenInfo().LoginName, info.RemarkName) {
@@ -1057,7 +1057,7 @@ func (y *Cloud189PC) getFamilyID() (string, error) {
 	return fmt.Sprint(infos[0].FamilyID), nil
 }
 
-// 保存家庭云中的文件到个人云
+// SaveFamilyFileToPersonCloud 保存家庭云中的文件到个人云
 func (y *Cloud189PC) SaveFamilyFileToPersonCloud(ctx context.Context, familyId string, srcObj, dstDir model.Obj, overwrite bool) error {
 	// _, err := y.post(API_URL+"/family/file/saveFileToMember.action", func(req *resty.Request) {
 	// 	req.SetQueryParams(map[string]string{

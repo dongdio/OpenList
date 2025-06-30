@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gogf/gf/v2/net/ghttp"
 
 	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/internal/setting"
@@ -19,18 +18,18 @@ func Favicon(c *gin.Context) {
 	c.Redirect(302, setting.GetStr(consts.Favicon))
 }
 
-func Favicon1(c *ghttp.Request) {
-	c.Response.RedirectTo(setting.GetStr(consts.Favicon), 302)
-}
+// func Favicon1(c *ghttp.Request) {
+// 	c.Response.RedirectTo(setting.GetStr(consts.Favicon), 302)
+// }
 
 // Robots returns the configured robots.txt content
 func Robots(c *gin.Context) {
 	c.String(200, setting.GetStr(consts.RobotsTxt))
 }
 
-func Robots1(c *ghttp.Request) {
-	c.Response.WriteStatus(200, setting.GetStr(consts.RobotsTxt))
-}
+// func Robots1(c *ghttp.Request) {
+// 	c.Response.WriteStatus(200, setting.GetStr(consts.RobotsTxt))
+// }
 
 // Plist generates an iOS plist file for app installation
 // The link_name parameter is expected to be a base64 encoded string containing URL and name information
@@ -98,67 +97,68 @@ func Plist(c *gin.Context) {
 	_, _ = c.Writer.WriteString(plist)
 }
 
-func Plist1(c *ghttp.Request) {
-	// Extract and decode the link name from the URL parameter
-	linkNameB64 := strings.TrimSuffix(c.GetRouter("link_name").String(), ".plist")
-	linkName, err := utils.SafeAtob(linkNameB64)
-	if err != nil {
-		c.Response.WriteStatus(400, err.Error())
-		return
-	}
-
-	// Split the link name into URL and name parts
-	linkNameParts := strings.Split(linkName, "/")
-	if len(linkNameParts) != 2 {
-		c.Response.WriteStatus(400, "malformed link")
-		return
-	}
-
-	// Process the URL part
-	linkEncoded := linkNameParts[0]
-	linkStr, err := url.PathUnescape(linkEncoded)
-	if err != nil {
-		c.Response.WriteStatus(400, err.Error())
-		return
-	}
-
-	link, err := url.Parse(linkStr)
-	if err != nil {
-		c.Response.WriteStatus(400, err.Error())
-		return
-	}
-
-	// Process the name part
-	nameEncoded := linkNameParts[1]
-	fullName, err := url.PathUnescape(nameEncoded)
-	if err != nil {
-		c.Response.WriteStatus(400, err.Error())
-		return
-	}
-
-	// Sanitize URL and name
-	downloadURL := link.String()
-	downloadURL = sanitizeForXML(downloadURL)
-
-	// Extract identifier from name if it contains separator
-	name := fullName
-	identifier := fmt.Sprintf("ci.nn.%s", url.PathEscape(fullName))
-
-	const identifierSeparator = "@"
-	if strings.Contains(fullName, identifierSeparator) {
-		parts := strings.Split(fullName, identifierSeparator)
-		name = strings.Join(parts[:len(parts)-1], identifierSeparator)
-		identifier = parts[len(parts)-1]
-	}
-	name = sanitizeForXML(name)
-
-	// Generate the plist XML content
-	plist := generatePlistXML(downloadURL, identifier, name)
-
-	// Return the plist as XML
-	c.Response.Header().Add("Content-Type", "application/xml;charset=utf-8")
-	c.Response.Write(plist)
-}
+//
+// func Plist1(c *ghttp.Request) {
+// 	// Extract and decode the link name from the URL parameter
+// 	linkNameB64 := strings.TrimSuffix(c.GetRouter("link_name").String(), ".plist")
+// 	linkName, err := utils.SafeAtob(linkNameB64)
+// 	if err != nil {
+// 		c.Response.WriteStatus(400, err.Error())
+// 		return
+// 	}
+//
+// 	// Split the link name into URL and name parts
+// 	linkNameParts := strings.Split(linkName, "/")
+// 	if len(linkNameParts) != 2 {
+// 		c.Response.WriteStatus(400, "malformed link")
+// 		return
+// 	}
+//
+// 	// Process the URL part
+// 	linkEncoded := linkNameParts[0]
+// 	linkStr, err := url.PathUnescape(linkEncoded)
+// 	if err != nil {
+// 		c.Response.WriteStatus(400, err.Error())
+// 		return
+// 	}
+//
+// 	link, err := url.Parse(linkStr)
+// 	if err != nil {
+// 		c.Response.WriteStatus(400, err.Error())
+// 		return
+// 	}
+//
+// 	// Process the name part
+// 	nameEncoded := linkNameParts[1]
+// 	fullName, err := url.PathUnescape(nameEncoded)
+// 	if err != nil {
+// 		c.Response.WriteStatus(400, err.Error())
+// 		return
+// 	}
+//
+// 	// Sanitize URL and name
+// 	downloadURL := link.String()
+// 	downloadURL = sanitizeForXML(downloadURL)
+//
+// 	// Extract identifier from name if it contains separator
+// 	name := fullName
+// 	identifier := fmt.Sprintf("ci.nn.%s", url.PathEscape(fullName))
+//
+// 	const identifierSeparator = "@"
+// 	if strings.Contains(fullName, identifierSeparator) {
+// 		parts := strings.Split(fullName, identifierSeparator)
+// 		name = strings.Join(parts[:len(parts)-1], identifierSeparator)
+// 		identifier = parts[len(parts)-1]
+// 	}
+// 	name = sanitizeForXML(name)
+//
+// 	// Generate the plist XML content
+// 	plist := generatePlistXML(downloadURL, identifier, name)
+//
+// 	// Return the plist as XML
+// 	c.Response.Header().Add("Content-Type", "application/xml;charset=utf-8")
+// 	c.Response.Write(plist)
+// }
 
 // sanitizeForXML replaces characters that could cause issues in XML
 func sanitizeForXML(input string) string {
