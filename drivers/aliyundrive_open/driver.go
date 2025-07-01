@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/Xhofe/rateg"
+	"github.com/OpenListTeam/rateg"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"

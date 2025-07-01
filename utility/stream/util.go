@@ -20,7 +20,7 @@ func GetRangeReadCloserFromLink(size int64, link *model.Link) (model.RangeReadCl
 		return nil, fmt.Errorf("can't create RangeReadCloser since URL is empty in link")
 	}
 	rangeReaderFunc := func(ctx context.Context, r http_range.Range) (io.ReadCloser, error) {
-		if link.Concurrency != 0 || link.PartSize != 0 {
+		if link.Concurrency > 0 || link.PartSize > 0 {
 			header := net2.ProcessHeader(nil, link.Header)
 			down := net2.NewDownloader(func(d *net2.Downloader) {
 				d.Concurrency = link.Concurrency

@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Xhofe/rateg"
+	"github.com/OpenListTeam/rateg"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
 

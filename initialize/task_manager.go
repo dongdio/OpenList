@@ -1,7 +1,7 @@
 package initialize
 
 import (
-	"github.com/xhofe/tache"
+	"github.com/OpenListTeam/tache"
 
 	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/internal/conf"

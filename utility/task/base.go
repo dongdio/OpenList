@@ -2,25 +2,33 @@ package task
 
 import (
 	"context"
-	"sync"
 	"time"
 
-	"github.com/xhofe/tache"
+	"github.com/OpenListTeam/tache"
 
+	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/internal/conf"
 	"github.com/dongdio/OpenList/internal/model"
 )
 
 type TaskExtension struct {
 	tache.Base
-	ctx          context.Context
-	ctxInitMutex sync.Mutex
-	Creator      *model.User
-	startTime    *time.Time
-	endTime      *time.Time
-	totalBytes   int64
+	Creator    *model.User
+	startTime  *time.Time
+	endTime    *time.Time
+	totalBytes int64
+	ApiUrl     string
 }
 
+func (t *TaskExtension) SetCtx(ctx context.Context) {
+	if t.Creator != nil {
+		ctx = context.WithValue(ctx, "user", t.Creator)
+	}
+	if len(t.ApiUrl) > 0 {
+		ctx = context.WithValue(ctx, consts.ApiUrlKey, t.ApiUrl)
+	}
+	t.Base.SetCtx(ctx)
+}
 func (t *TaskExtension) SetCreator(creator *model.User) {
 	t.Creator = creator
 	t.Persist()
@@ -42,6 +50,21 @@ func (t *TaskExtension) SetEndTime(endTime time.Time) {
 	t.endTime = &endTime
 }
 
+func (t *TaskExtension) ReinitCtx() error {
+	select {
+	case <-t.Ctx().Done():
+		if !conf.Conf.Tasks.AllowRetryCanceled {
+			return t.Ctx().Err()
+		}
+		ctx, cancel := context.WithCancel(context.Background())
+		t.SetCtx(ctx)
+		t.SetCancelFunc(cancel)
+
+	default:
+	}
+	return nil
+}
+
 func (t *TaskExtension) GetEndTime() *time.Time {
 	return t.endTime
 }
@@ -56,31 +79,6 @@ func (t *TaskExtension) SetTotalBytes(totalBytes int64) {
 
 func (t *TaskExtension) GetTotalBytes() int64 {
 	return t.totalBytes
-}
-
-func (t *TaskExtension) Ctx() context.Context {
-	if t.ctx == nil {
-		t.ctxInitMutex.Lock()
-		if t.ctx == nil {
-			t.ctx = context.WithValue(t.Base.Ctx(), "user", t.Creator)
-		}
-		t.ctxInitMutex.Unlock()
-	}
-	return t.ctx
-}
-
-func (t *TaskExtension) ReinitCtx() {
-	if !conf.Conf.Tasks.AllowRetryCanceled {
-		return
-	}
-	select {
-	case <-t.Base.Ctx().Done():
-		ctx, cancel := context.WithCancel(context.Background())
-		t.SetCtx(ctx)
-		t.SetCancelFunc(cancel)
-		t.ctx = nil
-	default:
-	}
 }
 
 type TaskExtensionInfo interface {

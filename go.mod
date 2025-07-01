@@ -97,6 +97,11 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.11.1 // indirect
 	github.com/Azure/go-ntlmssp v0.0.0-20221128193559-754e69321358 // indirect
 	github.com/Max-Sum/base32768 v0.0.0-20230304063302-18e6ce5945fd // indirect
+	github.com/OpenListTeam/115-sdk-go v0.2.0 // indirect
+	github.com/OpenListTeam/go-cache v0.1.0 // indirect
+	github.com/OpenListTeam/gsync v0.1.0 // indirect
+	github.com/OpenListTeam/rateg v0.1.0 // indirect
+	github.com/OpenListTeam/tache v0.2.0 // indirect
 	github.com/RoaringBitmap/roaring/v2 v2.6.0 // indirect
 	github.com/STARRY-S/zip v0.2.3 // indirect
 	github.com/abbot/go-http-auth v0.4.0 // indirect

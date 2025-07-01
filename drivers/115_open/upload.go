@@ -6,9 +6,9 @@ import (
 	"io"
 	"time"
 
+	sdk "github.com/OpenListTeam/115-sdk-go"
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 	"github.com/avast/retry-go"
-	sdk "github.com/xhofe/115-sdk-go"
 
 	"github.com/dongdio/OpenList/internal/driver"
 	"github.com/dongdio/OpenList/internal/model"

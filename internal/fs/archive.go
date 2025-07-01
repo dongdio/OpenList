@@ -16,9 +16,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/OpenListTeam/tache"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-	"github.com/xhofe/tache"
 
 	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/internal/conf"
@@ -57,7 +57,9 @@ func (t *ArchiveDownloadTask) GetStatus() string {
 
 // Run executes the archive download task
 func (t *ArchiveDownloadTask) Run() error {
-	t.ReinitCtx()
+	if err := t.ReinitCtx(); err != nil {
+		return err
+	}
 	t.ClearEndTime()
 	t.SetStartTime(time.Now())
 	defer func() { t.SetEndTime(time.Now()) }()
@@ -202,7 +204,9 @@ func (t *ArchiveContentUploadTask) GetStatus() string {
 
 // Run executes the archive content upload task
 func (t *ArchiveContentUploadTask) Run() error {
-	t.ReinitCtx()
+	if err := t.ReinitCtx(); err != nil {
+		return err
+	}
 	t.ClearEndTime()
 	t.SetStartTime(time.Now())
 	defer func() { t.SetEndTime(time.Now()) }()

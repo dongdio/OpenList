@@ -1,8 +1,6 @@
 package common
 
 import (
-	"context"
-	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -134,19 +132,4 @@ func Pluralize(count int, singular, plural string) string {
 		return singular
 	}
 	return plural
-}
-
-// GetHttpReq 从上下文中获取HTTP请求
-// 如果上下文是gin.Context类型，则返回其中的Request
-//
-// 参数:
-//   - ctx: 上下文
-//
-// 返回:
-//   - HTTP请求对象，如果无法获取则返回nil
-func GetHttpReq(ctx context.Context) *http.Request {
-	if c, ok := ctx.(*gin.Context); ok {
-		return c.Request
-	}
-	return nil
 }

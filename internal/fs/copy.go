@@ -7,13 +7,14 @@ import (
 	stdpath "path"
 	"time"
 
+	"github.com/OpenListTeam/tache"
 	"github.com/pkg/errors"
-	"github.com/xhofe/tache"
 
 	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/internal/driver"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
+	"github.com/dongdio/OpenList/server/common"
 	"github.com/dongdio/OpenList/utility/errs"
 	"github.com/dongdio/OpenList/utility/stream"
 	"github.com/dongdio/OpenList/utility/task"
@@ -48,7 +49,9 @@ func (t *CopyTask) GetStatus() string {
 // It initializes the storage drivers if needed and delegates to copyBetween2Storages
 func (t *CopyTask) Run() error {
 	// Initialize task timing information
-	t.ReinitCtx()
+	if err := t.ReinitCtx(); err != nil {
+		return err
+	}
 	t.ClearEndTime()
 	t.SetStartTime(time.Now())
 	defer func() { t.SetEndTime(time.Now()) }()
@@ -116,6 +119,7 @@ func _copy(ctx context.Context, srcObjPath, dstDirPath string, lazyCache ...bool
 	t := &CopyTask{
 		TaskExtension: task.TaskExtension{
 			Creator: taskCreator,
+			ApiUrl:  common.GetApiUrl(ctx),
 		},
 		srcStorage:   srcStorage,
 		dstStorage:   dstStorage,
@@ -217,6 +221,7 @@ func copyDirectoryBetween2Storages(t *CopyTask, srcStorage, dstStorage driver.Dr
 		CopyTaskManager.Add(&CopyTask{
 			TaskExtension: task.TaskExtension{
 				Creator: t.GetCreator(),
+				ApiUrl:  t.ApiUrl,
 			},
 			srcStorage:   srcStorage,
 			dstStorage:   dstStorage,

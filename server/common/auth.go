@@ -3,7 +3,7 @@ package common
 import (
 	"time"
 
-	"github.com/Xhofe/go-cache"
+	"github.com/OpenListTeam/go-cache"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/pkg/errors"
 

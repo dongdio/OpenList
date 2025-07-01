@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/Xhofe/go-cache"
+	"github.com/OpenListTeam/go-cache"
 )
 
 type TokenCache struct {

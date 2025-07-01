@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/internal/conf"
 	"github.com/dongdio/OpenList/server/common"
 	"github.com/dongdio/OpenList/utility/utils"
@@ -17,29 +18,22 @@ import (
 // - 根路径和favicon.ico
 // - 静态资源路径（assets、images、streamer、static）
 func StoragesLoaded(c *gin.Context) {
-	// 如果存储已加载，直接放行
-	if conf.StoragesLoaded {
-		c.Next()
-		return
-	}
-
-	// 检查是否为根路径或favicon.ico
-	requestPath := c.Request.URL.Path
-	if utils.SliceContains([]string{"", "/", "/favicon.ico"}, requestPath) {
-		c.Next()
-		return
-	}
-
-	// 检查是否为静态资源路径
-	staticPaths := []string{"/assets", "/images", "/streamer", "/static"}
-	for _, path := range staticPaths {
-		if strings.HasPrefix(requestPath, path) {
+	if !conf.StoragesLoaded {
+		if utils.SliceContains([]string{"", "/", "/favicon.ico"}, c.Request.URL.Path) {
 			c.Next()
 			return
 		}
+		paths := []string{"/assets", "/images", "/streamer", "/static"}
+		for _, path := range paths {
+			if strings.HasPrefix(c.Request.URL.Path, path) {
+				c.Next()
+				return
+			}
+		}
+		common.ErrorStrResp(c, "Loading storage, please wait", 500)
+		c.Abort()
+		return
 	}
-
-	// 其他路径返回存储加载中的提示
-	common.ErrorStrResp(c, "存储加载中，请稍候", 500)
-	c.Abort()
+	c.Set(consts.ApiUrlKey, common.GetApiUrlFormRequest(c.Request))
+	c.Next()
 }

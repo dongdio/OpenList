@@ -18,13 +18,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dongdio/OpenList/utility/stream"
-
 	"github.com/dongdio/OpenList/internal/fs"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/sign"
 	"github.com/dongdio/OpenList/server/common"
 	"github.com/dongdio/OpenList/utility/errs"
+	"github.com/dongdio/OpenList/utility/stream"
 	"github.com/dongdio/OpenList/utility/utils"
 )
 
@@ -246,9 +245,9 @@ func (h *Handler) confirmLocks(r *http.Request, src, dst string) (release func()
 	}
 
 	// If头部是ifLists的逻辑或(OR)，任何一个ifList匹配即可
-	for _, ifList := range parsedIfHeader.lists {
+	for _, item := range parsedIfHeader.lists {
 		// 确定源资源路径
-		lockSrc := ifList.resourceTag
+		lockSrc := item.resourceTag
 		if lockSrc == "" {
 			// 如果没有资源标签，使用请求的源路径
 			lockSrc = src
@@ -269,8 +268,8 @@ func (h *Handler) confirmLocks(r *http.Request, src, dst string) (release func()
 		}
 
 		// 尝试确认锁
-		release, err = h.LockSystem.Confirm(time.Now(), lockSrc, dst, ifList.conditions...)
-		if err == ErrConfirmationFailed {
+		release, err = h.LockSystem.Confirm(time.Now(), lockSrc, dst, item.conditions...)
+		if errors.Is(err, ErrConfirmationFailed) {
 			// 如果确认失败，尝试下一个列表
 			continue
 		}
@@ -362,12 +361,12 @@ func (h *Handler) handleGetHeadPost(w http.ResponseWriter, r *http.Request) (sta
 	storage, _ := fs.GetStorage(reqPath, &fs.GetStoragesArgs{})
 	downProxyUrl := storage.GetStorage().DownProxyUrl
 	if storage.GetStorage().WebdavNative() || (storage.GetStorage().WebdavProxy() && downProxyUrl == "") {
-		link, _, err := fs.Link(ctx, reqPath, model.LinkArgs{Header: r.Header, HttpReq: r})
+		link, _, err := fs.Link(ctx, reqPath, model.LinkArgs{Header: r.Header})
 		if err != nil {
 			return http.StatusInternalServerError, err
 		}
 		if storage.GetStorage().ProxyRange {
-			common.ProxyRange(link, fi.GetSize())
+			common.ProxyRange(ctx, link, fi.GetSize())
 		}
 		err = common.Proxy(w, r, link, fi)
 		if err != nil {
@@ -381,7 +380,7 @@ func (h *Handler) handleGetHeadPost(w http.ResponseWriter, r *http.Request) (sta
 		w.Header().Set("Cache-Control", "max-age=0, no-cache, no-store, must-revalidate")
 		http.Redirect(w, r, u, http.StatusFound)
 	} else {
-		link, _, err := fs.Link(ctx, reqPath, model.LinkArgs{IP: utils.ClientIP(r), Header: r.Header, HttpReq: r, Redirect: true})
+		link, _, err := fs.Link(ctx, reqPath, model.LinkArgs{IP: utils.ClientIP(r), Header: r.Header, Redirect: true})
 		if err != nil {
 			return http.StatusInternalServerError, err
 		}
@@ -639,7 +638,7 @@ func (h *Handler) handleLock(w http.ResponseWriter, r *http.Request) (retStatus 
 		}
 		ld, err = h.LockSystem.Refresh(now, token, duration)
 		if err != nil {
-			if err == ErrNoSuchLock {
+			if errors.Is(err, ErrNoSuchLock) {
 				return http.StatusPreconditionFailed, err
 			}
 			return http.StatusInternalServerError, err
@@ -673,7 +672,7 @@ func (h *Handler) handleLock(w http.ResponseWriter, r *http.Request) (retStatus 
 		}
 		token, err = h.LockSystem.Create(now, ld)
 		if err != nil {
-			if err == ErrLocked {
+			if errors.Is(err, ErrLocked) {
 				return StatusLocked, err
 			}
 			return http.StatusInternalServerError, err

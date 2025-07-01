@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	sdk "github.com/xhofe/115-sdk-go"
+	sdk "github.com/OpenListTeam/115-sdk-go"
 	"golang.org/x/time/rate"
 
 	"github.com/dongdio/OpenList/drivers/base"

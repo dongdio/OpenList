@@ -3,7 +3,7 @@ package op
 import (
 	"time"
 
-	"github.com/Xhofe/go-cache"
+	"github.com/OpenListTeam/go-cache"
 
 	"github.com/dongdio/OpenList/internal/db"
 	"github.com/dongdio/OpenList/internal/model"

@@ -4,8 +4,8 @@ import (
 	"math"
 	"time"
 
+	"github.com/OpenListTeam/tache"
 	"github.com/gin-gonic/gin"
-	"github.com/xhofe/tache"
 
 	"github.com/dongdio/OpenList/internal/fs"
 	"github.com/dongdio/OpenList/internal/model"

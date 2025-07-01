@@ -1,8 +1,8 @@
 package authn
 
 import (
+	"context"
 	"fmt"
-	"net/http"
 	"net/url"
 
 	"github.com/go-webauthn/webauthn/webauthn"
@@ -12,8 +12,8 @@ import (
 	"github.com/dongdio/OpenList/server/common"
 )
 
-func NewAuthnInstance(r *http.Request) (*webauthn.WebAuthn, error) {
-	siteUrl, err := url.Parse(common.GetApiUrl(r))
+func NewAuthnInstance(ctx context.Context) (*webauthn.WebAuthn, error) {
+	siteUrl, err := url.Parse(common.GetApiUrl(ctx))
 	if err != nil {
 		return nil, err
 	}

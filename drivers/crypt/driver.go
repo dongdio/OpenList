@@ -13,8 +13,6 @@ import (
 	"github.com/rclone/rclone/fs/config/obscure"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/dongdio/OpenList/utility/stream"
-
 	"github.com/dongdio/OpenList/internal/driver"
 	"github.com/dongdio/OpenList/internal/fs"
 	"github.com/dongdio/OpenList/internal/model"
@@ -23,6 +21,7 @@ import (
 	"github.com/dongdio/OpenList/server/common"
 	"github.com/dongdio/OpenList/utility/errs"
 	"github.com/dongdio/OpenList/utility/http_range"
+	"github.com/dongdio/OpenList/utility/stream"
 	"github.com/dongdio/OpenList/utility/utils"
 )
 
@@ -165,7 +164,7 @@ func (d *Crypt) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([
 			if d.Thumbnail && thumb == "" {
 				thumbPath := stdpath.Join(args.ReqPath, ".thumbnails", name+".webp")
 				thumb = fmt.Sprintf("%s/d%s?sign=%s",
-					common.GetApiUrl(common.GetHttpReq(ctx)),
+					common.GetApiUrl(ctx),
 					utils.EncodePath(thumbPath, true),
 					sign.Sign(thumbPath))
 			}

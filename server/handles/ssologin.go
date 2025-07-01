@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Xhofe/go-cache"
+	"github.com/OpenListTeam/go-cache"
 	"github.com/coreos/go-oidc"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/oauth2"
@@ -83,9 +83,9 @@ func verifyState(clientID, ip, state string) bool {
 // 构建SSO重定向URI
 func ssoRedirectUri(c *gin.Context, useCompatibility bool, method string) string {
 	if useCompatibility {
-		return common.GetApiUrl(c.Request) + "/api/auth/" + method
+		return common.GetApiUrl(c) + "/api/auth/" + method
 	}
-	return common.GetApiUrl(c.Request) + "/api/auth/sso_callback" + "?method=" + method
+	return common.GetApiUrl(c) + "/api/auth/sso_callback" + "?method=" + method
 }
 
 // SSOLoginRedirect 处理SSO登录重定向
@@ -189,7 +189,7 @@ func GetOIDCClient(c *gin.Context, useCompatibility bool, redirectUri, method st
 	clientSecret := setting.GetStr(consts.SSOClientSecret)
 
 	// 处理额外的作用域
-	extraScopes := []string{}
+	var extraScopes []string
 	if extraScopesStr := setting.GetStr(consts.SSOExtraScopes); extraScopesStr != "" {
 		extraScopes = strings.Split(extraScopesStr, " ")
 	}
@@ -366,7 +366,7 @@ func OIDCLoginCallback(c *gin.Context) {
 	// 处理获取SSO ID请求
 	if method == MethodGetSSOID {
 		if useCompatibility {
-			c.Redirect(http.StatusFound, common.GetApiUrl(c.Request)+"/@manage?sso_id="+userID)
+			c.Redirect(http.StatusFound, common.GetApiUrl(c)+"/@manage?sso_id="+userID)
 			return
 		}
 
@@ -376,35 +376,33 @@ func OIDCLoginCallback(c *gin.Context) {
 	}
 
 	// 处理获取令牌请求
-	if method == MethodGetToken {
-		// 获取用户信息
-		user, err := db.GetUserBySSOID(userID)
-		if err != nil {
-			// 尝试自动注册
-			user, err = autoRegister(userID, userID, err)
-			if err != nil {
-				common.ErrorResp(c, err, 400)
-				return
-			}
-		}
-
-		// 生成令牌
-		token, err := common.GenerateToken(user)
+	// 获取用户信息
+	user, err := db.GetUserBySSOID(userID)
+	if err != nil {
+		// 尝试自动注册
+		user, err = autoRegister(userID, userID, err)
 		if err != nil {
 			common.ErrorResp(c, err, 400)
 			return
 		}
+	}
 
-		// 返回令牌
-		if useCompatibility {
-			c.Redirect(http.StatusFound, common.GetApiUrl(c.Request)+"/@login?token="+token)
-			return
-		}
-
-		c.Data(http.StatusOK, "text/html; charset=utf-8",
-			[]byte(generatePostMessageHTML(map[string]string{"token": token})))
+	// 生成令牌
+	token, err := common.GenerateToken(user)
+	if err != nil {
+		common.ErrorResp(c, err, 400)
 		return
 	}
+
+	// 返回令牌
+	if useCompatibility {
+		c.Redirect(http.StatusFound, common.GetApiUrl(c)+"/@login?token="+token)
+		return
+	}
+
+	c.Data(http.StatusOK, "text/html; charset=utf-8",
+		[]byte(generatePostMessageHTML(map[string]string{"token": token})))
+	return
 }
 
 // SSOLoginCallback 处理SSO登录回调
@@ -587,7 +585,7 @@ func SSOLoginCallback(c *gin.Context) {
 	// 处理获取SSO ID请求
 	if method == MethodGetSSOID {
 		if useCompatibility {
-			c.Redirect(http.StatusFound, common.GetApiUrl(c.Request)+"/@manage?sso_id="+userID)
+			c.Redirect(http.StatusFound, common.GetApiUrl(c)+"/@manage?sso_id="+userID)
 			return
 		}
 
@@ -620,7 +618,7 @@ func SSOLoginCallback(c *gin.Context) {
 
 	// 返回令牌
 	if useCompatibility {
-		c.Redirect(http.StatusFound, common.GetApiUrl(c.Request)+"/@login?token="+token)
+		c.Redirect(http.StatusFound, common.GetApiUrl(c)+"/@login?token="+token)
 		return
 	}
 

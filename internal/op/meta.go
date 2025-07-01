@@ -5,7 +5,7 @@ import (
 	stdpath "path"
 	"time"
 
-	"github.com/Xhofe/go-cache"
+	"github.com/OpenListTeam/go-cache"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 

@@ -358,7 +358,7 @@ func FsGet(c *gin.Context) {
 					sign.Sign(reqPath))
 			} else {
 				rawURL = fmt.Sprintf("%s/p%s%s",
-					common.GetApiUrl(c.Request),
+					common.GetApiUrl(c),
 					utils.EncodePath(reqPath, true),
 					query)
 			}
@@ -371,7 +371,6 @@ func FsGet(c *gin.Context) {
 				link, _, err := fs.Link(c, reqPath, model.LinkArgs{
 					IP:       c.ClientIP(),
 					Header:   c.Request.Header,
-					HttpReq:  c.Request,
 					Redirect: true,
 				})
 				if err != nil {

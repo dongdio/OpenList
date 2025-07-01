@@ -140,7 +140,7 @@ func (d *Local) FileInfoToObj(ctx context.Context, f fs.FileInfo, reqPath string
 	if d.Thumbnail {
 		typeName := utils.GetFileType(f.Name())
 		if typeName == consts.IMAGE || typeName == consts.VIDEO {
-			thumb = common.GetApiUrl(common.GetHttpReq(ctx)) + stdpath.Join("/d", reqPath, f.Name())
+			thumb = common.GetApiUrl(ctx) + stdpath.Join("/d", reqPath, f.Name())
 			thumb = utils.EncodePath(thumb, true)
 			thumb += "?type=thumb&sign=" + sign.Sign(stdpath.Join(reqPath, f.Name()))
 		}

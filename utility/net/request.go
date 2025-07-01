@@ -157,8 +157,6 @@ func (d *downloader) download() (io.ReadCloser, error) {
 	if err := d.concurrencyCheck(); err != nil {
 		return nil, err
 	}
-	d.ctx, d.cancel = context.WithCancelCause(d.ctx)
-
 	maxPart := int(d.params.Range.Length / int64(d.cfg.PartSize))
 	if d.params.Range.Length%int64(d.cfg.PartSize) > 0 {
 		maxPart++
@@ -169,21 +167,30 @@ func (d *downloader) download() (io.ReadCloser, error) {
 	if d.params.Range.Length == 0 {
 		d.cfg.Concurrency = 1
 	}
-	log.Debugf("cfgConcurrency:%d", d.cfg.Concurrency)
+	log.Debugf("download cfgConcurrency:%d", d.cfg.Concurrency)
 
-	if d.cfg.Concurrency == 1 {
-		if d.cfg.ConcurrencyLimit != nil {
-			go func() {
-				<-d.ctx.Done()
-				d.concurrencyFinish()
-			}()
-		}
+	if maxPart == 1 {
 		resp, err := d.cfg.HttpClient(d.ctx, d.params)
 		if err != nil {
+			d.concurrencyFinish()
 			return nil, err
 		}
+		closeFunc := resp.Body.Close
+		resp.Body = utils.NewReadCloser(resp.Body, func() error {
+			d.m.Lock()
+			defer d.m.Unlock()
+			if closeFunc != nil {
+				d.concurrencyFinish()
+				err := closeFunc()
+				closeFunc = nil
+				return err
+			}
+			return nil
+		})
 		return resp.Body, nil
 	}
+
+	d.ctx, d.cancel = context.WithCancelCause(d.ctx)
 
 	// workers
 	d.chunkChannel = make(chan chunk, d.cfg.Concurrency)

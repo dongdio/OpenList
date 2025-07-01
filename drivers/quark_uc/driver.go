@@ -12,12 +12,11 @@ import (
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
 
-	streamPkg "github.com/dongdio/OpenList/utility/stream"
-
 	"github.com/dongdio/OpenList/drivers/base"
 	"github.com/dongdio/OpenList/internal/driver"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/utility/errs"
+	streamPkg "github.com/dongdio/OpenList/utility/stream"
 	"github.com/dongdio/OpenList/utility/utils"
 )
 
@@ -50,35 +49,15 @@ func (d *QuarkOrUC) List(ctx context.Context, dir model.Obj, args model.ListArgs
 	if err != nil {
 		return nil, err
 	}
-	return utils.SliceConvert(files, func(src File) (model.Obj, error) {
-		return fileToObj(src), nil
-	})
+	return files, nil
 }
 
 func (d *QuarkOrUC) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
-	data := base.Json{
-		"fids": []string{file.GetID()},
+	f := file.(*File)
+	if d.UseTransCodingAddress && d.config.Name == "Quark" && f.Category == 1 && f.Size > 0 {
+		return d.getTranscodingLink(file)
 	}
-	var resp DownResp
-	ua := d.conf.ua
-	_, err := d.request("/file/download", http.MethodPost, func(req *resty.Request) {
-		req.SetHeader("User-Agent", ua).
-			SetBody(data)
-	}, &resp)
-	if err != nil {
-		return nil, err
-	}
-
-	return &model.Link{
-		URL: resp.Data[0].DownloadUrl,
-		Header: http.Header{
-			"Cookie":     []string{d.Cookie},
-			"Referer":    []string{d.conf.referer},
-			"User-Agent": []string{ua},
-		},
-		Concurrency: 3,
-		PartSize:    10 * utils.MB,
-	}, nil
+	return d.getDownloadLink(file)
 }
 
 func (d *QuarkOrUC) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {

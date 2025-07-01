@@ -148,5 +148,6 @@ const (
 // ContextKey is the type of context keys.
 const (
 	NoTaskKey = "no_task"
+	ApiUrlKey = "api_url"
 	MetaKey   = "meta"
 )

@@ -21,7 +21,7 @@ const (
 
 	// LongDescription is the long description shown in help text
 	LongDescription = `A file list program that supports multiple storage,
-built with love by Xhofe and friends in Go/Solid.js.
+built with love by dongdio.
 Complete documentation is available at https://docs.openlist.team/`
 )
 

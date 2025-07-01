@@ -6,7 +6,7 @@ import (
 	"image/png"
 	"time"
 
-	"github.com/Xhofe/go-cache"
+	"github.com/OpenListTeam/go-cache"
 	"github.com/gin-gonic/gin"
 	"github.com/pquerna/otp/totp"
 

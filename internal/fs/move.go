@@ -8,8 +8,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/OpenListTeam/tache"
 	"github.com/pkg/errors"
-	"github.com/xhofe/tache"
 
 	"github.com/dongdio/OpenList/internal/driver"
 	"github.com/dongdio/OpenList/internal/model"

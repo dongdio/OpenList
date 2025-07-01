@@ -9,8 +9,6 @@ import (
 	"os"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
-
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/utility/http_range"
 	net2 "github.com/dongdio/OpenList/utility/net"
@@ -71,7 +69,7 @@ func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.
 			RangeReadCloserIF: link.RangeReadCloser,
 			Limiter:           stream.ServerDownloadLimit,
 		})
-	} else if link.Concurrency != 0 || link.PartSize != 0 {
+	} else if link.Concurrency > 0 || link.PartSize > 0 {
 		// 使用分块下载处理大文件
 		attachHeader(w, file)
 		size := file.GetSize()
@@ -179,9 +177,6 @@ func GetEtag(file model.Obj) string {
 	return fmt.Sprintf(`"%x-%x"`, file.ModTime().Unix(), file.GetSize())
 }
 
-// NoProxyRange 表示不使用代理的标记
-var NoProxyRange = &model.RangeReadCloser{}
-
 // ProxyRange 为链接设置范围读取器
 // 如果链接已经有MFile，则不需要设置
 // 如果链接的RangeReadCloser为NoProxyRange，则设置为nil
@@ -189,7 +184,7 @@ var NoProxyRange = &model.RangeReadCloser{}
 // 参数:
 //   - link: 链接对象
 //   - size: 文件大小
-func ProxyRange(link *model.Link, size int64) {
+func ProxyRange(ctx context.Context, link *model.Link, size int64) {
 	if link == nil {
 		return
 	}
@@ -200,16 +195,12 @@ func ProxyRange(link *model.Link, size int64) {
 	}
 
 	// 如果RangeReadCloser为nil，尝试从链接创建
-	if link.RangeReadCloser == nil {
+	if link.RangeReadCloser == nil && !strings.HasPrefix(link.URL, GetApiUrl(ctx)+"/") {
 		var rrc, err = stream.GetRangeReadCloserFromLink(size, link)
 		if err != nil {
-			log.Warnf("ProxyRange错误: %s", err)
 			return
 		}
 		link.RangeReadCloser = rrc
-	} else if link.RangeReadCloser == NoProxyRange {
-		// 如果是NoProxyRange标记，设置为nil
-		link.RangeReadCloser = nil
 	}
 }
 

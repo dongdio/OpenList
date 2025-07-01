@@ -55,7 +55,7 @@ func BeginAuthnLogin(c *gin.Context) {
 	}
 
 	// 创建 WebAuthn 实例
-	authnInstance, err := authn.NewAuthnInstance(c.Request)
+	authnInstance, err := authn.NewAuthnInstance(c)
 	if err != nil {
 		common.ErrorResp(c, fmt.Errorf("创建 WebAuthn 实例失败: %w", err), 400)
 		return
@@ -110,7 +110,7 @@ func FinishAuthnLogin(c *gin.Context) {
 	}
 
 	// 创建 WebAuthn 实例
-	authnInstance, err := authn.NewAuthnInstance(c.Request)
+	authnInstance, err := authn.NewAuthnInstance(c)
 	if err != nil {
 		common.ErrorResp(c, fmt.Errorf("创建 WebAuthn 实例失败: %w", err), 400)
 		return
@@ -186,7 +186,7 @@ func BeginAuthnRegistration(c *gin.Context) {
 	user := c.MustGet("user").(*model.User)
 
 	// 创建 WebAuthn 实例
-	authnInstance, err := authn.NewAuthnInstance(c.Request)
+	authnInstance, err := authn.NewAuthnInstance(c)
 	if err != nil {
 		common.ErrorResp(c, fmt.Errorf("创建 WebAuthn 实例失败: %w", err), 400)
 		return
@@ -233,7 +233,7 @@ func FinishAuthnRegistration(c *gin.Context) {
 	}
 
 	// 创建 WebAuthn 实例
-	authnInstance, err := authn.NewAuthnInstance(c.Request)
+	authnInstance, err := authn.NewAuthnInstance(c)
 	if err != nil {
 		common.ErrorResp(c, fmt.Errorf("创建 WebAuthn 实例失败: %w", err), 400)
 		return

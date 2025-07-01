@@ -3,7 +3,7 @@ package _115_open
 import (
 	"time"
 
-	sdk "github.com/xhofe/115-sdk-go"
+	sdk "github.com/OpenListTeam/115-sdk-go"
 
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/utility/utils"

@@ -157,7 +157,7 @@ func InitialSettings() []model.SettingItem {
 ([[:xdigit:]]{1,4}(?::[[:xdigit:]]{1,4}){7}|::|:(?::[[:xdigit:]]{1,4}){1,6}|[[:xdigit:]]{1,4}:(?::[[:xdigit:]]{1,4}){1,5}|(?:[[:xdigit:]]{1,4}:){2}(?::[[:xdigit:]]{1,4}){1,4}|(?:[[:xdigit:]]{1,4}:){3}(?::[[:xdigit:]]{1,4}){1,3}|(?:[[:xdigit:]]{1,4}:){4}(?::[[:xdigit:]]{1,4}){1,2}|(?:[[:xdigit:]]{1,4}:){5}:[[:xdigit:]]{1,4}|(?:[[:xdigit:]]{1,4}:){1,6}:)
 (?U)access_token=(.*)&`,
 			Type: consts.TypeText, Group: model.GLOBAL, Flag: model.PRIVATE},
-		{Key: consts.OcrApi, Value: "https://api.example.com/ocr/file/json", Type: consts.TypeString, Group: model.GLOBAL}, // TODO: This can be replace by a community-hosted endpoint, see https://github.com/xhofe/ocr_api_server
+		{Key: consts.OcrApi, Value: "https://api.example.com/ocr/file/json", Type: consts.TypeString, Group: model.GLOBAL}, // TODO: This can be replace by a community-hosted endpoint, see https://github.com/OpenListTeam/ocr_api_server
 		{Key: consts.FilenameCharMapping, Value: `{"/": "|"}`, Type: consts.TypeText, Group: model.GLOBAL},
 		{Key: consts.ForwardDirectLinkParams, Value: "false", Type: consts.TypeBool, Group: model.GLOBAL},
 		{Key: consts.IgnoreDirectLinkParams, Value: "sign,openlist_ts", Type: consts.TypeString, Group: model.GLOBAL},
