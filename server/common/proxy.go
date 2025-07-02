@@ -9,6 +9,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/pkg/errors"
+
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/utility/http_range"
 	net2 "github.com/dongdio/OpenList/utility/net"
@@ -34,7 +36,7 @@ import (
 func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.Obj) error {
 	// 参数检查
 	if link == nil || file == nil {
-		return fmt.Errorf("无效的链接或文件")
+		return errors.Errorf("无效的链接或文件")
 	}
 
 	// 使用MFile直接提供文件内容

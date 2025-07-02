@@ -10,15 +10,15 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-
-	streamPkg "github.com/dongdio/OpenList/utility/stream"
 
 	"github.com/dongdio/OpenList/drivers/base"
 	"github.com/dongdio/OpenList/internal/driver"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/utility/cron"
 	"github.com/dongdio/OpenList/utility/errs"
+	streamPkg "github.com/dongdio/OpenList/utility/stream"
 	"github.com/dongdio/OpenList/utility/utils"
 	"github.com/dongdio/OpenList/utility/utils/random"
 )
@@ -43,7 +43,7 @@ func (d *Yun139) GetAddition() driver.Additional {
 func (d *Yun139) Init(ctx context.Context) error {
 	if d.ref == nil {
 		if len(d.Authorization) == 0 {
-			return fmt.Errorf("authorization is empty")
+			return errors.Errorf("authorization is empty")
 		}
 		err := d.refreshToken()
 		if err != nil {
@@ -69,7 +69,7 @@ func (d *Yun139) Init(ctx context.Context) error {
 			}
 		}
 		if len(d.PersonalCloudHost) == 0 {
-			return fmt.Errorf("PersonalCloudHost is empty")
+			return errors.Errorf("PersonalCloudHost is empty")
 		}
 
 		d.cron = cron.NewCron(time.Hour * 12)
@@ -656,7 +656,7 @@ func (d *Yun139) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 				_ = res.Body.Close()
 				log.Debugf("[139] uploaded: %+v", res)
 				if res.StatusCode != http.StatusOK {
-					return fmt.Errorf("unexpected status code: %d", res.StatusCode)
+					return errors.Errorf("unexpected status code: %d", res.StatusCode)
 				}
 			}
 
@@ -782,7 +782,7 @@ func (d *Yun139) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 			return err
 		}
 		if resp.Data.Result.ResultCode != "0" {
-			return fmt.Errorf("get file upload url failed with result code: %s, message: %s", resp.Data.Result.ResultCode, resp.Data.Result.ResultDesc)
+			return errors.Errorf("get file upload url failed with result code: %s, message: %s", resp.Data.Result.ResultCode, resp.Data.Result.ResultDesc)
 		}
 
 		size := stream.GetSize()
@@ -826,19 +826,19 @@ func (d *Yun139) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 			}
 			if res.StatusCode != http.StatusOK {
 				res.Body.Close()
-				return fmt.Errorf("unexpected status code: %d", res.StatusCode)
+				return errors.Errorf("unexpected status code: %d", res.StatusCode)
 			}
 			bodyBytes, err := io.ReadAll(res.Body)
 			if err != nil {
-				return fmt.Errorf("error reading response body: %v", err)
+				return errors.Errorf("error reading response body: %v", err)
 			}
 			var result InterLayerUploadResult
 			err = xml.Unmarshal(bodyBytes, &result)
 			if err != nil {
-				return fmt.Errorf("error parsing XML: %v", err)
+				return errors.Errorf("error parsing XML: %v", err)
 			}
 			if result.ResultCode != 0 {
-				return fmt.Errorf("upload failed with result code: %d, message: %s", result.ResultCode, result.Msg)
+				return errors.Errorf("upload failed with result code: %d, message: %s", result.ResultCode, result.Msg)
 			}
 		}
 		return nil

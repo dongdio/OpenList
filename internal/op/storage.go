@@ -142,11 +142,11 @@ func initStorage(ctx context.Context, storage model.Storage, storageDriver drive
 
 				refStorage, refErr := GetStorageByMountPath(refMountPath)
 				if refErr != nil {
-					err = fmt.Errorf("reference error: %w", refErr)
+					err = errors.Errorf("reference error: %w", refErr)
 				} else {
 					if initErr := ref.InitReference(refStorage); initErr != nil {
 						if errs.IsNotSupportError(initErr) {
-							err = fmt.Errorf("reference error: storage is not compatible with %s", storageDriver.Config().Name)
+							err = errors.Errorf("reference error: storage is not compatible with %s", storageDriver.Config().Name)
 						} else {
 							err = initErr
 						}

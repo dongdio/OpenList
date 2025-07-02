@@ -1,9 +1,7 @@
 package aliyundrive_share
 
 import (
-	"errors"
-	"fmt"
-
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/dongdio/OpenList/drivers/base"
@@ -29,7 +27,7 @@ func (d *AliyundriveShare) refreshToken() error {
 		return err
 	}
 	if e.Code != "" {
-		return fmt.Errorf("failed to refresh token: %s", e.Message)
+		return errors.Errorf("failed to refresh token: %s", e.Message)
 	}
 	d.RefreshToken, d.AccessToken = resp.RefreshToken, resp.AccessToken
 	op.MustSaveDriverStorage(d)

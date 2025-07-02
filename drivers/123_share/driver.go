@@ -3,15 +3,14 @@ package _123Share
 import (
 	"context"
 	"encoding/base64"
-	"fmt"
 	"net/http"
 	"net/url"
 	"sync"
 	"time"
 
-	"golang.org/x/time/rate"
-
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/time/rate"
 	"resty.dev/v3"
 
 	_123 "github.com/dongdio/OpenList/drivers/123"
@@ -49,7 +48,7 @@ func (d *Pan123Share) InitReference(storage driver.Driver) error {
 		d.ref = refStorage
 		return nil
 	}
-	return fmt.Errorf("ref: storage is not 123Pan")
+	return errors.Errorf("ref: storage is not 123Pan")
 }
 
 func (d *Pan123Share) Drop(ctx context.Context) error {
@@ -127,7 +126,7 @@ func (d *Pan123Share) Link(ctx context.Context, file model.Obj, args model.LinkA
 		}
 		return &link, nil
 	}
-	return nil, fmt.Errorf("can't convert obj")
+	return nil, errors.Errorf("can't convert obj")
 }
 
 func (d *Pan123Share) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {

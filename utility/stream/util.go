@@ -3,10 +3,10 @@ package stream
 import (
 	"context"
 	"encoding/hex"
-	"fmt"
 	"io"
 	"net/http"
 
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/dongdio/OpenList/internal/model"
@@ -17,7 +17,7 @@ import (
 
 func GetRangeReadCloserFromLink(size int64, link *model.Link) (model.RangeReadCloserIF, error) {
 	if len(link.URL) == 0 {
-		return nil, fmt.Errorf("can't create RangeReadCloser since URL is empty in link")
+		return nil, errors.Errorf("can't create RangeReadCloser since URL is empty in link")
 	}
 	rangeReaderFunc := func(ctx context.Context, r http_range.Range) (io.ReadCloser, error) {
 		if link.Concurrency > 0 || link.PartSize > 0 {
@@ -39,7 +39,7 @@ func GetRangeReadCloserFromLink(size int64, link *model.Link) (model.RangeReadCl
 		response, err := RequestRangedHttp(ctx, link, r.Start, r.Length)
 		if err != nil {
 			if response == nil {
-				return nil, fmt.Errorf("http request failure, err:%s", err)
+				return nil, errors.Errorf("http request failure, err:%s", err)
 			}
 			return nil, err
 		}

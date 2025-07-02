@@ -4,7 +4,6 @@ package odrvcookie
 import (
 	"bytes"
 	"encoding/xml"
-	"fmt"
 	"html/template"
 	"net/http"
 	"net/http/cookiejar"
@@ -12,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
 	"golang.org/x/net/publicsuffix"
 
 	"github.com/dongdio/OpenList/drivers/base"
@@ -156,7 +156,7 @@ func getLoginUrl(endpoint string) (string, error) {
 	tld := domains[len(domains)-1]
 	loginUrl, ok := loginUrlsMap[tld]
 	if !ok {
-		return "", fmt.Errorf("tld %s is not supported", tld)
+		return "", errors.Errorf("tld %s is not supported", tld)
 	}
 	return loginUrl + "/extSTS.srf", nil
 }

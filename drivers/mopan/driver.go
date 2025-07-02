@@ -2,8 +2,6 @@ package mopan
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -12,6 +10,7 @@ import (
 
 	"github.com/avast/retry-go"
 	"github.com/foxxorcat/mopan-sdk-go"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/dongdio/OpenList/drivers/base"
@@ -326,7 +325,7 @@ func (d *MoPan) Put(ctx context.Context, dstDir model.Obj, stream model.FileStre
 				}
 				_ = resp.Body.Close()
 				if resp.StatusCode != http.StatusOK {
-					return fmt.Errorf("upload err,code=%d", resp.StatusCode)
+					return errors.Errorf("upload err,code=%d", resp.StatusCode)
 				}
 				up(100 * float64(threadG.Success()) / float64(len(parts)))
 				initUpdload.PartInfos[i] = ""

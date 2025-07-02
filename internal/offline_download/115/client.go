@@ -2,15 +2,15 @@ package _115
 
 import (
 	"context"
-	"fmt"
+
+	"github.com/pkg/errors"
 
 	"github.com/dongdio/OpenList/consts"
-	"github.com/dongdio/OpenList/internal/setting"
-
 	_115 "github.com/dongdio/OpenList/drivers/115"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/offline_download/tool"
 	"github.com/dongdio/OpenList/internal/op"
+	"github.com/dongdio/OpenList/internal/setting"
 	"github.com/dongdio/OpenList/utility/errs"
 )
 
@@ -59,7 +59,7 @@ func (p *Cloud115) AddURL(args *tool.AddUrlArgs) (string, error) {
 	}
 	driver115, ok := storage.(*_115.Pan115)
 	if !ok {
-		return "", fmt.Errorf("unsupported storage driver for offline download, only 115 Cloud is supported")
+		return "", errors.Errorf("unsupported storage driver for offline download, only 115 Cloud is supported")
 	}
 
 	ctx := context.Background()
@@ -75,7 +75,7 @@ func (p *Cloud115) AddURL(args *tool.AddUrlArgs) (string, error) {
 
 	hashs, err := driver115.OfflineDownload(ctx, []string{args.Url}, parentDir)
 	if err != nil || len(hashs) < 1 {
-		return "", fmt.Errorf("failed to add offline download task: %w", err)
+		return "", errors.Errorf("failed to add offline download task: %w", err)
 	}
 
 	return hashs[0], nil
@@ -88,7 +88,7 @@ func (p *Cloud115) Remove(task *tool.DownloadTask) error {
 	}
 	driver115, ok := storage.(*_115.Pan115)
 	if !ok {
-		return fmt.Errorf("unsupported storage driver for offline download, only 115 Cloud is supported")
+		return errors.Errorf("unsupported storage driver for offline download, only 115 Cloud is supported")
 	}
 
 	ctx := context.Background()
@@ -105,7 +105,7 @@ func (p *Cloud115) Status(task *tool.DownloadTask) (*tool.Status, error) {
 	}
 	driver115, ok := storage.(*_115.Pan115)
 	if !ok {
-		return nil, fmt.Errorf("unsupported storage driver for offline download, only 115 Cloud is supported")
+		return nil, errors.Errorf("unsupported storage driver for offline download, only 115 Cloud is supported")
 	}
 
 	tasks, err := driver115.OfflineList(context.Background())
@@ -127,12 +127,12 @@ func (p *Cloud115) Status(task *tool.DownloadTask) (*tool.Status, error) {
 			s.Completed = t.IsDone()
 			s.TotalBytes = t.Size
 			if t.IsFailed() {
-				s.Err = fmt.Errorf(t.GetStatus())
+				s.Err = errors.Errorf(t.GetStatus())
 			}
 			return s, nil
 		}
 	}
-	s.Err = fmt.Errorf("the task has been deleted")
+	s.Err = errors.Errorf("the task has been deleted")
 	return nil, nil
 }
 

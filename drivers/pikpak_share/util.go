@@ -4,18 +4,17 @@ import (
 	"crypto/md5"
 	"crypto/sha1"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
 	"strings"
 	"time"
 
-	"github.com/dongdio/OpenList/utility/utils"
-
+	"github.com/pkg/errors"
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/drivers/base"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 var AndroidAlgorithms = []string{
@@ -320,7 +319,7 @@ func (d *PikPakShare) refreshCaptchaToken(action string, metas map[string]string
 	}
 
 	// if resp.Url != "" {
-	//	return fmt.Errorf(`need verify: <a target="_blank" href="%s">Click Here</a>`, resp.Url)
+	//	return errors.Errorf(`need verify: <a target="_blank" href="%s">Click Here</a>`, resp.Url)
 	// }
 
 	if d.Common.RefreshCTokenCk != nil {

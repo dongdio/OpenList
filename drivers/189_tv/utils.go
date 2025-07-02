@@ -11,15 +11,16 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
+	"github.com/pkg/errors"
+	"github.com/skip2/go-qrcode"
+	"resty.dev/v3"
+
 	"github.com/dongdio/OpenList/drivers/base"
 	"github.com/dongdio/OpenList/internal/driver"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/op"
 	"github.com/dongdio/OpenList/utility/utils"
-	"github.com/google/uuid"
-	"github.com/pkg/errors"
-	"github.com/skip2/go-qrcode"
-	"resty.dev/v3"
 )
 
 const (
@@ -237,7 +238,7 @@ func (y *Cloud189TV) login() (err error) {
 			// Generate QR code
 			qrCode, err := qrcode.Encode(uuidInfo.Uuid, qrcode.Medium, 256)
 			if err != nil {
-				return fmt.Errorf("failed to generate QR code: %v", err)
+				return errors.Errorf("failed to generate QR code: %v", err)
 			}
 
 			// Encode QR code to base64
@@ -245,7 +246,7 @@ func (y *Cloud189TV) login() (err error) {
 
 			// Create the HTML page
 			qrPage := fmt.Sprintf(qrTemplate, qrCodeBase64, uuidInfo.Uuid, uuidInfo.Uuid)
-			return fmt.Errorf("need verify: \n%s", qrPage)
+			return errors.Errorf("need verify: \n%s", qrPage)
 
 		} else {
 			var accessTokenResp E189AccessTokenResp
@@ -468,7 +469,7 @@ func (y *Cloud189TV) getFamilyID() (string, error) {
 		return "", err
 	}
 	if len(infos) == 0 {
-		return "", fmt.Errorf("cannot get automatically,please input family_id")
+		return "", errors.Errorf("cannot get automatically,please input family_id")
 	}
 	for _, info := range infos {
 		if strings.Contains(y.tokenInfo.LoginName, info.RemarkName) {

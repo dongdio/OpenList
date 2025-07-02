@@ -4,12 +4,11 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
-	"errors"
-	"fmt"
 	"hash"
 	"io"
 	"net/http"
 
+	"github.com/pkg/errors"
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/drivers/base"
@@ -220,7 +219,7 @@ func (d *QuarkOpen) Put(ctx context.Context, dstDir model.Obj, stream model.File
 		reader := driver.NewLimitedUploadStream(ctx, bytes.NewReader(part))
 		etag, err := d.upPart(ctx, upUrlInfo, i, reader)
 		if err != nil {
-			return fmt.Errorf("failed to upload part %d: %w", i, err)
+			return errors.Errorf("failed to upload part %d: %w", i, err)
 		}
 
 		// 保存ETag，用于后续commit

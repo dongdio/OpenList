@@ -2,7 +2,6 @@ package lanzou
 
 import (
 	"bytes"
-	"fmt"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -10,6 +9,7 @@ import (
 	"time"
 	"unicode"
 
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -126,7 +126,7 @@ func CalcAcwScV2(html string) (string, error) {
 	log.Debugln("acw_sc__v2", html)
 	acwScV2s := findAcwScV2Reg.FindStringSubmatch(html)
 	if len(acwScV2s) != 2 {
-		return "", fmt.Errorf("无法匹配acw_sc__v2")
+		return "", errors.Errorf("无法匹配acw_sc__v2")
 	}
 	return HexXor(Unbox(acwScV2s[1]), "3000176000856006061501533003690027800375"), nil
 }
@@ -236,7 +236,7 @@ func getJSFunctionByName(html string, name string) (string, error) {
 			return data, nil
 		}
 	}
-	return "", fmt.Errorf("not find %s function", name)
+	return "", errors.Errorf("not find %s function", name)
 }
 
 // 解析html中的JSON,选择最长的数据
@@ -249,7 +249,7 @@ func htmlJsonToMap2(html string) (map[string]string, error) {
 		}
 	}
 	if sData == "" {
-		return nil, fmt.Errorf("not find data")
+		return nil, errors.Errorf("not find data")
 	}
 	return jsonToMap(sData, html), nil
 }
@@ -258,7 +258,7 @@ func htmlJsonToMap2(html string) (map[string]string, error) {
 func htmlJsonToMap(html string) (map[string]string, error) {
 	datas := findDataReg.FindStringSubmatch(html)
 	if len(datas) != 2 {
-		return nil, fmt.Errorf("not find data")
+		return nil, errors.Errorf("not find data")
 	}
 	return jsonToMap(datas[1], html), nil
 }
@@ -292,7 +292,7 @@ var findFromReg = regexp.MustCompile(`data : '(.+?)'`) // 查找from字符串
 func htmlFormToMap(html string) (map[string]string, error) {
 	forms := findFromReg.FindStringSubmatch(html)
 	if len(forms) != 2 {
-		return nil, fmt.Errorf("not find file sgin")
+		return nil, errors.Errorf("not find file sgin")
 	}
 	return formToMap(forms[1]), nil
 }

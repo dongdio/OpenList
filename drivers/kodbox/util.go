@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/pkg/errors"
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/drivers/base"
@@ -23,11 +24,11 @@ func (d *KodBox) getToken() error {
 		return err
 	}
 	if res.StatusCode() >= 400 {
-		return fmt.Errorf("get token failed: %s", res.String())
+		return errors.Errorf("get token failed: %s", res.String())
 	}
 
 	if res.StatusCode() == 200 && authResp.Code.(bool) == false {
-		return fmt.Errorf("get token failed: %s", res.String())
+		return errors.Errorf("get token failed: %s", res.String())
 	}
 
 	d.authorization = fmt.Sprintf("%s", authResp.Info)
@@ -82,7 +83,7 @@ func (d *KodBox) request(method string, pathname string, callback base.ReqCallba
 		}
 	}
 	if commonResp.Code.(bool) == false {
-		return nil, fmt.Errorf("request failed: %s", commonResp.Data)
+		return nil, errors.Errorf("request failed: %s", commonResp.Data)
 	}
 	return res.Bytes(), nil
 }

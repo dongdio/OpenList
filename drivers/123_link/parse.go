@@ -1,12 +1,13 @@
 package _123Link
 
 import (
-	"fmt"
 	url2 "net/url"
 	stdpath "path"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 // build tree from text, text structure definition:
@@ -44,7 +45,7 @@ func BuildTree(text string) (*Node, error) {
 		}
 		// if indent is not a multiple of 2, it is an error
 		if indent%2 != 0 {
-			return nil, fmt.Errorf("the line '%s' is not a multiple of 2", line)
+			return nil, errors.Errorf("the line '%s' is not a multiple of 2", line)
 		}
 		// calculate level
 		level := indent / 2
@@ -94,7 +95,7 @@ func isFolder(line string) bool {
 func parseFileLine(line string) (*Node, error) {
 	// if there is no url, it is an error
 	if !strings.Contains(line, "http://") && !strings.Contains(line, "https://") {
-		return nil, fmt.Errorf("invalid line: %s, because url is required for file", line)
+		return nil, errors.Errorf("invalid line: %s, because url is required for file", line)
 	}
 	index := strings.Index(line, "http://")
 	if index == -1 {
@@ -113,22 +114,22 @@ func parseFileLine(line string) (*Node, error) {
 	node.Name = name
 	if index > 0 {
 		if !strings.HasSuffix(info, ":") {
-			return nil, fmt.Errorf("invalid line: %s, because file info must end with ':'", line)
+			return nil, errors.Errorf("invalid line: %s, because file info must end with ':'", line)
 		}
 		info = info[:len(info)-1]
 		if info == "" {
-			return nil, fmt.Errorf("invalid line: %s, because file name can't be empty", line)
+			return nil, errors.Errorf("invalid line: %s, because file name can't be empty", line)
 		}
 		infoParts := strings.Split(info, ":")
 		size, err := strconv.ParseInt(infoParts[0], 10, 64)
 		if err != nil {
-			return nil, fmt.Errorf("invalid line: %s, because file size must be an integer", line)
+			return nil, errors.Errorf("invalid line: %s, because file size must be an integer", line)
 		}
 		node.Size = size
 		if len(infoParts) > 1 {
 			modified, err := strconv.ParseInt(infoParts[1], 10, 64)
 			if err != nil {
-				return nil, fmt.Errorf("invalid line: %s, because file modified must be an unix timestamp", line)
+				return nil, errors.Errorf("invalid line: %s, because file modified must be an unix timestamp", line)
 			}
 			node.Modified = modified
 		} else {

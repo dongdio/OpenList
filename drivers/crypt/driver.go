@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/pkg/errors"
 	rcCrypt "github.com/rclone/rclone/backend/crypt"
 	"github.com/rclone/rclone/fs/config/configmap"
 	"github.com/rclone/rclone/fs/config/obscure"
@@ -46,16 +47,16 @@ func (d *Crypt) Init(ctx context.Context) error {
 	// obfuscate credentials if it's updated or just created
 	err := d.updateObfusParm(&d.Password)
 	if err != nil {
-		return fmt.Errorf("failed to obfuscate password: %w", err)
+		return errors.Errorf("failed to obfuscate password: %w", err)
 	}
 	err = d.updateObfusParm(&d.Salt)
 	if err != nil {
-		return fmt.Errorf("failed to obfuscate salt: %w", err)
+		return errors.Errorf("failed to obfuscate salt: %w", err)
 	}
 
 	isCryptExt := regexp.MustCompile(`^[.][A-Za-z0-9-_]{2,}$`).MatchString
 	if !isCryptExt(d.EncryptedSuffix) {
-		return fmt.Errorf("EncryptedSuffix is Illegal")
+		return errors.Errorf("EncryptedSuffix is Illegal")
 	}
 	d.FileNameEncoding = utils.GetNoneEmpty(d.FileNameEncoding, "base64")
 	d.EncryptedSuffix = utils.GetNoneEmpty(d.EncryptedSuffix, ".bin")
@@ -65,7 +66,7 @@ func (d *Crypt) Init(ctx context.Context) error {
 	// need remote storage exist
 	storage, err := fs.GetStorage(d.RemotePath, &fs.GetStoragesArgs{})
 	if err != nil {
-		return fmt.Errorf("can't find remote storage: %w", err)
+		return errors.Errorf("can't find remote storage: %w", err)
 	}
 	d.remoteStorage = storage
 
@@ -82,7 +83,7 @@ func (d *Crypt) Init(ctx context.Context) error {
 	}
 	c, err := rcCrypt.NewCipher(config)
 	if err != nil {
-		return fmt.Errorf("failed to create Cipher: %w", err)
+		return errors.Errorf("failed to create Cipher: %w", err)
 	}
 	d.cipher = c
 
@@ -245,7 +246,7 @@ func (d *Crypt) Get(ctx context.Context, path string) (model.Obj, error) {
 func (d *Crypt) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	dstDirActualPath, err := d.getActualPathForRemote(file.GetPath(), false)
 	if err != nil {
-		return nil, fmt.Errorf("failed to convert path to remote path: %w", err)
+		return nil, errors.Errorf("failed to convert path to remote path: %w", err)
 	}
 	remoteLink, remoteFile, err := op.Link(ctx, d.remoteStorage, dstDirActualPath, args)
 	if err != nil {
@@ -253,7 +254,7 @@ func (d *Crypt) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 	}
 
 	if remoteLink.RangeReadCloser == nil && remoteLink.MFile == nil && len(remoteLink.URL) == 0 {
-		return nil, fmt.Errorf("the remote storage driver need to be enhanced to support encrytion")
+		return nil, errors.Errorf("the remote storage driver need to be enhanced to support encrytion")
 	}
 	remoteFileSize := remoteFile.GetSize()
 	remoteClosers := utils.EmptyClosers()
@@ -312,7 +313,7 @@ func (d *Crypt) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 func (d *Crypt) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
 	dstDirActualPath, err := d.getActualPathForRemote(parentDir.GetPath(), true)
 	if err != nil {
-		return fmt.Errorf("failed to convert path to remote path: %w", err)
+		return errors.Errorf("failed to convert path to remote path: %w", err)
 	}
 	dir := d.cipher.EncryptDirName(dirName)
 	return op.MakeDir(ctx, d.remoteStorage, stdpath.Join(dstDirActualPath, dir))
@@ -321,11 +322,11 @@ func (d *Crypt) MakeDir(ctx context.Context, parentDir model.Obj, dirName string
 func (d *Crypt) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 	srcRemoteActualPath, err := d.getActualPathForRemote(srcObj.GetPath(), srcObj.IsDir())
 	if err != nil {
-		return fmt.Errorf("failed to convert path to remote path: %w", err)
+		return errors.Errorf("failed to convert path to remote path: %w", err)
 	}
 	dstRemoteActualPath, err := d.getActualPathForRemote(dstDir.GetPath(), dstDir.IsDir())
 	if err != nil {
-		return fmt.Errorf("failed to convert path to remote path: %w", err)
+		return errors.Errorf("failed to convert path to remote path: %w", err)
 	}
 	return op.Move(ctx, d.remoteStorage, srcRemoteActualPath, dstRemoteActualPath)
 }
@@ -333,7 +334,7 @@ func (d *Crypt) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 func (d *Crypt) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
 	remoteActualPath, err := d.getActualPathForRemote(srcObj.GetPath(), srcObj.IsDir())
 	if err != nil {
-		return fmt.Errorf("failed to convert path to remote path: %w", err)
+		return errors.Errorf("failed to convert path to remote path: %w", err)
 	}
 	var newEncryptedName string
 	if srcObj.IsDir() {
@@ -347,11 +348,11 @@ func (d *Crypt) Rename(ctx context.Context, srcObj model.Obj, newName string) er
 func (d *Crypt) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 	srcRemoteActualPath, err := d.getActualPathForRemote(srcObj.GetPath(), srcObj.IsDir())
 	if err != nil {
-		return fmt.Errorf("failed to convert path to remote path: %w", err)
+		return errors.Errorf("failed to convert path to remote path: %w", err)
 	}
 	dstRemoteActualPath, err := d.getActualPathForRemote(dstDir.GetPath(), dstDir.IsDir())
 	if err != nil {
-		return fmt.Errorf("failed to convert path to remote path: %w", err)
+		return errors.Errorf("failed to convert path to remote path: %w", err)
 	}
 	return op.Copy(ctx, d.remoteStorage, srcRemoteActualPath, dstRemoteActualPath)
 
@@ -360,7 +361,7 @@ func (d *Crypt) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 func (d *Crypt) Remove(ctx context.Context, obj model.Obj) error {
 	remoteActualPath, err := d.getActualPathForRemote(obj.GetPath(), obj.IsDir())
 	if err != nil {
-		return fmt.Errorf("failed to convert path to remote path: %w", err)
+		return errors.Errorf("failed to convert path to remote path: %w", err)
 	}
 	return op.Remove(ctx, d.remoteStorage, remoteActualPath)
 }
@@ -368,13 +369,13 @@ func (d *Crypt) Remove(ctx context.Context, obj model.Obj) error {
 func (d *Crypt) Put(ctx context.Context, dstDir model.Obj, streamer model.FileStreamer, up driver.UpdateProgress) error {
 	dstDirActualPath, err := d.getActualPathForRemote(dstDir.GetPath(), true)
 	if err != nil {
-		return fmt.Errorf("failed to convert path to remote path: %w", err)
+		return errors.Errorf("failed to convert path to remote path: %w", err)
 	}
 
 	// Encrypt the data into wrappedIn
 	wrappedIn, err := d.cipher.EncryptData(streamer)
 	if err != nil {
-		return fmt.Errorf("failed to EncryptData: %w", err)
+		return errors.Errorf("failed to EncryptData: %w", err)
 	}
 
 	// doesn't support seekableStream, since rapid-upload is not working for encrypted data

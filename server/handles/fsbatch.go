@@ -287,7 +287,7 @@ func FsRegexRename(c *gin.Context) {
 	// 编译源文件名正则表达式
 	srcRegexp, err := regexp.Compile(req.SrcNameRegex)
 	if err != nil {
-		common.ErrorResp(c, fmt.Errorf("invalid source name regex: %w", err), 400)
+		common.ErrorResp(c, errors.Errorf("invalid source name regex: %w", err), 400)
 		return
 	}
 

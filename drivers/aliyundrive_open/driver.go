@@ -2,7 +2,6 @@ package aliyundrive_open
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"path/filepath"
 	"time"
@@ -89,7 +88,7 @@ func (d *AliyundriveOpen) GetRoot(ctx context.Context) (model.Obj, error) {
 
 func (d *AliyundriveOpen) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
 	if d.limitList == nil {
-		return nil, fmt.Errorf("driver not init")
+		return nil, errors.Errorf("driver not init")
 	}
 	files, err := d.getFiles(ctx, dir.GetID())
 	if err != nil {
@@ -135,7 +134,7 @@ func (d *AliyundriveOpen) link(ctx context.Context, file model.Obj) (*model.Link
 
 func (d *AliyundriveOpen) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	if d.limitLink == nil {
-		return nil, fmt.Errorf("driver not init")
+		return nil, errors.Errorf("driver not init")
 	}
 	return d.limitLink(ctx, file)
 }

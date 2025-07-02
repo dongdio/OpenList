@@ -2,16 +2,16 @@ package pikpak
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 
-	"github.com/dongdio/OpenList/consts"
-	"github.com/dongdio/OpenList/internal/setting"
+	"github.com/pkg/errors"
 
+	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/drivers/pikpak"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/offline_download/tool"
 	"github.com/dongdio/OpenList/internal/op"
+	"github.com/dongdio/OpenList/internal/setting"
 	"github.com/dongdio/OpenList/utility/errs"
 )
 
@@ -60,7 +60,7 @@ func (p *PikPak) AddURL(args *tool.AddUrlArgs) (string, error) {
 	}
 	pikpakDriver, ok := storage.(*pikpak.PikPak)
 	if !ok {
-		return "", fmt.Errorf("unsupported storage driver for offline download, only Pikpak is supported")
+		return "", errors.Errorf("unsupported storage driver for offline download, only Pikpak is supported")
 	}
 
 	ctx := context.Background()
@@ -76,7 +76,7 @@ func (p *PikPak) AddURL(args *tool.AddUrlArgs) (string, error) {
 
 	t, err := pikpakDriver.OfflineDownload(ctx, args.Url, parentDir, "")
 	if err != nil {
-		return "", fmt.Errorf("failed to add offline download task: %w", err)
+		return "", errors.Errorf("failed to add offline download task: %w", err)
 	}
 
 	return t.ID, nil
@@ -89,7 +89,7 @@ func (p *PikPak) Remove(task *tool.DownloadTask) error {
 	}
 	pikpakDriver, ok := storage.(*pikpak.PikPak)
 	if !ok {
-		return fmt.Errorf("unsupported storage driver for offline download, only Pikpak is supported")
+		return errors.Errorf("unsupported storage driver for offline download, only Pikpak is supported")
 	}
 	ctx := context.Background()
 	err = pikpakDriver.DeleteOfflineTasks(ctx, []string{task.GID}, false)
@@ -106,7 +106,7 @@ func (p *PikPak) Status(task *tool.DownloadTask) (*tool.Status, error) {
 	}
 	pikpakDriver, ok := storage.(*pikpak.PikPak)
 	if !ok {
-		return nil, fmt.Errorf("unsupported storage driver for offline download, only Pikpak is supported")
+		return nil, errors.Errorf("unsupported storage driver for offline download, only Pikpak is supported")
 	}
 	tasks, err := p.GetTasks(pikpakDriver)
 	if err != nil {
@@ -129,12 +129,12 @@ func (p *PikPak) Status(task *tool.DownloadTask) (*tool.Status, error) {
 				s.TotalBytes = 0
 			}
 			if t.Phase == "PHASE_TYPE_ERROR" {
-				s.Err = fmt.Errorf(t.Message)
+				s.Err = errors.Errorf(t.Message)
 			}
 			return s, nil
 		}
 	}
-	s.Err = fmt.Errorf("the task has been deleted")
+	s.Err = errors.Errorf("the task has been deleted")
 	return s, nil
 }
 

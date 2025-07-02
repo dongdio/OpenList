@@ -3,7 +3,6 @@ package _123
 import (
 	"context"
 	"encoding/base64"
-	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -14,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/time/rate"
 	"resty.dev/v3"
@@ -122,7 +122,7 @@ func (d *Pan123) Link(ctx context.Context, file model.Obj, args model.LinkArgs) 
 		}
 		return &link, nil
 	} else {
-		return nil, fmt.Errorf("can't convert obj")
+		return nil, errors.Errorf("can't convert obj")
 	}
 }
 
@@ -180,7 +180,7 @@ func (d *Pan123) Remove(ctx context.Context, obj model.Obj) error {
 		}, nil)
 		return err
 	} else {
-		return fmt.Errorf("can't convert obj")
+		return errors.Errorf("can't convert obj")
 	}
 }
 

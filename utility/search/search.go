@@ -2,8 +2,8 @@ package search
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/dongdio/OpenList/consts"
@@ -29,7 +29,7 @@ func initSearcher(mode string) error {
 		instance = nil
 	}
 	if Running() {
-		return fmt.Errorf("index is running")
+		return errors.Errorf("index is running")
 	}
 	if mode == "none" {
 		log.Warnf("not enable search")
@@ -37,7 +37,7 @@ func initSearcher(mode string) error {
 	}
 	s, ok := searcher2.NewMap[mode]
 	if !ok {
-		return fmt.Errorf("not support index: %s", mode)
+		return errors.Errorf("not support index: %s", mode)
 	}
 	i, err := s()
 	if err != nil {

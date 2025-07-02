@@ -2,17 +2,16 @@ package thunder
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"strconv"
 
-	"github.com/dongdio/OpenList/consts"
-	"github.com/dongdio/OpenList/internal/setting"
+	"github.com/pkg/errors"
 
+	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/drivers/thunder"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/offline_download/tool"
 	"github.com/dongdio/OpenList/internal/op"
+	"github.com/dongdio/OpenList/internal/setting"
 	"github.com/dongdio/OpenList/utility/errs"
 )
 
@@ -61,7 +60,7 @@ func (t *Thunder) AddURL(args *tool.AddUrlArgs) (string, error) {
 	}
 	thunderDriver, ok := storage.(*thunder.Thunder)
 	if !ok {
-		return "", fmt.Errorf("unsupported storage driver for offline download, only Thunder is supported")
+		return "", errors.Errorf("unsupported storage driver for offline download, only Thunder is supported")
 	}
 
 	ctx := context.Background()
@@ -77,7 +76,7 @@ func (t *Thunder) AddURL(args *tool.AddUrlArgs) (string, error) {
 
 	task, err := thunderDriver.OfflineDownload(ctx, args.Url, parentDir, "")
 	if err != nil {
-		return "", fmt.Errorf("failed to add offline download task: %w", err)
+		return "", errors.Errorf("failed to add offline download task: %w", err)
 	}
 
 	return task.ID, nil
@@ -90,7 +89,7 @@ func (t *Thunder) Remove(task *tool.DownloadTask) error {
 	}
 	thunderDriver, ok := storage.(*thunder.Thunder)
 	if !ok {
-		return fmt.Errorf("unsupported storage driver for offline download, only Thunder is supported")
+		return errors.Errorf("unsupported storage driver for offline download, only Thunder is supported")
 	}
 	ctx := context.Background()
 	err = thunderDriver.DeleteOfflineTasks(ctx, []string{task.GID}, false)
@@ -107,7 +106,7 @@ func (t *Thunder) Status(task *tool.DownloadTask) (*tool.Status, error) {
 	}
 	thunderDriver, ok := storage.(*thunder.Thunder)
 	if !ok {
-		return nil, fmt.Errorf("unsupported storage driver for offline download, only Thunder is supported")
+		return nil, errors.Errorf("unsupported storage driver for offline download, only Thunder is supported")
 	}
 	tasks, err := t.GetTasks(thunderDriver)
 	if err != nil {
@@ -135,7 +134,7 @@ func (t *Thunder) Status(task *tool.DownloadTask) (*tool.Status, error) {
 			return s, nil
 		}
 	}
-	s.Err = fmt.Errorf("the task has been deleted")
+	s.Err = errors.Errorf("the task has been deleted")
 	return s, nil
 }
 

@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/dongdio/OpenList/drivers/base"
@@ -49,7 +50,7 @@ func BuildTree(text string, headSize bool) (*Node, error) {
 		}
 		// if indent is not a multiple of 2, it is an error
 		if indent%2 != 0 {
-			return nil, fmt.Errorf("the line '%s' is not a multiple of 2", line)
+			return nil, errors.Errorf("the line '%s' is not a multiple of 2", line)
 		}
 		// calculate level
 		level := indent / 2
@@ -99,7 +100,7 @@ func isFolder(line string) bool {
 func parseFileLine(line string, headSize bool) (*Node, error) {
 	// if there is no url, it is an error
 	if !strings.Contains(line, "http://") && !strings.Contains(line, "https://") {
-		return nil, fmt.Errorf("invalid line: %s, because url is required for file", line)
+		return nil, errors.Errorf("invalid line: %s, because url is required for file", line)
 	}
 	index := strings.Index(line, "http://")
 	if index == -1 {
@@ -113,25 +114,25 @@ func parseFileLine(line string, headSize bool) (*Node, error) {
 	haveSize := false
 	if index > 0 {
 		if !strings.HasSuffix(info, ":") {
-			return nil, fmt.Errorf("invalid line: %s, because file info must end with ':'", line)
+			return nil, errors.Errorf("invalid line: %s, because file info must end with ':'", line)
 		}
 		info = info[:len(info)-1]
 		if info == "" {
-			return nil, fmt.Errorf("invalid line: %s, because file name can't be empty", line)
+			return nil, errors.Errorf("invalid line: %s, because file name can't be empty", line)
 		}
 		infoParts := strings.Split(info, ":")
 		node.Name = infoParts[0]
 		if len(infoParts) > 1 {
 			size, err := strconv.ParseInt(infoParts[1], 10, 64)
 			if err != nil {
-				return nil, fmt.Errorf("invalid line: %s, because file size must be an integer", line)
+				return nil, errors.Errorf("invalid line: %s, because file size must be an integer", line)
 			}
 			node.Size = size
 			haveSize = true
 			if len(infoParts) > 2 {
 				modified, err := strconv.ParseInt(infoParts[2], 10, 64)
 				if err != nil {
-					return nil, fmt.Errorf("invalid line: %s, because file modified must be an unix timestamp", line)
+					return nil, errors.Errorf("invalid line: %s, because file modified must be an unix timestamp", line)
 				}
 				node.Modified = modified
 			}
@@ -186,7 +187,7 @@ func getSizeFromUrl(url string) (int64, error) {
 	}
 	defer res.RawResponse.Body.Close()
 	if res.StatusCode() >= 300 {
-		return 0, fmt.Errorf("get size from url %s failed, status code: %d", url, res.StatusCode())
+		return 0, errors.Errorf("get size from url %s failed, status code: %d", url, res.StatusCode())
 	}
 	size, err := strconv.ParseInt(res.Header().Get("Content-Length"), 10, 64)
 	if err != nil {

@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/drivers/base"
@@ -173,11 +174,11 @@ func (c *Common) refreshCaptchaToken(action string, metas map[string]string) err
 	}
 
 	if resp.Url != "" {
-		return fmt.Errorf(`need verify: <a target="_blank" href="%s">Click Here</a>`, resp.Url)
+		return errors.Errorf(`need verify: <a target="_blank" href="%s">Click Here</a>`, resp.Url)
 	}
 
 	if resp.CaptchaToken == "" {
-		return fmt.Errorf("empty captchaToken")
+		return errors.Errorf("empty captchaToken")
 	}
 
 	if c.refreshCTokenCk != nil {

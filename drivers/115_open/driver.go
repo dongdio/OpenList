@@ -2,13 +2,13 @@ package _115_open
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
 	sdk "github.com/OpenListTeam/115-sdk-go"
+	"github.com/pkg/errors"
 	"golang.org/x/time/rate"
 
 	"github.com/dongdio/OpenList/drivers/base"
@@ -113,7 +113,7 @@ func (d *Open115) Link(ctx context.Context, file model.Obj, args model.LinkArgs)
 	}
 	obj, ok := file.(*Obj)
 	if !ok {
-		return nil, fmt.Errorf("can't convert obj")
+		return nil, errors.Errorf("can't convert obj")
 	}
 	pc := obj.Pc
 	resp, err := d.client.DownURL(ctx, pc, ua)
@@ -122,7 +122,7 @@ func (d *Open115) Link(ctx context.Context, file model.Obj, args model.LinkArgs)
 	}
 	u, ok := resp[obj.GetID()]
 	if !ok {
-		return nil, fmt.Errorf("can't get link")
+		return nil, errors.Errorf("can't get link")
 	}
 	return &model.Link{
 		URL: u.URL.URL,
@@ -204,7 +204,7 @@ func (d *Open115) Remove(ctx context.Context, obj model.Obj) error {
 	}
 	_obj, ok := obj.(*Obj)
 	if !ok {
-		return fmt.Errorf("can't convert obj")
+		return errors.Errorf("can't convert obj")
 	}
 	_, err := d.client.DelFile(ctx, &sdk.DelFileReq{
 		FileIDs:  _obj.GetID(),

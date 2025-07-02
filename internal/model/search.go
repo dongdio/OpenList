@@ -1,8 +1,9 @@
 package model
 
 import (
-	"fmt"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 type IndexProgress struct {
@@ -29,10 +30,10 @@ type SearchNode struct {
 
 func (p *SearchReq) Validate() error {
 	if p.Page < 1 {
-		return fmt.Errorf("page can't < 1")
+		return errors.Errorf("page can't < 1")
 	}
 	if p.PerPage < 1 {
-		return fmt.Errorf("per_page can't < 1")
+		return errors.Errorf("per_page can't < 1")
 	}
 	return nil
 }

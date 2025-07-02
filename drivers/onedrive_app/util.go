@@ -3,13 +3,13 @@ package onedrive_app
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	stdpath "path"
 	"time"
 
+	"github.com/pkg/errors"
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/drivers/base"
@@ -77,7 +77,7 @@ func (d *OnedriveAPP) _accessToken() error {
 		return err
 	}
 	if e.Error != "" {
-		return fmt.Errorf("%s", e.ErrorDescription)
+		return errors.Errorf("%s", e.ErrorDescription)
 	}
 	if resp.AccessToken == "" {
 		return errs.EmptyToken
@@ -187,7 +187,7 @@ func (d *OnedriveAPP) upBig(ctx context.Context, dstDir model.Obj, stream model.
 			retryCount++
 			if retryCount > maxRetries {
 				res.Body.Close()
-				return fmt.Errorf("upload failed after %d retries due to server errors, error %d", maxRetries, res.StatusCode)
+				return errors.Errorf("upload failed after %d retries due to server errors, error %d", maxRetries, res.StatusCode)
 			}
 			backoff := time.Duration(1<<retryCount) * time.Second
 			utils.Log.Warnf("[OnedriveAPP] server errors %d while uploading, retrying after %v...", res.StatusCode, backoff)

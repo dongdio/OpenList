@@ -2,13 +2,14 @@ package qbittorrent
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+
+	"github.com/pkg/errors"
 
 	"github.com/dongdio/OpenList/utility/utils"
 )
@@ -36,7 +37,7 @@ type client struct {
 func New(webuiUrl string) (Client, error) {
 	u, err := url.Parse(webuiUrl)
 	if err != nil {
-		return nil, fmt.Errorf("解析URL失败: %w", err)
+		return nil, errors.Errorf("解析URL失败: %w", err)
 	}
 
 	// 需要用户信息
@@ -46,7 +47,7 @@ func New(webuiUrl string) (Client, error) {
 
 	jar, err := cookiejar.New(nil)
 	if err != nil {
-		return nil, fmt.Errorf("创建cookie jar失败: %w", err)
+		return nil, errors.Errorf("创建cookie jar失败: %w", err)
 	}
 
 	var c = &client{
@@ -71,7 +72,7 @@ func (c *client) checkAuthorization() error {
 	// 尝试登录后再次检查授权
 	err := c.login()
 	if err != nil {
-		return fmt.Errorf("登录失败: %w", err)
+		return errors.Errorf("登录失败: %w", err)
 	}
 	if c.authorized() {
 		return nil
@@ -105,10 +106,10 @@ func (c *client) login() error {
 	// 检查结果
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("读取响应失败: %w", err)
+		return errors.Errorf("读取响应失败: %w", err)
 	}
 	if string(body) != "Ok" {
-		return fmt.Errorf("登录qBittorrent WebUI失败，URL: %s", c.url.String())
+		return errors.Errorf("登录qBittorrent WebUI失败，URL: %s", c.url.String())
 	}
 	return nil
 }
@@ -125,7 +126,7 @@ func (c *client) post(path string, data url.Values) (*http.Response, error) {
 
 	req, err := http.NewRequest("POST", u.String(), reqBody)
 	if err != nil {
-		return nil, fmt.Errorf("创建请求失败: %w", err)
+		return nil, errors.Errorf("创建请求失败: %w", err)
 	}
 	if data != nil {
 		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
@@ -133,7 +134,7 @@ func (c *client) post(path string, data url.Values) (*http.Response, error) {
 
 	resp, err := c.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("发送请求失败: %w", err)
+		return nil, errors.Errorf("发送请求失败: %w", err)
 	}
 
 	if resp.Cookies() != nil {
@@ -166,35 +167,35 @@ func (c *client) AddFromLink(link string, savePath string, id string) error {
 	addField("tags", "openlist-"+id)
 	addField("autoTMM", "false")
 	if fieldErr != nil {
-		return fmt.Errorf("创建表单字段失败: %w", fieldErr)
+		return errors.Errorf("创建表单字段失败: %w", fieldErr)
 	}
 
 	err = writer.Close()
 	if err != nil {
-		return fmt.Errorf("关闭表单writer失败: %w", err)
+		return errors.Errorf("关闭表单writer失败: %w", err)
 	}
 
 	u := c.url.JoinPath("/api/v2/torrents/add")
 	u.User = nil // 移除请求中的用户信息
 	req, err := http.NewRequest("POST", u.String(), buf)
 	if err != nil {
-		return fmt.Errorf("创建请求失败: %w", err)
+		return errors.Errorf("创建请求失败: %w", err)
 	}
 	req.Header.Add("Content-Type", writer.FormDataContentType())
 
 	resp, err := c.client.Do(req)
 	if err != nil {
-		return fmt.Errorf("发送请求失败: %w", err)
+		return errors.Errorf("发送请求失败: %w", err)
 	}
 	defer resp.Body.Close()
 
 	// 检查结果
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("读取响应失败: %w", err)
+		return errors.Errorf("读取响应失败: %w", err)
 	}
 	if resp.StatusCode != 200 || string(body) != "Ok" {
-		return fmt.Errorf("添加qBittorrent任务失败: %s", link)
+		return errors.Errorf("添加qBittorrent任务失败: %s", link)
 	}
 	return nil
 }
@@ -305,17 +306,17 @@ func (c *client) GetInfo(id string) (TorrentInfo, error) {
 	v.Set("tag", "openlist-"+id)
 	response, err := c.post("/api/v2/torrents/info", v)
 	if err != nil {
-		return TorrentInfo{}, fmt.Errorf("获取种子信息失败: %w", err)
+		return TorrentInfo{}, errors.Errorf("获取种子信息失败: %w", err)
 	}
 	defer response.Body.Close()
 
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
-		return TorrentInfo{}, fmt.Errorf("读取响应失败: %w", err)
+		return TorrentInfo{}, errors.Errorf("读取响应失败: %w", err)
 	}
 	err = utils.Json.Unmarshal(body, &infos)
 	if err != nil {
-		return TorrentInfo{}, fmt.Errorf("解析JSON失败: %w", err)
+		return TorrentInfo{}, errors.Errorf("解析JSON失败: %w", err)
 	}
 	if len(infos) != 1 {
 		return TorrentInfo{}, NewInfoNotFoundError(id)
@@ -353,17 +354,17 @@ func (c *client) GetFiles(id string) ([]FileInfo, error) {
 	v.Set("hash", tInfo.Hash)
 	response, err := c.post("/api/v2/torrents/files", v)
 	if err != nil {
-		return []FileInfo{}, fmt.Errorf("获取文件列表失败: %w", err)
+		return []FileInfo{}, errors.Errorf("获取文件列表失败: %w", err)
 	}
 	defer response.Body.Close()
 
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
-		return []FileInfo{}, fmt.Errorf("读取响应失败: %w", err)
+		return []FileInfo{}, errors.Errorf("读取响应失败: %w", err)
 	}
 	err = utils.Json.Unmarshal(body, &infos)
 	if err != nil {
-		return []FileInfo{}, fmt.Errorf("解析JSON失败: %w", err)
+		return []FileInfo{}, errors.Errorf("解析JSON失败: %w", err)
 	}
 	return infos, nil
 }
@@ -386,7 +387,7 @@ func (c *client) Delete(id string, deleteFiles bool) error {
 
 	response, err := c.post("/api/v2/torrents/delete", v)
 	if err != nil {
-		return fmt.Errorf("删除种子任务失败: %w", err)
+		return errors.Errorf("删除种子任务失败: %w", err)
 	}
 	defer response.Body.Close()
 
@@ -398,7 +399,7 @@ func (c *client) Delete(id string, deleteFiles bool) error {
 	v.Set("tags", "openlist-"+id)
 	response, err = c.post("/api/v2/torrents/deleteTags", v)
 	if err != nil {
-		return fmt.Errorf("删除标签失败: %w", err)
+		return errors.Errorf("删除标签失败: %w", err)
 	}
 	defer response.Body.Close()
 

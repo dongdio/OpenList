@@ -2,12 +2,12 @@ package dropbox
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"math"
 	"net/http"
 	"time"
 
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
 
@@ -44,7 +44,7 @@ func (d *Dropbox) Init(ctx context.Context) error {
 	}
 	result := utils.GetBytes(res, "result").String()
 	if result != query {
-		return fmt.Errorf("failed to check user: %s", string(res))
+		return errors.Errorf("failed to check user: %s", string(res))
 	}
 	d.RootNamespaceId, err = d.GetRootNamespaceId(ctx)
 

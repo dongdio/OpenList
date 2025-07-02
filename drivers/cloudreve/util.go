@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -12,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/consts"
@@ -284,7 +284,7 @@ func (d *Cloudreve) upRemote(ctx context.Context, stream model.FileStreamer, u U
 		} else {
 			retryCount++
 			if retryCount > maxRetries {
-				return fmt.Errorf("upload failed after %d retries due to server errors, error: %s", maxRetries, err)
+				return errors.Errorf("upload failed after %d retries due to server errors, error: %s", maxRetries, err)
 			}
 			backoff := time.Duration(1<<retryCount) * time.Second
 			utils.Log.Warnf("[Cloudreve-Remote] server errors while uploading, retrying after %v...", backoff)
@@ -330,7 +330,7 @@ func (d *Cloudreve) upOneDrive(ctx context.Context, stream model.FileStreamer, u
 		case resp.StatusCode() >= 500 && resp.StatusCode() <= 504:
 			retryCount++
 			if retryCount > maxRetries {
-				return fmt.Errorf("upload failed after %d retries due to server errors, error %d", maxRetries, resp.StatusCode())
+				return errors.Errorf("upload failed after %d retries due to server errors, error %d", maxRetries, resp.StatusCode())
 			}
 			backoff := time.Duration(1<<retryCount) * time.Second
 			utils.Log.Warnf("[Cloudreve-OneDrive] server errors %d while uploading, retrying after %v...", resp.StatusCode(), backoff)
@@ -383,7 +383,7 @@ func (d *Cloudreve) upS3(ctx context.Context, stream model.FileStreamer, u Uploa
 		case resp.StatusCode() != 200:
 			retryCount++
 			if retryCount > maxRetries {
-				return fmt.Errorf("upload failed after %d retries due to server errors, error %d", maxRetries, resp.StatusCode())
+				return errors.Errorf("upload failed after %d retries due to server errors, error %d", maxRetries, resp.StatusCode())
 			}
 			backoff := time.Duration(1<<retryCount) * time.Second
 			utils.Log.Warnf("[Cloudreve-S3] server errors %d while uploading, retrying after %v...", resp.StatusCode(), backoff)
@@ -421,7 +421,7 @@ func (d *Cloudreve) upS3(ctx context.Context, stream model.FileStreamer, u Uploa
 		return err
 	}
 	if resp.StatusCode() != 200 {
-		return fmt.Errorf("up status: %d, error: %s", resp.StatusCode(), resp.String())
+		return errors.Errorf("up status: %d, error: %s", resp.StatusCode(), resp.String())
 	}
 	// 上传成功发送回调请求
 	err = d.request(http.MethodGet, "/callback/s3/"+u.SessionID, nil, nil)

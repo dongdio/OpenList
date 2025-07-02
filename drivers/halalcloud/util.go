@@ -6,8 +6,6 @@ import (
 	"crypto/md5"
 	"crypto/tls"
 	"encoding/hex"
-	"errors"
-	"fmt"
 	"hash"
 	"io"
 	"net/http"
@@ -20,6 +18,7 @@ import (
 	pubUserFile "github.com/city404/v6-public-rpc-proto/go/v6/userfile"
 	"github.com/google/uuid"
 	"github.com/ipfs/go-cid"
+	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
@@ -82,7 +81,7 @@ func (d *HalalCloud) NewAuthServiceWithOauth(options ...HalalOption) (*AuthServi
 
 	if oauthToken.Url != "" {
 
-		return nil, fmt.Errorf(`need verify: <a target="_blank" href="%s">Click Here</a>`, oauthToken.Url)
+		return nil, errors.Errorf(`need verify: <a target="_blank" href="%s">Click Here</a>`, oauthToken.Url)
 	}
 
 	return aService, err2
@@ -239,7 +238,7 @@ func getRawFiles(addr *pubUserFile.SliceDownloadInfo) ([]byte, error) {
 		return nil, err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("bad status: %s, body: %s", resp.Status, body)
+		return nil, errors.Errorf("bad status: %s, body: %s", resp.Status, body)
 	}
 
 	if addr.Encrypt > 0 {
@@ -260,7 +259,7 @@ func getRawFiles(addr *pubUserFile.SliceDownloadInfo) ([]byte, error) {
 			return nil, err
 		}
 		if !checkCid.Equals(sourceCid) {
-			return nil, fmt.Errorf("bad cid: %s, body: %s", checkCid.String(), body)
+			return nil, errors.Errorf("bad cid: %s, body: %s", checkCid.String(), body)
 		}
 	}
 
@@ -304,7 +303,7 @@ func (oo *openObject) Read(p []byte) (n int, err error) {
 	oo.mu.Lock()
 	defer oo.mu.Unlock()
 	if oo.closed {
-		return 0, fmt.Errorf("read on closed file")
+		return 0, errors.Errorf("read on closed file")
 	}
 	// Skip data at the start if requested
 	for oo.skip > 0 {
@@ -346,7 +345,7 @@ func (oo *openObject) Close() (err error) {
 	}
 	// 校验Sha1
 	if string(oo.shaTemp.Sum(nil)) != oo.sha {
-		return fmt.Errorf("failed to finish download: %w", err)
+		return errors.Errorf("failed to finish download: %w", err)
 	}
 
 	oo.closed = true

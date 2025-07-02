@@ -268,11 +268,11 @@ package cmd
 //
 // 	mode, err := strconv.ParseUint(conf.Conf.Scheme.UnixFilePerm, 8, 32)
 // 	if err != nil {
-// 		return fmt.Errorf("failed to parse Unix socket file permission '%s': %w", conf.Conf.Scheme.UnixFilePerm, err)
+// 		return errors.Errorf("failed to parse Unix socket file permission '%s': %w", conf.Conf.Scheme.UnixFilePerm, err)
 // 	}
 //
 // 	if err := os.Chmod(socketPath, os.FileMode(mode)); err != nil {
-// 		return fmt.Errorf("failed to set Unix socket file permissions: %w", err)
+// 		return errors.Errorf("failed to set Unix socket file permissions: %w", err)
 // 	}
 //
 // 	utils.Log.Debugf("Set Unix socket file permissions to %s", conf.Conf.Scheme.UnixFilePerm)

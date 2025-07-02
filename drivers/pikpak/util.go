@@ -407,7 +407,7 @@ func (d *PikPak) refreshCaptchaToken(action string, metas map[string]string) err
 	}
 
 	if resp.Url != "" {
-		return fmt.Errorf(`need verify: <a target="_blank" href="%s">Click Here</a>`, resp.Url)
+		return errors.Errorf(`need verify: <a target="_blank" href="%s">Click Here</a>`, resp.Url)
 	}
 
 	if d.Common.RefreshCTokenCk != nil {
@@ -497,7 +497,7 @@ func (d *PikPak) UploadByMultipart(ctx context.Context, params *S3Params, fileSi
 		go func(threadId int) {
 			defer func() {
 				if r := recover(); r != nil {
-					errCh <- fmt.Errorf("recovered in %v", r)
+					errCh <- errors.Errorf("recovered in %v", r)
 				}
 			}()
 			for chunk := range chunksCh {
@@ -549,7 +549,7 @@ LOOP:
 		case <-errCh:
 			return err
 		case <-timeout.C:
-			return fmt.Errorf("time out")
+			return errors.Errorf("time out")
 		}
 	}
 

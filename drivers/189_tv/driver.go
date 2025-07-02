@@ -8,11 +8,12 @@ import (
 	"strings"
 	"time"
 
+	"resty.dev/v3"
+
 	"github.com/dongdio/OpenList/drivers/base"
 	"github.com/dongdio/OpenList/internal/driver"
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/utility/errs"
-	"resty.dev/v3"
 )
 
 type Cloud189TV struct {

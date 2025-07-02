@@ -1,10 +1,8 @@
 package meilisearch
 
 import (
-	"errors"
-	"fmt"
-
 	"github.com/meilisearch/meilisearch-go"
+	"github.com/pkg/errors"
 
 	"github.com/dongdio/OpenList/internal/conf"
 	"github.com/dongdio/OpenList/internal/model"
@@ -43,7 +41,7 @@ func init() {
 					return nil, err
 				}
 				if forTask.Status != meilisearch.TaskStatusSucceeded {
-					return nil, fmt.Errorf("index creation failed, task status is %s", forTask.Status)
+					return nil, errors.Errorf("index creation failed, task status is %s", forTask.Status)
 				}
 			} else {
 				return nil, err

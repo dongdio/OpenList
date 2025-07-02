@@ -6,14 +6,14 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/pkg/errors"
 	"resty.dev/v3"
-
-	"github.com/dongdio/OpenList/internal/op"
-	"github.com/dongdio/OpenList/utility/utils"
 
 	"github.com/dongdio/OpenList/internal/driver"
 	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/internal/op"
 	"github.com/dongdio/OpenList/utility/errs"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 type QuarkUCTV struct {
@@ -57,7 +57,7 @@ func (d *QuarkUCTV) Init(ctx context.Context) error {
         <img src="data:image/jpeg;base64,%s"/>
     </body>`
 			qrPage := fmt.Sprintf(qrTemplate, qrData)
-			return fmt.Errorf("need verify: \n%s", qrPage)
+			return errors.Errorf("need verify: \n%s", qrPage)
 		} else {
 			// 通过query token获取code -> refresh token
 			code, err := d.getCode(ctx1)

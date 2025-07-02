@@ -2,7 +2,6 @@ package thunder_browser
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/pkg/errors"
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/drivers/base"
@@ -831,7 +831,7 @@ func (xc *XunLeiBrowserCommon) OfflineList(ctx context.Context, nextPageToken st
 	}, &resp)
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to get offline list: %w", err)
+		return nil, errors.Errorf("failed to get offline list: %w", err)
 	}
 	res = append(res, resp.Tasks...)
 
@@ -852,7 +852,7 @@ func (xc *XunLeiBrowserCommon) DeleteOfflineTasks(ctx context.Context, taskIDs [
 			SetQueryParams(queryParams)
 	}, nil)
 	if err != nil {
-		return fmt.Errorf("failed to delete tasks %v: %w", taskIDs, err)
+		return errors.Errorf("failed to delete tasks %v: %w", taskIDs, err)
 	}
 
 	return nil

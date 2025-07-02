@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
+	"github.com/pkg/errors"
 
 	"github.com/dongdio/OpenList/consts"
 	"github.com/dongdio/OpenList/internal/db"
@@ -57,7 +58,7 @@ func BeginAuthnLogin(c *gin.Context) {
 	// 创建 WebAuthn 实例
 	authnInstance, err := authn.NewAuthnInstance(c)
 	if err != nil {
-		common.ErrorResp(c, fmt.Errorf("创建 WebAuthn 实例失败: %w", err), 400)
+		common.ErrorResp(c, errors.Errorf("创建 WebAuthn 实例失败: %w", err), 400)
 		return
 	}
 
@@ -72,7 +73,7 @@ func BeginAuthnLogin(c *gin.Context) {
 		// 用户名登录模式
 		user, err := db.GetUserByName(username)
 		if err != nil {
-			common.ErrorResp(c, fmt.Errorf("获取用户信息失败: %w", err), 400)
+			common.ErrorResp(c, errors.Errorf("获取用户信息失败: %w", err), 400)
 			return
 		}
 		options, sessionData, err = authnInstance.BeginLogin(user)
@@ -82,14 +83,14 @@ func BeginAuthnLogin(c *gin.Context) {
 	}
 
 	if err != nil {
-		common.ErrorResp(c, fmt.Errorf("开始登录流程失败: %w", err), 400)
+		common.ErrorResp(c, errors.Errorf("开始登录流程失败: %w", err), 400)
 		return
 	}
 
 	// 序列化会话数据
 	sessionBytes, err := utils.Json.Marshal(sessionData)
 	if err != nil {
-		common.ErrorResp(c, fmt.Errorf("序列化会话数据失败: %w", err), 400)
+		common.ErrorResp(c, errors.Errorf("序列化会话数据失败: %w", err), 400)
 		return
 	}
 
@@ -112,7 +113,7 @@ func FinishAuthnLogin(c *gin.Context) {
 	// 创建 WebAuthn 实例
 	authnInstance, err := authn.NewAuthnInstance(c)
 	if err != nil {
-		common.ErrorResp(c, fmt.Errorf("创建 WebAuthn 实例失败: %w", err), 400)
+		common.ErrorResp(c, errors.Errorf("创建 WebAuthn 实例失败: %w", err), 400)
 		return
 	}
 
@@ -125,13 +126,13 @@ func FinishAuthnLogin(c *gin.Context) {
 
 	sessionDataBytes, err := base64.StdEncoding.DecodeString(sessionDataString)
 	if err != nil {
-		common.ErrorResp(c, fmt.Errorf("解码会话数据失败: %w", err), 400)
+		common.ErrorResp(c, errors.Errorf("解码会话数据失败: %w", err), 400)
 		return
 	}
 
 	var sessionData webauthn.SessionData
 	if err = utils.Json.Unmarshal(sessionDataBytes, &sessionData); err != nil {
-		common.ErrorResp(c, fmt.Errorf("解析会话数据失败: %w", err), 400)
+		common.ErrorResp(c, errors.Errorf("解析会话数据失败: %w", err), 400)
 		return
 	}
 
@@ -141,7 +142,7 @@ func FinishAuthnLogin(c *gin.Context) {
 		// 用户名登录模式
 		user, err = db.GetUserByName(username)
 		if err != nil {
-			common.ErrorResp(c, fmt.Errorf("获取用户信息失败: %w", err), 400)
+			common.ErrorResp(c, errors.Errorf("获取用户信息失败: %w", err), 400)
 			return
 		}
 		_, err = authnInstance.FinishLogin(user, sessionData, c.Request)
@@ -152,21 +153,21 @@ func FinishAuthnLogin(c *gin.Context) {
 			userID := uint(binary.LittleEndian.Uint64(userHandle))
 			user, err = db.GetUserById(userID)
 			if err != nil {
-				return nil, fmt.Errorf("通过用户ID获取用户失败: %w", err)
+				return nil, errors.Errorf("通过用户ID获取用户失败: %w", err)
 			}
 			return user, nil
 		}, sessionData, c.Request)
 	}
 
 	if err != nil {
-		common.ErrorResp(c, fmt.Errorf("完成登录流程失败: %w", err), 400)
+		common.ErrorResp(c, errors.Errorf("完成登录流程失败: %w", err), 400)
 		return
 	}
 
 	// 生成登录令牌
 	token, err := common.GenerateToken(user)
 	if err != nil {
-		common.ErrorResp(c, fmt.Errorf("生成令牌失败: %w", err), 400)
+		common.ErrorResp(c, errors.Errorf("生成令牌失败: %w", err), 400)
 		return
 	}
 
@@ -188,21 +189,21 @@ func BeginAuthnRegistration(c *gin.Context) {
 	// 创建 WebAuthn 实例
 	authnInstance, err := authn.NewAuthnInstance(c)
 	if err != nil {
-		common.ErrorResp(c, fmt.Errorf("创建 WebAuthn 实例失败: %w", err), 400)
+		common.ErrorResp(c, errors.Errorf("创建 WebAuthn 实例失败: %w", err), 400)
 		return
 	}
 
 	// 开始注册流程
 	options, sessionData, err := authnInstance.BeginRegistration(user)
 	if err != nil {
-		common.ErrorResp(c, fmt.Errorf("开始注册流程失败: %w", err), 400)
+		common.ErrorResp(c, errors.Errorf("开始注册流程失败: %w", err), 400)
 		return
 	}
 
 	// 序列化会话数据
 	sessionBytes, err := utils.Json.Marshal(sessionData)
 	if err != nil {
-		common.ErrorResp(c, fmt.Errorf("序列化会话数据失败: %w", err), 400)
+		common.ErrorResp(c, errors.Errorf("序列化会话数据失败: %w", err), 400)
 		return
 	}
 
@@ -235,40 +236,40 @@ func FinishAuthnRegistration(c *gin.Context) {
 	// 创建 WebAuthn 实例
 	authnInstance, err := authn.NewAuthnInstance(c)
 	if err != nil {
-		common.ErrorResp(c, fmt.Errorf("创建 WebAuthn 实例失败: %w", err), 400)
+		common.ErrorResp(c, errors.Errorf("创建 WebAuthn 实例失败: %w", err), 400)
 		return
 	}
 
 	// 解码会话数据
 	sessionDataBytes, err := base64.StdEncoding.DecodeString(sessionDataString)
 	if err != nil {
-		common.ErrorResp(c, fmt.Errorf("解码会话数据失败: %w", err), 400)
+		common.ErrorResp(c, errors.Errorf("解码会话数据失败: %w", err), 400)
 		return
 	}
 
 	// 解析会话数据
 	var sessionData webauthn.SessionData
 	if err = utils.Json.Unmarshal(sessionDataBytes, &sessionData); err != nil {
-		common.ErrorResp(c, fmt.Errorf("解析会话数据失败: %w", err), 400)
+		common.ErrorResp(c, errors.Errorf("解析会话数据失败: %w", err), 400)
 		return
 	}
 
 	// 完成注册流程
 	credential, err := authnInstance.FinishRegistration(user, sessionData, c.Request)
 	if err != nil {
-		common.ErrorResp(c, fmt.Errorf("完成注册流程失败: %w", err), 400)
+		common.ErrorResp(c, errors.Errorf("完成注册流程失败: %w", err), 400)
 		return
 	}
 
 	// 保存凭证
 	if err = db.RegisterAuthn(user, credential); err != nil {
-		common.ErrorResp(c, fmt.Errorf("保存凭证失败: %w", err), 400)
+		common.ErrorResp(c, errors.Errorf("保存凭证失败: %w", err), 400)
 		return
 	}
 
 	// 清除用户缓存
 	if err = op.DelUserCache(user.Username); err != nil {
-		common.ErrorResp(c, fmt.Errorf("清除用户缓存失败: %w", err), 400)
+		common.ErrorResp(c, errors.Errorf("清除用户缓存失败: %w", err), 400)
 		return
 	}
 
@@ -283,7 +284,7 @@ func DeleteAuthnLogin(c *gin.Context) {
 	// 解析请求
 	var req DeleteAuthnRequest
 	if err := c.ShouldBind(&req); err != nil {
-		common.ErrorResp(c, fmt.Errorf("解析请求失败: %w", err), 400)
+		common.ErrorResp(c, errors.Errorf("解析请求失败: %w", err), 400)
 		return
 	}
 
@@ -295,13 +296,13 @@ func DeleteAuthnLogin(c *gin.Context) {
 
 	// 删除凭证
 	if err := db.RemoveAuthn(user, req.ID); err != nil {
-		common.ErrorResp(c, fmt.Errorf("删除凭证失败: %w", err), 400)
+		common.ErrorResp(c, errors.Errorf("删除凭证失败: %w", err), 400)
 		return
 	}
 
 	// 清除用户缓存
 	if err := op.DelUserCache(user.Username); err != nil {
-		common.ErrorResp(c, fmt.Errorf("清除用户缓存失败: %w", err), 400)
+		common.ErrorResp(c, errors.Errorf("清除用户缓存失败: %w", err), 400)
 		return
 	}
 

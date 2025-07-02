@@ -3,7 +3,6 @@ package net
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -120,7 +119,7 @@ type ConcurrencyLimit struct {
 	Limit int // 需要大于0
 }
 
-var ErrExceedMaxConcurrency = fmt.Errorf("ExceedMaxConcurrency")
+var ErrExceedMaxConcurrency = errors.Errorf("ExceedMaxConcurrency")
 
 func (l *ConcurrencyLimit) sub() error {
 	l._m.Lock()
@@ -275,7 +274,7 @@ func (d *downloader) interrupt() error {
 	if d.written != d.params.Range.Length {
 		log.Debugf("Downloader interrupt before finish")
 		if d.getErr() == nil {
-			d.setErr(fmt.Errorf("interrupted"))
+			d.setErr(errors.Errorf("interrupted"))
 		}
 	}
 	d.cancel(d.err)
@@ -381,8 +380,8 @@ func (d *downloader) downloadChunk(ch *chunk) error {
 	return err
 }
 
-var errCancelConcurrency = fmt.Errorf("cancel concurrency")
-var errInfiniteRetry = fmt.Errorf("infinite retry")
+var errCancelConcurrency = errors.Errorf("cancel concurrency")
+var errInfiniteRetry = errors.Errorf("infinite retry")
 
 func (d *downloader) tryDownloadChunk(params *HttpRequestParams, ch *chunk) (int64, error) {
 	resp, err := d.cfg.HttpClient(d.ctx, params)
@@ -403,7 +402,7 @@ func (d *downloader) tryDownloadChunk(params *HttpRequestParams, ch *chunk) (int
 			case http.StatusGatewayTimeout:
 			}
 			<-time.After(time.Millisecond * 200)
-			return 0, &errNeedRetry{err: fmt.Errorf("http request failure,status: %d", resp.StatusCode)}
+			return 0, &errNeedRetry{err: errors.Errorf("http request failure,status: %d", resp.StatusCode)}
 		}
 
 		// 来到这 说明第1个分片下载 连接成功了
@@ -448,7 +447,7 @@ func (d *downloader) tryDownloadChunk(params *HttpRequestParams, ch *chunk) (int
 		return n, &errNeedRetry{err: err}
 	}
 	if n != ch.size {
-		err = fmt.Errorf("chunk download size incorrect, expected=%d, got=%d", ch.size, n)
+		err = errors.Errorf("chunk download size incorrect, expected=%d, got=%d", ch.size, n)
 		return n, &errNeedRetry{err: err}
 	}
 
@@ -485,16 +484,16 @@ func (d *downloader) checkTotalBytes(resp *http.Response) error {
 		if totalStr != "*" {
 			total, err = strconv.ParseInt(totalStr, 10, 64)
 			if err != nil {
-				err = fmt.Errorf("failed extracting file size")
+				err = errors.Errorf("failed extracting file size")
 			}
 		} else {
-			err = fmt.Errorf("file size unknown")
+			err = errors.Errorf("file size unknown")
 		}
 
 		totalBytes = total
 	}
 	if totalBytes != d.params.Size && err == nil {
-		err = fmt.Errorf("expect file size=%d unmatch remote report size=%d, need refresh cache", d.params.Size, totalBytes)
+		err = errors.Errorf("expect file size=%d unmatch remote report size=%d, need refresh cache", d.params.Size, totalBytes)
 	}
 	if err != nil {
 		// _ = d.interrupt()

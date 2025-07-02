@@ -59,7 +59,7 @@ func (t *Transmission) Init() (string, error) {
 	}
 
 	if !ok {
-		return "", fmt.Errorf("remote transmission RPC version (v%d) is incompatible with the transmission library (v%d): remote needs at least v%d",
+		return "", errors.Errorf("remote transmission RPC version (v%d) is incompatible with the transmission library (v%d): remote needs at least v%d",
 			serverVersion, transmissionrpc.RPCVersion, serverMinimumVersion)
 	}
 
@@ -113,7 +113,7 @@ func (t *Transmission) AddURL(args *tool.AddUrlArgs) (string, error) {
 	}
 
 	if torrent.ID == nil {
-		return "", fmt.Errorf("failed get torrent ID")
+		return "", errors.Errorf("failed get torrent ID")
 	}
 	gid := strconv.FormatInt(*torrent.ID, 10)
 	return gid, nil
@@ -142,7 +142,7 @@ func (t *Transmission) Status(task *tool.DownloadTask) (*tool.Status, error) {
 	}
 
 	if len(infos) < 1 {
-		return nil, fmt.Errorf("failed get status, wrong gid: %s", task.GID)
+		return nil, errors.Errorf("failed get status, wrong gid: %s", task.GID)
 	}
 	info := infos[0]
 

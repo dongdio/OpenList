@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
 
@@ -61,9 +62,9 @@ func (d *GoogleDrive) refreshToken() error {
 		}
 		if resp.RefreshToken == "" || resp.AccessToken == "" {
 			if resp.ErrorMessage != "" {
-				return fmt.Errorf("empty token returned from official API: %s", resp.ErrorMessage)
+				return errors.Errorf("empty token returned from official API: %s", resp.ErrorMessage)
 			}
-			return fmt.Errorf("empty token returned from official API")
+			return errors.Errorf("empty token returned from official API, a wrong refresh token may have been used")
 		}
 		d.AccessToken = resp.AccessToken
 		d.RefreshToken = resp.RefreshToken
@@ -72,7 +73,7 @@ func (d *GoogleDrive) refreshToken() error {
 	}
 	// 使用本地客户端的情况下检查是否为空
 	if d.ClientID == "" || d.ClientSecret == "" {
-		return fmt.Errorf("empty ClientID or ClientSecret")
+		return errors.Errorf("empty ClientID or ClientSecret")
 	}
 	// 走原有的刷新逻辑
 
@@ -161,7 +162,7 @@ func (d *GoogleDrive) refreshToken() error {
 		}
 		log.Debug(res.String())
 		if e.Error != "" {
-			return fmt.Errorf(e.Error)
+			return errors.Errorf(e.Error)
 		}
 		d.AccessToken = resp.AccessToken
 		return nil
@@ -183,7 +184,7 @@ func (d *GoogleDrive) refreshToken() error {
 	}
 	log.Debug(res.String())
 	if e.Error != "" {
-		return fmt.Errorf(e.Error)
+		return errors.Errorf(e.Error)
 	}
 	d.AccessToken = resp.AccessToken
 	return nil
@@ -214,7 +215,7 @@ func (d *GoogleDrive) request(url string, method string, callback base.ReqCallba
 			}
 			return d.request(url, method, callback, resp)
 		}
-		return nil, fmt.Errorf("%s: %v", e.Error.Message, e.Error.Errors)
+		return nil, errors.Errorf("%s: %v", e.Error.Message, e.Error.Errors)
 	}
 	return res.Bytes(), nil
 }

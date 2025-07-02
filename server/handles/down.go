@@ -10,6 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/microcosm-cc/bluemonday"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/yuin/goldmark"
 
@@ -193,7 +194,7 @@ func localProxy(c *gin.Context, link *model.Link, file model.Obj, proxyRange boo
 			// 将Markdown转换为HTML
 			var html bytes.Buffer
 			if err = goldmark.Convert(buf.Bytes(), &html); err != nil {
-				err = fmt.Errorf("markdown conversion failed: %w", err)
+				err = errors.Errorf("markdown conversion failed: %w", err)
 			} else {
 				// 清空原缓冲区并进行安全过滤
 				buf.Reset()

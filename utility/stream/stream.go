@@ -3,12 +3,11 @@ package stream
 import (
 	"bytes"
 	"context"
-	"errors"
-	"fmt"
 	"io"
 	"math"
 	"os"
 
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"go4.org/readerutil"
 
@@ -67,9 +66,11 @@ func (f *FileStream) Close() error {
 		} else {
 			f.tmpFile = nil
 		}
+		if err2 != nil {
+			logrus.Error("failed to remove file", f.tmpFile.Name(), err2)
+		}
 	}
-
-	return errors.Join(err1, err2)
+	return errors.Wrap(err1, "failed to close stream")
 }
 
 func (f *FileStream) GetExist() model.Obj {
@@ -134,7 +135,7 @@ func (f *FileStream) RangeRead(httpRange http_range.Range) (io.Reader, error) {
 				return nil, err
 			}
 			if n != int(bufSize) {
-				return nil, fmt.Errorf("stream RangeRead did not get all data in peek, expect =%d ,actual =%d", bufSize, n)
+				return nil, errors.Errorf("stream RangeRead did not get all data in peek, expect =%d ,actual =%d", bufSize, n)
 			}
 			f.peekBuff = bytes.NewReader(buf)
 			f.Reader = io.MultiReader(f.peekBuff, f.Reader)
@@ -221,7 +222,7 @@ func NewSeekableStream(fs FileStream, link *model.Link) (*SeekableStream, error)
 	if fs.Reader != nil {
 		return ss, nil
 	}
-	return nil, fmt.Errorf("illegal seekableStream")
+	return nil, errors.Errorf("illegal seekableStream")
 }
 
 // func (ss *SeekableStream) Peek(length int) {
@@ -261,7 +262,7 @@ func (ss *SeekableStream) Read(p []byte) (n int, err error) {
 	// defer f.mu.Unlock()
 	if ss.Reader == nil {
 		if ss.rangeReadCloser == nil {
-			return 0, fmt.Errorf("illegal seekableStream")
+			return 0, errors.Errorf("illegal seekableStream")
 		}
 		rc, err := ss.rangeReadCloser.RangeRead(ss.Ctx, http_range.Range{Length: -1})
 		if err != nil {

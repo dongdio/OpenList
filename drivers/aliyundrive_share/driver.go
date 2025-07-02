@@ -2,11 +2,11 @@ package aliyundrive_share
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/OpenListTeam/rateg"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
 
@@ -75,7 +75,7 @@ func (d *AliyundriveShare) Drop(ctx context.Context) error {
 
 func (d *AliyundriveShare) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
 	if d.limitList == nil {
-		return nil, fmt.Errorf("driver not init")
+		return nil, errors.Errorf("driver not init")
 	}
 	return d.limitList(ctx, dir)
 }
@@ -92,7 +92,7 @@ func (d *AliyundriveShare) list(ctx context.Context, dir model.Obj) ([]model.Obj
 
 func (d *AliyundriveShare) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	if d.limitLink == nil {
-		return nil, fmt.Errorf("driver not init")
+		return nil, errors.Errorf("driver not init")
 	}
 	return d.limitLink(ctx, file)
 }

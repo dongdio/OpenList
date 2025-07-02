@@ -2,7 +2,8 @@ package doubao_share
 
 import (
 	"encoding/json"
-	"fmt"
+
+	"github.com/pkg/errors"
 
 	"github.com/dongdio/OpenList/internal/model"
 )
@@ -191,7 +192,7 @@ func (r *CommonResp) GetError() error {
 		errMsg = r.Error.Message
 	}
 
-	return fmt.Errorf("[doubao] API error (code: %d): %s", r.Code, errMsg)
+	return errors.Errorf("[doubao] API error (code: %d): %s", r.Code, errMsg)
 }
 
 // UnmarshalData 将data字段解析为指定类型

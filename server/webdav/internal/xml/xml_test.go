@@ -12,6 +12,8 @@ import (
 	"strings"
 	"testing"
 	"unicode/utf8"
+
+	"github.com/pkg/errors"
 )
 
 const testInput = `
@@ -714,7 +716,7 @@ func TestDirectivesWithComments(t *testing.T) {
 // Writer whose Write method always returns an error.
 type errWriter struct{}
 
-func (errWriter) Write(p []byte) (n int, err error) { return 0, fmt.Errorf("unwritable") }
+func (errWriter) Write(p []byte) (n int, err error) { return 0, errors.Errorf("unwritable") }
 
 func TestEscapeTextIOErrors(t *testing.T) {
 	expectErr := "unwritable"

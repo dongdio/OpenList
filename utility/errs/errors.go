@@ -1,10 +1,9 @@
 package errs
 
 import (
-	"errors"
 	"fmt"
 
-	pkgerr "github.com/pkg/errors"
+	"github.com/pkg/errors"
 )
 
 var (
@@ -28,16 +27,16 @@ var (
 // NewErr wrap constant error with an extra message
 // use errors.Is(err1, StorageNotFound) to check if err belongs to any internal error
 func NewErr(err error, format string, a ...any) error {
-	return fmt.Errorf("%w; %s", err, fmt.Sprintf(format, a...))
+	return errors.Errorf("%v; %s", err, fmt.Sprintf(format, a...))
 }
 
 func IsNotFoundError(err error) bool {
-	return errors.Is(pkgerr.Cause(err), ObjectNotFound) || errors.Is(pkgerr.Cause(err), StorageNotFound)
+	return errors.Is(errors.Cause(err), ObjectNotFound) || errors.Is(errors.Cause(err), StorageNotFound)
 }
 
 func IsNotSupportError(err error) bool {
-	return errors.Is(pkgerr.Cause(err), NotSupport)
+	return errors.Is(errors.Cause(err), NotSupport)
 }
 func IsNotImplement(err error) bool {
-	return errors.Is(pkgerr.Cause(err), NotImplement)
+	return errors.Is(errors.Cause(err), NotImplement)
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -12,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
 
@@ -231,7 +231,7 @@ x-oss-user-agent:aliyun-sdk-js/6.6.1 Chrome 98.0.4758.80 on Windows 10 64-bit
 		return "", err
 	}
 	if res.StatusCode() != 200 {
-		return "", fmt.Errorf("up status: %d, error: %s", res.StatusCode(), res.String())
+		return "", errors.Errorf("up status: %d, error: %s", res.StatusCode(), res.String())
 	}
 	return res.Header().Get("Etag"), nil
 }
@@ -301,7 +301,7 @@ x-oss-user-agent:aliyun-sdk-js/6.6.1 Chrome 98.0.4758.80 on Windows 10 64-bit
 		return err
 	}
 	if res.StatusCode() != 200 {
-		return fmt.Errorf("up status: %d, error: %s", res.StatusCode(), res.String())
+		return errors.Errorf("up status: %d, error: %s", res.StatusCode(), res.String())
 	}
 	return nil
 }

@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/html"
 
@@ -116,7 +117,7 @@ func getCookiesWithPassword(link, password string) (string, error) {
 		}
 	}
 	if fedAuthCookie == "" {
-		return "", fmt.Errorf("wrong password")
+		return "", errors.Errorf("wrong password")
 	}
 	return fmt.Sprintf("FedAuth=%s;", fedAuthCookie), nil
 }
@@ -156,7 +157,7 @@ func (d *OnedriveSharelink) getHeaders() (http.Header, error) {
 		redirectUrl := answerNoRedirect.Header.Get("Location")
 		log.Debugln("redirectUrl:", redirectUrl)
 		if redirectUrl == "" {
-			return nil, fmt.Errorf("password protected link. Please provide password")
+			return nil, errors.Errorf("password protected link. Please provide password")
 		}
 		header.Set("Cookie", answerNoRedirect.Header.Get("Set-Cookie"))
 		header.Set("Referer", redirectUrl)

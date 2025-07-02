@@ -8,11 +8,12 @@ import (
 	"bufio"
 	"bytes"
 	"encoding"
-	"fmt"
 	"io"
 	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 const (
@@ -214,7 +215,7 @@ func (enc *Encoder) EncodeToken(t Token) error {
 		escapeText(p, t, false)
 	case Comment:
 		if bytes.Contains(t, endComment) {
-			return fmt.Errorf("xml: EncodeToken of Comment containing --> marker")
+			return errors.Errorf("xml: EncodeToken of Comment containing --> marker")
 		}
 		p.WriteString("<!--")
 		p.Write(t)
@@ -224,13 +225,13 @@ func (enc *Encoder) EncodeToken(t Token) error {
 		// First token to be encoded which is also a ProcInst with target of xml
 		// is the xml declaration. The only ProcInst where target of xml is allowed.
 		if t.Target == "xml" && p.Buffered() != 0 {
-			return fmt.Errorf("xml: EncodeToken of ProcInst xml target only valid for xml declaration, first token encoded")
+			return errors.Errorf("xml: EncodeToken of ProcInst xml target only valid for xml declaration, first token encoded")
 		}
 		if !isNameString(t.Target) {
-			return fmt.Errorf("xml: EncodeToken of ProcInst with invalid Target")
+			return errors.Errorf("xml: EncodeToken of ProcInst with invalid Target")
 		}
 		if bytes.Contains(t.Inst, endProcInst) {
-			return fmt.Errorf("xml: EncodeToken of ProcInst containing ?> marker")
+			return errors.Errorf("xml: EncodeToken of ProcInst containing ?> marker")
 		}
 		p.WriteString("<?")
 		p.WriteString(t.Target)
@@ -241,13 +242,13 @@ func (enc *Encoder) EncodeToken(t Token) error {
 		p.WriteString("?>")
 	case Directive:
 		if !isValidDirective(t) {
-			return fmt.Errorf("xml: EncodeToken of Directive containing wrong < or > markers")
+			return errors.Errorf("xml: EncodeToken of Directive containing wrong < or > markers")
 		}
 		p.WriteString("<!")
 		p.Write(t)
 		p.WriteString(">")
 	default:
-		return fmt.Errorf("xml: EncodeToken of invalid token type")
+		return errors.Errorf("xml: EncodeToken of invalid token type")
 
 	}
 	return p.cachedWriteError()
@@ -350,7 +351,7 @@ func (p *printer) defineNS(attr Attr, ignoreNonEmptyDefault bool) error {
 	var prefix string
 	if attr.Name.Local == "xmlns" {
 		if attr.Name.Space != "" && attr.Name.Space != "xml" && attr.Name.Space != xmlURL {
-			return fmt.Errorf("xml: cannot redefine xmlns attribute prefix")
+			return errors.Errorf("xml: cannot redefine xmlns attribute prefix")
 		}
 	} else if attr.Name.Space == "xmlns" && attr.Name.Local != "" {
 		prefix = attr.Name.Local
@@ -555,7 +556,7 @@ var (
 // If val was obtained from a struct field, finfo must have its details.
 func (p *printer) marshalValue(val reflect.Value, finfo *fieldInfo, startTemplate *StartElement) error {
 	if startTemplate != nil && startTemplate.Name.Local == "" {
-		return fmt.Errorf("xml: EncodeElement of StartElement with missing name")
+		return errors.Errorf("xml: EncodeElement of StartElement with missing name")
 	}
 
 	if !val.IsValid() {
@@ -816,7 +817,7 @@ func (p *printer) marshalInterface(val Marshaler, start StartElement) error {
 
 	// Make sure MarshalXML closed all its tags. p.tags[n-1] is the mark.
 	if len(p.tags) > n {
-		return fmt.Errorf("xml: %s.MarshalXML wrote invalid XML: <%s> not closed", receiverType(val), p.tags[len(p.tags)-1].Local)
+		return errors.Errorf("xml: %s.MarshalXML wrote invalid XML: <%s> not closed", receiverType(val), p.tags[len(p.tags)-1].Local)
 	}
 	p.tags = p.tags[:n-1]
 	return nil
@@ -838,7 +839,7 @@ func (p *printer) marshalTextInterface(val encoding.TextMarshaler, start StartEl
 // writeStart writes the given start element.
 func (p *printer) writeStart(start *StartElement) error {
 	if start.Name.Local == "" {
-		return fmt.Errorf("xml: start tag with no name")
+		return errors.Errorf("xml: start tag with no name")
 	}
 
 	p.tags = append(p.tags, start.Name)
@@ -901,16 +902,16 @@ func (p *printer) writeName(name Name, isAttr bool) {
 
 func (p *printer) writeEnd(name Name) error {
 	if name.Local == "" {
-		return fmt.Errorf("xml: end tag with no name")
+		return errors.Errorf("xml: end tag with no name")
 	}
 	if len(p.tags) == 0 || p.tags[len(p.tags)-1].Local == "" {
-		return fmt.Errorf("xml: end tag </%s> without start tag", name.Local)
+		return errors.Errorf("xml: end tag </%s> without start tag", name.Local)
 	}
 	if top := p.tags[len(p.tags)-1]; top != name {
 		if top.Local != name.Local {
-			return fmt.Errorf("xml: end tag </%s> does not match start tag <%s>", name.Local, top.Local)
+			return errors.Errorf("xml: end tag </%s> does not match start tag <%s>", name.Local, top.Local)
 		}
-		return fmt.Errorf("xml: end tag </%s> in namespace %s does not match start tag <%s> in namespace %s", name.Local, name.Space, top.Local, top.Space)
+		return errors.Errorf("xml: end tag </%s> in namespace %s does not match start tag <%s> in namespace %s", name.Local, name.Space, top.Local, top.Space)
 	}
 	p.tags = p.tags[:len(p.tags)-1]
 
@@ -1030,7 +1031,7 @@ func (p *printer) marshalStruct(tinfo *typeInfo, val reflect.Value) error {
 			}
 			k := vf.Kind()
 			if !(k == reflect.String || k == reflect.Slice && vf.Type().Elem().Kind() == reflect.Uint8) {
-				return fmt.Errorf("xml: bad type for comment field of %s", val.Type())
+				return errors.Errorf("xml: bad type for comment field of %s", val.Type())
 			}
 			if vf.Len() == 0 {
 				continue
@@ -1058,7 +1059,7 @@ func (p *printer) marshalStruct(tinfo *typeInfo, val reflect.Value) error {
 				panic("can't happen")
 			}
 			if dashDash {
-				return fmt.Errorf(`xml: comments must not contain "--"`)
+				return errors.Errorf(`xml: comments must not contain "--"`)
 			}
 			if dashLast {
 				// "--->" is invalid grammar. Make it "- -->"

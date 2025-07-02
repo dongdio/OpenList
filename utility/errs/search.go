@@ -1,8 +1,10 @@
 package errs
 
-import "fmt"
+import (
+	"github.com/pkg/errors"
+)
 
 var (
-	SearchNotAvailable  = fmt.Errorf("search not available")
-	BuildIndexIsRunning = fmt.Errorf("build index is running, please try later")
+	SearchNotAvailable  = errors.Errorf("search not available")
+	BuildIndexIsRunning = errors.Errorf("build index is running, please try later")
 )

@@ -146,7 +146,7 @@ func (d *Github) List(ctx context.Context, dir model.Obj, args model.ListArgs) (
 			return nil, err
 		}
 		if tree.Truncated {
-			return nil, fmt.Errorf("tree %s is truncated", dir.GetPath())
+			return nil, errors.Errorf("tree %s is truncated", dir.GetPath())
 		}
 		ret := make([]model.Obj, 0, len(tree.Trees))
 		for _, t := range tree.Trees {
@@ -735,7 +735,7 @@ func (d *Github) putBlob(ctx context.Context, s model.FileStreamer, up driver.Up
 		if err = utils.Json.Unmarshal(resBody, &errMsg); err != nil {
 			return "", errors.New(res.Status)
 		} else {
-			return "", fmt.Errorf("%s: %s", res.Status, errMsg.Message)
+			return "", errors.Errorf("%s: %s", res.Status, errMsg.Message)
 		}
 	}
 	var resp PutBlobResp
@@ -793,14 +793,14 @@ func (d *Github) getTreeDirectly(path string) (*TreeResp, string, error) {
 		return nil, "", err
 	}
 	if p.Entries == nil {
-		return nil, "", fmt.Errorf("%s is not a folder", path)
+		return nil, "", errors.Errorf("%s is not a folder", path)
 	}
 	tree, err := d.getTree(p.Sha)
 	if err != nil {
 		return nil, "", err
 	}
 	if tree.Truncated {
-		return nil, "", fmt.Errorf("tree %s is truncated", path)
+		return nil, "", errors.Errorf("tree %s is truncated", path)
 	}
 	return tree, p.Sha, nil
 }

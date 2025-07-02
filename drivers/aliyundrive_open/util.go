@@ -43,7 +43,7 @@ func (d *AliyundriveOpen) _refreshToken() (string, string, error) {
 			if resp.ErrorMessage != "" {
 				return "", "", errors.Errorf("failed to refresh token: %s", resp.ErrorMessage)
 			}
-			return "", "", errors.Errorf("empty token returned from official API")
+			return "", "", errors.Errorf("empty token returned from official API, a wrong refresh token may have been used")
 		}
 		return resp.AccessToken, resp.RefreshToken, nil
 	}

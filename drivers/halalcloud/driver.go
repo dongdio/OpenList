@@ -17,6 +17,7 @@ import (
 	"github.com/city404/v6-public-rpc-proto/go/v6/common"
 	pbPublicUser "github.com/city404/v6-public-rpc-proto/go/v6/user"
 	pubUserFile "github.com/city404/v6-public-rpc-proto/go/v6/userfile"
+	"github.com/pkg/errors"
 	"github.com/rclone/rclone/lib/readers"
 	"github.com/zzzhr1990/go-common-entity/userfile"
 
@@ -258,7 +259,7 @@ func (d *HalalCloud) getLink(ctx context.Context, file model.Obj, args model.Lin
 			length = -1
 		}
 		if err != nil {
-			return nil, fmt.Errorf("open download file failed: %w", err)
+			return nil, errors.Errorf("open download file failed: %w", err)
 		}
 		oo := &openObject{
 			ctx:     ctx,

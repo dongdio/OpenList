@@ -1,11 +1,10 @@
 package yandex_disk
 
 import (
-	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 
+	"github.com/pkg/errors"
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/drivers/base"
@@ -37,9 +36,9 @@ func (d *YandexDisk) refreshToken() error {
 		}
 		if resp.RefreshToken == "" || resp.AccessToken == "" {
 			if resp.ErrorMessage != "" {
-				return fmt.Errorf("faild tp refresh token: %s", resp.ErrorMessage)
+				return errors.Errorf("faild tp refresh token: %s", resp.ErrorMessage)
 			}
-			return fmt.Errorf("empty token returned from official API")
+			return errors.Errorf("empty token returned from official API, a wrong refresh token may have been used")
 		}
 		d.AccessToken = resp.AccessToken
 		d.RefreshToken = resp.RefreshToken
@@ -48,7 +47,7 @@ func (d *YandexDisk) refreshToken() error {
 	}
 	// 使用本地客户端的情况下检查是否为空
 	if d.ClientID == "" || d.ClientSecret == "" {
-		return fmt.Errorf("empty ClientID or ClientSecret")
+		return errors.Errorf("empty ClientID or ClientSecret")
 	}
 	// 走原有的刷新逻辑
 	u := "https://oauth.yandex.com/token"
@@ -64,7 +63,7 @@ func (d *YandexDisk) refreshToken() error {
 		return err
 	}
 	if e.Error != "" {
-		return fmt.Errorf("%s : %s", e.Error, e.ErrorDescription)
+		return errors.Errorf("%s : %s", e.Error, e.ErrorDescription)
 	}
 	d.AccessToken, d.RefreshToken = resp.AccessToken, resp.RefreshToken
 	op.MustSaveDriverStorage(d)

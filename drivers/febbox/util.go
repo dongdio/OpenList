@@ -1,11 +1,10 @@
 package febbox
 
 import (
-	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 
+	"github.com/pkg/errors"
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/drivers/base"
@@ -139,7 +138,7 @@ func (d *FebBox) getDownloadLink(id string, ip string) (string, error) {
 		return "", err
 	}
 	if len(fileDownloadResp.Data) == 0 {
-		return "", fmt.Errorf("can not get download link, code:%d, msg:%s", fileDownloadResp.Code, fileDownloadResp.Msg)
+		return "", errors.Errorf("can not get download link, code:%d, msg:%s", fileDownloadResp.Code, fileDownloadResp.Msg)
 	}
 
 	return fileDownloadResp.Data[0].DownloadURL, nil

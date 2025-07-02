@@ -2,11 +2,11 @@ package google_photo
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 
+	"github.com/pkg/errors"
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/drivers/base"
@@ -113,7 +113,7 @@ func (d *GooglePhoto) Put(ctx context.Context, dstDir model.Obj, stream model.Fi
 			}
 			return d.Put(ctx, dstDir, stream, up)
 		}
-		return fmt.Errorf("%s: %v", e.Error.Message, e.Error.Errors)
+		return errors.Errorf("%s: %v", e.Error.Message, e.Error.Errors)
 	}
 
 	// Upload to the Google Photo

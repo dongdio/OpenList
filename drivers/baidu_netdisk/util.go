@@ -2,7 +2,6 @@ package baidu_netdisk
 
 import (
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -11,6 +10,7 @@ import (
 	"unicode"
 
 	"github.com/avast/retry-go"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
 
@@ -54,9 +54,9 @@ func (d *BaiduNetdisk) _refreshToken() error {
 		}
 		if resp.RefreshToken == "" || resp.AccessToken == "" {
 			if resp.ErrorMessage != "" {
-				return fmt.Errorf("empty token returned from official API: %s", resp.ErrorMessage)
+				return errors.Errorf("empty token returned from official API: %s", resp.ErrorMessage)
 			}
-			return fmt.Errorf("empty token returned from official API")
+			return errors.Errorf("empty token returned from official API, a wrong refresh token may have been used")
 		}
 		d.AccessToken = resp.AccessToken
 		d.RefreshToken = resp.RefreshToken
@@ -65,7 +65,7 @@ func (d *BaiduNetdisk) _refreshToken() error {
 	}
 	// 使用本地客户端的情况下检查是否为空
 	if d.ClientID == "" || d.ClientSecret == "" {
-		return fmt.Errorf("empty ClientID or ClientSecret")
+		return errors.Errorf("empty ClientID or ClientSecret")
 	}
 	// 走原有的刷新逻辑
 	u := "https://openapi.baidu.com/oauth/2.0/token"
@@ -85,7 +85,7 @@ func (d *BaiduNetdisk) _refreshToken() error {
 		return err
 	}
 	if e.Error != "" {
-		return fmt.Errorf("%s : %s", e.Error, e.ErrorDescription)
+		return errors.Errorf("%s : %s", e.Error, e.ErrorDescription)
 	}
 	if resp.RefreshToken == "" {
 		return errs.EmptyToken
@@ -126,7 +126,7 @@ func (d *BaiduNetdisk) request(furl string, method string, callback base.ReqCall
 				return nil
 			}
 
-			return fmt.Errorf("req: [%s] ,errno: %d, refer to https://pan.baidu.com/union/doc/", furl, errno)
+			return errors.Errorf("req: [%s] ,errno: %d, refer to https://pan.baidu.com/union/doc/", furl, errno)
 		}
 		result = res.Bytes()
 		return nil

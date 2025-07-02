@@ -9,7 +9,6 @@ package webdav
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -17,6 +16,8 @@ import (
 	"path"
 	"strings"
 	"time"
+
+	"github.com/pkg/errors"
 
 	"github.com/dongdio/OpenList/internal/fs"
 	"github.com/dongdio/OpenList/internal/model"
@@ -370,7 +371,7 @@ func (h *Handler) handleGetHeadPost(w http.ResponseWriter, r *http.Request) (sta
 		}
 		err = common.Proxy(w, r, link, fi)
 		if err != nil {
-			return http.StatusInternalServerError, fmt.Errorf("webdav proxy error: %+v", err)
+			return http.StatusInternalServerError, errors.Errorf("webdav proxy error: %+v", err)
 		}
 	} else if storage.GetStorage().WebdavProxy() && downProxyUrl != "" {
 		u := fmt.Sprintf("%s%s?sign=%s",

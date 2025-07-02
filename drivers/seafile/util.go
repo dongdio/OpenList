@@ -1,18 +1,17 @@
 package seafile
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"strings"
 	"time"
 
-	"github.com/dongdio/OpenList/utility/errs"
-	"github.com/dongdio/OpenList/utility/utils"
-
+	"github.com/pkg/errors"
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/drivers/base"
+	"github.com/dongdio/OpenList/utility/errs"
+	"github.com/dongdio/OpenList/utility/utils"
 )
 
 func (d *Seafile) getToken() error {
@@ -32,7 +31,7 @@ func (d *Seafile) getToken() error {
 		return err
 	}
 	if res.StatusCode() >= 400 {
-		return fmt.Errorf("get token failed: %s", res.String())
+		return errors.Errorf("get token failed: %s", res.String())
 	}
 	d.authorization = fmt.Sprintf("Token %s", authResp.Token)
 	return nil
@@ -67,7 +66,7 @@ func (d *Seafile) request(method string, pathname string, callback base.ReqCallb
 		}
 	}
 	if res.StatusCode() >= 400 {
-		return nil, fmt.Errorf("request failed: %s", res.String())
+		return nil, errors.Errorf("request failed: %s", res.String())
 	}
 	return res.Bytes(), nil
 }

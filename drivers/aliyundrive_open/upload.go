@@ -3,7 +3,6 @@ package aliyundrive_open
 import (
 	"context"
 	"encoding/base64"
-	"fmt"
 	"io"
 	"math"
 	"net/http"
@@ -12,6 +11,7 @@ import (
 	"time"
 
 	"github.com/avast/retry-go"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
 
@@ -80,7 +80,7 @@ func (d *AliyundriveOpen) uploadPart(ctx context.Context, r io.Reader, partInfo 
 	}
 	_ = res.Body.Close()
 	if res.StatusCode != http.StatusOK && res.StatusCode != http.StatusConflict {
-		return fmt.Errorf("upload status: %d", res.StatusCode)
+		return errors.Errorf("upload status: %d", res.StatusCode)
 	}
 	return nil
 }
@@ -139,7 +139,7 @@ func (d *AliyundriveOpen) calProofCode(stream model.FileStreamer) (string, error
 	buf := make([]byte, length)
 	n, err := io.ReadFull(reader, buf)
 	if err == io.ErrUnexpectedEOF {
-		return "", fmt.Errorf("can't read data, expected=%d, got=%d", len(buf), n)
+		return "", errors.Errorf("can't read data, expected=%d, got=%d", len(buf), n)
 	}
 	if err != nil {
 		return "", err
@@ -207,7 +207,7 @@ func (d *AliyundriveOpen) upload(ctx context.Context, dstDir model.Obj, stream m
 		createData["content_hash"] = hash
 		createData["proof_code"], err = d.calProofCode(stream)
 		if err != nil {
-			return nil, fmt.Errorf("cal proof code error: %s", err.Error())
+			return nil, errors.Errorf("cal proof code error: %s", err.Error())
 		}
 		_, err = d.request("/adrive/v1.0/openFile/create", http.MethodPost, func(req *resty.Request) {
 			req.SetBody(createData).SetResult(&createResp)

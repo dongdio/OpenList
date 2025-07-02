@@ -5,12 +5,12 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/hex"
-	"fmt"
 	"io"
 	"math"
 	stdpath "path"
 	"strconv"
 
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/dongdio/OpenList/drivers/base"
@@ -45,9 +45,9 @@ func (d *Terabox) Init(ctx context.Context) error {
 	}
 	if resp.Errno != 0 {
 		if resp.Errno == 9000 {
-			return fmt.Errorf("terabox is not yet available in this area")
+			return errors.Errorf("terabox is not yet available in this area")
 		}
-		return fmt.Errorf("failed to check login status according to cookie")
+		return errors.Errorf("failed to check login status according to cookie")
 	}
 	return err
 }
@@ -171,7 +171,7 @@ func (d *Terabox) Put(ctx context.Context, dstDir model.Obj, stream model.FileSt
 	log.Debugf("%+v", precreateResp)
 	if precreateResp.Errno != 0 {
 		log.Debugln(string(res))
-		return fmt.Errorf("[terabox] failed to precreate file, errno: %d", precreateResp.Errno)
+		return errors.Errorf("[terabox] failed to precreate file, errno: %d", precreateResp.Errno)
 	}
 	if precreateResp.ReturnType == 2 {
 		return nil
@@ -265,7 +265,7 @@ func (d *Terabox) Put(ctx context.Context, dstDir model.Obj, stream model.FileSt
 		return err
 	}
 	if createResp.Errno != 0 {
-		return fmt.Errorf("[terabox] failed to create file, errno: %d", createResp.Errno)
+		return errors.Errorf("[terabox] failed to create file, errno: %d", createResp.Errno)
 	}
 	return nil
 }

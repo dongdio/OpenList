@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
@@ -102,7 +103,7 @@ func connectToDatabase(gormConfig *gorm.Config) (*gorm.DB, error) {
 	case "postgres":
 		return connectToPostgres(dbConfig, gormConfig)
 	default:
-		return nil, fmt.Errorf("unsupported database type: %s", dbConfig.Type)
+		return nil, errors.Errorf("unsupported database type: %s", dbConfig.Type)
 	}
 }
 
@@ -110,7 +111,7 @@ func connectToDatabase(gormConfig *gorm.Config) (*gorm.DB, error) {
 func connectToSQLite(dbConfig conf.Database, gormConfig *gorm.Config) (*gorm.DB, error) {
 	// Validate SQLite database file name
 	if !isValidSQLiteFileName(dbConfig.DBFile) {
-		return nil, fmt.Errorf("invalid SQLite database file name: %s", dbConfig.DBFile)
+		return nil, errors.Errorf("invalid SQLite database file name: %s", dbConfig.DBFile)
 	}
 
 	// Construct DSN with journal and vacuum settings

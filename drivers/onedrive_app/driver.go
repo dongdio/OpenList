@@ -2,12 +2,12 @@ package onedrive_app
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"net/url"
 	"path"
 	"sync"
 
+	"github.com/pkg/errors"
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/drivers/base"
@@ -154,7 +154,7 @@ func (d *OnedriveAPP) Rename(ctx context.Context, srcObj model.Obj, newName stri
 	if o, ok := srcObj.(*Object); ok {
 		parentID = o.ParentID
 	} else {
-		return fmt.Errorf("srcObj is not Object")
+		return errors.Errorf("srcObj is not Object")
 	}
 	if parentID == "" {
 		parentID = "root"

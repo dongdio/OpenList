@@ -2,7 +2,6 @@ package handles
 
 import (
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -13,6 +12,7 @@ import (
 	"github.com/OpenListTeam/go-cache"
 	"github.com/coreos/go-oidc"
 	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 	"gorm.io/gorm"
 	"resty.dev/v3"
@@ -181,7 +181,7 @@ func GetOIDCClient(c *gin.Context, useCompatibility bool, redirectUri, method st
 	// 创建OIDC提供者
 	provider, err := oidc.NewProvider(c, endpoint)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create OIDC provider: %w", err)
+		return nil, errors.Errorf("failed to create OIDC provider: %w", err)
 	}
 
 	// 获取客户端配置
@@ -250,13 +250,13 @@ func parseJWT(p string) ([]byte, error) {
 	// 分割JWT令牌
 	parts := strings.Split(p, ".")
 	if len(parts) < 2 {
-		return nil, fmt.Errorf("oidc: malformed jwt, expected 3 parts got %d", len(parts))
+		return nil, errors.Errorf("oidc: malformed jwt, expected 3 parts got %d", len(parts))
 	}
 
 	// 解码载荷部分
 	payload, err := base64.RawURLEncoding.DecodeString(parts[1])
 	if err != nil {
-		return nil, fmt.Errorf("oidc: malformed jwt payload: %w", err)
+		return nil, errors.Errorf("oidc: malformed jwt payload: %w", err)
 	}
 
 	return payload, nil
@@ -539,7 +539,7 @@ func SSOLoginCallback(c *gin.Context) {
 	}
 
 	if err != nil {
-		common.ErrorResp(c, fmt.Errorf("failed to exchange token: %w", err), 400)
+		common.ErrorResp(c, errors.Errorf("failed to exchange token: %w", err), 400)
 		return
 	}
 
@@ -571,7 +571,7 @@ func SSOLoginCallback(c *gin.Context) {
 	}
 
 	if err != nil {
-		common.ErrorResp(c, fmt.Errorf("failed to get user info: %w", err), 400)
+		common.ErrorResp(c, errors.Errorf("failed to get user info: %w", err), 400)
 		return
 	}
 

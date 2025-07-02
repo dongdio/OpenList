@@ -2,7 +2,6 @@ package ftp
 
 import (
 	"context"
-	"fmt"
 	stdpath "path"
 
 	"github.com/pkg/errors"
@@ -124,7 +123,7 @@ func Rename(ctx context.Context, oldPath, newPath string) error {
 
 			// 文件名相同但移动失败，尝试复制
 			if _, err1 := fs.Copy(ctx, srcPath, dstDir); err1 != nil {
-				return fmt.Errorf("failed move for %v, and failed try copying for %v", err, err1)
+				return errors.Errorf("failed move for %v, and failed try copying for %v", err, err1)
 			}
 			return nil
 		}

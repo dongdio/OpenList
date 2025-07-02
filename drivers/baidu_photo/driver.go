@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -14,6 +13,7 @@ import (
 	"time"
 
 	"github.com/avast/retry-go"
+	"github.com/pkg/errors"
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/drivers/base"
@@ -236,7 +236,7 @@ func (d *BaiduPhoto) Remove(ctx context.Context, obj model.Obj) error {
 func (d *BaiduPhoto) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) (model.Obj, error) {
 	// 不支持大小为0的文件
 	if stream.GetSize() == 0 {
-		return nil, fmt.Errorf("file size cannot be zero")
+		return nil, errors.Errorf("file size cannot be zero")
 	}
 
 	// TODO:

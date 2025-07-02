@@ -2,10 +2,10 @@ package doubao
 
 import (
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/dongdio/OpenList/internal/model"
+	"github.com/pkg/errors"
 )
 
 type BaseResp struct {
@@ -398,7 +398,7 @@ func (r *CommonResp) GetError() error {
 		errMsg = r.Error.Message
 	}
 
-	return fmt.Errorf("[doubao] API error (code: %d): %s", r.Code, errMsg)
+	return errors.Errorf("[doubao] API error (code: %d): %s", r.Code, errMsg)
 }
 
 // UnmarshalData 将data字段解析为指定类型

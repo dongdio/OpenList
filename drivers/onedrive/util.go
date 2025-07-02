@@ -96,7 +96,7 @@ func (d *Onedrive) _refreshToken() error {
 			if resp.ErrorMessage != "" {
 				return errors.Errorf("empty token returned from official API: %s", resp.ErrorMessage)
 			}
-			return errors.Errorf("empty token returned from official API")
+			return errors.Errorf("empty token returned from official API, a wrong refresh token may have been used")
 		}
 		d.AccessToken = resp.AccessToken
 		d.RefreshToken = resp.RefreshToken

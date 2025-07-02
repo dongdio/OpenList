@@ -2,7 +2,6 @@ package weiyun
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"math"
 	"net/http"
@@ -12,6 +11,7 @@ import (
 
 	"github.com/avast/retry-go"
 	weiyunsdkgo "github.com/foxxorcat/weiyun-sdk-go"
+	"github.com/pkg/errors"
 
 	"github.com/dongdio/OpenList/drivers/base"
 	"github.com/dongdio/OpenList/internal/driver"
@@ -91,7 +91,7 @@ func (d *WeiYun) Init(ctx context.Context) error {
 		return err
 	}
 	if len(folders) == 0 {
-		return fmt.Errorf("invalid directory ID")
+		return errors.Errorf("invalid directory ID")
 	}
 
 	folder := folders[len(folders)-1]

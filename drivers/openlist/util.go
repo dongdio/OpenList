@@ -1,9 +1,9 @@
 package openlist
 
 import (
-	"fmt"
 	"net/http"
 
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
 
@@ -49,7 +49,7 @@ func (d *OpenList) request(api, method string, callback base.ReqCallback, retry 
 	}
 	log.Debugf("[openlist] response body: %s", res.String())
 	if res.StatusCode() >= 400 {
-		return nil, res.StatusCode(), fmt.Errorf("request failed, status: %s", res.Status())
+		return nil, res.StatusCode(), errors.Errorf("request failed, status: %s", res.Status())
 	}
 	code := int(utils.GetBytes(res.Bytes(), "code").Int())
 	if code != 200 {
@@ -60,7 +60,7 @@ func (d *OpenList) request(api, method string, callback base.ReqCallback, retry 
 			}
 			return d.request(api, method, callback, true)
 		}
-		return nil, code, fmt.Errorf("request failed,code: %d, message: %s", code, utils.GetBytes(res.Bytes(), "message").String())
+		return nil, code, errors.Errorf("request failed,code: %d, message: %s", code, utils.GetBytes(res.Bytes(), "message").String())
 	}
 	return res.Bytes(), 200, nil
 }

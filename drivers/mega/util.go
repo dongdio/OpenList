@@ -2,11 +2,11 @@ package mega
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"sync"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/t3rm1n4l/go-mega"
 
 	"github.com/dongdio/OpenList/utility/utils"
@@ -47,7 +47,7 @@ func (oo *openObject) Read(p []byte) (n int, err error) {
 	oo.mu.Lock()
 	defer oo.mu.Unlock()
 	if oo.closed {
-		return 0, fmt.Errorf("read on closed file")
+		return 0, errors.Errorf("read on closed file")
 	}
 	// Skip data at the start if requested
 	for oo.skip > 0 {
@@ -87,7 +87,7 @@ func (oo *openObject) Close() (err error) {
 		return oo.d.Finish()
 	})
 	if err != nil {
-		return fmt.Errorf("failed to finish download: %w", err)
+		return errors.Errorf("failed to finish download: %w", err)
 	}
 	oo.closed = true
 	return nil

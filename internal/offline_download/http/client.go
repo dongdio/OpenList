@@ -1,7 +1,6 @@
 package http
 
 import (
-	"fmt"
 	"net/http"
 	"net/url"
 	"os"
@@ -12,6 +11,7 @@ import (
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/internal/offline_download/tool"
 	"github.com/dongdio/OpenList/utility/utils"
+	"github.com/pkg/errors"
 )
 
 type SimpleHttp struct {
@@ -63,7 +63,7 @@ func (s SimpleHttp) Run(task *tool.DownloadTask) error {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode >= 400 {
-		return fmt.Errorf("http status code %d", resp.StatusCode)
+		return errors.Errorf("http status code %d", resp.StatusCode)
 	}
 	// If Path is empty, use Hostname; otherwise, filePath euqals TempDir which causes os.Create to fail
 	urlPath := _u.Path

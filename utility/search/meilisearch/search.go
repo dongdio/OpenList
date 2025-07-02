@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/meilisearch/meilisearch-go"
+	"github.com/pkg/errors"
 
 	"github.com/dongdio/OpenList/internal/model"
 	"github.com/dongdio/OpenList/utility/search/searcher"
@@ -86,7 +87,7 @@ func (m *Meilisearch) BatchIndex(ctx context.Context, nodes []model.SearchNode) 
 	//	return err
 	// }
 	// if forTask.Status != meilisearch.TaskStatusSucceeded {
-	//	return fmt.Errorf("BatchIndex failed, task status is %s", forTask.Status)
+	//	return errors.Errorf("BatchIndex failed, task status is %s", forTask.Status)
 	// }
 	return nil
 }
@@ -165,7 +166,7 @@ func (m *Meilisearch) DelDirChild(ctx context.Context, prefix string) error {
 		return err
 	}
 	if taskStatus != meilisearch.TaskStatusSucceeded {
-		return fmt.Errorf("DelDir failed, task status is %s", taskStatus)
+		return errors.Errorf("DelDir failed, task status is %s", taskStatus)
 	}
 	return nil
 }
@@ -203,7 +204,7 @@ func (m *Meilisearch) Del(ctx context.Context, prefix string) error {
 		return err
 	}
 	if taskStatus != meilisearch.TaskStatusSucceeded {
-		return fmt.Errorf("DelDir failed, task status is %s", taskStatus)
+		return errors.Errorf("DelDir failed, task status is %s", taskStatus)
 	}
 	return nil
 }

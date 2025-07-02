@@ -19,13 +19,13 @@ import (
 func (d *AliDrive) createSession() error {
 	state, ok := global.Load(d.UserID)
 	if !ok {
-		return fmt.Errorf("can't load user state, user_id: %s", d.UserID)
+		return errors.Errorf("can't load user state, user_id: %s", d.UserID)
 	}
 	d.sign()
 	state.retry++
 	if state.retry > 3 {
 		state.retry = 0
-		return fmt.Errorf("createSession failed after three retries")
+		return errors.Errorf("createSession failed after three retries")
 	}
 	_, err, _ := d.request("https://api.alipan.com/users/v1/users/device/create_session", http.MethodPost, func(req *resty.Request) {
 		req.SetBody(base.Json{
@@ -72,7 +72,7 @@ func (d *AliDrive) refreshToken() error {
 		return err
 	}
 	if e.Code != "" {
-		return fmt.Errorf("failed to refresh token: %s", e.Message)
+		return errors.Errorf("failed to refresh token: %s", e.Message)
 	}
 	if resp.RefreshToken == "" {
 		return errors.New("failed to refresh token: refresh token is empty")

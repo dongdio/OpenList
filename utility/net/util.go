@@ -1,7 +1,6 @@
 package net
 
 import (
-	"fmt"
 	"io"
 	"math"
 	"mime/multipart"
@@ -10,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/dongdio/OpenList/utility/http_range"
@@ -335,7 +335,7 @@ func (l *LimitedReadCloser) Close() error {
 func GetRangedHttpReader(readCloser io.ReadCloser, offset, length int64) (io.ReadCloser, error) {
 	var length_int int
 	if length > math.MaxInt {
-		return nil, fmt.Errorf("doesnot support length bigger than int32 max ")
+		return nil, errors.Errorf("doesnot support length bigger than int32 max ")
 	}
 	length_int = int(length)
 

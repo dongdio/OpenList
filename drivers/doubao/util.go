@@ -5,7 +5,6 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"hash/crc32"
 	"io"
@@ -22,6 +21,7 @@ import (
 
 	"github.com/avast/retry-go"
 	"github.com/google/uuid"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
 
@@ -155,7 +155,7 @@ func (d *Doubao) getUserInfo() (UserInfo, error) {
 func (d *Doubao) signRequest(req *resty.Request, method, tokenType, uploadURL string) error {
 	parsedUrl, err := url.Parse(uploadURL)
 	if err != nil {
-		return fmt.Errorf("invalid URL format: %w", err)
+		return errors.Errorf("invalid URL format: %w", err)
 	}
 
 	var accessKeyId, secretAccessKey, sessionToken string
@@ -189,7 +189,7 @@ func (d *Doubao) signRequest(req *resty.Request, method, tokenType, uploadURL st
 	if req.Body != nil {
 		bodyBytes, ok := req.Body.([]byte)
 		if !ok {
-			return fmt.Errorf("request body must be []byte")
+			return errors.Errorf("request body must be []byte")
 		}
 
 		bodyHash = hashSHA256(string(bodyBytes))
@@ -386,7 +386,7 @@ func (d *Doubao) getUploadConfig(upConfig *UploadConfig, dataType string, file m
 			log.Debugln("[doubao] Upload token expired, re-fetching...")
 			newToken, err := d.initUploadToken()
 			if err != nil {
-				return fmt.Errorf("failed to refresh token: %w", err)
+				return errors.Errorf("failed to refresh token: %w", err)
 			}
 
 			d.UploadToken = newToken
@@ -396,7 +396,7 @@ func (d *Doubao) getUploadConfig(upConfig *UploadConfig, dataType string, file m
 			return retry.Error{errors.New("token refreshed, retry needed")}
 		}
 
-		return fmt.Errorf("get upload_config failed: %s", configResp.ResponseMetadata.Error.Message)
+		return errors.Errorf("get upload_config failed: %s", configResp.ResponseMetadata.Error.Message)
 	})
 
 	return err
@@ -479,7 +479,7 @@ func (d *Doubao) Upload(config *UploadConfig, dstDir model.Obj, file model.FileS
 	}
 
 	if uploadResp.Code != 2000 {
-		return nil, fmt.Errorf("upload failed: %s", uploadResp.Message)
+		return nil, errors.Errorf("upload failed: %s", uploadResp.Message)
 	}
 
 	uploadNodeResp, err := d.uploadNode(config, dstDir, file, dataType)
@@ -509,7 +509,7 @@ func (d *Doubao) UploadByMultipart(ctx context.Context, config *UploadConfig, fi
 		return err
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to initialize multipart upload: %w", err)
+		return nil, errors.Errorf("failed to initialize multipart upload: %w", err)
 	}
 	// 准备分片参数
 	chunkSize := DefaultChunkSize
@@ -522,7 +522,7 @@ func (d *Doubao) UploadByMultipart(ctx context.Context, config *UploadConfig, fi
 	// 缓存文件
 	tempFile, err := file.CacheFullInTempFile()
 	if err != nil {
-		return nil, fmt.Errorf("failed to cache file: %w", err)
+		return nil, errors.Errorf("failed to cache file: %w", err)
 	}
 	defer tempFile.Close()
 	up(10.0) // 更新进度
@@ -552,7 +552,7 @@ func (d *Doubao) UploadByMultipart(ctx context.Context, config *UploadConfig, fi
 			// 读取数据到内存
 			data, err := io.ReadAll(limitedReader)
 			if err != nil {
-				return fmt.Errorf("failed to read part %d: %w", partNumber, err)
+				return errors.Errorf("failed to read part %d: %w", partNumber, err)
 			}
 			// 计算CRC32
 			crc32Value := calculateCRC32(data)
@@ -563,7 +563,7 @@ func (d *Doubao) UploadByMultipart(ctx context.Context, config *UploadConfig, fi
 				uploadPart, err = d.uploadPart(config, uploadURL, uploadID, partNumber, data, crc32Value)
 				return err
 			}); err != nil {
-				return fmt.Errorf("part %d upload failed: %w", partNumber, err)
+				return errors.Errorf("part %d upload failed: %w", partNumber, err)
 			}
 			// 记录成功上传的分片
 			partsMutex.Lock()
@@ -588,13 +588,13 @@ func (d *Doubao) UploadByMultipart(ctx context.Context, config *UploadConfig, fi
 	if err = d._retryOperation("Complete multipart upload", func() error {
 		return d.completeMultipartUpload(config, uploadURL, uploadID, parts)
 	}); err != nil {
-		return nil, fmt.Errorf("failed to complete multipart upload: %w", err)
+		return nil, errors.Errorf("failed to complete multipart upload: %w", err)
 	}
 	// 提交上传
 	if err = d._retryOperation("Commit upload", func() error {
 		return d.commitMultipartUpload(config)
 	}); err != nil {
-		return nil, fmt.Errorf("failed to commit upload: %w", err)
+		return nil, errors.Errorf("failed to commit upload: %w", err)
 	}
 
 	up(98.0) // 更新到98%
@@ -605,7 +605,7 @@ func (d *Doubao) UploadByMultipart(ctx context.Context, config *UploadConfig, fi
 		uploadNodeResp, err = d.uploadNode(config, dstDir, file, dataType)
 		return err
 	}); err != nil {
-		return nil, fmt.Errorf("failed to upload node: %w", err)
+		return nil, errors.Errorf("failed to upload node: %w", err)
 	}
 
 	up(100.0) // 完成上传
@@ -651,7 +651,7 @@ func (d *Doubao) uploadRequest(uploadURL string, method string, storeInfo StoreI
 
 	res, err := req.Execute(method, uploadURL)
 	if err != nil && err != io.EOF {
-		return nil, fmt.Errorf("upload request failed: %w", err)
+		return nil, errors.Errorf("upload request failed: %w", err)
 	}
 
 	return res.Bytes(), nil
@@ -673,7 +673,7 @@ func (d *Doubao) initMultipartUpload(config *UploadConfig, uploadURL string, sto
 	}
 
 	if uploadResp.Code != 2000 {
-		return uploadId, fmt.Errorf("init upload failed: %s", uploadResp.Message)
+		return uploadId, errors.Errorf("init upload failed: %s", uploadResp.Message)
 	}
 
 	return uploadResp.Data.UploadId, nil
@@ -707,9 +707,9 @@ func (d *Doubao) uploadPart(config *UploadConfig, uploadURL, uploadID string, pa
 	}
 
 	if uploadResp.Code != 2000 {
-		return resp, fmt.Errorf("upload part failed: %s", uploadResp.Message)
+		return resp, errors.Errorf("upload part failed: %s", uploadResp.Message)
 	} else if uploadResp.Data.Crc32 != crc32Value {
-		return resp, fmt.Errorf("upload part failed: crc32 mismatch, expected %s, got %s", crc32Value, uploadResp.Data.Crc32)
+		return resp, errors.Errorf("upload part failed: crc32 mismatch, expected %s, got %s", crc32Value, uploadResp.Data.Crc32)
 	}
 
 	return uploadResp.Data, nil
@@ -738,14 +738,14 @@ func (d *Doubao) completeMultipartUpload(config *UploadConfig, uploadURL, upload
 		}
 		// 检查响应状态码 2000 成功 4024 分片合并中
 		if uploadResp.Code != 2000 && uploadResp.Code != 4024 {
-			return fmt.Errorf("finish upload failed: %s", uploadResp.Message)
+			return errors.Errorf("finish upload failed: %s", uploadResp.Message)
 		}
 
 		return err
 	})
 
 	if err != nil {
-		return fmt.Errorf("failed to complete multipart upload: %w", err)
+		return errors.Errorf("failed to complete multipart upload: %w", err)
 	}
 
 	return nil
@@ -767,7 +767,7 @@ func (d *Doubao) commitMultipartUpload(uploadConfig *UploadConfig) error {
 		"Functions":  []base.Json{},
 	})
 	if err != nil {
-		return fmt.Errorf("failed to marshal request data: %w", err)
+		return errors.Errorf("failed to marshal request data: %w", err)
 	}
 
 	_, err = d.requestApi(uploadURL, http.MethodPost, tokenType, func(req *resty.Request) {

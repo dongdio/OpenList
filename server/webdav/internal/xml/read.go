@@ -7,11 +7,11 @@ package xml
 import (
 	"bytes"
 	"encoding"
-	"errors"
-	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 // BUG(rsc): Mapping between XML elements and data structures is inherently flawed:
@@ -192,7 +192,7 @@ func (p *Decoder) unmarshalInterface(val Unmarshaler, start *StartElement) error
 	}
 
 	if !p.popEOF() {
-		return fmt.Errorf("xml: %s.UnmarshalXML did not consume entire <%s> element", receiverType(val), start.Name.Local)
+		return errors.Errorf("xml: %s.UnmarshalXML did not consume entire <%s> element", receiverType(val), start.Name.Local)
 	}
 
 	return nil

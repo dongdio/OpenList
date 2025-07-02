@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
 
@@ -49,7 +50,7 @@ func (d *Terabox) resetJsToken() error {
 	html := res.String()
 	jsToken := getStrBetween(html, "`function%20fn%28a%29%7Bwindow.jsToken%20%3D%20a%7D%3Bfn%28%22", "%22%29`")
 	if jsToken == "" {
-		return fmt.Errorf("jsToken not found, html: %s", html)
+		return errors.Errorf("jsToken not found, html: %s", html)
 	}
 	d.JsToken = jsToken
 	return nil
@@ -153,7 +154,7 @@ func (d *Terabox) getFiles(dir string) ([]File, error) {
 			return nil, err
 		}
 		if resp.Errno == 9000 {
-			return nil, fmt.Errorf("terabox is not yet available in this area")
+			return nil, errors.Errorf("terabox is not yet available in this area")
 		}
 		if len(resp.List) == 0 {
 			break
@@ -215,7 +216,7 @@ func (d *Terabox) linkOfficial(file model.Obj, args model.LinkArgs) (*model.Link
 	}
 
 	if len(resp.Dlink) == 0 {
-		return nil, fmt.Errorf("fid %s no dlink found, errno: %d", file.GetID(), resp.Errno)
+		return nil, errors.Errorf("fid %s no dlink found, errno: %d", file.GetID(), resp.Errno)
 	}
 
 	res, err := base.NoRedirectClient.R().SetHeader("Cookie", d.Cookie).SetHeader("User-Agent", base.UserAgent).Get(resp.Dlink[0].Dlink)

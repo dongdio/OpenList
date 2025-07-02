@@ -3,7 +3,6 @@ package github
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 	"text/template"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/ProtonMail/go-crypto/openpgp"
 	"github.com/ProtonMail/go-crypto/openpgp/armor"
+	"github.com/pkg/errors"
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/internal/model"
@@ -44,7 +44,7 @@ func toErr(res *resty.Response) error {
 	if err := utils.Json.Unmarshal(res.Bytes(), &errMsg); err != nil {
 		return errors.New(res.Status())
 	} else {
-		return fmt.Errorf("%s: %s", res.Status(), errMsg.Message)
+		return errors.Errorf("%s: %s", res.Status(), errMsg.Message)
 	}
 }
 
@@ -110,20 +110,20 @@ func loadPrivateKey(key, passphrase string) (*openpgp.Entity, error) {
 		return nil, err
 	}
 	if len(entityList) < 1 {
-		return nil, fmt.Errorf("no keys found in key ring")
+		return nil, errors.Errorf("no keys found in key ring")
 	}
 	entity := entityList[0]
 
 	pass := []byte(passphrase)
 	if entity.PrivateKey != nil && entity.PrivateKey.Encrypted {
 		if err = entity.PrivateKey.Decrypt(pass); err != nil {
-			return nil, fmt.Errorf("password incorrect: %+v", err)
+			return nil, errors.Errorf("password incorrect: %+v", err)
 		}
 	}
 	for _, subKey := range entity.Subkeys {
 		if subKey.PrivateKey != nil && subKey.PrivateKey.Encrypted {
 			if err = subKey.PrivateKey.Decrypt(pass); err != nil {
-				return nil, fmt.Errorf("password incorrect: %+v", err)
+				return nil, errors.Errorf("password incorrect: %+v", err)
 			}
 		}
 	}
@@ -152,7 +152,7 @@ func signCommit(m *map[string]any, entity *openpgp.Entity) (string, error) {
 	var sigBuffer bytes.Buffer
 	err := openpgp.DetachSign(&sigBuffer, entity, strings.NewReader(data), nil)
 	if err != nil {
-		return "", fmt.Errorf("signing failed: %v", err)
+		return "", errors.Errorf("signing failed: %v", err)
 	}
 	var armoredSig bytes.Buffer
 	armorWriter, err := armor.Encode(&armoredSig, "PGP SIGNATURE", nil)

@@ -6,7 +6,6 @@ import (
 	"crypto/sha1"
 	"encoding/base64"
 	"encoding/hex"
-	"fmt"
 	"io"
 	"math"
 	"math/big"
@@ -14,6 +13,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
 
@@ -326,7 +326,7 @@ func (d *AliDrive) Put(ctx context.Context, dstDir model.Obj, streamer model.Fil
 	if resp2["file_id"] == resp.FileId {
 		return nil
 	}
-	return fmt.Errorf("%+v", resp2)
+	return errors.Errorf("%+v", resp2)
 }
 
 func (d *AliDrive) Other(ctx context.Context, args model.OtherArgs) (any, error) {

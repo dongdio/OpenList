@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/google/uuid"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
 
@@ -149,7 +150,7 @@ func (d *MediaTrack) Remove(ctx context.Context, obj model.Obj) error {
 	if o, ok := obj.(*Object); ok {
 		parentID = o.ParentID
 	} else {
-		return fmt.Errorf("obj is not local Object")
+		return errors.Errorf("obj is not local Object")
 	}
 	data := base.Json{
 		"origin_id": parentID,

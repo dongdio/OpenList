@@ -9,6 +9,7 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/pkg/errors"
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/drivers/base"
@@ -44,17 +45,17 @@ func (d *BaiduPhoto) Request(client *resty.Client, furl string, method string, c
 	case 0:
 		break
 	case 50805:
-		return nil, fmt.Errorf("you have joined album")
+		return nil, errors.Errorf("you have joined album")
 	case 50820:
-		return nil, fmt.Errorf("no shared albums found")
+		return nil, errors.Errorf("no shared albums found")
 	case 50100:
-		return nil, fmt.Errorf("illegal title, only supports 50 characters")
+		return nil, errors.Errorf("illegal title, only supports 50 characters")
 	// case -6:
 	// 	if err = d.refreshToken(); err != nil {
 	// 		return nil, err
 	// 	}
 	default:
-		return nil, fmt.Errorf("errno: %d, refer to https://photo.baidu.com/union/doc", erron)
+		return nil, errors.Errorf("errno: %d, refer to https://photo.baidu.com/union/doc", erron)
 	}
 	return res, nil
 }
@@ -358,7 +359,7 @@ func (d *BaiduPhoto) linkAlbum(ctx context.Context, file *AlbumFile, args model.
 	}
 
 	if resp.StatusCode() != 302 {
-		return nil, fmt.Errorf("not found 302 redirect")
+		return nil, errors.Errorf("not found 302 redirect")
 	}
 
 	location := resp.Header().Get("Location")
@@ -408,7 +409,7 @@ func (d *BaiduPhoto) linkFile(ctx context.Context, file *File, args model.LinkAr
 	}
 
 	// if resp.StatusCode() != 302 {
-	// 	return nil, fmt.Errorf("not found 302 redirect")
+	// 	return nil, errors.Errorf("not found 302 redirect")
 	// }
 
 	// location := resp.Header().Get("Location")

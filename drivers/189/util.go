@@ -6,7 +6,6 @@ import (
 	"crypto/md5"
 	"encoding/base64"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"io"
 	"math"
@@ -15,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
 
@@ -53,7 +53,7 @@ import (
 //		}
 //	}
 //	if lt == "" {
-//		return fmt.Errorf("get page: %s \nstatus: %d \nrequest url: %s\nredirect url: %s",
+//		return errors.Errorf("get page: %s \nstatus: %d \nrequest url: %s\nredirect url: %s",
 //			b, res.StatusCode(), res.RawResponse.Request.URL.String(), res.Header().Get("location"))
 //	}
 //	captchaToken := regexp.MustCompile(`captchaToken' value='(.+?)'`).FindStringSubmatch(b)[1]
@@ -134,7 +134,7 @@ import (
 //		return err
 //	}
 //	if loginResp.Result != 0 {
-//		return fmt.Errorf(loginResp.Msg)
+//		return errors.Errorf(loginResp.Msg)
 //	}
 //	_, err = d.client.R().Get(loginResp.ToUrl)
 //	return err

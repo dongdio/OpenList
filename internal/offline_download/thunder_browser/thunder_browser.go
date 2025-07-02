@@ -2,7 +2,6 @@ package thunder_browser
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 
 	"github.com/pkg/errors"
@@ -81,15 +80,15 @@ func (t *ThunderBrowser) AddURL(args *tool.AddUrlArgs) (string, error) {
 	case *thunder_browser.ThunderBrowserExpert:
 		task, err = v.OfflineDownload(ctx, args.Url, parentDir, "")
 	default:
-		return "", fmt.Errorf("unsupported storage driver for offline download, only ThunderBrowser is supported")
+		return "", errors.Errorf("unsupported storage driver for offline download, only ThunderBrowser is supported")
 	}
 
 	if err != nil {
-		return "", fmt.Errorf("failed to add offline download task: %w", err)
+		return "", errors.Errorf("failed to add offline download task: %w", err)
 	}
 
 	if task == nil {
-		return "", fmt.Errorf("failed to add offline download task: task is nil")
+		return "", errors.Errorf("failed to add offline download task: task is nil")
 	}
 
 	return task.ID, nil
@@ -109,7 +108,7 @@ func (t *ThunderBrowser) Remove(task *tool.DownloadTask) error {
 	case *thunder_browser.ThunderBrowserExpert:
 		err = v.DeleteOfflineTasks(ctx, []string{task.GID})
 	default:
-		return fmt.Errorf("unsupported storage driver for offline download, only ThunderBrowser is supported")
+		return errors.Errorf("unsupported storage driver for offline download, only ThunderBrowser is supported")
 	}
 
 	if err != nil {
@@ -132,7 +131,7 @@ func (t *ThunderBrowser) Status(task *tool.DownloadTask) (*tool.Status, error) {
 	case *thunder_browser.ThunderBrowserExpert:
 		tasks, err = t.GetTasksExpert(v)
 	default:
-		return nil, fmt.Errorf("unsupported storage driver for offline download, only ThunderBrowser is supported")
+		return nil, errors.Errorf("unsupported storage driver for offline download, only ThunderBrowser is supported")
 	}
 
 	if err != nil {
@@ -163,7 +162,7 @@ func (t *ThunderBrowser) Status(task *tool.DownloadTask) (*tool.Status, error) {
 		}
 	}
 
-	s.Err = fmt.Errorf("the task has been deleted")
+	s.Err = errors.Errorf("the task has been deleted")
 	return s, nil
 }
 

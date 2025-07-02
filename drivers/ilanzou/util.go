@@ -2,7 +2,6 @@ package template
 
 import (
 	"encoding/hex"
-	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -10,6 +9,7 @@ import (
 	"time"
 
 	"github.com/foxxorcat/mopan-sdk-go"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
 
@@ -29,7 +29,7 @@ func (d *ILanZou) login() error {
 	}
 	d.Token = utils.GetBytes(res, "data", "appToken").String()
 	if d.Token == "" {
-		return fmt.Errorf("failed to login: token is empty, resp: %s", res)
+		return errors.Errorf("failed to login: token is empty, resp: %s", res)
 	}
 	return nil
 }
@@ -104,7 +104,7 @@ func (d *ILanZou) request(pathname, method string, callback base.ReqCallback, pr
 			}
 			return d.request(pathname, method, callback, proved, true)
 		}
-		return nil, fmt.Errorf("%d: %s", code, msg)
+		return nil, errors.Errorf("%d: %s", code, msg)
 	}
 	return body, nil
 }

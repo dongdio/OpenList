@@ -3,8 +3,6 @@ package local
 import (
 	"bytes"
 	"context"
-	"errors"
-	"fmt"
 	"io/fs"
 	"net/http"
 	"os"
@@ -16,6 +14,7 @@ import (
 
 	"github.com/OpenListTeam/times"
 	cp "github.com/otiai10/copy"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	_ "golang.org/x/image/webp"
 
@@ -57,7 +56,7 @@ func (d *Local) Init(ctx context.Context) error {
 		d.mkdirPerm = int32(v)
 	}
 	if !utils.Exists(d.GetRootPath()) {
-		return fmt.Errorf("root folder %s not exists", d.GetRootPath())
+		return errors.Errorf("root folder %s not exists", d.GetRootPath())
 	}
 	if !filepath.IsAbs(d.GetRootPath()) {
 		abs, err := filepath.Abs(d.GetRootPath())
@@ -92,20 +91,20 @@ func (d *Local) Init(ctx context.Context) error {
 		percentage := strings.TrimSuffix(d.VideoThumbPos, "%")
 		val, err := strconv.ParseFloat(percentage, 64)
 		if err != nil {
-			return fmt.Errorf("invalid video_thumb_pos value: %s, err: %s", d.VideoThumbPos, err)
+			return errors.Errorf("invalid video_thumb_pos value: %s, err: %s", d.VideoThumbPos, err)
 		}
 		if val < 0 || val > 100 {
-			return fmt.Errorf("invalid video_thumb_pos value: %s, the precentage must be a number between 0 and 100", d.VideoThumbPos)
+			return errors.Errorf("invalid video_thumb_pos value: %s, the precentage must be a number between 0 and 100", d.VideoThumbPos)
 		}
 		d.videoThumbPosIsPercentage = true
 		d.videoThumbPos = val / 100
 	} else {
 		val, err := strconv.ParseFloat(d.VideoThumbPos, 64)
 		if err != nil {
-			return fmt.Errorf("invalid video_thumb_pos value: %s, err: %s", d.VideoThumbPos, err)
+			return errors.Errorf("invalid video_thumb_pos value: %s, err: %s", d.VideoThumbPos, err)
 		}
 		if val < 0 {
-			return fmt.Errorf("invalid video_thumb_pos value: %s, the time must be a positive number", d.VideoThumbPos)
+			return errors.Errorf("invalid video_thumb_pos value: %s, the time must be a positive number", d.VideoThumbPos)
 		}
 		d.videoThumbPosIsPercentage = false
 		d.videoThumbPos = val
@@ -269,7 +268,7 @@ func (d *Local) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 	srcPath := srcObj.GetPath()
 	dstPath := filepath.Join(dstDir.GetPath(), srcObj.GetName())
 	if utils.IsSubPath(srcPath, dstPath) {
-		return fmt.Errorf("the destination folder is a subfolder of the source folder")
+		return errors.Errorf("the destination folder is a subfolder of the source folder")
 	}
 	if err := os.Rename(srcPath, dstPath); err != nil && strings.Contains(err.Error(), "invalid cross-device link") {
 		// Handle cross-device file move in local driver
@@ -303,7 +302,7 @@ func (d *Local) Copy(_ context.Context, srcObj, dstDir model.Obj) error {
 	srcPath := srcObj.GetPath()
 	dstPath := filepath.Join(dstDir.GetPath(), srcObj.GetName())
 	if utils.IsSubPath(srcPath, dstPath) {
-		return fmt.Errorf("the destination folder is a subfolder of the source folder")
+		return errors.Errorf("the destination folder is a subfolder of the source folder")
 	}
 	// Copy using otiai10/copy to perform more secure & efficient copy
 	return cp.Copy(srcPath, dstPath, cp.Options{

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/pkg/errors"
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/drivers/base"
@@ -33,7 +34,7 @@ func (d *GooglePhoto) refreshToken() error {
 		return err
 	}
 	if e.Error != "" {
-		return fmt.Errorf(e.Error)
+		return errors.Errorf(e.Error)
 	}
 	d.AccessToken = resp.AccessToken
 	return nil
@@ -67,7 +68,7 @@ func (d *GooglePhoto) request(url string, method string, callback base.ReqCallba
 			}
 			return d.request(url, method, callback, resp, headers)
 		}
-		return nil, fmt.Errorf("%s: %v", e.Error.Message, e.Error.Errors)
+		return nil, errors.Errorf("%s: %v", e.Error.Message, e.Error.Errors)
 	}
 	return res.Bytes(), nil
 }
