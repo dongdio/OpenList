@@ -113,7 +113,7 @@ func InitialSettings() []model.SettingItem {
 		{Key: "home_container", Value: "max_980px", Type: consts.TypeSelect, Options: "max_980px,hope_container", Group: model.STYLE},
 		{Key: "settings_layout", Value: "list", Type: consts.TypeSelect, Options: "list,responsive", Group: model.STYLE},
 		// preview settings
-		{Key: consts.TextTypes, Value: "txt,htm,html,xml,java,properties,sql,js,md,json,conf,ini,vue,php,py,bat,gitignore,yml,go,sh,c,cpp,h,hpp,tsx,vtt,srt,ass,rs,lrc", Type: consts.TypeText, Group: model.PREVIEW, Flag: model.PRIVATE},
+		{Key: consts.TextTypes, Value: "txt,htm,html,xml,java,properties,sql,js,md,json,conf,ini,vue,php,py,bat,gitignore,yml,go,sh,c,cpp,h,hpp,tsx,vtt,srt,ass,rs,lrc,strm", Type: consts.TypeText, Group: model.PREVIEW, Flag: model.PRIVATE},
 		{Key: consts.AudioTypes, Value: "mp3,flac,ogg,m4a,wav,opus,wma", Type: consts.TypeText, Group: model.PREVIEW, Flag: model.PRIVATE},
 		{Key: consts.VideoTypes, Value: "mp4,mkv,avi,mov,rmvb,webm,flv,m3u8", Type: consts.TypeText, Group: model.PREVIEW, Flag: model.PRIVATE},
 		{Key: consts.ImageTypes, Value: "jpg,tiff,jpeg,png,gif,bmp,svg,ico,swf,webp,avif", Type: consts.TypeText, Group: model.PREVIEW, Flag: model.PRIVATE},

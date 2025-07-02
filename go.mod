@@ -5,12 +5,14 @@ go 1.24.4
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.18.0
 	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.6.1
+	github.com/OpenListTeam/115-sdk-go v0.2.0
+	github.com/OpenListTeam/go-cache v0.1.0
+	github.com/OpenListTeam/rateg v0.1.0
 	github.com/OpenListTeam/sftpd-openlist v1.0.1
+	github.com/OpenListTeam/tache v0.2.0
 	github.com/OpenListTeam/times v0.1.0
 	github.com/ProtonMail/go-crypto v1.3.0
 	github.com/SheltonZhu/115driver v1.1.0
-	github.com/Xhofe/go-cache v0.0.0-20240804043513-b1a71927bc21
-	github.com/Xhofe/rateg v0.1.0
 	github.com/aliyun/aliyun-oss-go-sdk v3.0.2+incompatible
 	github.com/andybalholm/brotli v1.2.0
 	github.com/avast/retry-go v3.0.0+incompatible
@@ -22,7 +24,7 @@ require (
 	github.com/charmbracelet/bubbles v0.21.0
 	github.com/charmbracelet/bubbletea v1.3.5
 	github.com/charmbracelet/lipgloss v1.1.0
-	github.com/city404/v6-public-rpc-proto/go v0.0.0-20250629172224-e21a756d4e31
+	github.com/city404/v6-public-rpc-proto/go v0.0.0-20250630131259-1dda2c4b2697
 	github.com/coreos/go-oidc v2.3.0+incompatible
 	github.com/deckarep/golang-set/v2 v2.8.0
 	github.com/dhowden/tag v0.0.0-20240417053706-3d75831295e8
@@ -70,8 +72,6 @@ require (
 	github.com/tidwall/gjson v1.18.0
 	github.com/u2takey/ffmpeg-go v0.5.0
 	github.com/upyun/go-sdk/v3 v3.0.4
-	github.com/xhofe/115-sdk-go v0.1.5
-	github.com/xhofe/tache v0.1.5
 	github.com/yeka/zip v0.0.0-20231116150916-03d6312748a9
 	github.com/yuin/goldmark v1.7.12
 	github.com/zzzhr1990/go-common-entity v0.0.0-20250202070650-1a200048f0d3
@@ -93,15 +93,12 @@ require (
 )
 
 require (
+	cloud.google.com/go/compute/metadata v0.7.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.11.1 // indirect
 	github.com/Azure/go-ntlmssp v0.0.0-20221128193559-754e69321358 // indirect
 	github.com/Max-Sum/base32768 v0.0.0-20230304063302-18e6ce5945fd // indirect
-	github.com/OpenListTeam/115-sdk-go v0.2.0 // indirect
-	github.com/OpenListTeam/go-cache v0.1.0 // indirect
 	github.com/OpenListTeam/gsync v0.1.0 // indirect
-	github.com/OpenListTeam/rateg v0.1.0 // indirect
-	github.com/OpenListTeam/tache v0.2.0 // indirect
 	github.com/RoaringBitmap/roaring/v2 v2.6.0 // indirect
 	github.com/STARRY-S/zip v0.2.3 // indirect
 	github.com/abbot/go-http-auth v0.4.0 // indirect
@@ -109,7 +106,6 @@ require (
 	github.com/andreburgaud/crypt2go v1.8.0 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
-	github.com/benbjohnson/clock v1.3.5 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bits-and-blooms/bitset v1.22.0 // indirect
 	github.com/blang/semver/v4 v4.0.0 // indirect
@@ -242,7 +238,7 @@ require (
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/ryszard/goskiplist v0.0.0-20150312221310-2dfbae5fcf46 // indirect
 	github.com/shabbyrobe/gocovmerge v0.0.0-20230507112040-c3350d9342df // indirect
-	github.com/shirou/gopsutil/v4 v4.25.5 // indirect
+	github.com/shirou/gopsutil/v4 v4.25.6 // indirect
 	github.com/sorairolake/lzip-go v0.3.7 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.6 // indirect
@@ -256,7 +252,6 @@ require (
 	github.com/ugorji/go/codec v1.3.0 // indirect
 	github.com/ulikunitz/xz v0.5.12 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
-	github.com/xhofe/gsync v0.0.0-20230917091818-2111ceb38a25 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	go.etcd.io/bbolt v1.4.2 // indirect
@@ -269,6 +264,7 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250603155806-513f23925822 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/go-jose/go-jose.v2 v2.6.3 // indirect
+	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	lukechampine.com/blake3 v1.4.1 // indirect
 )

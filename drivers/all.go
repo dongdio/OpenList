@@ -58,6 +58,7 @@ import (
 	_ "github.com/dongdio/OpenList/drivers/seafile"
 	_ "github.com/dongdio/OpenList/drivers/sftp"
 	_ "github.com/dongdio/OpenList/drivers/smb"
+	_ "github.com/dongdio/OpenList/drivers/strm"
 	_ "github.com/dongdio/OpenList/drivers/teambition"
 	_ "github.com/dongdio/OpenList/drivers/terabox"
 	_ "github.com/dongdio/OpenList/drivers/thunder"
