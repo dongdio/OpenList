@@ -10,9 +10,9 @@ import (
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 	"github.com/avast/retry-go"
 
-	"github.com/dongdio/OpenList/internal/driver"
-	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/utility/utils"
+	"github.com/dongdio/OpenList/v4/internal/driver"
+	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 func calPartSize(fileSize int64) int64 {

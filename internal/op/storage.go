@@ -12,12 +12,12 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/dongdio/OpenList/internal/db"
-	"github.com/dongdio/OpenList/internal/driver"
-	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/utility/errs"
-	"github.com/dongdio/OpenList/utility/generic"
-	"github.com/dongdio/OpenList/utility/utils"
+	"github.com/dongdio/OpenList/v4/internal/db"
+	"github.com/dongdio/OpenList/v4/internal/driver"
+	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/utility/errs"
+	"github.com/dongdio/OpenList/v4/utility/generic"
+	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 // storagesMap maintains a mapping of mount paths to their corresponding storage drivers

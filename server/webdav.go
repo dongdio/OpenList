@@ -9,13 +9,13 @@ import (
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/dongdio/OpenList/consts"
-	"github.com/dongdio/OpenList/internal/conf"
-	"github.com/dongdio/OpenList/internal/op"
-	"github.com/dongdio/OpenList/internal/setting"
-	"github.com/dongdio/OpenList/server/middlewares"
-	"github.com/dongdio/OpenList/server/webdav"
-	"github.com/dongdio/OpenList/utility/stream"
+	"github.com/dongdio/OpenList/v4/consts"
+	"github.com/dongdio/OpenList/v4/internal/conf"
+	"github.com/dongdio/OpenList/v4/internal/op"
+	"github.com/dongdio/OpenList/v4/internal/setting"
+	"github.com/dongdio/OpenList/v4/server/middlewares"
+	"github.com/dongdio/OpenList/v4/server/webdav"
+	"github.com/dongdio/OpenList/v4/utility/stream"
 )
 
 var handler *webdav.Handler

@@ -11,10 +11,10 @@ import (
 	"github.com/sirupsen/logrus"
 	"go4.org/readerutil"
 
-	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/utility/errs"
-	"github.com/dongdio/OpenList/utility/http_range"
-	"github.com/dongdio/OpenList/utility/utils"
+	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/utility/errs"
+	"github.com/dongdio/OpenList/v4/utility/http_range"
+	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 type FileStream struct {

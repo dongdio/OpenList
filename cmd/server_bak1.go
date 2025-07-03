@@ -22,12 +22,12 @@ package cmd
 // 	"github.com/gogf/gf/v2/os/glog"
 // 	"github.com/spf13/cobra"
 //
-// 	"github.com/dongdio/OpenList/global"
-// 	"github.com/dongdio/OpenList/initialize"
-// 	"github.com/dongdio/OpenList/internal/conf"
-// 	"github.com/dongdio/OpenList/internal/fs"
-// 	"github.com/dongdio/OpenList/server"
-// 	"github.com/dongdio/OpenList/utility/utils"
+// 	"github.com/dongdio/OpenList/v4/global"
+// 	"github.com/dongdio/OpenList/v4/initialize"
+// 	"github.com/dongdio/OpenList/v4/internal/conf"
+// 	"github.com/dongdio/OpenList/v4/internal/fs"
+// 	"github.com/dongdio/OpenList/v4/server"
+// 	"github.com/dongdio/OpenList/v4/utility/utils"
 // )
 //
 // // Constants for server operation

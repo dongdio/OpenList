@@ -6,11 +6,11 @@ import (
 	stdpath "path"
 	"strings"
 
-	"github.com/dongdio/OpenList/internal/fs"
-	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/internal/sign"
-	"github.com/dongdio/OpenList/server/common"
-	"github.com/dongdio/OpenList/utility/utils"
+	"github.com/dongdio/OpenList/v4/internal/fs"
+	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/internal/sign"
+	"github.com/dongdio/OpenList/v4/server/common"
+	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 func (d *Strm) listRoot() []model.Obj {
@@ -110,7 +110,7 @@ func (d *Strm) list(ctx context.Context, dst, sub string, args *fs.ListArgs) ([]
 			Size:     size,
 			Modified: obj.ModTime(),
 			IsFolder: obj.IsDir(),
-			Path:     stdpath.Join(sub, obj.GetName()),
+			Path:     stdpath.Join(reqPath, obj.GetName()),
 		}
 		thumb, ok := model.GetThumb(obj)
 		if !ok {
@@ -125,17 +125,6 @@ func (d *Strm) list(ctx context.Context, dst, sub string, args *fs.ListArgs) ([]
 	})
 }
 
-func (d *Strm) link(ctx context.Context, dst, sub string) (*model.Link, error) {
-	reqPath := stdpath.Join(dst, sub)
-	_, err := fs.Get(ctx, reqPath, &fs.GetArgs{NoLog: true})
-	if err != nil {
-		return nil, err
-	}
-	return &model.Link{
-		MFile: model.NewNopMFile(strings.NewReader(d.getLink(ctx, reqPath))),
-	}, nil
-}
-
 func (d *Strm) getLink(ctx context.Context, path string) string {
 	apiUrl := d.SiteUrl
 	if len(apiUrl) > 0 {
@@ -143,8 +132,11 @@ func (d *Strm) getLink(ctx context.Context, path string) string {
 	} else {
 		apiUrl = common.GetApiUrl(ctx)
 	}
-	return fmt.Sprintf("%s/d%s?sign=%s",
-		apiUrl,
-		utils.EncodePath(path, true),
-		sign.Sign(path))
+	if d.EncodePath {
+		path = utils.EncodePath(path, true)
+	}
+	if !d.UseSign {
+		return fmt.Sprintf("%s/d%s", apiUrl, path)
+	}
+	return fmt.Sprintf("%s/d%s?sign=%s", apiUrl, path, sign.Sign(path))
 }

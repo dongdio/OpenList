@@ -7,10 +7,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 
-	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/internal/op"
-	"github.com/dongdio/OpenList/server/common"
-	"github.com/dongdio/OpenList/utility/errs"
+	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/internal/op"
+	"github.com/dongdio/OpenList/v4/server/common"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 )
 
 // FsUp 中间件，处理文件上传请求的权限验证

@@ -2,24 +2,24 @@
   <img width="100px" alt="logo" src="https://raw.githubusercontent.com/OpenListTeam/Logo/main/logo.svg"/></a>
   <p><em>🗂一个支持多存储的文件列表程序，使用 Gin 和 SolidJS，基于 AList 项目 fork 开发</em></p>
 <div>
-  <a href="https://goreportcard.com/report/github.com/dongdio/OpenList/v3">
-    <img src="https://goreportcard.com/badge/github.com/dongdio/OpenList/v3" alt="latest version" />
+  <a href="https://goreportcard.com/report/github.com/dongdio/OpenList/v4/v3">
+    <img src="https://goreportcard.com/badge/github.com/dongdio/OpenList/v4/v3" alt="latest version" />
   </a>
-  <a href="https://github.com/dongdio/OpenList/blob/main/LICENSE">
+  <a href="https://github.com/dongdio/OpenList/v4/blob/main/LICENSE">
     <img src="https://img.shields.io/github/license/OpenListTeam/OpenList" alt="License" />
   </a>
-  <a href="https://github.com/dongdio/OpenList/actions?query=workflow%3ABuild">
+  <a href="https://github.com/dongdio/OpenList/v4/actions?query=workflow%3ABuild">
     <img src="https://img.shields.io/github/actions/workflow/status/OpenListTeam/OpenList/build.yml?branch=main" alt="Build status" />
   </a>
-  <a href="https://github.com/dongdio/OpenList/releases">
+  <a href="https://github.com/dongdio/OpenList/v4/releases">
     <img src="https://img.shields.io/github/release/OpenListTeam/OpenList" alt="latest version" />
   </a>
 </div>
 <div>
-  <a href="https://github.com/dongdio/OpenList/discussions">
+  <a href="https://github.com/dongdio/OpenList/v4/discussions">
     <img src="https://img.shields.io/github/discussions/OpenListTeam/OpenList?color=%23ED8936" alt="discussions" />
   </a>
-  <a href="https://github.com/dongdio/OpenList/releases">
+  <a href="https://github.com/dongdio/OpenList/v4/releases">
     <img src="https://img.shields.io/github/downloads/OpenListTeam/OpenList/total?color=%239F7AEA&logo=github" alt="Downloads" />
   </a>
 </div>
@@ -34,7 +34,7 @@
 > 我们诚挚地感谢原项目 [AlistGo/alist](https://github.com/AlistGo/alist) 的作者 [Xhofe](https://github.com/Xhofe)
 > 以及其他所有贡献者。
 >
-> 本 Fork 尚未稳定, 具体迁移进度可在 [OpenList 迁移工作总结](https://github.com/dongdio/OpenList/issues/6) 中查看。
+> 本 Fork 尚未稳定, 具体迁移进度可在 [OpenList 迁移工作总结](https://github.com/dongdio/OpenList/v4/issues/6) 中查看。
 
 [English](./README.md) |
 中文 | [日本語](./README_ja.md) | [Contributing](./CONTRIBUTING.md) | [CODE OF CONDUCT](./CODE_OF_CONDUCT.md)
@@ -105,7 +105,7 @@ N/A（重建中）
 
 ## 讨论
 
-一般问题请到 [*Discussions*](https://github.com/dongdio/OpenList/discussions) 讨论，***Issues* 仅针对错误报告和功能请求。
+一般问题请到 [*Discussions*](https://github.com/dongdio/OpenList/v4/discussions) 讨论，***Issues* 仅针对错误报告和功能请求。
 **
 
 ## 许可

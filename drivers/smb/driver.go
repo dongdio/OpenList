@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/dongdio/OpenList/internal/driver"
-	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/utility/utils"
+	"github.com/dongdio/OpenList/v4/internal/driver"
+	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/utility/utils"
 
 	"github.com/hirochachacha/go-smb2"
 )

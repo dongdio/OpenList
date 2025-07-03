@@ -13,12 +13,12 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/dongdio/OpenList/consts"
-	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/internal/offline_download/tool"
-	"github.com/dongdio/OpenList/internal/setting"
-	"github.com/dongdio/OpenList/utility/errs"
-	"github.com/dongdio/OpenList/utility/utils"
+	"github.com/dongdio/OpenList/v4/consts"
+	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/internal/offline_download/tool"
+	"github.com/dongdio/OpenList/v4/internal/setting"
+	"github.com/dongdio/OpenList/v4/utility/errs"
+	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 type Transmission struct {

@@ -3,13 +3,13 @@ package initialize
 import (
 	"github.com/OpenListTeam/tache"
 
-	"github.com/dongdio/OpenList/consts"
-	"github.com/dongdio/OpenList/internal/conf"
-	"github.com/dongdio/OpenList/internal/db"
-	"github.com/dongdio/OpenList/internal/fs"
-	"github.com/dongdio/OpenList/internal/offline_download/tool"
-	"github.com/dongdio/OpenList/internal/op"
-	"github.com/dongdio/OpenList/internal/setting"
+	"github.com/dongdio/OpenList/v4/consts"
+	"github.com/dongdio/OpenList/v4/internal/conf"
+	"github.com/dongdio/OpenList/v4/internal/db"
+	"github.com/dongdio/OpenList/v4/internal/fs"
+	"github.com/dongdio/OpenList/v4/internal/offline_download/tool"
+	"github.com/dongdio/OpenList/v4/internal/op"
+	"github.com/dongdio/OpenList/v4/internal/setting"
 )
 
 func taskFilterNegative(num int) int64 {

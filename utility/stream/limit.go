@@ -7,9 +7,9 @@ import (
 
 	"golang.org/x/time/rate"
 
-	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/utility/http_range"
-	"github.com/dongdio/OpenList/utility/utils"
+	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/utility/http_range"
+	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 type Limiter interface {

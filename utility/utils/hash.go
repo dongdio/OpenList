@@ -14,7 +14,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/dongdio/OpenList/utility/errs"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 )
 
 func GetMD5EncodeStr(data string) string {

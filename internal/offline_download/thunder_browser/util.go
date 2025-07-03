@@ -6,9 +6,9 @@ import (
 
 	"github.com/OpenListTeam/go-cache"
 
-	"github.com/dongdio/OpenList/drivers/thunder_browser"
-	"github.com/dongdio/OpenList/internal/op"
-	"github.com/dongdio/OpenList/utility/singleflight"
+	"github.com/dongdio/OpenList/v4/drivers/thunder_browser"
+	"github.com/dongdio/OpenList/v4/internal/op"
+	"github.com/dongdio/OpenList/v4/utility/singleflight"
 )
 
 var taskCache = cache.NewMemCache(cache.WithShards[[]thunder_browser.OfflineTask](16))

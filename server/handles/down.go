@@ -14,15 +14,15 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/yuin/goldmark"
 
-	"github.com/dongdio/OpenList/consts"
-	"github.com/dongdio/OpenList/internal/conf"
-	"github.com/dongdio/OpenList/internal/driver"
-	"github.com/dongdio/OpenList/internal/fs"
-	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/internal/setting"
-	"github.com/dongdio/OpenList/internal/sign"
-	"github.com/dongdio/OpenList/server/common"
-	"github.com/dongdio/OpenList/utility/utils"
+	"github.com/dongdio/OpenList/v4/consts"
+	"github.com/dongdio/OpenList/v4/internal/conf"
+	"github.com/dongdio/OpenList/v4/internal/driver"
+	"github.com/dongdio/OpenList/v4/internal/fs"
+	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/internal/setting"
+	"github.com/dongdio/OpenList/v4/internal/sign"
+	"github.com/dongdio/OpenList/v4/server/common"
+	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 // Down 处理文件下载请求

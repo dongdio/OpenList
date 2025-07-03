@@ -5,9 +5,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/utility/utils"
-	hash_extend "github.com/dongdio/OpenList/utility/utils/hash"
+	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/utility/utils"
+	hash_extend "github.com/dongdio/OpenList/v4/utility/utils/hash"
 )
 
 type ErrResp struct {

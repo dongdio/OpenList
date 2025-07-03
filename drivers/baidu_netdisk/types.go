@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/utility/utils"
+	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 type TokenErrResp struct {

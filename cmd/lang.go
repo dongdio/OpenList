@@ -14,11 +14,11 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
-	"github.com/dongdio/OpenList/consts"
-	_ "github.com/dongdio/OpenList/drivers"
-	"github.com/dongdio/OpenList/initialize"
-	"github.com/dongdio/OpenList/internal/op"
-	"github.com/dongdio/OpenList/utility/utils"
+	"github.com/dongdio/OpenList/v4/consts"
+	_ "github.com/dongdio/OpenList/v4/drivers"
+	"github.com/dongdio/OpenList/v4/initialize"
+	"github.com/dongdio/OpenList/v4/internal/op"
+	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 type KV[V any] map[string]V

@@ -3,7 +3,7 @@ package yandex_disk
 import (
 	"time"
 
-	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/v4/internal/model"
 )
 
 type TokenErrResp struct {

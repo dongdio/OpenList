@@ -1,7 +1,7 @@
 package db_non_full_text
 
 import (
-	searcher2 "github.com/dongdio/OpenList/utility/search/searcher"
+	searcher2 "github.com/dongdio/OpenList/v4/utility/search/searcher"
 )
 
 var config = searcher2.Config{

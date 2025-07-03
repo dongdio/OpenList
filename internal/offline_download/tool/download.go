@@ -8,10 +8,12 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/dongdio/OpenList/consts"
-	"github.com/dongdio/OpenList/internal/setting"
-	"github.com/dongdio/OpenList/utility/errs"
-	"github.com/dongdio/OpenList/utility/task"
+	"github.com/dongdio/OpenList/v4/consts"
+	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/internal/op"
+	"github.com/dongdio/OpenList/v4/internal/setting"
+	"github.com/dongdio/OpenList/v4/utility/errs"
+	"github.com/dongdio/OpenList/v4/utility/task"
 )
 
 type DownloadTask struct {
@@ -170,6 +172,27 @@ func (t *DownloadTask) Transfer() error {
 		if t.TempDir != t.DstDirPath {
 			return transferObj(t.Ctx(), t.TempDir, t.DstDirPath, t.DeletePolicy)
 		}
+		return nil
+	}
+	if t.DeletePolicy == UploadDownloadStream {
+		dstStorage, dstDirActualPath, err := op.GetStorageAndActualPath(t.DstDirPath)
+		if err != nil {
+			return errors.WithMessage(err, "failed get dst storage")
+		}
+		taskCreator, _ := t.Ctx().Value("user").(*model.User)
+		tmpTask := &TransferTask{
+			TaskExtension: task.TaskExtension{
+				Creator: taskCreator,
+			},
+			SrcObjPath:   t.TempDir,
+			DstDirPath:   dstDirActualPath,
+			DstStorage:   dstStorage,
+			DstStorageMp: dstStorage.GetStorage().MountPath,
+			DeletePolicy: t.DeletePolicy,
+			Url:          t.Url,
+		}
+		tmpTask.SetTotalBytes(t.GetTotalBytes())
+		TransferTaskManager.Add(tmpTask)
 		return nil
 	}
 	return transferStd(t.Ctx(), t.TempDir, t.DstDirPath, t.DeletePolicy)

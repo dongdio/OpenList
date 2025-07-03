@@ -3,7 +3,7 @@ package aliyundrive
 import (
 	"crypto/ecdsa"
 
-	"github.com/dongdio/OpenList/utility/generic"
+	"github.com/dongdio/OpenList/v4/utility/generic"
 )
 
 type State struct {

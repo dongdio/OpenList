@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/v4/internal/conf"
 )
 
 // TestHidePrivacy 测试hidePrivacy函数

@@ -7,8 +7,8 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/pkg/errors"
 
-	"github.com/dongdio/OpenList/internal/conf"
-	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/v4/internal/conf"
+	"github.com/dongdio/OpenList/v4/internal/model"
 )
 
 // SecretKey 用于JWT签名的密钥

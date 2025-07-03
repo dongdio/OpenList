@@ -9,10 +9,10 @@ import (
 	"github.com/pkg/errors"
 	"resty.dev/v3"
 
-	"github.com/dongdio/OpenList/drivers/base"
-	"github.com/dongdio/OpenList/internal/driver"
-	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/utility/utils"
+	"github.com/dongdio/OpenList/v4/drivers/base"
+	"github.com/dongdio/OpenList/v4/internal/driver"
+	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 func (d *Pan123) getS3PreSignedUrls(ctx context.Context, upReq *UploadResp, start, end int) (*S3PreSignedURLs, error) {

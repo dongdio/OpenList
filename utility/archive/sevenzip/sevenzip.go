@@ -4,11 +4,11 @@ import (
 	"io"
 	"strings"
 
-	"github.com/dongdio/OpenList/utility/stream"
+	"github.com/dongdio/OpenList/v4/utility/stream"
 
-	"github.com/dongdio/OpenList/internal/model"
-	tool2 "github.com/dongdio/OpenList/utility/archive/tool"
-	"github.com/dongdio/OpenList/utility/errs"
+	"github.com/dongdio/OpenList/v4/internal/model"
+	tool2 "github.com/dongdio/OpenList/v4/utility/archive/tool"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 )
 
 type SevenZip struct{}

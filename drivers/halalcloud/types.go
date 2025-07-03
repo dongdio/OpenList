@@ -7,8 +7,8 @@ import (
 	pubUserFile "github.com/city404/v6-public-rpc-proto/go/v6/userfile"
 	"google.golang.org/grpc"
 
-	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/utility/utils"
+	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 type AuthService struct {

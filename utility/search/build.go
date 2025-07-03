@@ -12,17 +12,17 @@ import (
 	mapset "github.com/deckarep/golang-set/v2"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/dongdio/OpenList/consts"
-	"github.com/dongdio/OpenList/internal/conf"
-	"github.com/dongdio/OpenList/internal/fs"
-	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/internal/op"
-	"github.com/dongdio/OpenList/internal/setting"
-	"github.com/dongdio/OpenList/utility/errs"
+	"github.com/dongdio/OpenList/v4/consts"
+	"github.com/dongdio/OpenList/v4/internal/conf"
+	"github.com/dongdio/OpenList/v4/internal/fs"
+	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/internal/op"
+	"github.com/dongdio/OpenList/v4/internal/setting"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
-	"github.com/dongdio/OpenList/utility/generic"
-	"github.com/dongdio/OpenList/utility/search/searcher"
-	"github.com/dongdio/OpenList/utility/utils"
+	"github.com/dongdio/OpenList/v4/utility/generic"
+	"github.com/dongdio/OpenList/v4/utility/search/searcher"
+	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 var (

@@ -16,7 +16,7 @@ import (
 	"strings"
 	"testing"
 
-	ixml "github.com/dongdio/OpenList/server/webdav/internal/xml"
+	ixml "github.com/dongdio/OpenList/v4/server/webdav/internal/xml"
 )
 
 func TestReadLockInfo(t *testing.T) {

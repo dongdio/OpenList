@@ -7,11 +7,11 @@ import (
 
 	"github.com/kdomanski/iso9660"
 
-	"github.com/dongdio/OpenList/utility/stream"
+	"github.com/dongdio/OpenList/v4/utility/stream"
 
-	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/utility/errs"
-	"github.com/dongdio/OpenList/utility/utils"
+	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/utility/errs"
+	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 func getImage(ss *stream.SeekableStream) (*iso9660.Image, error) {

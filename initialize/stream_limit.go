@@ -5,10 +5,10 @@ import (
 
 	"golang.org/x/time/rate"
 
-	"github.com/dongdio/OpenList/consts"
-	"github.com/dongdio/OpenList/internal/op"
-	"github.com/dongdio/OpenList/internal/setting"
-	"github.com/dongdio/OpenList/utility/stream"
+	"github.com/dongdio/OpenList/v4/consts"
+	"github.com/dongdio/OpenList/v4/internal/op"
+	"github.com/dongdio/OpenList/v4/internal/setting"
+	"github.com/dongdio/OpenList/v4/utility/stream"
 )
 
 type blockBurstLimiter struct {

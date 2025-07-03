@@ -6,11 +6,11 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/dongdio/OpenList/consts"
-	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/internal/op"
-	"github.com/dongdio/OpenList/utility/errs"
-	searcher2 "github.com/dongdio/OpenList/utility/search/searcher"
+	"github.com/dongdio/OpenList/v4/consts"
+	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/internal/op"
+	"github.com/dongdio/OpenList/v4/utility/errs"
+	searcher2 "github.com/dongdio/OpenList/v4/utility/search/searcher"
 )
 
 var instance searcher2.Searcher = nil

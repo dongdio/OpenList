@@ -14,13 +14,13 @@ import (
 	ftpserver "github.com/fclairamb/ftpserverlib"
 	"github.com/pkg/errors"
 
-	"github.com/dongdio/OpenList/consts"
-	"github.com/dongdio/OpenList/internal/conf"
-	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/internal/op"
-	"github.com/dongdio/OpenList/internal/setting"
-	"github.com/dongdio/OpenList/server/ftp"
-	"github.com/dongdio/OpenList/utility/utils"
+	"github.com/dongdio/OpenList/v4/consts"
+	"github.com/dongdio/OpenList/v4/internal/conf"
+	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/internal/op"
+	"github.com/dongdio/OpenList/v4/internal/setting"
+	"github.com/dongdio/OpenList/v4/server/ftp"
+	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 type FtpMainDriver struct {

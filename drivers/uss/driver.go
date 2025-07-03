@@ -8,13 +8,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dongdio/OpenList/utility/stream"
+	"github.com/dongdio/OpenList/v4/utility/stream"
 
 	"github.com/upyun/go-sdk/v3/upyun"
 
-	"github.com/dongdio/OpenList/internal/driver"
-	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/utility/utils"
+	"github.com/dongdio/OpenList/v4/internal/driver"
+	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 type USS struct {

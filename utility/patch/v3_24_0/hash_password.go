@@ -1,9 +1,9 @@
 package v3_24_0
 
 import (
-	"github.com/dongdio/OpenList/internal/db"
-	"github.com/dongdio/OpenList/internal/op"
-	"github.com/dongdio/OpenList/utility/utils"
+	"github.com/dongdio/OpenList/v4/internal/db"
+	"github.com/dongdio/OpenList/v4/internal/op"
+	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 // HashPwdForOldVersion encode passwords using SHA256

@@ -5,5 +5,5 @@
 package drivers
 
 import (
-	_ "github.com/dongdio/OpenList/drivers/lark"
+	_ "github.com/dongdio/OpenList/v4/drivers/lark"
 )

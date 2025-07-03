@@ -3,8 +3,8 @@ package LenovoNasShare
 import (
 	"errors"
 
-	"github.com/dongdio/OpenList/drivers/base"
-	"github.com/dongdio/OpenList/utility/utils"
+	"github.com/dongdio/OpenList/v4/drivers/base"
+	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 func (d *LenovoNasShare) request(url string, method string, callback base.ReqCallback, resp any) ([]byte, error) {

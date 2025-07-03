@@ -3,9 +3,9 @@ package LenovoNasShare
 import (
 	"time"
 
-	"github.com/dongdio/OpenList/utility/utils"
+	"github.com/dongdio/OpenList/v4/utility/utils"
 
-	_ "github.com/dongdio/OpenList/internal/model"
+	_ "github.com/dongdio/OpenList/v4/internal/model"
 )
 
 func (f *File) UnmarshalJSON(data []byte) error {

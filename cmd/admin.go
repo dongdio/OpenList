@@ -4,11 +4,11 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/dongdio/OpenList/consts"
-	"github.com/dongdio/OpenList/internal/op"
-	"github.com/dongdio/OpenList/internal/setting"
-	"github.com/dongdio/OpenList/utility/utils"
-	"github.com/dongdio/OpenList/utility/utils/random"
+	"github.com/dongdio/OpenList/v4/consts"
+	"github.com/dongdio/OpenList/v4/internal/op"
+	"github.com/dongdio/OpenList/v4/internal/setting"
+	"github.com/dongdio/OpenList/v4/utility/utils"
+	"github.com/dongdio/OpenList/v4/utility/utils/random"
 )
 
 // Constants for admin-related functionality

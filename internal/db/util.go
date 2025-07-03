@@ -5,7 +5,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/v4/internal/conf"
 )
 
 func columnName(name string) string {

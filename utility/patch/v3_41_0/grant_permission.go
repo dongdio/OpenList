@@ -1,8 +1,8 @@
 package v3_41_0
 
 import (
-	"github.com/dongdio/OpenList/internal/op"
-	"github.com/dongdio/OpenList/utility/utils"
+	"github.com/dongdio/OpenList/v4/internal/op"
+	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 // GrantAdminPermissions gives admin Permission 0(can see hidden) - 9(webdav manage) and

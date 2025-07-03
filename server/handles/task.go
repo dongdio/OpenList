@@ -7,12 +7,12 @@ import (
 	"github.com/OpenListTeam/tache"
 	"github.com/gin-gonic/gin"
 
-	"github.com/dongdio/OpenList/internal/fs"
-	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/internal/offline_download/tool"
-	"github.com/dongdio/OpenList/server/common"
-	task2 "github.com/dongdio/OpenList/utility/task"
-	"github.com/dongdio/OpenList/utility/utils"
+	"github.com/dongdio/OpenList/v4/internal/fs"
+	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/internal/offline_download/tool"
+	"github.com/dongdio/OpenList/v4/server/common"
+	task2 "github.com/dongdio/OpenList/v4/utility/task"
+	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 // TaskInfo 任务信息结构体

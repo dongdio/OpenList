@@ -9,10 +9,10 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/utility/http_range"
-	net2 "github.com/dongdio/OpenList/utility/net"
-	"github.com/dongdio/OpenList/utility/utils"
+	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/utility/http_range"
+	net2 "github.com/dongdio/OpenList/v4/utility/net"
+	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 func GetRangeReadCloserFromLink(size int64, link *model.Link) (model.RangeReadCloserIF, error) {

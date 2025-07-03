@@ -1,9 +1,9 @@
 package patch
 
 import (
-	"github.com/dongdio/OpenList/utility/patch/v3_24_0"
-	"github.com/dongdio/OpenList/utility/patch/v3_32_0"
-	"github.com/dongdio/OpenList/utility/patch/v3_41_0"
+	"github.com/dongdio/OpenList/v4/utility/patch/v3_24_0"
+	"github.com/dongdio/OpenList/v4/utility/patch/v3_32_0"
+	"github.com/dongdio/OpenList/v4/utility/patch/v3_41_0"
 )
 
 type VersionPatches struct {

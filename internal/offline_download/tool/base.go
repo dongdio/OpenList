@@ -1,7 +1,7 @@
 package tool
 
 import (
-	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/v4/internal/model"
 )
 
 type AddUrlArgs struct {

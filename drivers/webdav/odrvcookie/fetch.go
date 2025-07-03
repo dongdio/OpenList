@@ -14,7 +14,7 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/net/publicsuffix"
 
-	"github.com/dongdio/OpenList/drivers/base"
+	"github.com/dongdio/OpenList/v4/drivers/base"
 )
 
 // CookieAuth hold the authentication information

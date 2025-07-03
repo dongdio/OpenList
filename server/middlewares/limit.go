@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/dongdio/OpenList/utility/stream"
+	"github.com/dongdio/OpenList/v4/utility/stream"
 )
 
 // MaxAllowed 中间件生成器，限制并发请求数量

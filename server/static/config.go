@@ -3,8 +3,8 @@ package static
 import (
 	"strings"
 
-	"github.com/dongdio/OpenList/internal/conf"
-	"github.com/dongdio/OpenList/utility/utils"
+	"github.com/dongdio/OpenList/v4/internal/conf"
+	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 type SiteConfig struct {

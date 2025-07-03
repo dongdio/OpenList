@@ -12,12 +12,12 @@ import (
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
 
-	"github.com/dongdio/OpenList/drivers/base"
-	"github.com/dongdio/OpenList/internal/driver"
-	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/utility/errs"
-	streamPkg "github.com/dongdio/OpenList/utility/stream"
-	"github.com/dongdio/OpenList/utility/utils"
+	"github.com/dongdio/OpenList/v4/drivers/base"
+	"github.com/dongdio/OpenList/v4/internal/driver"
+	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/utility/errs"
+	streamPkg "github.com/dongdio/OpenList/v4/utility/stream"
+	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 type QuarkOrUC struct {
@@ -37,6 +37,14 @@ func (d *QuarkOrUC) GetAddition() driver.Additional {
 
 func (d *QuarkOrUC) Init(ctx context.Context) error {
 	_, err := d.request("/config", http.MethodGet, nil, nil)
+	if err == nil {
+		if d.AdditionVersion != 1 {
+			d.AdditionVersion = 1
+			if !d.UseTransCodingAddress {
+				d.WebProxy = true
+			}
+		}
+	}
 	return err
 }
 

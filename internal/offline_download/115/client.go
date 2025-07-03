@@ -5,13 +5,13 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/dongdio/OpenList/consts"
-	_115 "github.com/dongdio/OpenList/drivers/115"
-	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/internal/offline_download/tool"
-	"github.com/dongdio/OpenList/internal/op"
-	"github.com/dongdio/OpenList/internal/setting"
-	"github.com/dongdio/OpenList/utility/errs"
+	"github.com/dongdio/OpenList/v4/consts"
+	_115 "github.com/dongdio/OpenList/v4/drivers/115"
+	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/internal/offline_download/tool"
+	"github.com/dongdio/OpenList/v4/internal/op"
+	"github.com/dongdio/OpenList/v4/internal/setting"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 )
 
 type Cloud115 struct {

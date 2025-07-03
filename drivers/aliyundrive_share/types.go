@@ -3,7 +3,7 @@ package aliyundrive_share
 import (
 	"time"
 
-	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/v4/internal/model"
 )
 
 type ErrorResp struct {

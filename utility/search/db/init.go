@@ -6,9 +6,9 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/dongdio/OpenList/internal/conf"
-	"github.com/dongdio/OpenList/internal/db"
-	searcher2 "github.com/dongdio/OpenList/utility/search/searcher"
+	"github.com/dongdio/OpenList/v4/internal/conf"
+	"github.com/dongdio/OpenList/v4/internal/db"
+	searcher2 "github.com/dongdio/OpenList/v4/utility/search/searcher"
 )
 
 var config = searcher2.Config{

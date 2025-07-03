@@ -4,16 +4,16 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 
-	"github.com/dongdio/OpenList/global"
-	"github.com/dongdio/OpenList/internal/conf"
-	"github.com/dongdio/OpenList/internal/sign"
-	"github.com/dongdio/OpenList/server/common"
-	"github.com/dongdio/OpenList/server/handles"
-	"github.com/dongdio/OpenList/server/middlewares"
-	"github.com/dongdio/OpenList/server/static"
-	"github.com/dongdio/OpenList/utility/message"
-	"github.com/dongdio/OpenList/utility/stream"
-	"github.com/dongdio/OpenList/utility/utils"
+	"github.com/dongdio/OpenList/v4/global"
+	"github.com/dongdio/OpenList/v4/internal/conf"
+	"github.com/dongdio/OpenList/v4/internal/sign"
+	"github.com/dongdio/OpenList/v4/server/common"
+	"github.com/dongdio/OpenList/v4/server/handles"
+	"github.com/dongdio/OpenList/v4/server/middlewares"
+	"github.com/dongdio/OpenList/v4/server/static"
+	"github.com/dongdio/OpenList/v4/utility/message"
+	"github.com/dongdio/OpenList/v4/utility/stream"
+	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 func Init(e *gin.Engine) {

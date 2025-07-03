@@ -6,8 +6,8 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
 
-	"github.com/dongdio/OpenList/internal/db"
-	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/v4/internal/db"
+	"github.com/dongdio/OpenList/v4/internal/model"
 )
 
 // CreateSSHPublicKey creates a new SSH public key for a user

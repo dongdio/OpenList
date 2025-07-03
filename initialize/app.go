@@ -1,7 +1,7 @@
 package initialize
 
 import (
-	"github.com/dongdio/OpenList/global"
+	"github.com/dongdio/OpenList/v4/global"
 )
 
 func InitApp(server ...bool) {

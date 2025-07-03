@@ -11,11 +11,11 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/utility/http_range"
-	net2 "github.com/dongdio/OpenList/utility/net"
-	"github.com/dongdio/OpenList/utility/stream"
-	"github.com/dongdio/OpenList/utility/utils"
+	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/utility/http_range"
+	net2 "github.com/dongdio/OpenList/v4/utility/net"
+	"github.com/dongdio/OpenList/v4/utility/stream"
+	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 // Proxy 处理文件代理请求

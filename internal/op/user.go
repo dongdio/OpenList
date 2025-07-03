@@ -5,11 +5,11 @@ import (
 
 	"github.com/OpenListTeam/go-cache"
 
-	"github.com/dongdio/OpenList/internal/db"
-	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/utility/errs"
-	"github.com/dongdio/OpenList/utility/singleflight"
-	"github.com/dongdio/OpenList/utility/utils"
+	"github.com/dongdio/OpenList/v4/internal/db"
+	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/utility/errs"
+	"github.com/dongdio/OpenList/v4/utility/singleflight"
+	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 // Cache for storing user information

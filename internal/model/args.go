@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/dongdio/OpenList/utility/http_range"
-	"github.com/dongdio/OpenList/utility/utils"
+	"github.com/dongdio/OpenList/v4/utility/http_range"
+	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 type ListArgs struct {

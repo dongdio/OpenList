@@ -22,13 +22,13 @@ import (
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 
-	"github.com/dongdio/OpenList/global"
-	"github.com/dongdio/OpenList/initialize"
-	"github.com/dongdio/OpenList/internal/conf"
-	"github.com/dongdio/OpenList/internal/fs"
-	"github.com/dongdio/OpenList/server"
-	"github.com/dongdio/OpenList/server/middlewares"
-	"github.com/dongdio/OpenList/utility/utils"
+	"github.com/dongdio/OpenList/v4/global"
+	"github.com/dongdio/OpenList/v4/initialize"
+	"github.com/dongdio/OpenList/v4/internal/conf"
+	"github.com/dongdio/OpenList/v4/internal/fs"
+	"github.com/dongdio/OpenList/v4/server"
+	"github.com/dongdio/OpenList/v4/server/middlewares"
+	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 // ServerCmd represents the server command that starts the OpenList server

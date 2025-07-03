@@ -3,10 +3,10 @@ package common
 import (
 	stdpath "path"
 
-	"github.com/dongdio/OpenList/consts"
-	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/internal/setting"
-	"github.com/dongdio/OpenList/internal/sign"
+	"github.com/dongdio/OpenList/v4/consts"
+	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/internal/setting"
+	"github.com/dongdio/OpenList/v4/internal/sign"
 )
 
 // Sign 为对象生成签名

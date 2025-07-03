@@ -10,7 +10,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/dongdio/OpenList/utility/generic"
+	"github.com/dongdio/OpenList/v4/utility/generic"
 )
 
 func TestConcurrentRange(t *testing.T) {

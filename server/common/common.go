@@ -6,8 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/dongdio/OpenList/global"
-	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/v4/global"
+	"github.com/dongdio/OpenList/v4/internal/conf"
 )
 
 // hidePrivacy 隐藏消息中的隐私信息

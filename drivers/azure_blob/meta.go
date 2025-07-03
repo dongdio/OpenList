@@ -1,8 +1,8 @@
 package azure_blob
 
 import (
-	"github.com/dongdio/OpenList/internal/driver"
-	"github.com/dongdio/OpenList/internal/op"
+	"github.com/dongdio/OpenList/v4/internal/driver"
+	"github.com/dongdio/OpenList/v4/internal/op"
 )
 
 type Addition struct {

@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/dongdio/OpenList/internal/op"
+	"github.com/dongdio/OpenList/v4/internal/op"
 )
 
 // will give the best guessing based on the path

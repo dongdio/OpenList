@@ -17,13 +17,13 @@ import (
 	"gorm.io/gorm"
 	"resty.dev/v3"
 
-	"github.com/dongdio/OpenList/consts"
-	"github.com/dongdio/OpenList/internal/db"
-	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/internal/setting"
-	"github.com/dongdio/OpenList/server/common"
-	"github.com/dongdio/OpenList/utility/utils"
-	"github.com/dongdio/OpenList/utility/utils/random"
+	"github.com/dongdio/OpenList/v4/consts"
+	"github.com/dongdio/OpenList/v4/internal/db"
+	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/internal/setting"
+	"github.com/dongdio/OpenList/v4/server/common"
+	"github.com/dongdio/OpenList/v4/utility/utils"
+	"github.com/dongdio/OpenList/v4/utility/utils/random"
 )
 
 // SSO相关常量

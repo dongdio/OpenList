@@ -5,8 +5,8 @@ import (
 
 	"github.com/foxxorcat/mopan-sdk-go"
 
-	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/utility/utils"
+	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 func fileToObj(f mopan.File) model.Obj {

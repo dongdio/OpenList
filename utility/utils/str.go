@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 	"strings"
 
-	"github.com/dongdio/OpenList/internal/conf"
+	"github.com/dongdio/OpenList/v4/internal/conf"
 )
 
 func MappingName(name string) string {

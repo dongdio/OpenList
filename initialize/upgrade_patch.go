@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/dongdio/OpenList/internal/conf"
-	"github.com/dongdio/OpenList/utility/patch"
-	"github.com/dongdio/OpenList/utility/utils"
+	"github.com/dongdio/OpenList/v4/internal/conf"
+	"github.com/dongdio/OpenList/v4/utility/patch"
+	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 func safeCall(v string, i int, f func()) {

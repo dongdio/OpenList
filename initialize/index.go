@@ -3,7 +3,7 @@ package initialize
 import (
 	log "github.com/sirupsen/logrus"
 
-	"github.com/dongdio/OpenList/utility/search"
+	"github.com/dongdio/OpenList/v4/utility/search"
 )
 
 func initIndex() {

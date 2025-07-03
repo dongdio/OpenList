@@ -13,13 +13,13 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/dongdio/OpenList/utility/stream"
-
-	"github.com/dongdio/OpenList/internal/driver"
-	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/internal/op"
-	"github.com/dongdio/OpenList/utility/task"
-	"github.com/dongdio/OpenList/utility/utils"
+	"github.com/dongdio/OpenList/v4/internal/driver"
+	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/internal/op"
+	"github.com/dongdio/OpenList/v4/utility/http_range"
+	"github.com/dongdio/OpenList/v4/utility/stream"
+	"github.com/dongdio/OpenList/v4/utility/task"
+	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 type TransferTask struct {
@@ -32,6 +32,7 @@ type TransferTask struct {
 	SrcStorageMp string        `json:"src_storage_mp"`
 	DstStorageMp string        `json:"dst_storage_mp"`
 	DeletePolicy DeletePolicy  `json:"delete_policy"`
+	Url          string        `json:"-"`
 }
 
 func (t *TransferTask) Run() error {
@@ -42,6 +43,32 @@ func (t *TransferTask) Run() error {
 	t.SetStartTime(time.Now())
 	defer func() { t.SetEndTime(time.Now()) }()
 	if t.SrcStorage == nil {
+		if t.DeletePolicy == UploadDownloadStream {
+			rrc, err := stream.GetRangeReadCloserFromLink(t.GetTotalBytes(), &model.Link{URL: t.Url})
+			if err != nil {
+				return err
+			}
+			r, err := rrc.RangeRead(t.Ctx(), http_range.Range{Length: t.GetTotalBytes()})
+			if err != nil {
+				return err
+			}
+			name := t.SrcObjPath
+			mimetype := utils.GetMimeType(name)
+			s := &stream.FileStream{
+				Ctx: nil,
+				Obj: &model.Object{
+					Name:     name,
+					Size:     t.GetTotalBytes(),
+					Modified: time.Now(),
+					IsFolder: false,
+				},
+				Reader:   r,
+				Mimetype: mimetype,
+				Closers:  utils.NewClosers(rrc),
+			}
+			defer s.Close()
+			return op.Put(t.Ctx(), t.DstStorage, t.DstDirPath, s, t.SetProgress)
+		}
 		return transferStdPath(t)
 	} else {
 		return transferObjPath(t)
@@ -49,6 +76,9 @@ func (t *TransferTask) Run() error {
 }
 
 func (t *TransferTask) GetName() string {
+	if t.DeletePolicy == UploadDownloadStream {
+		return fmt.Sprintf("upload [%s](%s) to [%s](%s)", t.SrcObjPath, t.Url, t.DstStorageMp, t.DstDirPath)
+	}
 	return fmt.Sprintf("transfer [%s](%s) to [%s](%s)", t.SrcStorageMp, t.SrcObjPath, t.DstStorageMp, t.DstDirPath)
 }
 
@@ -121,7 +151,7 @@ func transferStdPath(t *TransferTask) error {
 		for _, entry := range entries {
 			srcRawPath := stdpath.Join(t.SrcObjPath, entry.Name())
 			dstObjPath := stdpath.Join(t.DstDirPath, info.Name())
-			t := &TransferTask{
+			taskTmp := &TransferTask{
 				TaskExtension: task.TaskExtension{
 					Creator: t.Creator,
 				},
@@ -132,7 +162,7 @@ func transferStdPath(t *TransferTask) error {
 				DstStorageMp: t.DstStorageMp,
 				DeletePolicy: t.DeletePolicy,
 			}
-			TransferTaskManager.Add(t)
+			TransferTaskManager.Add(taskTmp)
 		}
 		t.Status = "src object is dir, added all transfer tasks of files"
 		return nil
@@ -274,7 +304,7 @@ func removeObjTemp(t *TransferTask) {
 	if err != nil || srcObj.IsDir() {
 		return
 	}
-	if err := op.Remove(t.Ctx(), t.SrcStorage, t.SrcObjPath); err != nil {
+	if err = op.Remove(t.Ctx(), t.SrcStorage, t.SrcObjPath); err != nil {
 		log.Errorf("failed to delete temp obj %s, error: %s", t.SrcObjPath, err.Error())
 	}
 }

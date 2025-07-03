@@ -1,8 +1,8 @@
 package initialize
 
 import (
-	"github.com/dongdio/OpenList/internal/offline_download/tool"
-	"github.com/dongdio/OpenList/utility/utils"
+	"github.com/dongdio/OpenList/v4/internal/offline_download/tool"
+	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 func initOfflineDownloadTools() {

@@ -7,9 +7,9 @@ import (
 	stdpath "path"
 	"strings"
 
-	"github.com/dongdio/OpenList/utility/stream"
+	"github.com/dongdio/OpenList/v4/utility/stream"
 
-	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/v4/internal/model"
 )
 
 type SubFile interface {

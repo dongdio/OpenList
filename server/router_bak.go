@@ -4,10 +4,10 @@ package server
 // import (
 // 	"github.com/gogf/gf/v2/net/ghttp"
 //
-// 	"github.com/dongdio/OpenList/internal/conf"
-// 	"github.com/dongdio/OpenList/server/handles"
-// 	"github.com/dongdio/OpenList/server/middlewares"
-// 	"github.com/dongdio/OpenList/utility/utils"
+// 	"github.com/dongdio/OpenList/v4/internal/conf"
+// 	"github.com/dongdio/OpenList/v4/server/handles"
+// 	"github.com/dongdio/OpenList/v4/server/middlewares"
+// 	"github.com/dongdio/OpenList/v4/utility/utils"
 // )
 //
 // func Init_bak(g *ghttp.RouterGroup) {

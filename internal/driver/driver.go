@@ -3,7 +3,7 @@ package driver
 import (
 	"context"
 
-	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/v4/internal/model"
 )
 
 type Driver interface {

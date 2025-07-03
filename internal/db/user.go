@@ -6,8 +6,8 @@ import (
 	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/pkg/errors"
 
-	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/utility/utils"
+	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 func GetUserByRole(role int) (*model.User, error) {

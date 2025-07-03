@@ -8,10 +8,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/internal/offline_download/tool"
-	"github.com/dongdio/OpenList/utility/utils"
 	"github.com/pkg/errors"
+
+	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/internal/offline_download/tool"
+	"github.com/dongdio/OpenList/v4/utility/http_range"
+	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 type SimpleHttp struct {
@@ -53,9 +55,17 @@ func (s SimpleHttp) Run(task *tool.DownloadTask) error {
 	if err != nil {
 		return err
 	}
-	req, err := http.NewRequestWithContext(task.Ctx(), http.MethodGet, u, nil)
+	streamPut := task.DeletePolicy == tool.UploadDownloadStream
+	method := http.MethodGet
+	if streamPut {
+		method = http.MethodHead
+	}
+	req, err := http.NewRequestWithContext(task.Ctx(), method, u, nil)
 	if err != nil {
 		return err
+	}
+	if streamPut {
+		req.Header.Set("Range", "bytes=0-")
 	}
 	resp, err := s.client.Do(req)
 	if err != nil {
@@ -71,9 +81,22 @@ func (s SimpleHttp) Run(task *tool.DownloadTask) error {
 		urlPath = strings.ReplaceAll(_u.Host, ".", "_")
 	}
 	filename := path.Base(urlPath)
-	if n, err := parseFilenameFromContentDisposition(resp.Header.Get("Content-Disposition")); err == nil {
-		filename = n
+	var disposition string
+	disposition, err = parseFilenameFromContentDisposition(resp.Header.Get("Content-Disposition"))
+	if err == nil {
+		filename = disposition
 	}
+	fileSize := resp.ContentLength
+	if streamPut {
+		if fileSize == 0 {
+			start, end, _ := http_range.ParseContentRange(resp.Header.Get("Content-Range"))
+			fileSize = start + end
+		}
+		task.SetTotalBytes(fileSize)
+		task.TempDir = filename
+		return nil
+	}
+	task.SetTotalBytes(fileSize)
 	// save to temp dir
 	_ = os.MkdirAll(task.TempDir, os.ModePerm)
 	filePath := filepath.Join(task.TempDir, filename)
@@ -82,8 +105,6 @@ func (s SimpleHttp) Run(task *tool.DownloadTask) error {
 		return err
 	}
 	defer file.Close()
-	fileSize := resp.ContentLength
-	task.SetTotalBytes(fileSize)
 	err = utils.CopyWithCtx(task.Ctx(), file, resp.Body, fileSize, task.SetProgress)
 	return err
 }

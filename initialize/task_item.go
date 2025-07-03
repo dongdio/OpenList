@@ -1,8 +1,8 @@
 package initialize
 
 import (
-	"github.com/dongdio/OpenList/internal/db"
-	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/v4/internal/db"
+	"github.com/dongdio/OpenList/v4/internal/model"
 )
 
 var initialTaskItems []model.TaskItem

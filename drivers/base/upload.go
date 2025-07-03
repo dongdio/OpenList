@@ -7,7 +7,7 @@ import (
 
 	"github.com/OpenListTeam/go-cache"
 
-	"github.com/dongdio/OpenList/internal/driver"
+	"github.com/dongdio/OpenList/v4/internal/driver"
 )
 
 // UploadStateCache storage upload progress, for upload recovery

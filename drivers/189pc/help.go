@@ -18,8 +18,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/utility/utils/random"
+	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/utility/utils/random"
 )
 
 func clientSuffix() map[string]string {

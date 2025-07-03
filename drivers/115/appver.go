@@ -4,7 +4,7 @@ import (
 	driver115 "github.com/SheltonZhu/115driver/pkg/driver"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/dongdio/OpenList/drivers/base"
+	"github.com/dongdio/OpenList/v4/drivers/base"
 )
 
 var (

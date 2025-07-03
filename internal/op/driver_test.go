@@ -3,8 +3,8 @@ package op_test
 import (
 	"testing"
 
-	_ "github.com/dongdio/OpenList/drivers"
-	"github.com/dongdio/OpenList/internal/op"
+	_ "github.com/dongdio/OpenList/v4/drivers"
+	"github.com/dongdio/OpenList/v4/internal/op"
 )
 
 // TestDriverItemsMap verifies that the driver information map is properly populated

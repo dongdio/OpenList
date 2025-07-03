@@ -28,7 +28,7 @@ import (
 	//
 	// 长期来看，一旦 https://github.com/golang/go/issues/13400 得到解决，
 	// 本包应该只使用标准库版本，并删除内部分支。
-	ixml "github.com/dongdio/OpenList/server/webdav/internal/xml"
+	ixml "github.com/dongdio/OpenList/v4/server/webdav/internal/xml"
 )
 
 // lockInfo 表示锁定信息

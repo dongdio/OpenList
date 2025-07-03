@@ -8,10 +8,10 @@ import (
 	"github.com/spf13/cobra"
 
 	// Import required packages to register their initialization functions
-	_ "github.com/dongdio/OpenList/drivers"
-	"github.com/dongdio/OpenList/global"
-	_ "github.com/dongdio/OpenList/internal/offline_download"
-	_ "github.com/dongdio/OpenList/utility/archive"
+	_ "github.com/dongdio/OpenList/v4/drivers"
+	"github.com/dongdio/OpenList/v4/global"
+	_ "github.com/dongdio/OpenList/v4/internal/offline_download"
+	_ "github.com/dongdio/OpenList/v4/utility/archive"
 )
 
 // Default CLI descriptions

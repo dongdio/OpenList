@@ -13,12 +13,20 @@ import (
 	"testing"
 
 	"github.com/sirupsen/logrus"
-	"golang.org/x/exp/slices"
 
-	"github.com/dongdio/OpenList/utility/http_range"
+	"github.com/dongdio/OpenList/v4/utility/http_range"
 )
 
 var buf22MB = make([]byte, 1024*1024*22)
+
+func containsString(slice []string, val string) bool {
+	for _, item := range slice {
+		if item == val {
+			return true
+		}
+	}
+	return false
+}
 
 func dummyHttpRequest(data []byte, p http_range.Range) io.ReadCloser {
 
@@ -73,7 +81,7 @@ func TestDownloadOrder(t *testing.T) {
 
 	expectRngs := []string{"2-3", "5-3", "8-3", "11-1"}
 	for _, rng := range expectRngs {
-		if !slices.Contains(*ranges, rng) {
+		if !containsString(*ranges, rng) {
 			t.Errorf("expect range %v, but absent in return", rng)
 		}
 	}
@@ -125,7 +133,7 @@ func TestDownloadSingle(t *testing.T) {
 
 	expectRngs := []string{"2-10"}
 	for _, rng := range expectRngs {
-		if !slices.Contains(*ranges, rng) {
+		if !containsString(*ranges, rng) {
 			t.Errorf("expect range %v, but absent in return", rng)
 		}
 	}

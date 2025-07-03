@@ -13,14 +13,14 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/dongdio/OpenList/drivers/base"
-	"github.com/dongdio/OpenList/internal/driver"
-	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/utility/cron"
-	"github.com/dongdio/OpenList/utility/errs"
-	streamPkg "github.com/dongdio/OpenList/utility/stream"
-	"github.com/dongdio/OpenList/utility/utils"
-	"github.com/dongdio/OpenList/utility/utils/random"
+	"github.com/dongdio/OpenList/v4/drivers/base"
+	"github.com/dongdio/OpenList/v4/internal/driver"
+	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/utility/cron"
+	"github.com/dongdio/OpenList/v4/utility/errs"
+	streamPkg "github.com/dongdio/OpenList/v4/utility/stream"
+	"github.com/dongdio/OpenList/v4/utility/utils"
+	"github.com/dongdio/OpenList/v4/utility/utils/random"
 )
 
 type Yun139 struct {

@@ -3,8 +3,8 @@ package conf
 import (
 	"path/filepath"
 
-	"github.com/dongdio/OpenList/global"
-	"github.com/dongdio/OpenList/utility/utils/random"
+	"github.com/dongdio/OpenList/v4/global"
+	"github.com/dongdio/OpenList/v4/utility/utils/random"
 )
 
 type Database struct {

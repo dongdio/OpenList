@@ -13,7 +13,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dongdio/OpenList/utility/utils"
+	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 // Client defines our structure

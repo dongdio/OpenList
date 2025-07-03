@@ -7,8 +7,8 @@ import (
 	"github.com/pkg/errors"
 	"resty.dev/v3"
 
-	"github.com/dongdio/OpenList/drivers/base"
-	"github.com/dongdio/OpenList/internal/op"
+	"github.com/dongdio/OpenList/v4/drivers/base"
+	"github.com/dongdio/OpenList/v4/internal/op"
 )
 
 // do others that not defined in Driver interface

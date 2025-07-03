@@ -4,10 +4,10 @@ import (
 	"github.com/meilisearch/meilisearch-go"
 	"github.com/pkg/errors"
 
-	"github.com/dongdio/OpenList/internal/conf"
-	"github.com/dongdio/OpenList/internal/model"
-	searcher2 "github.com/dongdio/OpenList/utility/search/searcher"
-	"github.com/dongdio/OpenList/utility/utils"
+	"github.com/dongdio/OpenList/v4/internal/conf"
+	"github.com/dongdio/OpenList/v4/internal/model"
+	searcher2 "github.com/dongdio/OpenList/v4/utility/search/searcher"
+	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 var config = searcher2.Config{

@@ -8,7 +8,7 @@ import (
 
 	"github.com/itsHenry35/gofakes3"
 
-	"github.com/dongdio/OpenList/utility/utils"
+	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 // logger implements gofakes3.Logger interface for OpenList's logging system

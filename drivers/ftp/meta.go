@@ -3,8 +3,8 @@ package ftp
 import (
 	"github.com/axgle/mahonia"
 
-	"github.com/dongdio/OpenList/internal/driver"
-	"github.com/dongdio/OpenList/internal/op"
+	"github.com/dongdio/OpenList/v4/internal/driver"
+	"github.com/dongdio/OpenList/v4/internal/op"
 )
 
 func encode(str string, encoding string) string {

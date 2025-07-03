@@ -6,15 +6,15 @@ import (
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 
-	"github.com/dongdio/OpenList/consts"
-	"github.com/dongdio/OpenList/global"
-	"github.com/dongdio/OpenList/internal/conf"
-	"github.com/dongdio/OpenList/internal/db"
-	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/internal/offline_download/tool"
-	"github.com/dongdio/OpenList/internal/op"
-	"github.com/dongdio/OpenList/utility/utils"
-	"github.com/dongdio/OpenList/utility/utils/random"
+	"github.com/dongdio/OpenList/v4/consts"
+	"github.com/dongdio/OpenList/v4/global"
+	"github.com/dongdio/OpenList/v4/internal/conf"
+	"github.com/dongdio/OpenList/v4/internal/db"
+	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/internal/offline_download/tool"
+	"github.com/dongdio/OpenList/v4/internal/op"
+	"github.com/dongdio/OpenList/v4/utility/utils"
+	"github.com/dongdio/OpenList/v4/utility/utils/random"
 )
 
 var initialSettingItems []model.SettingItem
@@ -99,7 +99,7 @@ func InitialSettings() []model.SettingItem {
 		// {Key: conf.ApiUrl, Value: "", Type: conf.TypeString, Group: model.SITE},
 		// {Key: conf.BasePath, Value: "", Type: conf.TypeString, Group: model.SITE},
 		{Key: consts.SiteTitle, Value: "OpenList", Type: consts.TypeString, Group: model.SITE},
-		{Key: consts.Announcement, Value: "### repo\nhttps://github.com/dongdio/OpenList", Type: consts.TypeText, Group: model.SITE},
+		{Key: consts.Announcement, Value: "### repo\nhttps://github.com/dongdio/OpenList/v4", Type: consts.TypeText, Group: model.SITE},
 		{Key: "pagination_type", Value: "all", Type: consts.TypeSelect, Options: "all,pagination,load_more,auto_load_more", Group: model.SITE},
 		{Key: "default_page_size", Value: "30", Type: consts.TypeNumber, Group: model.SITE},
 		{Key: consts.AllowIndexed, Value: "false", Type: consts.TypeBool, Group: model.SITE},

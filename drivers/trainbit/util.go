@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dongdio/OpenList/drivers/base"
-	"github.com/dongdio/OpenList/internal/model"
+	"github.com/dongdio/OpenList/v4/drivers/base"
+	"github.com/dongdio/OpenList/v4/internal/model"
 )
 
 func get(url string, apiKey string, AUSHELLPORTAL string) (*http.Response, error) {

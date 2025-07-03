@@ -13,12 +13,12 @@ import (
 	"golang.org/x/time/rate"
 	"resty.dev/v3"
 
-	_123 "github.com/dongdio/OpenList/drivers/123"
-	"github.com/dongdio/OpenList/drivers/base"
-	"github.com/dongdio/OpenList/internal/driver"
-	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/utility/errs"
-	"github.com/dongdio/OpenList/utility/utils"
+	_123 "github.com/dongdio/OpenList/v4/drivers/123"
+	"github.com/dongdio/OpenList/v4/drivers/base"
+	"github.com/dongdio/OpenList/v4/internal/driver"
+	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/utility/errs"
+	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 type Pan123Share struct {

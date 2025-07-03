@@ -3,16 +3,16 @@ package handles
 import (
 	"github.com/gin-gonic/gin"
 
-	"github.com/dongdio/OpenList/consts"
-	_115 "github.com/dongdio/OpenList/drivers/115"
-	"github.com/dongdio/OpenList/drivers/pikpak"
-	"github.com/dongdio/OpenList/drivers/thunder"
-	"github.com/dongdio/OpenList/drivers/thunder_browser"
-	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/internal/offline_download/tool"
-	"github.com/dongdio/OpenList/internal/op"
-	"github.com/dongdio/OpenList/server/common"
-	"github.com/dongdio/OpenList/utility/task"
+	"github.com/dongdio/OpenList/v4/consts"
+	_115 "github.com/dongdio/OpenList/v4/drivers/115"
+	"github.com/dongdio/OpenList/v4/drivers/pikpak"
+	"github.com/dongdio/OpenList/v4/drivers/thunder"
+	"github.com/dongdio/OpenList/v4/drivers/thunder_browser"
+	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/internal/offline_download/tool"
+	"github.com/dongdio/OpenList/v4/internal/op"
+	"github.com/dongdio/OpenList/v4/server/common"
+	"github.com/dongdio/OpenList/v4/utility/task"
 )
 
 // SetAria2Req Aria2设置请求

@@ -3,7 +3,7 @@ package setting
 import (
 	"strconv"
 
-	"github.com/dongdio/OpenList/internal/op"
+	"github.com/dongdio/OpenList/v4/internal/op"
 )
 
 func GetStr(key string, defaultValue ...string) string {

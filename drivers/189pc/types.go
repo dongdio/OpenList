@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dongdio/OpenList/utility/utils"
+	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 // 居然有四种返回方式

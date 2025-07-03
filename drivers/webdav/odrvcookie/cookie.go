@@ -3,7 +3,7 @@ package odrvcookie
 import (
 	"net/http"
 
-	"github.com/dongdio/OpenList/utility/cookie"
+	"github.com/dongdio/OpenList/v4/utility/cookie"
 )
 
 // type SpCookie struct {

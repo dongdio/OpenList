@@ -13,8 +13,8 @@ import (
 	"github.com/pkg/errors"
 	"resty.dev/v3"
 
-	"github.com/dongdio/OpenList/internal/model"
-	"github.com/dongdio/OpenList/utility/utils"
+	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 type MessageTemplateVars struct {

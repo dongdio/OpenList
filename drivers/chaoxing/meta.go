@@ -1,8 +1,8 @@
 package chaoxing
 
 import (
-	"github.com/dongdio/OpenList/internal/driver"
-	"github.com/dongdio/OpenList/internal/op"
+	"github.com/dongdio/OpenList/v4/internal/driver"
+	"github.com/dongdio/OpenList/v4/internal/op"
 )
 
 // 此程序挂载的是超星小组网盘，需要代理才能使用；
