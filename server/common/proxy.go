@@ -6,7 +6,6 @@ import (
 	"io"
 	"maps"
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -41,7 +40,9 @@ func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.
 
 	// 使用MFile直接提供文件内容
 	if link.MFile != nil {
-		defer link.MFile.Close()
+		if clr, ok := link.MFile.(io.Closer); ok {
+			defer clr.Close()
+		}
 		// 设置响应头
 		attachHeader(w, file)
 
@@ -52,17 +53,7 @@ func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.
 		}
 
 		// 处理文件读取限速
-		mFile := link.MFile
-		if _, ok := mFile.(*os.File); !ok {
-			mFile = &stream.RateLimitFile{
-				File:    mFile,
-				Limiter: stream.ServerDownloadLimit,
-				Ctx:     r.Context(),
-			}
-		}
-
-		// 使用ServeContent提供文件内容
-		http.ServeContent(w, r, file.GetName(), file.ModTime(), mFile)
+		http.ServeContent(w, r, file.GetName(), file.ModTime(), link.MFile)
 		return nil
 	} else if link.RangeReadCloser != nil {
 		// 使用RangeReadCloser处理范围请求

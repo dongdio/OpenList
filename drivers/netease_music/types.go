@@ -55,17 +55,8 @@ func (lrc *LyricObj) getProxyLink(ctx context.Context) *model.Link {
 }
 
 func (lrc *LyricObj) getLyricLink() *model.Link {
-	reader := strings.NewReader(lrc.lyric)
 	return &model.Link{
-		RangeReadCloser: &model.RangeReadCloser{
-			RangeReader: func(ctx context.Context, httpRange http_range.Range) (io.ReadCloser, error) {
-				if httpRange.Length < 0 {
-					return io.NopCloser(reader), nil
-				}
-				sr := io.NewSectionReader(reader, httpRange.Start, httpRange.Length)
-				return io.NopCloser(sr), nil
-			},
-		},
+		MFile: strings.NewReader(lrc.lyric),
 	}
 }
 

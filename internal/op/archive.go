@@ -123,8 +123,8 @@ func GetArchiveToolAndStream(ctx context.Context, storage driver.Driver, path st
 
 // closeResources closes any open resources in a link
 func closeResources(link *model.Link) {
-	if link.MFile != nil {
-		_ = link.MFile.Close()
+	if clr, ok := link.MFile.(io.Closer); ok {
+		_ = clr.Close()
 	}
 	if link.RangeReadCloser != nil {
 		_ = link.RangeReadCloser.Close()
@@ -243,9 +243,6 @@ func getArchiveMeta(ctx context.Context, storage driver.Driver, path string, arg
 	if !storage.Config().NoCache {
 		expiration := time.Minute * time.Duration(storage.GetStorage().CacheExpiration)
 		metaProvider.Expiration = &expiration
-	} else if streams[0].Link.MFile == nil {
-		// Special case for alias/crypt drivers
-		metaProvider.Expiration = streams[0].Link.Expiration
 	}
 
 	return obj, metaProvider, err
@@ -548,11 +545,7 @@ func DriverExtract(ctx context.Context, storage driver.Driver, path string, args
 
 		// Cache result if expiration is set
 		if link.Link.Expiration != nil {
-			cacheKey := key
-			if link.Link.IPCacheKey {
-				cacheKey = key + ":" + args.IP
-			}
-			extractCache.Set(cacheKey, link, cache.WithEx[*extractLink](*link.Link.Expiration))
+			extractCache.Set(key, link, cache.WithEx[*extractLink](*link.Link.Expiration))
 		}
 
 		return link, nil

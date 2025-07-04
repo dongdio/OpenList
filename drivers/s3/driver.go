@@ -96,9 +96,9 @@ func (d *S3) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*mo
 		}
 		input.ResponseContentDisposition = &disposition
 	}
-	req, reqErr := d.linkClient.GetObjectRequest(input)
-	if reqErr != nil {
-		return nil, errors.Errorf("failed to create Getobject request: %v", reqErr)
+	req, _ := d.linkClient.GetObjectRequest(input)
+	if req == nil {
+		return nil, errors.Errorf("failed to create Getobject request")
 	}
 	var link model.Link
 	var err error

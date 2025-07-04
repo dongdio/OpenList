@@ -204,7 +204,11 @@ func (b *s3Backend) GetObject(ctx context.Context, bucketName, objectName string
 		if err != nil {
 			return nil, err
 		}
-		reader = link.MFile
+		if rdr2, ok := link.MFile.(io.ReadCloser); ok {
+			reader = rdr2
+		} else {
+			reader = io.NopCloser(link.MFile)
+		}
 	} else {
 		// Use range reader for remote files
 		// Adjust length if it would exceed file size
@@ -360,18 +364,19 @@ func (b *s3Backend) PutObject(
 // DeleteMulti deletes multiple objects in a single request
 func (b *s3Backend) DeleteMulti(ctx context.Context, bucketName string, objects ...string) (result gofakes3.MultiDeleteResult, rerr error) {
 	for _, objectName := range objects {
-		if err := b.deleteObject(ctx, bucketName, objectName); err != nil {
-			log.Errorf("serve s3, delete object failed: %v", err)
-			result.Error = append(result.Error, gofakes3.ErrorResult{
-				Code:    gofakes3.ErrInternal,
-				Message: gofakes3.ErrInternal.Message(),
-				Key:     objectName,
-			})
-		} else {
+		err := b.deleteObject(ctx, bucketName, objectName)
+		if err == nil {
 			result.Deleted = append(result.Deleted, gofakes3.ObjectID{
 				Key: objectName,
 			})
+			continue
 		}
+		log.Errorf("serve s3, delete object failed: %v", err)
+		result.Error = append(result.Error, gofakes3.ErrorResult{
+			Code:    gofakes3.ErrInternal,
+			Message: gofakes3.ErrInternal.Message(),
+			Key:     objectName,
+		})
 	}
 
 	return result, nil

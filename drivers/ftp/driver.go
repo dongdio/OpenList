@@ -9,6 +9,7 @@ import (
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/utility/errs"
+	"github.com/dongdio/OpenList/v4/utility/stream"
 )
 
 type FTP struct {
@@ -67,7 +68,11 @@ func (d *FTP) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*m
 
 	r := NewFileReader(d.conn, encode(file.GetPath(), d.Encoding), file.GetSize())
 	link := &model.Link{
-		MFile: r,
+		MFile: &stream.RateLimitFile{
+			File:    r,
+			Limiter: stream.ServerDownloadLimit,
+			Ctx:     ctx,
+		},
 	}
 	return link, nil
 }

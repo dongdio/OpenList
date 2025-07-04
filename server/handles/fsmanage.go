@@ -2,6 +2,7 @@ package handles
 
 import (
 	"fmt"
+	"io"
 	stdpath "path"
 
 	"github.com/gin-gonic/gin"
@@ -53,7 +54,7 @@ func FsMkdir(c *gin.Context) {
 		}
 	}
 
-	if err := fs.MakeDir(c, reqPath); err != nil {
+	if err = fs.MakeDir(c, reqPath); err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}
@@ -245,7 +246,7 @@ func FsRename(c *gin.Context) {
 		}
 	}
 
-	if err := fs.Rename(c, reqPath, req.Name); err != nil {
+	if err = fs.Rename(c, reqPath, req.Name); err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}
@@ -433,15 +434,13 @@ func Link(c *gin.Context) {
 		common.ErrorResp(c, err, 500)
 		return
 	}
-
-	// 确保关闭文件
-	if link.MFile != nil {
-		defer func() {
-			if err := link.MFile.Close(); err != nil {
+	if clr, ok := link.MFile.(io.Closer); ok {
+		defer func(clr io.Closer) {
+			err := clr.Close()
+			if err != nil {
 				log.Errorf("close link data error: %v", err)
 			}
-		}()
+		}(clr)
 	}
-
 	common.SuccessResp(c, link)
 }

@@ -2,12 +2,12 @@ package ftp
 
 import (
 	"context"
+	"io"
 	fs2 "io/fs"
 	"net/http"
 	"os"
 	"time"
 
-	ftpserver "github.com/fclairamb/ftpserverlib"
 	"github.com/pkg/errors"
 
 	"github.com/dongdio/OpenList/v4/internal/fs"
@@ -20,8 +20,9 @@ import (
 
 // FileDownloadProxy 文件下载代理，实现了ftpserver.FileTransfer接口
 type FileDownloadProxy struct {
-	ftpserver.FileTransfer
-	reader stream.SStreamReadAtSeeker // 支持Seek和ReadAt的流读取器
+	model.File
+	io.Closer
+	ctx context.Context
 }
 
 // OpenDownload 打开一个文件用于下载
@@ -88,35 +89,33 @@ func OpenDownload(ctx context.Context, reqPath string, offset int64) (*FileDownl
 		return nil, err
 	}
 
-	return &FileDownloadProxy{reader: reader}, nil
+	return &FileDownloadProxy{File: reader, Closer: ss, ctx: ctx}, nil
 }
 
 // Read 从文件读取数据
 func (f *FileDownloadProxy) Read(p []byte) (n int, err error) {
 	// 读取数据
-	n, err = f.reader.Read(p)
+	n, err = f.File.Read(p)
 	if err != nil {
 		return
 	}
 
 	// 应用下载限速
-	err = stream.ClientDownloadLimit.WaitN(f.reader.GetRawStream().Ctx, n)
+	err = stream.ClientDownloadLimit.WaitN(f.ctx, n)
 	return
 }
 
-// Write 写入数据（不支持）
+func (f *FileDownloadProxy) ReadAt(p []byte, off int64) (n int, err error) {
+	n, err = f.File.ReadAt(p, off)
+	if err != nil {
+		return
+	}
+	err = stream.ClientDownloadLimit.WaitN(f.ctx, n)
+	return
+}
+
 func (f *FileDownloadProxy) Write(p []byte) (n int, err error) {
 	return 0, errs.NotSupport
-}
-
-// Seek 设置下一次读取的位置
-func (f *FileDownloadProxy) Seek(offset int64, whence int) (int64, error) {
-	return f.reader.Seek(offset, whence)
-}
-
-// Close 关闭文件下载代理
-func (f *FileDownloadProxy) Close() error {
-	return f.reader.Close()
 }
 
 // OsFileInfoAdapter 将model.Obj适配为os.FileInfo接口

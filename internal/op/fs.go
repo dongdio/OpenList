@@ -360,9 +360,6 @@ func Link(ctx context.Context, storage driver.Driver, path string, args model.Li
 		// Cache result if expiration is set
 		if link.Expiration != nil {
 			cacheKey := key
-			if link.IPCacheKey {
-				cacheKey = key + ":" + args.IP
-			}
 			linkCache.Set(cacheKey, link, cache.WithEx[*model.Link](*link.Expiration))
 		}
 

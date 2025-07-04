@@ -110,16 +110,16 @@ func Proxy(c *gin.Context) {
 
 // down 处理文件下载重定向
 func down(c *gin.Context, link *model.Link) {
-	// 关闭文件句柄
-	if link.MFile != nil {
-		defer func(readSeekCloser io.ReadCloser) {
-			err := readSeekCloser.Close()
-			if err != nil {
-				log.Errorf("close data error: %s", err)
-			}
-		}(link.MFile)
-	}
+	if clr, ok := link.MFile.(io.Closer); ok {
+		defer func(clr io.Closer) {
+			err := clr.Close()
 
+			if err != nil {
+				log.Errorf("close link data error: %v", err)
+			}
+		}(clr)
+	}
+	var err error
 	// 设置安全相关头部
 	c.Header("Referrer-Policy", "no-referrer")
 	c.Header("Cache-Control", "max-age=0, no-cache, no-store, must-revalidate")
@@ -132,16 +132,13 @@ func down(c *gin.Context, link *model.Link) {
 		for _, paramName := range conf.SlicesMap[consts.IgnoreDirectLinkParams] {
 			query.Del(paramName)
 		}
-
 		// 注入查询参数到URL
-		var err error
 		link.URL, err = utils.InjectQuery(link.URL, query)
 		if err != nil {
 			common.ErrorResp(c, err, 500)
 			return
 		}
 	}
-
 	// 重定向到文件URL
 	c.Redirect(302, link.URL)
 }

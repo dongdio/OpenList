@@ -97,7 +97,3 @@ type SteamFile struct {
 func (s *SteamFile) Read(p []byte) (n int, err error) {
 	return s.file.Read(p)
 }
-
-func (s *SteamFile) Close() error {
-	return s.file.Close()
-}

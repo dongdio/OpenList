@@ -11,6 +11,7 @@ import (
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/utility/errs"
+	"github.com/dongdio/OpenList/v4/utility/stream"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
@@ -64,7 +65,11 @@ func (d *SFTP) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*
 		return nil, err
 	}
 	link := &model.Link{
-		MFile: remoteFile,
+		MFile: &stream.RateLimitFile{
+			File:    remoteFile,
+			Limiter: stream.ServerDownloadLimit,
+			Ctx:     ctx,
+		},
 	}
 	return link, nil
 }
