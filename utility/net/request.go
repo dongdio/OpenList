@@ -3,6 +3,7 @@ package net
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -18,40 +19,44 @@ import (
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
-// DefaultDownloadPartSize is the default range of bytes to get at a time when
-// using Download().
+// DefaultDownloadPartSize 是使用 Download() 时默认的字节范围大小
 const DefaultDownloadPartSize = utils.MB * 10
 
-// DefaultDownloadConcurrency is the default number of goroutines to spin up
-// when using Download().
+// DefaultDownloadConcurrency 是使用 Download() 时默认的并发数
 const DefaultDownloadConcurrency = 2
 
-// DefaultPartBodyMaxRetries is the default number of retries to make when a part fails to download.
+// DefaultPartBodyMaxRetries 是下载分片失败时的默认重试次数
 const DefaultPartBodyMaxRetries = 3
 
+// DefaultConcurrencyLimit 是默认的并发限制
 var DefaultConcurrencyLimit *ConcurrencyLimit
 
+// Downloader 是一个多线程HTTP下载器
 type Downloader struct {
+	// PartSize 是每个分片的大小
 	PartSize int
 
-	// PartBodyMaxRetries is the number of retry attempts to make for failed part downloads.
+	// PartBodyMaxRetries 是分片下载失败时的重试次数
 	PartBodyMaxRetries int
 
-	// The number of goroutines to spin up in parallel when sending parts.
-	// If this is set to zero, the DefaultDownloadConcurrency value will be used.
-	//
-	// Concurrency of 1 will download the parts sequentially.
+	// Concurrency 是并行发送分片的goroutine数量
+	// 如果设置为零，将使用DefaultDownloadConcurrency值
+	// Concurrency为1时将按顺序下载分片
 	Concurrency int
 
-	// RequestParam        HttpRequestParams
+	// HttpClient 是执行HTTP请求的函数
 	HttpClient HttpRequestFunc
 
+	// ConcurrencyLimit 是并发限制器
 	*ConcurrencyLimit
 }
+
+// HttpRequestFunc 是执行HTTP请求的函数类型
 type HttpRequestFunc func(ctx context.Context, params *HttpRequestParams) (*http.Response, error)
 
+// NewDownloader 创建一个新的下载器实例
 func NewDownloader(options ...func(*Downloader)) *Downloader {
-	d := &Downloader{ // 允许不设置的选项
+	d := &Downloader{
 		PartBodyMaxRetries: DefaultPartBodyMaxRetries,
 		ConcurrencyLimit:   DefaultConcurrencyLimit,
 	}
@@ -61,12 +66,11 @@ func NewDownloader(options ...func(*Downloader)) *Downloader {
 	return d
 }
 
-// Download The Downloader makes multi-thread http requests to remote URL, each chunk(except last one) has PartSize,
-// cache some data, then return Reader with assembled data
-// Supports range, do not support unknown FileSize, and will fail if FileSize is incorrect
-// memory usage is at about Concurrency*PartSize, use this wisely
-func (d Downloader) Download(ctx context.Context, p *HttpRequestParams) (readCloser io.ReadCloser, err error) {
-
+// Download 方法使用多线程HTTP请求从远程URL下载数据
+// 每个分块(除了最后一个)的大小为PartSize，缓存部分数据，然后返回包含组装数据的Reader
+// 支持范围请求，不支持未知文件大小，如果文件大小不正确将会失败
+// 内存使用量约为Concurrency*PartSize，请谨慎使用
+func (d Downloader) Download(ctx context.Context, p *HttpRequestParams) (io.ReadCloser, error) {
 	var finalP HttpRequestParams
 	awsutil.Copy(&finalP, p)
 	if finalP.Range.Length == -1 {
@@ -74,8 +78,7 @@ func (d Downloader) Download(ctx context.Context, p *HttpRequestParams) (readClo
 	}
 	impl := downloader{params: &finalP, cfg: d, ctx: ctx}
 
-	// Ensures we don't need nil checks later on
-	// 必需的选项
+	// 设置必需的选项默认值
 	if impl.cfg.Concurrency == 0 {
 		impl.cfg.Concurrency = DefaultDownloadConcurrency
 	}
@@ -89,77 +92,85 @@ func (d Downloader) Download(ctx context.Context, p *HttpRequestParams) (readClo
 	return impl.download()
 }
 
-// downloader is the implementation structure used internally by Downloader.
+// downloader 是Downloader内部使用的实现结构
 type downloader struct {
 	ctx    context.Context
 	cancel context.CancelCauseFunc
 	cfg    Downloader
 
-	params       *HttpRequestParams // http request params
-	chunkChannel chan chunk         // chunk chanel
+	params       *HttpRequestParams // HTTP请求参数
+	chunkChannel chan chunk         // 分块通道
 
-	// wg sync.WaitGroup
 	m sync.Mutex
 
-	nextChunk int // next chunk id
+	nextChunk int // 下一个分块ID
 	bufs      []*Buf
-	written   int64 // total bytes of file downloaded from remote
+	written   int64 // 从远程下载的文件总字节数
 	err       error
 
 	concurrency int // 剩余的并发数，递减。到0时停止并发
-	maxPart     int // 有多少个分片
+	maxPart     int // 分片总数
 	pos         int64
 	maxPos      int64
 	m2          sync.Mutex
-	readingID   int // 正在被读取的id
+	readingID   int // 正在被读取的ID
 }
 
+// ConcurrencyLimit 用于限制并发数
 type ConcurrencyLimit struct {
-	_m    sync.Mutex
+	mu    sync.Mutex
 	Limit int // 需要大于0
 }
 
-var ErrExceedMaxConcurrency = errors.Errorf("ExceedMaxConcurrency")
+// ErrExceedMaxConcurrency 表示超出最大并发数的错误
+var ErrExceedMaxConcurrency = errors.New("exceed maximum concurrency")
 
+// sub 减少并发限制计数
 func (l *ConcurrencyLimit) sub() error {
-	l._m.Lock()
-	defer l._m.Unlock()
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	if l.Limit-1 < 0 {
 		return ErrExceedMaxConcurrency
 	}
 	l.Limit--
-	// log.Debugf("ConcurrencyLimit.sub: %d", l.Limit)
 	return nil
 }
+
+// add 增加并发限制计数
 func (l *ConcurrencyLimit) add() {
-	l._m.Lock()
-	defer l._m.Unlock()
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	l.Limit++
-	// log.Debugf("ConcurrencyLimit.add: %d", l.Limit)
 }
 
-// 检测是否超过限制
+// concurrencyCheck 检查是否超过并发限制
 func (d *downloader) concurrencyCheck() error {
 	if d.cfg.ConcurrencyLimit != nil {
 		return d.cfg.ConcurrencyLimit.sub()
 	}
 	return nil
 }
+
+// concurrencyFinish 完成并发任务，释放并发计数
 func (d *downloader) concurrencyFinish() {
 	if d.cfg.ConcurrencyLimit != nil {
 		d.cfg.ConcurrencyLimit.add()
 	}
 }
 
-// download performs the implementation of the object download across ranged GETs.
+// download 执行对象下载的实现
 func (d *downloader) download() (io.ReadCloser, error) {
 	if err := d.concurrencyCheck(); err != nil {
 		return nil, err
 	}
+
+	// 计算分片数量
 	maxPart := int(d.params.Range.Length / int64(d.cfg.PartSize))
 	if d.params.Range.Length%int64(d.cfg.PartSize) > 0 {
 		maxPart++
 	}
+
+	// 调整并发数
 	if maxPart < d.cfg.Concurrency {
 		d.cfg.Concurrency = maxPart
 	}
@@ -168,6 +179,7 @@ func (d *downloader) download() (io.ReadCloser, error) {
 	}
 	log.Debugf("download cfgConcurrency:%d", d.cfg.Concurrency)
 
+	// 单分片情况直接下载
 	if maxPart == 1 {
 		resp, err := d.cfg.HttpClient(d.ctx, d.params)
 		if err != nil {
@@ -189,9 +201,10 @@ func (d *downloader) download() (io.ReadCloser, error) {
 		return resp.Body, nil
 	}
 
+	// 多分片情况
 	d.ctx, d.cancel = context.WithCancelCause(d.ctx)
 
-	// workers
+	// 初始化workers
 	d.chunkChannel = make(chan chunk, d.cfg.Concurrency)
 
 	d.maxPart = maxPart
@@ -202,13 +215,14 @@ func (d *downloader) download() (io.ReadCloser, error) {
 
 	var rc io.ReadCloser = NewMultiReadCloser(d.bufs[0], d.interrupt, d.finishBuf)
 
-	// Return error
 	return rc, d.err
 }
 
+// sendChunkTask 发送分块任务
 func (d *downloader) sendChunkTask(newConcurrency bool) error {
 	d.m.Lock()
 	defer d.m.Unlock()
+
 	isNewBuf := d.concurrency > 0
 	if newConcurrency {
 		if d.concurrency <= 0 {
@@ -233,9 +247,11 @@ func (d *downloader) sendChunkTask(newConcurrency bool) error {
 
 	if d.pos < d.maxPos {
 		finalSize := int64(d.cfg.PartSize)
+
+		// 优化分片大小
 		switch d.nextChunk {
 		case 0:
-			// 最小分片在前面有助视频播放？
+			// 调整第一个分片大小以优化视频播放体验
 			firstSize := d.params.Range.Length % finalSize
 			if firstSize > 0 {
 				minSize := finalSize / 2
@@ -246,466 +262,443 @@ func (d *downloader) sendChunkTask(newConcurrency bool) error {
 				}
 			}
 		case 1:
+			// 调整第二个分片大小
 			firstSize := d.params.Range.Length % finalSize
 			minSize := finalSize / 2
 			if firstSize > 0 && firstSize < minSize {
-				finalSize += firstSize - minSize
+				finalSize = d.params.Range.Length - firstSize
+				if d.cfg.Concurrency > 2 {
+					finalSize = finalSize / int64(d.cfg.Concurrency-1)
+				}
 			}
 		}
-		buf.Reset(int(finalSize))
-		ch := chunk{
-			start: d.pos,
-			size:  finalSize,
-			id:    d.nextChunk,
-			buf:   buf,
 
+		// 确保不超出范围
+		if d.pos+finalSize > d.maxPos {
+			finalSize = d.maxPos - d.pos
+		}
+
+		// 创建分块任务
+		ch := chunk{
+			start:          d.pos,
+			size:           finalSize,
+			buf:            buf,
+			id:             d.nextChunk,
 			newConcurrency: newConcurrency,
 		}
+
+		// 更新位置和下一个分块ID
 		d.pos += finalSize
 		d.nextChunk++
-		d.chunkChannel <- ch
-		return nil
+
+		// 发送分块任务
+		select {
+		case <-d.ctx.Done():
+			return context.Cause(d.ctx)
+		case d.chunkChannel <- ch:
+		}
 	}
+
 	return nil
 }
 
-// when the final reader Close, we interrupt
+// interrupt 中断下载
 func (d *downloader) interrupt() error {
+	if d.cancel != nil {
+		d.cancel(errors.New("download interrupted"))
+	}
+	return d.getErr()
+}
+
+// getBuf 获取指定ID的缓冲区
+func (d *downloader) getBuf(id int) (b *Buf) {
+	return d.bufs[id]
+}
+
+// finishBuf 完成缓冲区读取
+func (d *downloader) finishBuf(id int) (isLast bool, nextBuf *Buf) {
 	d.m.Lock()
 	defer d.m.Unlock()
-	err := d.err
-	if err == nil && d.written != d.params.Range.Length {
-		log.Debugf("Downloader interrupt before finish")
-		d.err = errors.New("interrupted")
-	}
-	if d.chunkChannel != nil {
-		d.cancel(err)
-		close(d.chunkChannel)
-		d.chunkChannel = nil
-		for _, buf := range d.bufs {
-			buf.Close()
-		}
-		d.bufs = nil
-		if d.concurrency > 0 {
-			d.concurrency = -d.concurrency
-		}
-		log.Debugf("maxConcurrency:%d", d.cfg.Concurrency+d.concurrency)
-	} else {
-		log.Debug("close of closed channel")
-	}
-	return err
-}
-func (d *downloader) getBuf(id int) (b *Buf) {
-	return d.bufs[id%len(d.bufs)]
-}
-func (d *downloader) finishBuf(id int) (isLast bool, nextBuf *Buf) {
-	id++
-	if id >= d.maxPart {
+
+	nextID := id + 1
+	if nextID >= len(d.bufs) {
 		return true, nil
 	}
 
-	d.sendChunkTask(false)
+	// 发送新的分块任务
+	d.readingID = nextID
+	if err := d.sendChunkTask(false); err != nil {
+		d.setErr(err)
+		return true, nil
+	}
 
-	d.readingID = id
-	return false, d.getBuf(id)
+	return false, d.bufs[nextID]
 }
 
-// downloadPart is an individual goroutine worker reading from the ch channel
-// and performing Http request on the data with a given byte range.
+// downloadPart 下载分片
 func (d *downloader) downloadPart() {
-	// defer d.wg.Done()
+	defer d.concurrencyFinish()
+
 	for {
-		c, ok := <-d.chunkChannel
-		if !ok {
-			break
-		}
-		if d.getErr() != nil {
-			// Drain the channel if there is an error, to prevent deadlocking
-			// of download producer.
-			break
-		}
-		if err := d.downloadChunk(&c); err != nil {
-			if errors.Is(err, errCancelConcurrency) {
-				break
+		select {
+		case <-d.ctx.Done():
+			return
+		case ch, ok := <-d.chunkChannel:
+			if !ok {
+				return
 			}
-			if errors.Is(err, context.Canceled) {
-				if e := context.Cause(d.ctx); e != nil {
-					err = e
+
+			// 下载分块
+			if err := d.downloadChunk(&ch); err != nil {
+				d.setErr(err)
+				d.cancel(err)
+				return
+			}
+
+			// 如果是新的并发任务，继续发送分块任务
+			if ch.newConcurrency {
+				if err := d.sendChunkTask(true); err != nil {
+					if !errors.Is(err, ErrExceedMaxConcurrency) {
+						d.setErr(err)
+						d.cancel(err)
+					}
+					return
 				}
 			}
-			d.setErr(err)
-			d.cancel(err)
 		}
 	}
-	d.concurrencyFinish()
 }
 
-// downloadChunk downloads the chunk
+// downloadChunk 下载单个分块
 func (d *downloader) downloadChunk(ch *chunk) error {
-	log.Debugf("start chunk_%d, %+v", ch.id, ch)
-	params := d.getParamsFromChunk(ch)
-	var n int64
-	var err error
+	var (
+		n   int64
+		err error
+	)
+
+	// 重试逻辑
 	for retry := 0; retry <= d.cfg.PartBodyMaxRetries; retry++ {
-		if d.getErr() != nil {
-			return nil
-		}
+		params := d.getParamsFromChunk(ch)
 		n, err = d.tryDownloadChunk(params, ch)
+
 		if err == nil {
-			d.incrWritten(n)
-			log.Debugf("chunk_%d downloaded", ch.id)
 			break
 		}
-		if d.getErr() != nil {
-			return nil
+
+		// 检查是否需要重试
+		if retry == d.cfg.PartBodyMaxRetries || !errors.Is(errors.Unwrap(err), &errNeedRetry{}) {
+			return err
 		}
-		if utils.IsCanceled(d.ctx) {
-			return d.ctx.Err()
-		}
-		// Check if the returned error is an errNeedRetry.
-		// If this occurs we unwrap the err to set the underlying error
-		// and attempt any remaining retries.
-		var e *errNeedRetry
-		if errors.As(err, &e) {
-			err = e.Unwrap()
-			if n > 0 {
-				// 测试：下载时 断开 openlist 向云盘发起的下载连接
-				// 校验：下载完后校验文件哈希值 一致
-				d.incrWritten(n)
-				ch.start += n
-				ch.size -= n
-				params.Range.Start = ch.start
-				params.Range.Length = ch.size
-			}
-			log.Warnf("err chunk_%d, object part download error %s, retrying attempt %d. %v",
-				ch.id, params.URL, retry, err)
+
+		// 重试延迟
+		delay := time.Duration(retry+1) * 100 * time.Millisecond
+		select {
+		case <-time.After(delay):
+		case <-d.ctx.Done():
+			return context.Cause(d.ctx)
 		}
 	}
 
-	return err
+	d.incrWritten(n)
+	return nil
 }
 
-var errCancelConcurrency = errors.Errorf("cancel concurrency")
-var errInfiniteRetry = errors.Errorf("infinite retry")
-
+// tryDownloadChunk 尝试下载分块
 func (d *downloader) tryDownloadChunk(params *HttpRequestParams, ch *chunk) (int64, error) {
 	resp, err := d.cfg.HttpClient(d.ctx, params)
 	if err != nil {
-		if resp == nil {
-			return 0, err
-		}
-		if resp.StatusCode == http.StatusRequestedRangeNotSatisfiable {
-			return 0, err
-		}
-		if ch.id == 0 { // 第1个任务 有限的重试，超过重试就会结束请求
-			switch resp.StatusCode {
-			default:
-				return 0, err
-			case http.StatusTooManyRequests:
-			case http.StatusBadGateway:
-			case http.StatusServiceUnavailable:
-			case http.StatusGatewayTimeout:
-			}
-			<-time.After(time.Millisecond * 200)
-			return 0, &errNeedRetry{err: errors.Errorf("http request failure,status: %d", resp.StatusCode)}
-		}
-
-		// 来到这 说明第1个分片下载 连接成功了
-		// 后续分片下载出错都当超载处理
-		log.Debugf("err chunk_%d, try downloading:%v", ch.id, err)
-
-		d.m.Lock()
-		isCancelConcurrency := ch.newConcurrency
-		if d.concurrency > 0 { // 取消剩余的并发任务
-			// 用于计算实际的并发数
-			d.concurrency = -d.concurrency
-			isCancelConcurrency = true
-		}
-		if isCancelConcurrency {
-			d.concurrency--
-			d.chunkChannel <- *ch
-			d.m.Unlock()
-			return 0, errCancelConcurrency
-		}
-		d.m.Unlock()
-		if ch.id != d.readingID { // 正在被读取的优先重试
-			d.m2.Lock()
-			defer d.m2.Unlock()
-			<-time.After(time.Millisecond * 200)
-		}
-		return 0, errInfiniteRetry
-	}
-	defer resp.Body.Close()
-	// only check file size on the first task
-	if ch.id == 0 {
-		err = d.checkTotalBytes(resp)
-		if err != nil {
-			return 0, err
-		}
-	}
-	err = d.sendChunkTask(true)
-	if err != nil {
 		return 0, err
 	}
-	n, err := utils.CopyWithBuffer(ch.buf, resp.Body)
-	if err != nil {
-		return n, &errNeedRetry{err: err}
+	defer resp.Body.Close()
+
+	// 检查响应状态
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusPartialContent {
+		return 0, errors.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
+
+	// 检查总字节数
+	if err = d.checkTotalBytes(resp); err != nil {
+		return 0, err
+	}
+
+	// 读取响应体
+	n, err := io.Copy(ch.buf, resp.Body)
+	if err != nil {
+		// 检查是否需要重试
+		if strings.Contains(err.Error(), "connection reset by peer") ||
+			strings.Contains(err.Error(), "use of closed network connection") ||
+			strings.Contains(err.Error(), "unexpected EOF") {
+			return n, &errNeedRetry{err: err}
+		}
+		return n, err
+	}
+
+	// 检查是否下载了预期的字节数
 	if n != ch.size {
-		err = errors.Errorf("chunk download size incorrect, expected=%d, got=%d", ch.size, n)
-		return n, &errNeedRetry{err: err}
+		return n, errors.Errorf("expected %d bytes, got %d", ch.size, n)
 	}
 
 	return n, nil
 }
-func (d *downloader) getParamsFromChunk(ch *chunk) *HttpRequestParams {
-	var params HttpRequestParams
-	awsutil.Copy(&params, d.params)
 
-	// Get the getBuf byte range of data
-	params.Range = http_range.Range{Start: ch.start, Length: ch.size}
+// getParamsFromChunk 从分块获取HTTP请求参数
+func (d *downloader) getParamsFromChunk(ch *chunk) *HttpRequestParams {
+	params := *d.params
+	params.Range.Start = ch.start
+	params.Range.Length = ch.size
 	return &params
 }
 
+// checkTotalBytes 检查响应中的总字节数
 func (d *downloader) checkTotalBytes(resp *http.Response) error {
-	var err error
-	totalBytes := int64(-1)
+	if d.params.Size <= 0 {
+		return nil
+	}
+
+	// 从Content-Range头解析总大小
 	contentRange := resp.Header.Get("Content-Range")
-	if len(contentRange) == 0 {
-		// ContentRange is nil when the full file contents is provided, and
-		// is not chunked. Use ContentLength instead.
-		if resp.ContentLength > 0 {
-			totalBytes = resp.ContentLength
-		}
-	} else {
-		parts := strings.Split(contentRange, "/")
-
-		total := int64(-1)
-
-		// Checking for whether a numbered total exists
-		// If one does not exist, we will assume the total to be -1, undefined,
-		// and sequentially download each chunk until hitting a 416 error
-		totalStr := parts[len(parts)-1]
-		if totalStr != "*" {
-			total, err = strconv.ParseInt(totalStr, 10, 64)
-			if err != nil {
-				err = errors.Errorf("failed extracting file size")
-			}
-		} else {
-			err = errors.Errorf("file size unknown")
-		}
-
-		totalBytes = total
+	if contentRange == "" {
+		return nil
 	}
-	if totalBytes != d.params.Size && err == nil {
-		err = errors.Errorf("expect file size=%d unmatch remote report size=%d, need refresh cache", d.params.Size, totalBytes)
+
+	// 解析Content-Range头
+	parts := strings.Split(contentRange, "/")
+	if len(parts) != 2 {
+		return nil
 	}
+
+	totalBytes, err := strconv.ParseInt(parts[1], 10, 64)
 	if err != nil {
-		// _ = d.interrupt()
-		d.setErr(err)
-		d.cancel(err)
+		return nil
 	}
-	return err
 
+	// 验证总大小
+	if totalBytes != d.params.Size {
+		return errors.Errorf("expected file size %d, got %d from Content-Range", d.params.Size, totalBytes)
+	}
+
+	return nil
 }
 
+// incrWritten 增加已写入的字节数
 func (d *downloader) incrWritten(n int64) {
 	d.m.Lock()
 	defer d.m.Unlock()
-
 	d.written += n
 }
 
-// getErr is a thread-safe getter for the error object
+// getErr 获取错误
 func (d *downloader) getErr() error {
 	d.m.Lock()
 	defer d.m.Unlock()
-
 	return d.err
 }
 
-// setErr is a thread-safe setter for the error object
+// setErr 设置错误
 func (d *downloader) setErr(e error) {
 	d.m.Lock()
 	defer d.m.Unlock()
-
-	d.err = e
+	if d.err == nil {
+		d.err = e
+	}
 }
 
-// Chunk represents a single chunk of data to write by the worker routine.
-// This structure also implements an io.SectionReader style interface for
-// io.WriterAt, effectively making it an io.SectionWriter (which does not
-// exist).
+// chunk 表示一个下载分块
 type chunk struct {
-	start int64
-	size  int64
-	buf   *Buf
-	id    int
-
+	start          int64
+	size           int64
+	buf            *Buf
+	id             int
 	newConcurrency bool
 }
 
+// DefaultHttpRequestFunc 是默认的HTTP请求函数
 func DefaultHttpRequestFunc(ctx context.Context, params *HttpRequestParams) (*http.Response, error) {
-	header := http_range.ApplyRangeToHttpHeader(params.Range, params.HeaderRef)
-
-	res, err := RequestHttp(ctx, "GET", header, params.URL)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, params.URL, nil)
 	if err != nil {
-		return res, err
+		return nil, err
 	}
-	return res, nil
+
+	// 设置Range头
+	if params.Range.Length > 0 {
+		req.Header.Set("Range", fmt.Sprintf("bytes=%d-%d", params.Range.Start, params.Range.Start+params.Range.Length-1))
+	}
+
+	// 复制其他头部
+	if params.HeaderRef != nil {
+		for k, v := range params.HeaderRef {
+			req.Header[k] = v
+		}
+	}
+
+	return http.DefaultClient.Do(req)
 }
 
+// HttpRequestParams 包含HTTP请求的参数
 type HttpRequestParams struct {
-	URL string
-	// only want data within this range
-	Range     http_range.Range
+	URL       string
+	Range     http_range.Range // 只需要此范围内的数据
 	HeaderRef http.Header
-	// total file size
-	Size int64
+	Size      int64 // 文件总大小
 }
+
+// errNeedRetry 表示需要重试的错误
 type errNeedRetry struct {
 	err error
 }
 
+// Error 实现error接口
 func (e *errNeedRetry) Error() string {
-	return e.err.Error()
+	return fmt.Sprintf("need retry: %v", e.err)
 }
 
+// Unwrap 返回底层错误
 func (e *errNeedRetry) Unwrap() error {
 	return e.err
 }
 
+// MultiReadCloser 是一个多重读取关闭器
 type MultiReadCloser struct {
 	cfg    *cfg
 	closer closerFunc
-	finish finishBufFUnc
+	finish finishBufFunc
 }
 
+// cfg 是MultiReadCloser的配置
 type cfg struct {
-	rPos   int // current reader position, start from 0
+	rPos   int // 当前读取位置，从0开始
 	curBuf *Buf
 }
 
+// closerFunc 是关闭函数类型
 type closerFunc func() error
-type finishBufFUnc func(id int) (isLast bool, buf *Buf)
 
-// NewMultiReadCloser to save memory, we re-use limited Buf, and feed data to Read()
-func NewMultiReadCloser(buf *Buf, c closerFunc, fb finishBufFUnc) *MultiReadCloser {
-	return &MultiReadCloser{closer: c, finish: fb, cfg: &cfg{curBuf: buf}}
+// finishBufFunc 是完成缓冲区函数类型
+type finishBufFunc func(id int) (isLast bool, buf *Buf)
+
+// NewMultiReadCloser 创建一个新的多重读取关闭器
+func NewMultiReadCloser(buf *Buf, c closerFunc, fb finishBufFunc) *MultiReadCloser {
+	return &MultiReadCloser{cfg: &cfg{curBuf: buf}, closer: c, finish: fb}
 }
 
+// Read 实现io.Reader接口
 func (mr MultiReadCloser) Read(p []byte) (n int, err error) {
-	if mr.cfg.curBuf == nil {
-		return 0, io.EOF
-	}
-	n, err = mr.cfg.curBuf.Read(p)
-	// log.Debugf("read_%d read current buffer, n=%d ,err=%+v", mr.cfg.rPos, n, err)
-	if err == io.EOF {
-		log.Debugf("read_%d finished current buffer", mr.cfg.rPos)
+	for {
+		// 从当前缓冲区读取
+		n, err = mr.cfg.curBuf.Read(p)
+		if err == nil || err != io.EOF {
+			return n, err
+		}
 
-		isLast, next := mr.finish(mr.cfg.rPos)
+		// 当前缓冲区已读完，获取下一个缓冲区
+		isLast, nextBuf := mr.finish(mr.cfg.rPos)
 		if isLast {
 			return n, io.EOF
 		}
-		mr.cfg.curBuf = next
+
+		// 更新当前缓冲区和位置
 		mr.cfg.rPos++
-		return n, nil
-	}
-	if err == context.Canceled {
-		if e := context.Cause(mr.cfg.curBuf.ctx); e != nil {
-			err = e
+		mr.cfg.curBuf = nextBuf
+
+		// 如果已读取了一些数据，先返回
+		if n > 0 {
+			return n, nil
 		}
 	}
-	return n, err
 }
+
+// Close 实现io.Closer接口
 func (mr MultiReadCloser) Close() error {
 	return mr.closer()
 }
 
+// Buf 是一个缓冲区
 type Buf struct {
 	buffer *bytes.Buffer
-	size   int // expected size
+	size   int // 预期大小
 	ctx    context.Context
 	off    int
-	rw     sync.Mutex
+	mu     sync.Mutex
 
 	readSignal  chan struct{}
 	readPending bool
 }
 
-// NewBuf is a buffer that can have 1 read & 1 write at the same time.
-// when read is faster write, immediately feed data to read after written
+// NewBuf 创建一个新的缓冲区
 func NewBuf(ctx context.Context, maxSize int) *Buf {
 	return &Buf{
-		ctx:        ctx,
 		buffer:     bytes.NewBuffer(make([]byte, 0, maxSize)),
 		size:       maxSize,
+		ctx:        ctx,
 		readSignal: make(chan struct{}, 1),
 	}
 }
+
+// Reset 重置缓冲区
 func (br *Buf) Reset(size int) {
-	br.rw.Lock()
-	defer br.rw.Unlock()
-	if br.buffer == nil {
-		return
-	}
+	br.mu.Lock()
+	defer br.mu.Unlock()
+
 	br.buffer.Reset()
-	br.size = size
 	br.off = 0
+	br.size = size
+	br.readPending = false
+
+	// 清空读取信号
+	select {
+	case <-br.readSignal:
+	default:
+	}
 }
 
+// Read 实现io.Reader接口
 func (br *Buf) Read(p []byte) (n int, err error) {
-	if err := br.ctx.Err(); err != nil {
-		return 0, err
-	}
-	if len(p) == 0 {
-		return 0, nil
-	}
-	if br.off >= br.size {
-		return 0, io.EOF
-	}
-	for {
-		br.rw.Lock()
-		if br.buffer != nil {
-			n, err = br.buffer.Read(p)
-		} else {
-			err = io.ErrClosedPipe
-		}
-		if err != nil && err != io.EOF {
-			br.rw.Unlock()
-			return
-		}
-		if n > 0 {
-			br.off += n
-			br.rw.Unlock()
-			return n, nil
-		}
-		br.rw.Lock()
+	br.mu.Lock()
+
+	// 检查是否有足够的数据可读
+	if br.buffer.Len() == 0 && br.off < br.size {
+		// 标记为等待读取
 		br.readPending = true
-		br.rw.Unlock()
-		// n==0, err==io.EOF
+		br.mu.Unlock()
+
+		// 等待数据写入
 		select {
+		case <-br.readSignal:
 		case <-br.ctx.Done():
-			return 0, br.ctx.Err()
-		case _, ok := <-br.readSignal:
-			if !ok {
-				return 0, io.ErrClosedPipe
-			}
-			continue
+			return 0, context.Cause(br.ctx)
 		}
+
+		br.mu.Lock()
 	}
+
+	// 读取数据
+	n, err = br.buffer.Read(p)
+	br.off += n
+
+	// 检查是否已读取完毕
+	if br.off >= br.size && err == io.EOF {
+		br.mu.Unlock()
+		return n, io.EOF
+	}
+
+	// 如果缓冲区已空但未读取完毕，返回nil错误
+	if err == io.EOF {
+		err = nil
+	}
+
+	br.mu.Unlock()
+	return n, err
 }
 
+// Write 实现io.Writer接口
 func (br *Buf) Write(p []byte) (n int, err error) {
-	if err := br.ctx.Err(); err != nil {
-		return 0, err
-	}
-	br.rw.Lock()
-	defer br.rw.Unlock()
-	if br.buffer == nil {
-		return 0, io.ErrClosedPipe
-	}
+	br.mu.Lock()
+	defer br.mu.Unlock()
+
+	// 写入数据
 	n, err = br.buffer.Write(p)
+
+	// 如果有等待读取的操作，发送信号
 	if br.readPending {
 		br.readPending = false
 		select {
@@ -713,12 +706,24 @@ func (br *Buf) Write(p []byte) (n int, err error) {
 		default:
 		}
 	}
-	return
+
+	return n, err
 }
 
+// Close 关闭缓冲区
 func (br *Buf) Close() {
-	br.rw.Lock()
-	defer br.rw.Unlock()
-	br.buffer = nil
-	close(br.readSignal)
+	br.mu.Lock()
+	defer br.mu.Unlock()
+
+	// 标记为已读取完毕
+	br.off = br.size
+
+	// 如果有等待读取的操作，发送信号
+	if br.readPending {
+		br.readPending = false
+		select {
+		case br.readSignal <- struct{}{}:
+		default:
+		}
+	}
 }

@@ -32,7 +32,7 @@ import (
 // }
 
 // ServeHTTP replies to the request using the content in the
-// provided RangeReadCloser. The main benefit of ServeHTTP over io.Copy
+// provided RangeReadCloser. The main benefit of ServeHTTP
 // is that it handles Range requests properly, sets the MIME type, and
 // handles If-Match, If-Unmodified-Since, If-None-Match, If-Modified-Since,
 // and If-Range requests.
@@ -54,8 +54,8 @@ import (
 //
 // If the caller has set w's ETag header formatted per RFC 7232, section 2.3,
 // ServeHTTP uses it to handle requests using If-Match, If-None-Match, or If-Range.
-func ServeHTTP(w http.ResponseWriter, r *http.Request, name string, modTime time.Time, size int64, RangeReadCloser model.RangeReadCloserIF) error {
-	defer RangeReadCloser.Close()
+func ServeHTTP(w http.ResponseWriter, r *http.Request, name string, modTime time.Time, size int64, rangeReadCloser model.RangeReadCloserIF) error {
+	defer rangeReadCloser.Close()
 	setLastModified(w, modTime)
 	done, rangeReq := checkPreconditions(w, r, modTime)
 	if done {
@@ -119,10 +119,10 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request, name string, modTime time
 	ctx := context.WithValue(r.Context(), "request_header", r.Header)
 	switch {
 	case len(ranges) == 0:
-		reader, err := RangeReadCloser.RangeRead(ctx, http_range.Range{Length: -1})
+		reader, err := rangeReadCloser.RangeRead(ctx, http_range.Range{Length: -1})
 		if err != nil {
 			code = http.StatusRequestedRangeNotSatisfiable
-			if err == ErrExceedMaxConcurrency {
+			if errors.Is(err, ErrExceedMaxConcurrency) {
 				code = http.StatusTooManyRequests
 			}
 			http.Error(w, err.Error(), code)
@@ -142,10 +142,10 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request, name string, modTime time
 		// does not request multiple parts might not support
 		// multipart responses."
 		ra := ranges[0]
-		sendContent, err = RangeReadCloser.RangeRead(ctx, ra)
+		sendContent, err = rangeReadCloser.RangeRead(ctx, ra)
 		if err != nil {
 			code = http.StatusRequestedRangeNotSatisfiable
-			if err == ErrExceedMaxConcurrency {
+			if errors.Is(err, ErrExceedMaxConcurrency) {
 				code = http.StatusTooManyRequests
 			}
 			http.Error(w, err.Error(), code)
@@ -173,7 +173,7 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request, name string, modTime time
 					pw.CloseWithError(err)
 					return
 				}
-				reader, err := RangeReadCloser.RangeRead(ctx, ra)
+				reader, err := rangeReadCloser.RangeRead(ctx, ra)
 				if err != nil {
 					pw.CloseWithError(err)
 					return
@@ -182,6 +182,7 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request, name string, modTime time
 					pw.CloseWithError(err)
 					return
 				}
+				reader.Close() // 确保每个范围读取器都被关闭
 			}
 
 			mw.Close()
@@ -202,9 +203,9 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request, name string, modTime time
 			if errors.Is(context.Cause(ctx), context.Canceled) {
 				return nil
 			}
-			log.Warnf("ServeHttp error. err: %s ", err)
+			log.Warnf("ServeHttp error: %s", err)
 			if written != sendSize {
-				log.Warnf("Maybe size incorrect or reader not giving correct/full data, or connection closed before finish. written bytes: %d ,sendSize:%d, ", written, sendSize)
+				log.Warnf("Size mismatch: written=%d, expected=%d - possible causes: incorrect size, reader not providing full data, or connection closed prematurely", written, sendSize)
 			}
 			code = http.StatusInternalServerError
 			if errors.Is(err, ErrExceedMaxConcurrency) {
