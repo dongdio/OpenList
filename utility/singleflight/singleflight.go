@@ -31,6 +31,15 @@ func (p *panicError) Error() string {
 	return fmt.Sprintf("%v\n\n%s", p.value, p.stack)
 }
 
+func (p *panicError) Unwrap() error {
+	err, ok := p.value.(error)
+	if !ok {
+		return nil
+	}
+
+	return err
+}
+
 func newPanicError(v any) error {
 	stack := debug.Stack()
 
@@ -148,10 +157,10 @@ func (g *Group[T]) doCall(c *call[T], key string, fn func() (T, error)) {
 			c.err = errGoexit
 		}
 
-		c.wg.Done()
 		g.mu.Lock()
 		defer g.mu.Unlock()
-		if !c.forgotten {
+		c.wg.Done()
+		if g.m[key] == c {
 			delete(g.m, key)
 		}
 
@@ -204,9 +213,6 @@ func (g *Group[T]) doCall(c *call[T], key string, fn func() (T, error)) {
 // an earlier call to complete.
 func (g *Group[T]) Forget(key string) {
 	g.mu.Lock()
-	if c, ok := g.m[key]; ok {
-		c.forgotten = true
-	}
 	delete(g.m, key)
 	g.mu.Unlock()
 }
