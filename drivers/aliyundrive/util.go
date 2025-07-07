@@ -16,17 +16,24 @@ import (
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
+// createSession 创建设备会话
 func (d *AliDrive) createSession() error {
 	state, ok := global.Load(d.UserID)
 	if !ok {
-		return errors.Errorf("can't load user state, user_id: %s", d.UserID)
+		return errors.Errorf("无法加载用户状态，用户ID: %s", d.UserID)
 	}
+
+	// 生成签名
 	d.sign()
+
+	// 重试计数增加
 	state.retry++
 	if state.retry > 3 {
 		state.retry = 0
-		return errors.Errorf("createSession failed after three retries")
+		return errors.New("创建会话失败，已重试3次")
 	}
+
+	// 发送创建会话请求
 	_, err, _ := d.request("https://api.alipan.com/users/v1/users/device/create_session", http.MethodPost, func(req *resty.Request) {
 		req.SetBody(base.Json{
 			"deviceName":   "samsung",
@@ -36,6 +43,7 @@ func (d *AliDrive) createSession() error {
 			"refreshToken": d.RefreshToken,
 		})
 	}, nil)
+
 	if err == nil {
 		state.retry = 0
 	}
@@ -47,51 +55,63 @@ func (d *AliDrive) createSession() error {
 // 	return err
 // }
 
+// sign 生成签名
 func (d *AliDrive) sign() {
 	state, _ := global.Load(d.UserID)
 	secpAppID := "5dde4e1bdf9e4966b387ba58f4b3fdc3"
-	singdata := fmt.Sprintf("%s:%s:%s:%d", secpAppID, state.deviceID, d.UserID, 0)
-	hash := sha256.Sum256([]byte(singdata))
+	signData := fmt.Sprintf("%s:%s:%s:%d", secpAppID, state.deviceID, d.UserID, 0)
+	hash := sha256.Sum256([]byte(signData))
 	data, _ := ecc.SignBytes(state.privateKey, hash[:], ecc.RecID|ecc.LowerS)
-	state.signature = hex.EncodeToString(data) // strconv.Itoa(state.nonce)
+	state.signature = hex.EncodeToString(data)
 }
 
 // do others that not defined in Driver interface
 
+// refreshToken 刷新访问令牌
 func (d *AliDrive) refreshToken() error {
 	url := "https://auth.alipan.com/v2/account/token"
 	var resp base.TokenResp
 	var e RespErr
+
+	// 发送刷新令牌请求
 	_, err := base.RestyClient.R().
-		// ForceContentType("application/json").
 		SetBody(base.Json{"refresh_token": d.RefreshToken, "grant_type": "refresh_token"}).
 		SetResult(&resp).
 		SetError(&e).
 		Post(url)
+
 	if err != nil {
-		return err
+		return errors.Wrap(err, "发送刷新令牌请求失败")
 	}
+
 	if e.Code != "" {
-		return errors.Errorf("failed to refresh token: %s", e.Message)
+		return errors.Errorf("刷新令牌失败: %s", e.Message)
 	}
+
 	if resp.RefreshToken == "" {
-		return errors.New("failed to refresh token: refresh token is empty")
+		return errors.New("刷新令牌失败: 返回的刷新令牌为空")
 	}
+
+	// 更新令牌
 	d.RefreshToken, d.AccessToken = resp.RefreshToken, resp.AccessToken
 	op.MustSaveDriverStorage(d)
 	return nil
 }
 
+// request 发送API请求
 func (d *AliDrive) request(url, method string, callback base.ReqCallback, resp any) ([]byte, error, RespErr) {
 	req := base.RestyClient.R()
 	state, ok := global.Load(d.UserID)
+
 	if !ok {
 		if url == "https://api.alipan.com/v2/user/get" {
 			state = &State{}
 		} else {
-			return nil, errors.Errorf("can't load user state, user_id: %s", d.UserID), RespErr{}
+			return nil, errors.Errorf("无法加载用户状态，用户ID: %s", d.UserID), RespErr{}
 		}
 	}
+
+	// 设置请求头
 	req.SetHeaders(map[string]string{
 		"Authorization": "Bearer\t" + d.AccessToken,
 		"content-type":  "application/json",
@@ -102,52 +122,68 @@ func (d *AliDrive) request(url, method string, callback base.ReqCallback, resp a
 		"X-Canary":      "client=Android,app=adrive,version=v4.1.0",
 		"X-Device-Id":   state.deviceID,
 	})
+
+	// 设置请求体
 	if callback != nil {
 		callback(req)
 	} else {
 		req.SetBody("{}")
 	}
+
+	// 设置响应处理
 	if resp != nil {
 		req.SetResult(resp)
 	}
+
 	var e RespErr
 	req.SetError(&e)
+
+	// 发送请求
 	res, err := req.Execute(method, url)
 	if err != nil {
-		return nil, err, e
+		return nil, errors.Wrap(err, "发送请求失败"), e
 	}
+
+	// 处理错误响应
 	if e.Code != "" {
 		switch e.Code {
 		case "AccessTokenInvalid":
+			// 令牌无效，尝试刷新
 			err = d.refreshToken()
 			if err != nil {
-				return nil, err, e
+				return nil, errors.Wrap(err, "刷新令牌失败"), e
 			}
 		case "DeviceSessionSignatureInvalid":
+			// 会话签名无效，尝试创建新会话
 			err = d.createSession()
 			if err != nil {
-				return nil, err, e
+				return nil, errors.Wrap(err, "创建会话失败"), e
 			}
 		default:
 			return nil, errors.New(e.Message), e
 		}
+		// 重试请求
 		return d.request(url, method, callback, resp)
 	} else if res.IsError() {
-		return nil, errors.New("bad status code " + res.Status()), e
+		return nil, errors.Errorf("请求返回错误状态码: %s", res.Status()), e
 	}
+
 	return res.Bytes(), nil, e
 }
 
-func (d *AliDrive) getFiles(fileId string) ([]File, error) {
+// getFiles 获取目录下的文件列表
+func (d *AliDrive) getFiles(fileID string) ([]File, error) {
 	marker := "first"
-	res := make([]File, 0)
+	result := make([]File, 0)
+
 	for marker != "" {
 		if marker == "first" {
 			marker = ""
 		}
+
 		var resp Files
 		data := base.Json{
-			"drive_id":                d.DriveId,
+			"drive_id":                d.DriveID,
 			"fields":                  "*",
 			"image_thumbnail_process": "image/resize,w_400/format,jpeg",
 			"image_url_process":       "image/resize,w_1920/format,jpeg",
@@ -155,24 +191,28 @@ func (d *AliDrive) getFiles(fileId string) ([]File, error) {
 			"marker":                  marker,
 			"order_by":                d.OrderBy,
 			"order_direction":         d.OrderDirection,
-			"parent_file_id":          fileId,
+			"parent_file_id":          fileID,
 			"video_thumbnail_process": "video/snapshot,t_0,f_jpg,ar_auto,w_300",
 			"url_expire_sec":          14400,
 		}
+
 		_, err, _ := d.request("https://api.alipan.com/v2/file/list", http.MethodPost, func(req *resty.Request) {
 			req.SetBody(data)
 		}, &resp)
 
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "获取文件列表失败")
 		}
+
 		marker = resp.NextMarker
-		res = append(res, resp.Items...)
+		result = append(result, resp.Items...)
 	}
-	return res, nil
+
+	return result, nil
 }
 
-func (d *AliDrive) batch(srcId, dstId string, url string) error {
+// batch 批量处理文件操作（移动/复制）
+func (d *AliDrive) batch(srcID, dstID string, url string) error {
 	res, err, _ := d.request("https://api.alipan.com/v3/batch", http.MethodPost, func(req *resty.Request) {
 		req.SetBody(base.Json{
 			"requests": []base.Json{
@@ -181,12 +221,12 @@ func (d *AliDrive) batch(srcId, dstId string, url string) error {
 						"Content-Type": "application/json",
 					},
 					"method": "POST",
-					"id":     srcId,
+					"id":     srcID,
 					"body": base.Json{
-						"drive_id":          d.DriveId,
-						"file_id":           srcId,
-						"to_drive_id":       d.DriveId,
-						"to_parent_file_id": dstId,
+						"drive_id":          d.DriveID,
+						"file_id":           srcID,
+						"to_drive_id":       d.DriveID,
+						"to_parent_file_id": dstID,
 					},
 					"url": url,
 				},
@@ -194,12 +234,15 @@ func (d *AliDrive) batch(srcId, dstId string, url string) error {
 			"resource": "file",
 		})
 	}, nil)
+
 	if err != nil {
-		return err
+		return errors.Wrap(err, "批量操作请求失败")
 	}
+
 	status := utils.GetBytes(res, "responses.0.status").Int()
-	if status < 400 && status >= 100 {
+	if status >= 100 && status < 400 {
 		return nil
 	}
-	return errors.New(string(res))
+
+	return errors.Errorf("批量操作失败，状态码: %d，响应: %s", status, string(res))
 }

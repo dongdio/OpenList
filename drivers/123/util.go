@@ -20,8 +20,7 @@ import (
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
-// do others that not defined in Driver interface
-
+// API端点常量定义
 const (
 	Api              = "https://www.123pan.com/api"
 	AApi             = "https://www.123pan.com/a/api"
@@ -46,25 +45,54 @@ const (
 	// AuthKeySalt      = "8-8D$sL8gPjom7bk#cY"
 )
 
+// signPath 生成API请求签名
+// 参数：
+//   - path: API路径
+//   - os: 操作系统标识
+//   - version: 客户端版本
+//
+// 返回：
+//   - 时间签名和完整签名
 func signPath(path string, os string, version string) (k string, v string) {
+	// 字符表，用于时间格式转换
 	table := []byte{'a', 'd', 'e', 'f', 'g', 'h', 'l', 'm', 'y', 'i', 'j', 'n', 'o', 'p', 'k', 'q', 'r', 's', 't', 'u', 'b', 'c', 'v', 'w', 's', 'z'}
+
+	// 生成随机数
 	random := fmt.Sprintf("%.f", math.Round(1e7*rand.Float64()))
+
+	// 获取当前时间（中国时区）
 	now := time.Now().In(time.FixedZone("CST", 8*3600))
 	timestamp := fmt.Sprint(now.Unix())
+
+	// 转换时间格式
 	nowStr := []byte(now.Format("200601021504"))
 	for i := range nowStr {
 		nowStr[i] = table[nowStr[i]-48]
 	}
+
+	// 计算时间签名
 	timeSign := fmt.Sprint(crc32.ChecksumIEEE(nowStr))
+
+	// 构建签名数据
 	data := strings.Join([]string{timestamp, random, path, os, version, timeSign}, "|")
+
+	// 计算数据签名
 	dataSign := fmt.Sprint(crc32.ChecksumIEEE([]byte(data)))
+
 	return timeSign, strings.Join([]string{timestamp, random, dataSign}, "-")
 }
 
+// GetApi 为API URL添加签名参数
+// 参数：
+//   - rawUrl: 原始API URL
+//
+// 返回：
+//   - 添加签名后的URL
 func GetApi(rawUrl string) string {
 	u, _ := url.Parse(rawUrl)
 	query := u.Query()
-	query.Add(signPath(u.Path, "web", "3"))
+	k, v := signPath(u.Path, "web", "3")
+	query.Add(k, v)
 	u.RawQuery = query.Encode()
 	return u.String()
 }
@@ -144,21 +172,30 @@ func GetApi(rawUrl string) string {
 //	return url + "?" + v
 // }
 
+// login 执行登录操作获取访问令牌
+// 返回：
+//   - 可能的错误
 func (d *Pan123) login() error {
 	var body base.Json
+
+	// 根据用户名格式选择不同的登录方式
 	if utils.IsEmailFormat(d.Username) {
+		// 邮箱登录
 		body = base.Json{
 			"mail":     d.Username,
 			"password": d.Password,
 			"type":     2,
 		}
 	} else {
+		// 用户名登录
 		body = base.Json{
 			"passport": d.Username,
 			"password": d.Password,
 			"remember": true,
 		}
 	}
+
+	// 发送登录请求
 	res, err := base.RestyClient.R().
 		SetHeaders(map[string]string{
 			"origin":      "https://www.123pan.com",
@@ -172,9 +209,12 @@ func (d *Pan123) login() error {
 	if err != nil {
 		return err
 	}
+
+	// 检查响应状态
 	if utils.GetBytes(res.Bytes(), "code").Int() != 200 {
 		err = errors.New(utils.GetBytes(res.Bytes(), "message").String())
 	} else {
+		// 提取访问令牌
 		d.AccessToken = utils.GetBytes(res.Bytes(), "data", "token").String()
 	}
 	return err
@@ -194,9 +234,19 @@ func (d *Pan123) login() error {
 //	return &authKey, nil
 // }
 
+// Request 发送API请求
+// 参数：
+//   - url: API URL
+//   - method: HTTP方法
+//   - callback: 请求回调函数，用于自定义请求
+//   - resp: 响应结构体指针
+//
+// 返回：
+//   - 响应体字节数组和可能的错误
 func (d *Pan123) Request(url string, method string, callback base.ReqCallback, resp any) ([]byte, error) {
 	isRetry := false
 do:
+	// 创建请求
 	req := base.RestyClient.R()
 	req.SetHeaders(map[string]string{
 		"origin":        "https://www.123pan.com",
@@ -207,24 +257,30 @@ do:
 		"app-version":   "3",
 		// "user-agent":    base.UserAgent,
 	})
+
+	// 应用回调函数
 	if callback != nil {
 		callback(req)
 	}
+
+	// 设置响应结构体
 	if resp != nil {
 		req.SetResult(resp)
 	}
-	// authKey, err := authKey(url)
-	// if err != nil {
-	//	return nil, err
-	// }
-	// req.SetQueryParam("auth-key", *authKey)
+
+	// 发送请求
 	res, err := req.Execute(method, GetApi(url))
 	if err != nil {
 		return nil, err
 	}
+
+	// 解析响应
 	body := res.Bytes()
 	code := utils.GetBytes(body, "code").Int()
+
+	// 处理错误响应
 	if code != 0 {
+		// 处理授权失效的情况
 		if !isRetry && code == 401 {
 			err := d.login()
 			if err != nil {
@@ -235,19 +291,31 @@ do:
 		}
 		return nil, errors.New(utils.GetBytes(body, "message").String())
 	}
+
 	return body, nil
 }
 
+// getFiles 获取指定目录下的文件列表
+// 参数：
+//   - ctx: 上下文
+//   - parentId: 父目录ID
+//   - name: 父目录名称（用于日志）
+//
+// 返回：
+//   - 文件列表和可能的错误
 func (d *Pan123) getFiles(ctx context.Context, parentId string, name string) ([]File, error) {
 	page := 1
 	total := 0
 	res := make([]File, 0)
-	// 2024-02-06 fix concurrency by 123pan
+
+	// 分页获取文件列表
 	for {
+		// 应用API速率限制
 		if err := d.APIRateLimit(ctx, FileList); err != nil {
 			return nil, err
 		}
 
+		// 准备查询参数
 		var resp Files
 		query := map[string]string{
 			"driveId":              "0",
@@ -264,6 +332,8 @@ func (d *Pan123) getFiles(ctx context.Context, parentId string, name string) ([]
 			"operateType":          "4",
 			"inDirectSpace":        "false",
 		}
+
+		// 发送请求
 		_res, err := d.Request(FileList, http.MethodGet, func(req *resty.Request) {
 			req.SetQueryParams(query)
 		}, &resp)
@@ -271,15 +341,22 @@ func (d *Pan123) getFiles(ctx context.Context, parentId string, name string) ([]
 			return nil, err
 		}
 		log.Debug(string(_res))
+
+		// 处理响应
 		page++
 		res = append(res, resp.Data.InfoList...)
 		total = resp.Data.Total
+
+		// 检查是否已获取所有文件
 		if len(resp.Data.InfoList) == 0 || resp.Data.Next == "-1" {
 			break
 		}
 	}
+
+	// 验证文件数量是否一致
 	if len(res) != total {
-		log.Warnf("incorrect file count from remote at %s: expected %d, got %d", name, total, len(res))
+		log.Warnf("从远程获取的文件数量不正确，路径 %s: 期望 %d，实际 %d", name, total, len(res))
 	}
+
 	return res, nil
 }

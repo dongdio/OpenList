@@ -23,23 +23,36 @@ import (
 	"github.com/dongdio/OpenList/v4/utility/utils/random"
 )
 
+// Yun139 实现 139 云盘驱动的主结构体，包含所有云盘操作方法
+// 继承 model.Storage，包含 Addition 配置、定时器、账号等信息
+// 该结构体是驱动的核心，负责与 139 云盘 API 交互和管理文件操作
 type Yun139 struct {
 	model.Storage
 	Addition
-	cron              *cron.Cron
-	Account           string
-	ref               *Yun139
-	PersonalCloudHost string
+	cron              *cron.Cron // 定时器，用于定时刷新 token
+	Account           string     // 账号，存储用户账号信息
+	ref               *Yun139    // 引用存储，用于多实例共享 token
+	PersonalCloudHost string     // 个人云主机地址，从路由策略中获取
 }
 
+// Config 返回驱动的元配置信息
+// 该方法返回 139 云盘驱动的基本配置，如名称、是否支持本地排序等
+// 返回值: driver.Config 结构体，包含驱动的元信息
 func (d *Yun139) Config() driver.Config {
 	return config
 }
 
+// GetAddition 返回驱动的附加配置项
+// 该方法返回 139 云盘驱动的附加配置，如授权信息、云盘类型等
+// 返回值: driver.Additional 接口，指向 Addition 结构体
 func (d *Yun139) GetAddition() driver.Additional {
 	return &d.Addition
 }
 
+// Init 初始化驱动，包括 token 刷新、路由策略查询、定时任务等
+// 该方法在驱动启动时调用，用于设置驱动的初始状态
+// 参数 ctx: 上下文，用于控制初始化过程
+// 返回值: 初始化成功返回 nil，否则返回错误
 func (d *Yun139) Init(ctx context.Context) error {
 	if d.ref == nil {
 		if len(d.Authorization) == 0 {
@@ -64,7 +77,7 @@ func (d *Yun139) Init(ctx context.Context) error {
 		}
 		for _, policyItem := range resp.Data.RoutePolicyList {
 			if policyItem.ModName == "personal" {
-				d.PersonalCloudHost = policyItem.HttpsUrl
+				d.PersonalCloudHost = policyItem.HTTPSURL
 				break
 			}
 		}
@@ -100,6 +113,10 @@ func (d *Yun139) Init(ctx context.Context) error {
 	return nil
 }
 
+// InitReference 设置引用存储，用于多实例共享 token
+// 该方法用于设置一个引用驱动实例，以便多个驱动实例共享同一个 token
+// 参数 storage: 驱动实例，需要是 Yun139 类型
+// 返回值: 设置成功返回 nil，否则返回错误
 func (d *Yun139) InitReference(storage driver.Driver) error {
 	refStorage, ok := storage.(*Yun139)
 	if ok {
@@ -109,6 +126,10 @@ func (d *Yun139) InitReference(storage driver.Driver) error {
 	return errs.NotSupport
 }
 
+// Drop 停止定时任务，清理引用
+// 该方法在驱动卸载时调用，用于清理资源和停止定时任务
+// 参数 ctx: 上下文，用于控制清理过程
+// 返回值: 清理成功返回 nil，否则返回错误
 func (d *Yun139) Drop(ctx context.Context) error {
 	if d.cron != nil {
 		d.cron.Stop()
@@ -117,6 +138,10 @@ func (d *Yun139) Drop(ctx context.Context) error {
 	return nil
 }
 
+// List 列出指定目录下的所有文件和文件夹，自动根据类型分流
+// 该方法用于获取指定目录的内容列表，根据云盘类型调用不同的实现
+// 参数 ctx: 上下文，dir: 目录对象，args: 列表参数
+// 返回值: 文件和文件夹的对象列表，错误信息
 func (d *Yun139) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
 	switch d.Addition.Type {
 	case MetaPersonalNew:
@@ -132,6 +157,10 @@ func (d *Yun139) List(ctx context.Context, dir model.Obj, args model.ListArgs) (
 	}
 }
 
+// Link 获取文件的下载直链，自动根据类型分流
+// 该方法用于获取指定文件的下载链接，根据云盘类型调用不同的实现
+// 参数 ctx: 上下文，file: 文件对象，args: 链接参数
+// 返回值: 下载链接对象，错误信息
 func (d *Yun139) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	var url string
 	var err error
@@ -153,6 +182,10 @@ func (d *Yun139) Link(ctx context.Context, file model.Obj, args model.LinkArgs) 
 	return &model.Link{URL: url}, nil
 }
 
+// MakeDir 在指定目录下创建新文件夹，自动根据类型分流
+// 该方法用于在指定目录下创建新文件夹，根据云盘类型调用不同的实现
+// 参数 ctx: 上下文，parentDir: 父目录对象，dirName: 新文件夹名称
+// 返回值: 创建成功返回 nil，否则返回错误
 func (d *Yun139) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
 	var err error
 	switch d.Addition.Type {
@@ -210,6 +243,7 @@ func (d *Yun139) MakeDir(ctx context.Context, parentDir model.Obj, dirName strin
 	return err
 }
 
+// Move 移动文件或文件夹到目标目录，自动根据类型分流
 func (d *Yun139) Move(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj, error) {
 	switch d.Addition.Type {
 	case MetaPersonalNew:
@@ -285,6 +319,7 @@ func (d *Yun139) Move(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj,
 	}
 }
 
+// Rename 重命名文件或文件夹，自动根据类型分流
 func (d *Yun139) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
 	var err error
 	switch d.Addition.Type {
@@ -386,6 +421,7 @@ func (d *Yun139) Rename(ctx context.Context, srcObj model.Obj, newName string) e
 	return err
 }
 
+// Copy 复制文件或文件夹到目标目录，自动根据类型分流
 func (d *Yun139) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 	var err error
 	switch d.Addition.Type {
@@ -428,6 +464,7 @@ func (d *Yun139) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 	return err
 }
 
+// Remove 删除文件或文件夹，自动根据类型分流
 func (d *Yun139) Remove(ctx context.Context, obj model.Obj) error {
 	switch d.Addition.Type {
 	case MetaPersonalNew:
@@ -507,6 +544,7 @@ func (d *Yun139) Remove(ctx context.Context, obj model.Obj) error {
 	}
 }
 
+// getPartSize 计算分片上传的分片大小，支持自定义
 func (d *Yun139) getPartSize(size int64) int64 {
 	if d.CustomUploadPartSize != 0 {
 		return d.CustomUploadPartSize
@@ -518,6 +556,7 @@ func (d *Yun139) getPartSize(size int64) int64 {
 	return 100 * utils.MB
 }
 
+// Put 上传文件到目标目录，自动处理分片、冲突、进度等
 func (d *Yun139) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
 	switch d.Addition.Type {
 	case MetaPersonalNew:
@@ -607,8 +646,8 @@ func (d *Yun139) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 				batchPartInfos := partInfos[i:end]
 
 				moredata := base.Json{
-					"fileId":    resp.Data.FileId,
-					"uploadId":  resp.Data.UploadId,
+					"fileId":    resp.Data.FileID,
+					"uploadId":  resp.Data.UploadID,
 					"partInfos": batchPartInfos,
 					"commonAccountInfo": base.Json{
 						"account":     d.getAccount(),
@@ -616,7 +655,7 @@ func (d *Yun139) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 					},
 				}
 				pathname := "/file/getUploadUrl"
-				var moreresp PersonalUploadUrlResp
+				var moreresp PersonalUploadURLResp
 				_, err = d.personalPost(pathname, moredata, &moreresp)
 				if err != nil {
 					return err
@@ -638,7 +677,7 @@ func (d *Yun139) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 				// Update Progress
 				r := io.TeeReader(limitReader, p)
 
-				req, err := http.NewRequest("PUT", uploadPartInfo.UploadUrl, r)
+				req, err := http.NewRequest("PUT", uploadPartInfo.UploadURL, r)
 				if err != nil {
 					return err
 				}
@@ -663,8 +702,8 @@ func (d *Yun139) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 			data = base.Json{
 				"contentHash":          fullHash,
 				"contentHashAlgorithm": "SHA256",
-				"fileId":               resp.Data.FileId,
-				"uploadId":             resp.Data.UploadId,
+				"fileId":               resp.Data.FileID,
+				"uploadId":             resp.Data.UploadID,
 			}
 			_, err = d.personalPost("/file/complete", data, nil)
 			if err != nil {
@@ -761,7 +800,7 @@ func (d *Yun139) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 		}
 		pathname := "/orchestration/personalCloud/uploadAndDownload/v1.0/pcUploadFileRequest"
 		if d.isFamily() {
-			data = d.newJson(base.Json{
+			data = d.newJSON(base.Json{
 				"fileCount":    1,
 				"manualRename": 2,
 				"operation":    0,
@@ -847,6 +886,7 @@ func (d *Yun139) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 	}
 }
 
+// Other 扩展接口，支持视频预览等特殊操作
 func (d *Yun139) Other(ctx context.Context, args model.OtherArgs) (any, error) {
 	switch d.Addition.Type {
 	case MetaPersonalNew:

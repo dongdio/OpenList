@@ -25,8 +25,7 @@ import (
 	myrand "github.com/dongdio/OpenList/v4/utility/utils/random"
 )
 
-// do others that not defined in Driver interface
-
+// 注：旧版登录方法已注释，保留作为参考
 // func (d *Cloud189) login() error {
 //	url := "https://cloud.189.cn/api/portal/loginUrl.action?redirectURL=https%3A%2F%2Fcloud.189.cn%2Fmain.action"
 //	b := ""
@@ -140,76 +139,119 @@ import (
 //	return err
 // }
 
+// request 发送HTTP请求并处理响应
+// 参数:
+//   - url: 请求URL
+//   - method: HTTP方法
+//   - callback: 请求回调函数，用于设置请求参数
+//   - resp: 响应结构体指针，用于解析响应JSON
+//
+// 返回:
+//   - []byte: 响应体字节数组
+//   - error: 错误信息
 func (d *Cloud189) request(url string, method string, callback base.ReqCallback, resp any) ([]byte, error) {
-	var e Error
+	var errResp Error
+
+	// 创建请求
 	req := base.RestyClient.R().
-		SetError(&e).
+		SetError(&errResp).
 		SetHeaders(d.header).
 		SetHeader("Accept", "application/json;charset=UTF-8").
 		SetQueryParams(map[string]string{
-			"noCache": random(),
+			"noCache": random(), // 添加随机参数避免缓存
 		})
+
+	// 应用回调函数
 	if callback != nil {
 		callback(req)
 	}
+
+	// 设置响应结构体
 	if resp != nil {
 		req.SetResult(resp)
 	}
+
+	// 执行请求
 	res, err := req.Execute(method, url)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "执行HTTP请求失败")
 	}
-	// log.Debug(res.String())
-	if e.ErrorCode != "" {
-		if e.ErrorCode == "InvalidSessionKey" {
+
+	// 检查API错误
+	if errResp.ErrorCode != "" {
+		if errResp.ErrorCode == "InvalidSessionKey" {
+			// 会话过期，重新登录
+			log.Debug("会话密钥无效，尝试重新登录")
 			err = d.newLogin()
 			if err != nil {
-				return nil, err
+				return nil, errors.Wrap(err, "重新登录失败")
 			}
+			// 重新发送请求
 			return d.request(url, method, callback, resp)
 		}
+		return nil, errors.Errorf("API错误: [%s] %s", errResp.ErrorCode, errResp.ErrorMsg)
 	}
-	if utils.GetBytes(res.Bytes(), "res_code").Int() != 0 {
-		err = errors.New(utils.GetBytes(res.Bytes(), "res_message").String())
+
+	// 检查响应代码
+	resCode := utils.GetBytes(res.Bytes(), "res_code").Int()
+	if resCode != 0 {
+		resMessage := utils.GetBytes(res.Bytes(), "res_message").String()
+		err = errors.Errorf("响应错误: [%d] %s", resCode, resMessage)
 	}
+
 	return res.Bytes(), err
 }
 
+// getFiles 获取指定文件夹下的文件列表
+// 参数:
+//   - fileId: 文件夹ID
+//
+// 返回:
+//   - []model.Obj: 文件对象列表
+//   - error: 错误信息
 func (d *Cloud189) getFiles(fileId string) ([]model.Obj, error) {
-	res := make([]model.Obj, 0)
+	result := make([]model.Obj, 0)
 	pageNum := 1
+
+	// 分页获取文件列表
 	for {
 		var resp Files
 		_, err := d.request("https://cloud.189.cn/api/open/file/listFiles.action", http.MethodGet, func(req *resty.Request) {
 			req.SetQueryParams(map[string]string{
-				// "noCache":    random(),
-				"pageSize":   "60",
+				"pageSize":   "60", // 每页60条记录
 				"pageNum":    strconv.Itoa(pageNum),
-				"mediaType":  "0",
-				"folderId":   fileId,
-				"iconOption": "5",
-				"orderBy":    "lastOpTime", // account.OrderBy
-				"descending": "true",       // account.OrderDirection
+				"mediaType":  "0",          // 所有类型
+				"folderId":   fileId,       // 文件夹ID
+				"iconOption": "5",          // 图标选项
+				"orderBy":    "lastOpTime", // 按最后操作时间排序
+				"descending": "true",       // 降序排列
 			})
 		}, &resp)
+
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "获取文件列表失败")
 		}
+
+		// 没有更多数据，退出循环
 		if resp.FileListAO.Count == 0 {
 			break
 		}
+
+		// 处理文件夹
 		for _, folder := range resp.FileListAO.FolderList {
 			lastOpTime := utils.MustParseCNTime(folder.LastOpTime)
-			res = append(res, &model.Object{
+			result = append(result, &model.Object{
 				ID:       strconv.FormatInt(folder.Id, 10),
 				Name:     folder.Name,
 				Modified: lastOpTime,
 				IsFolder: true,
 			})
 		}
+
+		// 处理文件
 		for _, file := range resp.FileListAO.FileList {
 			lastOpTime := utils.MustParseCNTime(file.LastOpTime)
-			res = append(res, &model.ObjThumb{
+			result = append(result, &model.ObjThumb{
 				Object: model.Object{
 					ID:       strconv.FormatInt(file.Id, 10),
 					Name:     file.Name,
@@ -219,11 +261,21 @@ func (d *Cloud189) getFiles(fileId string) ([]model.Obj, error) {
 				Thumbnail: model.Thumbnail{Thumbnail: file.Icon.SmallUrl},
 			})
 		}
+
+		// 下一页
 		pageNum++
 	}
-	return res, nil
+
+	return result, nil
 }
 
+// oldUpload 旧版上传方法（保留作为参考）
+// 参数:
+//   - dstDir: 目标目录对象
+//   - file: 文件流
+//
+// 返回:
+//   - error: 错误信息
 func (d *Cloud189) oldUpload(dstDir model.Obj, file model.FileStreamer) error {
 	res, err := base.RestyClient.R().
 		SetHeaders(d.header).
@@ -234,173 +286,294 @@ func (d *Cloud189) oldUpload(dstDir model.Obj, file model.FileStreamer) error {
 			"fname":      file.GetName(),
 		}).SetMultipartField("Filedata", file.GetName(), file.GetMimetype(), file).
 		Post("https://hb02.upload.cloud.189.cn/v1/DCIWebUploadAction")
+
 	if err != nil {
-		return err
+		return errors.Wrap(err, "上传文件失败")
 	}
+
+	// 检查上传结果
 	if utils.GetBytes(res.Bytes(), "MD5").String() != "" {
 		return nil
 	}
-	log.Debugf(res.String())
-	return errors.New(res.String())
+
+	log.Debugf("上传响应: %s", res.String())
+	return errors.New("上传失败: " + res.String())
 }
 
+// getSessionKey 获取会话密钥
+// 返回:
+//   - string: 会话密钥
+//   - error: 错误信息
 func (d *Cloud189) getSessionKey() (string, error) {
 	resp, err := d.request("https://cloud.189.cn/v2/getUserBriefInfo.action", http.MethodGet, nil, nil)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "获取用户信息失败")
 	}
+
 	sessionKey := utils.GetBytes(resp, "sessionKey").String()
+	if sessionKey == "" {
+		return "", errors.New("未找到会话密钥")
+	}
+
 	return sessionKey, nil
 }
 
+// getResKey 获取RSA加密密钥
+// 返回:
+//   - string: 公钥
+//   - string: 公钥ID
+//   - error: 错误信息
 func (d *Cloud189) getResKey() (string, string, error) {
 	now := time.Now().UnixMilli()
+
+	// 如果已有有效的RSA密钥，直接返回
 	if d.rsa.Expire > now {
 		return d.rsa.PubKey, d.rsa.PkId, nil
 	}
+
+	// 获取新的RSA密钥
 	resp, err := d.request("https://cloud.189.cn/api/security/generateRsaKey.action", http.MethodGet, nil, nil)
 	if err != nil {
-		return "", "", err
+		return "", "", errors.Wrap(err, "获取RSA密钥失败")
 	}
-	pubKey, pkId := utils.GetBytes(resp, "pubKey").String(), utils.GetBytes(resp, "pkId").String()
-	d.rsa.PubKey, d.rsa.PkId = pubKey, pkId
-	d.rsa.Expire = utils.GetBytes(resp, "expire").Int()
+
+	// 解析响应
+	pubKey := utils.GetBytes(resp, "pubKey").String()
+	pkId := utils.GetBytes(resp, "pkId").String()
+	expire := utils.GetBytes(resp, "expire").Int()
+
+	// 更新缓存
+	d.rsa.PubKey = pubKey
+	d.rsa.PkId = pkId
+	d.rsa.Expire = expire
+
 	return pubKey, pkId, nil
 }
 
+// uploadRequest 发送上传相关的请求
+// 参数:
+//   - uri: 请求URI
+//   - form: 表单数据
+//   - resp: 响应结构体指针
+//
+// 返回:
+//   - []byte: 响应体字节数组
+//   - error: 错误信息
 func (d *Cloud189) uploadRequest(uri string, form map[string]string, resp any) ([]byte, error) {
-	c := strconv.FormatInt(time.Now().UnixMilli(), 10)
-	r := Random("xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx")
-	l := Random("xxxxxxxxxxxx4xxxyxxxxxxxxxxxxxxx")
-	l = l[0 : 16+int(16*myrand.Rand.Float32())]
+	// 生成请求参数
+	currentTime := strconv.FormatInt(time.Now().UnixMilli(), 10)
+	requestId := Random("xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx")
+	secretKey := Random("xxxxxxxxxxxx4xxxyxxxxxxxxxxxxxxx")
+	secretKey = secretKey[0 : 16+int(16*myrand.Rand.Float32())]
 
-	e := qs(form)
-	data := AesEncrypt([]byte(e), []byte(l[0:16]))
-	h := hex.EncodeToString(data)
+	// 加密表单数据
+	formQueryString := qs(form)
+	encryptedData := AesEncrypt([]byte(formQueryString), []byte(secretKey[0:16]))
+	hexData := hex.EncodeToString(encryptedData)
 
-	sessionKey := d.sessionKey
-	signature := hmacSha1(fmt.Sprintf("SessionKey=%s&Operate=GET&RequestURI=%s&Date=%s&params=%s", sessionKey, uri, c, h), l)
+	// 计算签名
+	signature := hmacSha1(fmt.Sprintf("SessionKey=%s&Operate=GET&RequestURI=%s&Date=%s&params=%s",
+		d.sessionKey, uri, currentTime, hexData), secretKey)
 
+	// 获取RSA密钥
 	pubKey, pkId, err := d.getResKey()
 	if err != nil {
 		return nil, err
 	}
-	b := RsaEncode([]byte(l), pubKey, false)
+
+	// 加密密钥
+	encryptedKey := RsaEncode([]byte(secretKey), pubKey, false)
+
+	// 创建请求
 	req := base.RestyClient.R().
 		SetHeaders(d.header).
 		SetHeaders(map[string]string{
 			"accept":         "application/json;charset=UTF-8",
-			"SessionKey":     sessionKey,
+			"SessionKey":     d.sessionKey,
 			"Signature":      signature,
-			"X-Request-Date": c,
-			"X-Request-ID":   r,
-			"EncryptionText": b,
+			"X-Request-Date": currentTime,
+			"X-Request-ID":   requestId,
+			"EncryptionText": encryptedKey,
 			"PkId":           pkId,
 		})
+
+	// 设置响应结构体
 	if resp != nil {
 		req.SetResult(resp)
 	}
-	res, err := req.Get("https://upload.cloud.189.cn" + uri + "?params=" + h)
+
+	// 执行请求
+	res, err := req.Get("https://upload.cloud.189.cn" + uri + "?params=" + hexData)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "执行上传请求失败")
 	}
-	data = res.Bytes()
-	if utils.GetBytes(data, "code").String() != "SUCCESS" {
-		return nil, errors.New(uri + "---" + utils.GetBytes(data, "msg").String())
+
+	// 检查响应
+	responseData := res.Bytes()
+	if utils.GetBytes(responseData, "code").String() != "SUCCESS" {
+		return nil, errors.Errorf("上传请求失败: %s - %s",
+			uri, utils.GetBytes(responseData, "msg").String())
 	}
-	return data, nil
+
+	return responseData, nil
 }
 
+// newUpload 实现分片上传
+// 参数:
+//   - ctx: 上下文
+//   - dstDir: 目标目录对象
+//   - file: 文件流
+//   - up: 进度更新回调
+//
+// 返回:
+//   - error: 错误信息
 func (d *Cloud189) newUpload(ctx context.Context, dstDir model.Obj, file model.FileStreamer, up driver.UpdateProgress) error {
+	// 获取会话密钥
 	sessionKey, err := d.getSessionKey()
 	if err != nil {
 		return err
 	}
 	d.sessionKey = sessionKey
-	const DEFAULT int64 = 10485760
-	var count = int64(math.Ceil(float64(file.GetSize()) / float64(DEFAULT)))
 
+	// 定义分片大小（10MB）
+	const SLICE_SIZE int64 = 10 * 1024 * 1024
+
+	// 计算分片数量
+	totalSlices := int64(math.Ceil(float64(file.GetSize()) / float64(SLICE_SIZE)))
+
+	// 初始化上传
 	res, err := d.uploadRequest("/person/initMultiUpload", map[string]string{
 		"parentFolderId": dstDir.GetID(),
 		"fileName":       encode(file.GetName()),
 		"fileSize":       strconv.FormatInt(file.GetSize(), 10),
-		"sliceSize":      strconv.FormatInt(DEFAULT, 10),
-		"lazyCheck":      "1",
+		"sliceSize":      strconv.FormatInt(SLICE_SIZE, 10),
+		"lazyCheck":      "1", // 懒校验模式
 	}, nil)
+
 	if err != nil {
-		return err
+		return errors.Wrap(err, "初始化上传失败")
 	}
+
+	// 获取上传文件ID
 	uploadFileId := utils.GetBytes(res, "data", "uploadFileId").String()
+	if uploadFileId == "" {
+		return errors.New("获取上传文件ID失败")
+	}
+
+	// 可以获取已上传的分片信息（目前未使用）
 	// _, err = d.uploadRequest("/person/getUploadedPartsInfo", map[string]string{
 	//	"uploadFileId": uploadFileId,
 	// }, nil)
-	var finish int64 = 0
-	var i int64
-	var byteSize int64
-	md5s := make([]string, 0)
-	md5Sum := md5.New()
-	for i = 1; i <= count; i++ {
+
+	// 上传分片
+	var uploadedBytes int64 = 0
+	md5List := make([]string, 0, totalSlices)
+	md5Sum := md5.New() // 计算整个文件的MD5
+
+	for i := int64(1); i <= totalSlices; i++ {
+		// 检查是否取消
 		if utils.IsCanceled(ctx) {
 			return ctx.Err()
 		}
-		byteSize = file.GetSize() - finish
-		if DEFAULT < byteSize {
-			byteSize = DEFAULT
+
+		// 计算当前分片大小
+		sliceSize := file.GetSize() - uploadedBytes
+		if SLICE_SIZE < sliceSize {
+			sliceSize = SLICE_SIZE
 		}
-		// log.Debugf("%d,%d", byteSize, finish)
-		byteData := make([]byte, byteSize)
-		n, err := io.ReadFull(file, byteData)
-		// log.Debug(err, n)
+
+		// 读取分片数据
+		sliceData := make([]byte, sliceSize)
+		n, err := io.ReadFull(file, sliceData)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "读取文件分片失败")
 		}
-		finish += int64(n)
-		md5Bytes := getMd5(byteData)
-		md5Hex := hex.EncodeToString(md5Bytes)
-		md5Base64 := base64.StdEncoding.EncodeToString(md5Bytes)
-		md5s = append(md5s, strings.ToUpper(md5Hex))
-		md5Sum.Write(byteData)
-		var resp UploadUrlsResp
-		res, err = d.uploadRequest("/person/getMultiUploadUrls", map[string]string{
-			"partInfo":     fmt.Sprintf("%s-%s", strconv.FormatInt(i, 10), md5Base64),
+
+		uploadedBytes += int64(n)
+
+		// 计算分片MD5
+		sliceMD5Bytes := getMd5(sliceData)
+		sliceMD5Hex := hex.EncodeToString(sliceMD5Bytes)
+		sliceMD5Base64 := base64.StdEncoding.EncodeToString(sliceMD5Bytes)
+
+		// 添加到MD5列表并更新整体MD5
+		md5List = append(md5List, strings.ToUpper(sliceMD5Hex))
+		md5Sum.Write(sliceData)
+
+		// 获取分片上传URL
+		var uploadUrlsResp UploadUrlsResp
+		_, err = d.uploadRequest("/person/getMultiUploadUrls", map[string]string{
+			"partInfo":     fmt.Sprintf("%s-%s", strconv.FormatInt(i, 10), sliceMD5Base64),
 			"uploadFileId": uploadFileId,
-		}, &resp)
+		}, &uploadUrlsResp)
+
 		if err != nil {
-			return err
+			return errors.Wrap(err, "获取分片上传URL失败")
 		}
-		uploadData := resp.UploadUrls["partNumber_"+strconv.FormatInt(i, 10)]
-		log.Debugf("uploadData: %+v", uploadData)
+
+		// 获取上传数据
+		uploadData := uploadUrlsResp.UploadUrls["partNumber_"+strconv.FormatInt(i, 10)]
+		log.Debugf("分片上传数据: %+v", uploadData)
+
 		requestURL := uploadData.RequestURL
 		uploadHeaders := strings.Split(decodeURIComponent(uploadData.RequestHeader), "&")
 
-		req, err := http.NewRequest(http.MethodPut, requestURL, driver.NewLimitedUploadStream(ctx, bytes.NewReader(byteData)))
+		// 创建上传请求
+		req, err := http.NewRequest(http.MethodPut, requestURL,
+			driver.NewLimitedUploadStream(ctx, bytes.NewReader(sliceData)))
 		if err != nil {
-			return err
+			return errors.Wrap(err, "创建分片上传请求失败")
 		}
+
+		// 设置上下文和请求头
 		req = req.WithContext(ctx)
-		for _, v := range uploadHeaders {
-			i := strings.Index(v, "=")
-			req.Header.Set(v[0:i], v[i+1:])
+		for _, headerItem := range uploadHeaders {
+			i := strings.Index(headerItem, "=")
+			if i > 0 {
+				req.Header.Set(headerItem[0:i], headerItem[i+1:])
+			}
 		}
-		r, err := base.HttpClient.Do(req)
+
+		// 执行上传请求
+		resp, err := base.HttpClient.Do(req)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "执行分片上传请求失败")
 		}
-		log.Debugf("%+v %+v", r, r.Request.Header)
-		_ = r.Body.Close()
-		up(float64(i) * 100 / float64(count))
+
+		// 检查响应状态
+		if resp.StatusCode != http.StatusOK {
+			_ = resp.Body.Close()
+			return errors.Errorf("分片上传失败，状态码: %d", resp.StatusCode)
+		}
+
+		log.Debugf("分片上传响应: %+v", resp.Status)
+		_ = resp.Body.Close()
+
+		// 更新进度
+		up(float64(i) * 100 / float64(totalSlices))
 	}
-	fileMd5 := hex.EncodeToString(md5Sum.Sum(nil))
-	sliceMd5 := fileMd5
-	if file.GetSize() > DEFAULT {
-		sliceMd5 = utils.GetMD5EncodeStr(strings.Join(md5s, "\n"))
+
+	// 计算文件MD5和分片MD5
+	fileMD5 := hex.EncodeToString(md5Sum.Sum(nil))
+	sliceMD5 := fileMD5
+
+	// 如果文件大于一个分片，计算分片MD5列表的MD5
+	if file.GetSize() > SLICE_SIZE {
+		sliceMD5 = utils.GetMD5EncodeStr(strings.Join(md5List, "\n"))
 	}
-	res, err = d.uploadRequest("/person/commitMultiUploadFile", map[string]string{
+
+	// 提交上传
+	_, err = d.uploadRequest("/person/commitMultiUploadFile", map[string]string{
 		"uploadFileId": uploadFileId,
-		"fileMd5":      fileMd5,
-		"sliceMd5":     sliceMd5,
+		"fileMd5":      fileMD5,
+		"sliceMd5":     sliceMD5,
 		"lazyCheck":    "1",
-		"opertype":     "3",
+		"opertype":     "3", // 操作类型：上传完成
 	}, nil)
-	return err
+
+	if err != nil {
+		return errors.Wrap(err, "提交上传失败")
+	}
+
+	return nil
 }
