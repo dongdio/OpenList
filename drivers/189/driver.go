@@ -41,7 +41,7 @@ func (d *Cloud189) GetAddition() driver.Additional {
 func (d *Cloud189) Init(ctx context.Context) error {
 	// 初始化HTTP请求头
 	d.header = map[string]string{
-		"Referer": "https://cloud.189.cn/",
+		"Referer": _refer,
 	}
 
 	// 执行登录
@@ -65,10 +65,9 @@ func (d *Cloud189) List(ctx context.Context, dir model.Obj, args model.ListArgs)
 // 实现driver.Driver接口
 func (d *Cloud189) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	var resp DownResp
-	fileInfoURL := "https://cloud.189.cn/api/portal/getFileInfo.action"
 
 	// 获取文件信息
-	_, err := d.request(fileInfoURL, http.MethodGet, func(req *resty.Request) {
+	_, err := d.request(_fileInfoURL, http.MethodGet, func(req *resty.Request) {
 		req.SetQueryParam("fileId", file.GetID())
 	}, &resp)
 
@@ -82,7 +81,7 @@ func (d *Cloud189) Link(ctx context.Context, file model.Obj, args model.LinkArgs
 		SetHeader("User-Agent", base.UserAgent)
 
 	// 请求下载链接
-	res, err := client.Get("https:" + resp.FileDownloadUrl)
+	res, err := client.Get("https:" + resp.FileDownloadURL)
 	if err != nil {
 		return nil, errors.Wrap(err, "请求下载链接失败")
 	}
@@ -90,7 +89,7 @@ func (d *Cloud189) Link(ctx context.Context, file model.Obj, args model.LinkArgs
 	log.Debugln("下载链接状态:", res.Status(), res.String())
 
 	link := model.Link{}
-	log.Debugln("初始下载URL:", resp.FileDownloadUrl)
+	log.Debugln("初始下载URL:", resp.FileDownloadURL)
 
 	// 处理重定向
 	if res.StatusCode() == 302 {
@@ -106,7 +105,7 @@ func (d *Cloud189) Link(ctx context.Context, file model.Obj, args model.LinkArgs
 			log.Debugln("最终URL:", link.URL)
 		}
 	} else {
-		link.URL = resp.FileDownloadUrl
+		link.URL = resp.FileDownloadURL
 	}
 
 	// 确保使用HTTPS
@@ -121,16 +120,8 @@ func (d *Cloud189) MakeDir(ctx context.Context, parentDir model.Obj, dirName str
 		"parentFolderId": parentDir.GetID(),
 		"folderName":     dirName,
 	}
-
-	_, err := d.request("https://cloud.189.cn/api/open/file/createFolder.action", http.MethodPost, func(req *resty.Request) {
-		req.SetFormData(form)
-	}, nil)
-
-	if err != nil {
-		return errors.Wrap(err, "创建目录失败")
-	}
-
-	return nil
+	_, err := d.request(_createFolder, http.MethodPost, _callBack(form), nil)
+	return errors.Wrap(err, "创建目录失败")
 }
 
 // Move 移动文件/目录
@@ -165,27 +156,21 @@ func (d *Cloud189) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 	}
 
 	// 发送请求
-	_, err = d.request("https://cloud.189.cn/api/open/batch/createBatchTask.action", http.MethodPost, func(req *resty.Request) {
-		req.SetFormData(form)
-	}, nil)
-
-	if err != nil {
-		return errors.Wrap(err, "移动文件失败")
-	}
-
-	return nil
+	_, err = d.request(_createBatchTask, http.MethodPost, _callBack(form), nil)
+	return errors.Wrap(err, "移动文件失败")
 }
 
 // Rename 重命名文件/目录
 // 实现driver.Driver接口
 func (d *Cloud189) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
+
 	// 根据对象类型选择不同的API和参数
-	url := "https://cloud.189.cn/api/open/file/renameFile.action"
+	link := _renameFile
 	idKey := "fileId"
 	nameKey := "destFileName"
 
 	if srcObj.IsDir() {
-		url = "https://cloud.189.cn/api/open/file/renameFolder.action"
+		link = _renameFolder
 		idKey = "folderId"
 		nameKey = "destFolderName"
 	}
@@ -197,15 +182,8 @@ func (d *Cloud189) Rename(ctx context.Context, srcObj model.Obj, newName string)
 	}
 
 	// 发送请求
-	_, err := d.request(url, http.MethodPost, func(req *resty.Request) {
-		req.SetFormData(form)
-	}, nil)
-
-	if err != nil {
-		return errors.Wrap(err, "重命名失败")
-	}
-
-	return nil
+	_, err := d.request(link, http.MethodPost, _callBack(form), nil)
+	return errors.Wrap(err, "重命名失败")
 }
 
 // Copy 复制文件/目录
@@ -240,15 +218,8 @@ func (d *Cloud189) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 	}
 
 	// 发送请求
-	_, err = d.request("https://cloud.189.cn/api/open/batch/createBatchTask.action", http.MethodPost, func(req *resty.Request) {
-		req.SetFormData(form)
-	}, nil)
-
-	if err != nil {
-		return errors.Wrap(err, "复制文件失败")
-	}
-
-	return nil
+	_, err = d.request(_createBatchTask, http.MethodPost, _callBack(form), nil)
+	return errors.Wrap(err, "复制文件失败")
 }
 
 // Remove 删除文件/目录
@@ -283,15 +254,8 @@ func (d *Cloud189) Remove(ctx context.Context, obj model.Obj) error {
 	}
 
 	// 发送请求
-	_, err = d.request("https://cloud.189.cn/api/open/batch/createBatchTask.action", http.MethodPost, func(req *resty.Request) {
-		req.SetFormData(form)
-	}, nil)
-
-	if err != nil {
-		return errors.Wrap(err, "删除文件失败")
-	}
-
-	return nil
+	_, err = d.request(_createBatchTask, http.MethodPost, _callBack(form), nil)
+	return errors.Wrap(err, "删除文件失败")
 }
 
 // Put 上传文件

@@ -4,7 +4,7 @@ package _189
 type LoginResp struct {
 	Msg    string `json:"msg"`    // 响应消息
 	Result int    `json:"result"` // 响应结果码，0表示成功
-	ToUrl  string `json:"toUrl"`  // 重定向URL
+	ToURL  string `json:"toUrl"`  // 重定向URL
 }
 
 // Error API错误响应结构体
@@ -15,20 +15,20 @@ type Error struct {
 
 // File 文件信息结构体
 type File struct {
-	Id         int64  `json:"id"`         // 文件ID
+	ID         int64  `json:"id"`         // 文件ID
 	LastOpTime string `json:"lastOpTime"` // 最后操作时间
 	Name       string `json:"name"`       // 文件名
 	Size       int64  `json:"size"`       // 文件大小
 	Icon       struct {
-		SmallUrl string `json:"smallUrl"` // 缩略图URL
+		SmallURL string `json:"smallUrl"` // 缩略图URL
 		// LargeUrl string `json:"largeUrl"` // 大图URL（未使用）
 	} `json:"icon"`
-	Url string `json:"url"` // 文件URL
+	URL string `json:"url"` // 文件URL
 }
 
 // Folder 文件夹信息结构体
 type Folder struct {
-	Id         int64  `json:"id"`         // 文件夹ID
+	ID         int64  `json:"id"`         // 文件夹ID
 	LastOpTime string `json:"lastOpTime"` // 最后操作时间
 	Name       string `json:"name"`       // 文件夹名
 }
@@ -59,7 +59,7 @@ type Part struct {
 // Rsa RSA加密参数结构体
 type Rsa struct {
 	Expire int64  `json:"expire"` // 过期时间
-	PkId   string `json:"pkId"`   // 公钥ID
+	PkID   string `json:"pkId"`   // 公钥ID
 	PubKey string `json:"pubKey"` // 公钥
 }
 
@@ -67,12 +67,12 @@ type Rsa struct {
 type Down struct {
 	ResCode         int    `json:"res_code"`        // 响应代码
 	ResMessage      string `json:"res_message"`     // 响应消息
-	FileDownloadUrl string `json:"fileDownloadUrl"` // 文件下载URL
+	FileDownloadURL string `json:"fileDownloadUrl"` // 文件下载URL
 }
 
 // DownResp 下载响应结构体
 type DownResp struct {
 	ResCode         int    `json:"res_code"`    // 响应代码
 	ResMessage      string `json:"res_message"` // 响应消息
-	FileDownloadUrl string `json:"downloadUrl"` // 文件下载URL
+	FileDownloadURL string `json:"downloadUrl"` // 文件下载URL
 }

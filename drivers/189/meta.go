@@ -3,6 +3,7 @@ package _189
 import (
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/op"
+	"resty.dev/v3"
 )
 
 // Addition 定义189云盘驱动的额外配置选项
@@ -29,4 +30,23 @@ func init() {
 	op.RegisterDriver(func() driver.Driver {
 		return new(Cloud189)
 	})
+}
+
+const (
+	_refer           = "https://cloud.189.cn/"
+	_fileInfoURL     = "https://cloud.189.cn/api/portal/getFileInfo.action"
+	_createFolder    = "https://cloud.189.cn/api/open/file/createFolder.action"
+	_createBatchTask = "https://cloud.189.cn/api/open/batch/createBatchTask.action"
+	_renameFile      = "https://cloud.189.cn/api/open/file/renameFile.action"
+	_renameFolder    = "https://cloud.189.cn/api/open/file/renameFolder.action"
+
+	_listFiles        = "https://cloud.189.cn/api/open/file/listFiles.action"
+	_getUserBriefInfo = "https://cloud.189.cn/v2/getUserBriefInfo.action"
+	_generateRsaKey   = "https://cloud.189.cn/api/security/generateRsaKey.action"
+)
+
+func _callBack(data map[string]string) func(req *resty.Request) {
+	return func(req *resty.Request) {
+		req.SetFormData(data)
+	}
 }

@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
@@ -56,8 +55,7 @@ func calSign(body, ts, randStr string) string {
 	base64Body := base64.StdEncoding.EncodeToString([]byte(sortedBody))
 	md5Body := utils.GetMD5EncodeStr(base64Body)
 	combinedStr := md5Body + utils.GetMD5EncodeStr(ts+":"+randStr)
-	finalSign := strings.ToUpper(utils.GetMD5EncodeStr(combinedStr))
-	return finalSign
+	return strings.ToUpper(utils.GetMD5EncodeStr(combinedStr))
 }
 
 // getTime 解析时间字符串为 time.Time
@@ -130,8 +128,8 @@ func (d *Yun139) refreshToken() error {
 func (d *Yun139) request(pathname string, method string, callback base.ReqCallback, resp any) ([]byte, error) {
 	link := "https://yun.139.com" + pathname
 	request := base.RestyClient.R()
-	randomStr := random.String(16)
-	timestamp := time.Now().Format("2006-01-02 15:04:05")
+
+	timestamp := time.Now().Format(time.DateTime)
 	if callback != nil {
 		callback(request)
 	}
@@ -139,6 +137,7 @@ func (d *Yun139) request(pathname string, method string, callback base.ReqCallba
 	if err != nil {
 		return nil, err
 	}
+	randomStr := random.String(16)
 	signature := calSign(string(bodyData), timestamp, randomStr)
 	serviceType := "1"
 	if d.isFamily() {
@@ -169,7 +168,6 @@ func (d *Yun139) request(pathname string, method string, callback base.ReqCallba
 	if err != nil {
 		return nil, err
 	}
-	log.Debugln(response.String())
 	if !errorResp.Success {
 		return nil, errors.New(errorResp.Message)
 	}
@@ -184,19 +182,15 @@ func (d *Yun139) request(pathname string, method string, callback base.ReqCallba
 
 func (d *Yun139) requestRoute(data any, resp any) ([]byte, error) {
 	link := "https://user-njs.yun.139.com/user/route/qryRoutePolicy"
-	req := base.RestyClient.R()
-	randStr := random.String(16)
-	ts := time.Now().Format("2006-01-02 15:04:05")
-	callback := func(req *resty.Request) {
-		req.SetBody(data)
-	}
-	if callback != nil {
-		callback(req)
-	}
-	body, err := utils.Json.Marshal(req.Body)
+
+	ts := time.Now().Format(time.DateTime)
+	req := base.RestyClient.R().SetBody(data)
+
+	body, err := utils.Json.Marshal(data)
 	if err != nil {
 		return nil, err
 	}
+	randStr := random.String(16)
 	sign := calSign(string(body), ts, randStr)
 	svcType := "1"
 	if d.isFamily() {
@@ -227,7 +221,6 @@ func (d *Yun139) requestRoute(data any, resp any) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Debugln(res.String())
 	if !e.Success {
 		return nil, errors.New(e.Message)
 	}
@@ -476,8 +469,8 @@ func unicode(str string) string {
 func (d *Yun139) personalRequest(pathname string, method string, callback base.ReqCallback, resp any) ([]byte, error) {
 	link := d.getPersonalCloudHost() + pathname
 	req := base.RestyClient.R()
-	randStr := random.String(16)
 	ts := time.Now().Format(time.DateTime)
+
 	if callback != nil {
 		callback(req)
 	}
@@ -485,6 +478,7 @@ func (d *Yun139) personalRequest(pathname string, method string, callback base.R
 	if err != nil {
 		return nil, err
 	}
+	randStr := random.String(16)
 	sign := calSign(string(body), ts, randStr)
 	svcType := "1"
 	if d.isFamily() {
@@ -520,7 +514,6 @@ func (d *Yun139) personalRequest(pathname string, method string, callback base.R
 	if err != nil {
 		return nil, err
 	}
-	log.Debugln(res.String())
 	if !e.Success {
 		return nil, errors.New(e.Message)
 	}
@@ -546,7 +539,7 @@ func getPersonalTime(t string) time.Time {
 	return stamp
 }
 
-func (d *Yun139) personalGetFiles(fileId string) ([]model.Obj, error) {
+func (d *Yun139) personalGetFiles(fileID string) ([]model.Obj, error) {
 	files := make([]model.Obj, 0)
 	nextPageCursor := ""
 	for {
@@ -558,7 +551,7 @@ func (d *Yun139) personalGetFiles(fileId string) ([]model.Obj, error) {
 				"pageCursor": nextPageCursor,
 				"pageSize":   100,
 			},
-			"parentFileId": fileId,
+			"parentFileId": fileID,
 		}
 		var resp PersonalListResp
 		_, err := d.personalPost("/file/list", data, &resp)
@@ -580,17 +573,17 @@ func (d *Yun139) personalGetFiles(fileId string) ([]model.Obj, error) {
 				}
 			} else {
 				var Thumbnails = item.Thumbnails
-				var ThumbnailUrl string
+				var ThumbnailURL string
 				if d.UseLargeThumbnail {
 					for _, thumb := range Thumbnails {
 						if strings.Contains(thumb.Style, "Large") {
-							ThumbnailUrl = thumb.URL
+							ThumbnailURL = thumb.URL
 							break
 						}
 					}
 				}
-				if ThumbnailUrl == "" && len(Thumbnails) > 0 {
-					ThumbnailUrl = Thumbnails[len(Thumbnails)-1].URL
+				if ThumbnailURL == "" && len(Thumbnails) > 0 {
+					ThumbnailURL = Thumbnails[len(Thumbnails)-1].URL
 				}
 				f = &model.ObjThumb{
 					Object: model.Object{
@@ -601,7 +594,7 @@ func (d *Yun139) personalGetFiles(fileId string) ([]model.Obj, error) {
 						Ctime:    getPersonalTime(item.CreatedAt),
 						IsFolder: isFolder,
 					},
-					Thumbnail: model.Thumbnail{Thumbnail: ThumbnailUrl},
+					Thumbnail: model.Thumbnail{Thumbnail: ThumbnailURL},
 				}
 			}
 			files = append(files, f)
@@ -617,12 +610,11 @@ func (d *Yun139) personalGetLink(fileID string) (string, error) {
 	data := base.Json{
 		"fileId": fileID,
 	}
-	res, err := d.personalPost("/file/getDownloadUrl",
-		data, nil)
+	res, err := d.personalPost("/file/getDownloadUrl", data, nil)
 	if err != nil {
 		return "", err
 	}
-	var cdnURL = utils.GetBytes(res, "data", "cdnUrl").String()
+	cdnURL := utils.GetBytes(res, "data", "cdnUrl").String()
 	if cdnURL != "" {
 		return cdnURL, nil
 	}

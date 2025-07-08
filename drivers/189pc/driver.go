@@ -19,6 +19,7 @@ import (
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
+// Cloud189PC 天翼云盘PC客户端驱动实现
 type Cloud189PC struct {
 	model.Storage
 	Addition
@@ -39,6 +40,8 @@ type Cloud189PC struct {
 	ref           *Cloud189PC
 }
 
+// Config 获取驱动配置
+// 返回值: 驱动配置信息
 func (y *Cloud189PC) Config() driver.Config {
 	if y.storageConfig.Name == "" {
 		y.storageConfig = config
@@ -46,10 +49,18 @@ func (y *Cloud189PC) Config() driver.Config {
 	return y.storageConfig
 }
 
+// GetAddition 获取附加配置
+// 返回值: 驱动附加配置
 func (y *Cloud189PC) GetAddition() driver.Additional {
 	return &y.Addition
 }
 
+// Init 初始化驱动
+// 初始化客户端、登录状态、家庭云ID等
+// 参数:
+//   - ctx: 上下文
+//
+// 返回值: 错误信息
 func (y *Cloud189PC) Init(ctx context.Context) (err error) {
 	y.storageConfig = config
 	if y.isFamily() {
@@ -82,11 +93,11 @@ func (y *Cloud189PC) Init(ctx context.Context) (err error) {
 		if y.client == nil {
 			y.client = base.NewRestyClient().SetHeaders(map[string]string{
 				"Accept":  "application/json;charset=UTF-8",
-				"Referer": WEB_URL,
+				"Referer": _webURL,
 			})
 		}
 
-		// 避免重复登陆
+		// 避免重复登录
 		identity := utils.GetMD5EncodeStr(y.Username + y.Password)
 		if !y.isLogin() || y.identity != identity {
 			y.identity = identity
@@ -119,6 +130,12 @@ func (y *Cloud189PC) Init(ctx context.Context) (err error) {
 	return
 }
 
+// InitReference 初始化引用
+// 用于在多个存储实例之间共享登录状态
+// 参数:
+//   - storage: 要引用的驱动实例
+//
+// 返回值: 错误信息
 func (d *Cloud189PC) InitReference(storage driver.Driver) error {
 	refStorage, ok := storage.(*Cloud189PC)
 	if ok {
@@ -128,28 +145,48 @@ func (d *Cloud189PC) InitReference(storage driver.Driver) error {
 	return errs.NotSupport
 }
 
+// Drop 清除引用
+// 参数:
+//   - ctx: 上下文
+//
+// 返回值: 错误信息
 func (y *Cloud189PC) Drop(ctx context.Context) error {
 	y.ref = nil
 	return nil
 }
 
+// List 列出目录内容
+// 获取指定目录下的所有文件和文件夹
+// 参数:
+//   - ctx: 上下文
+//   - dir: 目录对象
+//   - args: 列表参数
+//
+// 返回值: 文件和文件夹对象列表，错误信息
 func (y *Cloud189PC) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
 	return y.getFiles(ctx, dir.GetID(), y.isFamily())
 }
 
+// Link 获取文件下载链接
+// 参数:
+//   - ctx: 上下文
+//   - file: 文件对象
+//   - args: 链接参数
+//
+// 返回值: 下载链接，错误信息
 func (y *Cloud189PC) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
-	var downloadUrl struct {
+	var downloadURL struct {
 		URL string `json:"fileDownloadUrl"`
 	}
 
 	isFamily := y.isFamily()
-	fullUrl := API_URL
+	fullURL := _apiURL
 	if isFamily {
-		fullUrl += "/family/file"
+		fullURL += "/family/file"
 	}
-	fullUrl += "/getFileDownloadUrl.action"
+	fullURL += "/getFileDownloadUrl.action"
 
-	_, err := y.get(fullUrl, func(r *resty.Request) {
+	_, err := y.get(fullURL, func(r *resty.Request) {
 		r.SetContext(ctx)
 		r.SetQueryParam("fileId", file.GetID())
 		if isFamily {
@@ -162,33 +199,33 @@ func (y *Cloud189PC) Link(ctx context.Context, file model.Obj, args model.LinkAr
 				"flag": "1",
 			})
 		}
-	}, &downloadUrl, isFamily)
+	}, &downloadURL, isFamily)
 	if err != nil {
 		return nil, err
 	}
 
 	// 重定向获取真实链接
-	downloadUrl.URL = strings.Replace(strings.ReplaceAll(downloadUrl.URL, "&amp;", "&"), "http://", "https://", 1)
+	downloadURL.URL = strings.Replace(strings.ReplaceAll(downloadURL.URL, "&amp;", "&"), "http://", "https://", 1)
 	res, err := base.NoRedirectClient.R().SetContext(ctx).
 		SetDoNotParseResponse(true).
-		Get(downloadUrl.URL)
+		Get(downloadURL.URL)
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
 	if res.StatusCode() == 302 {
-		downloadUrl.URL = res.Header().Get("location")
+		downloadURL.URL = res.Header().Get("location")
 	}
 
-	like := &model.Link{
-		URL: downloadUrl.URL,
+	link := &model.Link{
+		URL: downloadURL.URL,
 		Header: http.Header{
 			"User-Agent": []string{base.UserAgent},
 		},
 	}
 	/*
 		// 获取链接有效时常
-		strs := regexp.MustCompile(`(?i)expire[^=]*=([0-9]*)`).FindStringSubmatch(downloadUrl.URL)
+		strs := regexp.MustCompile(`(?i)expire[^=]*=([0-9]*)`).FindStringSubmatch(downloadURL.URL)
 		if len(strs) == 2 {
 			timestamp, err := strconv.ParseInt(strs[1], 10, 64)
 			if err == nil {
@@ -197,19 +234,27 @@ func (y *Cloud189PC) Link(ctx context.Context, file model.Obj, args model.LinkAr
 			}
 		}
 	*/
-	return like, nil
+	return link, nil
 }
 
+// MakeDir 创建目录
+// 在指定目录下创建新的文件夹
+// 参数:
+//   - ctx: 上下文
+//   - parentDir: 父目录对象
+//   - dirName: 新目录名称
+//
+// 返回值: 新创建的目录对象，错误信息
 func (y *Cloud189PC) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) (model.Obj, error) {
 	isFamily := y.isFamily()
-	fullUrl := API_URL
+	fullURL := _apiURL
 	if isFamily {
-		fullUrl += "/family/file"
+		fullURL += "/family/file"
 	}
-	fullUrl += "/createFolder.action"
+	fullURL += "/createFolder.action"
 
 	var newFolder Cloud189Folder
-	_, err := y.post(fullUrl, func(req *resty.Request) {
+	_, err := y.post(fullURL, func(req *resty.Request) {
 		req.SetContext(ctx)
 		req.SetQueryParams(map[string]string{
 			"folderName":   dirName,
@@ -232,12 +277,20 @@ func (y *Cloud189PC) MakeDir(ctx context.Context, parentDir model.Obj, dirName s
 	return &newFolder, nil
 }
 
+// Move 移动文件或文件夹
+// 将文件或文件夹移动到新的目录
+// 参数:
+//   - ctx: 上下文
+//   - srcObj: 源文件或文件夹对象
+//   - dstDir: 目标目录对象
+//
+// 返回值: 移动后的对象，错误信息
 func (y *Cloud189PC) Move(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj, error) {
 	isFamily := y.isFamily()
 	other := map[string]string{"targetFileName": dstDir.GetName()}
 
 	resp, err := y.CreateBatchTask("MOVE", IF(isFamily, y.FamilyID, ""), dstDir.GetID(), other, BatchTaskInfo{
-		FileId:   srcObj.GetID(),
+		FileID:   srcObj.GetID(),
 		FileName: srcObj.GetName(),
 		IsFolder: BoolToNumber(srcObj.IsDir()),
 	})
@@ -250,13 +303,20 @@ func (y *Cloud189PC) Move(ctx context.Context, srcObj, dstDir model.Obj) (model.
 	return srcObj, nil
 }
 
+// Rename 重命名文件或文件夹
+// 参数:
+//   - ctx: 上下文
+//   - srcObj: 要重命名的文件或文件夹对象
+//   - newName: 新名称
+//
+// 返回值: 重命名后的对象，错误信息
 func (y *Cloud189PC) Rename(ctx context.Context, srcObj model.Obj, newName string) (model.Obj, error) {
 	isFamily := y.isFamily()
 	queryParam := make(map[string]string)
-	fullUrl := API_URL
+	fullURL := _apiURL
 	method := http.MethodPost
 	if isFamily {
-		fullUrl += "/family/file"
+		fullURL += "/family/file"
 		method = http.MethodGet
 		queryParam["familyId"] = y.FamilyID
 	}
@@ -264,12 +324,12 @@ func (y *Cloud189PC) Rename(ctx context.Context, srcObj model.Obj, newName strin
 	var newObj model.Obj
 	switch f := srcObj.(type) {
 	case *Cloud189File:
-		fullUrl += "/renameFile.action"
+		fullURL += "/renameFile.action"
 		queryParam["fileId"] = srcObj.GetID()
 		queryParam["destFileName"] = newName
 		newObj = &Cloud189File{Icon: f.Icon} // 复用预览
 	case *Cloud189Folder:
-		fullUrl += "/renameFolder.action"
+		fullURL += "/renameFolder.action"
 		queryParam["folderId"] = srcObj.GetID()
 		queryParam["destFolderName"] = newName
 		newObj = &Cloud189Folder{}
@@ -277,7 +337,7 @@ func (y *Cloud189PC) Rename(ctx context.Context, srcObj model.Obj, newName strin
 		return nil, errs.NotSupport
 	}
 
-	_, err := y.request(fullUrl, method, func(req *resty.Request) {
+	_, err := y.request(fullURL, method, func(req *resty.Request) {
 		req.SetContext(ctx).SetQueryParams(queryParam)
 	}, nil, newObj, isFamily)
 	if err != nil {
@@ -286,12 +346,20 @@ func (y *Cloud189PC) Rename(ctx context.Context, srcObj model.Obj, newName strin
 	return newObj, nil
 }
 
+// Copy 复制文件或文件夹
+// 将文件或文件夹复制到新的目录
+// 参数:
+//   - ctx: 上下文
+//   - srcObj: 源文件或文件夹对象
+//   - dstDir: 目标目录对象
+//
+// 返回值: 错误信息
 func (y *Cloud189PC) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 	isFamily := y.isFamily()
 	other := map[string]string{"targetFileName": dstDir.GetName()}
 
 	resp, err := y.CreateBatchTask("COPY", IF(isFamily, y.FamilyID, ""), dstDir.GetID(), other, BatchTaskInfo{
-		FileId:   srcObj.GetID(),
+		FileID:   srcObj.GetID(),
 		FileName: srcObj.GetName(),
 		IsFolder: BoolToNumber(srcObj.IsDir()),
 	})
@@ -302,11 +370,17 @@ func (y *Cloud189PC) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 	return y.WaitBatchTask("COPY", resp.TaskID, time.Second)
 }
 
+// Remove 删除文件或文件夹
+// 参数:
+//   - ctx: 上下文
+//   - obj: 要删除的文件或文件夹对象
+//
+// 返回值: 错误信息
 func (y *Cloud189PC) Remove(ctx context.Context, obj model.Obj) error {
 	isFamily := y.isFamily()
 
 	resp, err := y.CreateBatchTask("DELETE", IF(isFamily, y.FamilyID, ""), "", nil, BatchTaskInfo{
-		FileId:   obj.GetID(),
+		FileID:   obj.GetID(),
 		FileName: obj.GetName(),
 		IsFolder: BoolToNumber(obj.IsDir()),
 	})
@@ -317,6 +391,15 @@ func (y *Cloud189PC) Remove(ctx context.Context, obj model.Obj) error {
 	return y.WaitBatchTask("DELETE", resp.TaskID, time.Millisecond*200)
 }
 
+// Put 上传文件
+// 将文件上传到指定目录
+// 参数:
+//   - ctx: 上下文
+//   - dstDir: 目标目录对象
+//   - stream: 文件流
+//   - up: 上传进度回调
+//
+// 返回值: 上传后的文件对象，错误信息
 func (y *Cloud189PC) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) (newObj model.Obj, err error) {
 	overwrite := true
 	isFamily := y.isFamily()

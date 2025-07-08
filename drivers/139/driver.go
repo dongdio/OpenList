@@ -2,7 +2,6 @@ package _139
 
 import (
 	"context"
-	"encoding/xml"
 	"fmt"
 	"io"
 	"net/http"
@@ -244,6 +243,9 @@ func (d *Yun139) MakeDir(ctx context.Context, parentDir model.Obj, dirName strin
 }
 
 // Move 移动文件或文件夹到目标目录，自动根据类型分流
+// 该方法用于将源对象移动到目标目录，根据云盘类型调用不同的实现
+// 参数 ctx: 上下文，srcObj: 源对象，dstDir: 目标目录
+// 返回值: 移动后的对象，错误信息
 func (d *Yun139) Move(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj, error) {
 	switch d.Addition.Type {
 	case MetaPersonalNew:
@@ -320,6 +322,9 @@ func (d *Yun139) Move(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj,
 }
 
 // Rename 重命名文件或文件夹，自动根据类型分流
+// 该方法用于重命名文件或文件夹，根据云盘类型调用不同的实现
+// 参数 ctx: 上下文，srcObj: 源对象，newName: 新名称
+// 返回值: 重命名成功返回 nil，否则返回错误
 func (d *Yun139) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
 	var err error
 	switch d.Addition.Type {
@@ -422,6 +427,9 @@ func (d *Yun139) Rename(ctx context.Context, srcObj model.Obj, newName string) e
 }
 
 // Copy 复制文件或文件夹到目标目录，自动根据类型分流
+// 该方法用于将源对象复制到目标目录，根据云盘类型调用不同的实现
+// 参数 ctx: 上下文，srcObj: 源对象，dstDir: 目标目录
+// 返回值: 复制成功返回 nil，否则返回错误
 func (d *Yun139) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 	var err error
 	switch d.Addition.Type {
@@ -465,6 +473,9 @@ func (d *Yun139) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 }
 
 // Remove 删除文件或文件夹，自动根据类型分流
+// 该方法用于删除文件或文件夹，根据云盘类型调用不同的实现
+// 参数 ctx: 上下文，obj: 要删除的对象
+// 返回值: 删除成功返回 nil，否则返回错误
 func (d *Yun139) Remove(ctx context.Context, obj model.Obj) error {
 	switch d.Addition.Type {
 	case MetaPersonalNew:
@@ -545,6 +556,9 @@ func (d *Yun139) Remove(ctx context.Context, obj model.Obj) error {
 }
 
 // getPartSize 计算分片上传的分片大小，支持自定义
+// 该方法根据文件大小和配置计算合适的分片大小
+// 参数 size: 文件大小，单位为字节
+// 返回值: 计算得到的分片大小，单位为字节
 func (d *Yun139) getPartSize(size int64) int64 {
 	if d.CustomUploadPartSize != 0 {
 		return d.CustomUploadPartSize
@@ -557,6 +571,15 @@ func (d *Yun139) getPartSize(size int64) int64 {
 }
 
 // Put 上传文件到目标目录，自动处理分片、冲突、进度等
+// 该方法用于将文件上传到指定目录，支持分片上传、断点续传、冲突处理等功能
+// 根据云盘类型调用不同的实现，支持自定义分片大小和进度回调
+// 参数:
+//   - ctx: 上下文，用于控制上传过程和取消操作
+//   - dstDir: 目标目录对象，指定上传到哪个目录
+//   - stream: 文件流，包含文件内容、名称、大小等信息
+//   - up: 进度回调函数，用于报告上传进度
+//
+// 返回值: 上传成功返回 nil，否则返回错误
 func (d *Yun139) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
 	switch d.Addition.Type {
 	case MetaPersonalNew:
@@ -645,7 +668,7 @@ func (d *Yun139) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 				}
 				batchPartInfos := partInfos[i:end]
 
-				moredata := base.Json{
+				moreData := base.Json{
 					"fileId":    resp.Data.FileID,
 					"uploadId":  resp.Data.UploadID,
 					"partInfos": batchPartInfos,
@@ -655,18 +678,20 @@ func (d *Yun139) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 					},
 				}
 				pathname := "/file/getUploadUrl"
-				var moreresp PersonalUploadURLResp
-				_, err = d.personalPost(pathname, moredata, &moreresp)
+				var moreResp PersonalUploadURLResp
+				_, err = d.personalPost(pathname, moreData, &moreResp)
 				if err != nil {
 					return err
 				}
-				uploadPartInfos = append(uploadPartInfos, moreresp.Data.PartInfos...)
+				uploadPartInfos = append(uploadPartInfos, moreResp.Data.PartInfos...)
 			}
 
-			// Progress
+			// 创建进度跟踪器
 			p := driver.NewProgress(size, up)
 
+			// 创建限速上传流
 			rateLimited := driver.NewLimitedUploadStream(ctx, stream)
+
 			// 上传所有分片
 			for _, uploadPartInfo := range uploadPartInfos {
 				index := uploadPartInfo.PartNumber - 1
@@ -674,7 +699,7 @@ func (d *Yun139) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 				log.Debugf("[139] uploading part %+v/%+v", index, len(uploadPartInfos))
 				limitReader := io.LimitReader(rateLimited, partSize)
 
-				// Update Progress
+				// 更新进度
 				r := io.TeeReader(limitReader, p)
 
 				req, err := http.NewRequest("PUT", uploadPartInfo.UploadURL, r)
@@ -699,6 +724,7 @@ func (d *Yun139) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 				}
 			}
 
+			// 完成上传
 			data = base.Json{
 				"contentHash":          fullHash,
 				"contentHashAlgorithm": "SHA256",
@@ -846,39 +872,64 @@ func (d *Yun139) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 			limitReader := io.LimitReader(rateLimited, byteSize)
 			// Update Progress
 			r := io.TeeReader(limitReader, p)
-			req, err := http.NewRequest("POST", resp.Data.UploadResult.RedirectionURL, r)
-			if err != nil {
-				return err
-			}
 
-			req = req.WithContext(ctx)
-			req.Header.Set("Content-Type", "text/plain;name="+unicode(stream.GetName()))
-			req.Header.Set("contentSize", strconv.FormatInt(size, 10))
-			req.Header.Set("range", fmt.Sprintf("bytes=%d-%d", start, start+byteSize-1))
-			req.Header.Set("uploadtaskID", resp.Data.UploadResult.UploadTaskID)
-			req.Header.Set("rangeType", "0")
-			req.ContentLength = byteSize
-
-			res, err := base.HttpClient.Do(req)
-			if err != nil {
-				return err
-			}
-			if res.StatusCode != http.StatusOK {
-				res.Body.Close()
-				return errors.Errorf("unexpected status code: %d", res.StatusCode)
-			}
-			bodyBytes, err := io.ReadAll(res.Body)
-			if err != nil {
-				return errors.Errorf("error reading response body: %v", err)
-			}
 			var result InterLayerUploadResult
-			err = xml.Unmarshal(bodyBytes, &result)
+			resp, err := base.RestyClient.R().
+				WithContext(ctx).
+				SetBody(r).
+				SetHeader("Content-Type", "text/plain;name="+unicode(stream.GetName())).
+				SetHeader("contentSize", strconv.FormatInt(size, 10)).
+				SetHeader("range", fmt.Sprintf("bytes=%d-%d", start, start+byteSize-1)).
+				SetHeader("uploadtaskID", resp.Data.UploadResult.UploadTaskID).
+				SetHeader("rangeType", "0").
+				SetContentLength(true).
+				SetResult(&result).
+				Post(resp.Data.UploadResult.RedirectionURL)
 			if err != nil {
-				return errors.Errorf("error parsing XML: %v", err)
+				return err
+			}
+			if resp.StatusCode() != http.StatusOK {
+				return errors.Errorf("unexpected status code: %d", resp.StatusCode())
 			}
 			if result.ResultCode != 0 {
 				return errors.Errorf("upload failed with result code: %d, message: %s", result.ResultCode, result.Msg)
+			} else {
+				log.Debugf("[139] uploaded: %+v", result)
 			}
+
+			// req, err := http.NewRequest("POST", resp.Data.UploadResult.RedirectionURL, r)
+			// if err != nil {
+			// 	return err
+			// }
+
+			// req = req.WithContext(ctx)
+			// req.Header.Set("Content-Type", "text/plain;name="+unicode(stream.GetName()))
+			// req.Header.Set("contentSize", strconv.FormatInt(size, 10))
+			// req.Header.Set("range", fmt.Sprintf("bytes=%d-%d", start, start+byteSize-1))
+			// req.Header.Set("uploadtaskID", resp.Data.UploadResult.UploadTaskID)
+			// req.Header.Set("rangeType", "0")
+			// req.ContentLength = byteSize
+
+			// res, err := base.HttpClient.Do(req)
+			// if err != nil {
+			// 	return err
+			// }
+			// if res.StatusCode != http.StatusOK {
+			// 	res.Body.Close()
+			// 	return errors.Errorf("unexpected status code: %d", res.StatusCode)
+			// }
+			// bodyBytes, err := io.ReadAll(res.Body)
+			// if err != nil {
+			// 	return errors.Errorf("error reading response body: %v", err)
+			// }
+			// var result InterLayerUploadResult
+			// err = xml.Unmarshal(bodyBytes, &result)
+			// if err != nil {
+			// 	return errors.Errorf("error parsing XML: %v", err)
+			// }
+			// if result.ResultCode != 0 {
+			// 	return errors.Errorf("upload failed with result code: %d, message: %s", result.ResultCode, result.Msg)
+			// }
 		}
 		return nil
 	default:

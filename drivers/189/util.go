@@ -209,19 +209,19 @@ func (d *Cloud189) request(url string, method string, callback base.ReqCallback,
 // 返回:
 //   - []model.Obj: 文件对象列表
 //   - error: 错误信息
-func (d *Cloud189) getFiles(fileId string) ([]model.Obj, error) {
+func (d *Cloud189) getFiles(fileID string) ([]model.Obj, error) {
 	result := make([]model.Obj, 0)
 	pageNum := 1
 
 	// 分页获取文件列表
 	for {
 		var resp Files
-		_, err := d.request("https://cloud.189.cn/api/open/file/listFiles.action", http.MethodGet, func(req *resty.Request) {
+		_, err := d.request(_listFiles, http.MethodGet, func(req *resty.Request) {
 			req.SetQueryParams(map[string]string{
 				"pageSize":   "60", // 每页60条记录
 				"pageNum":    strconv.Itoa(pageNum),
 				"mediaType":  "0",          // 所有类型
-				"folderId":   fileId,       // 文件夹ID
+				"folderId":   fileID,       // 文件夹ID
 				"iconOption": "5",          // 图标选项
 				"orderBy":    "lastOpTime", // 按最后操作时间排序
 				"descending": "true",       // 降序排列
@@ -241,7 +241,7 @@ func (d *Cloud189) getFiles(fileId string) ([]model.Obj, error) {
 		for _, folder := range resp.FileListAO.FolderList {
 			lastOpTime := utils.MustParseCNTime(folder.LastOpTime)
 			result = append(result, &model.Object{
-				ID:       strconv.FormatInt(folder.Id, 10),
+				ID:       strconv.FormatInt(folder.ID, 10),
 				Name:     folder.Name,
 				Modified: lastOpTime,
 				IsFolder: true,
@@ -253,12 +253,12 @@ func (d *Cloud189) getFiles(fileId string) ([]model.Obj, error) {
 			lastOpTime := utils.MustParseCNTime(file.LastOpTime)
 			result = append(result, &model.ObjThumb{
 				Object: model.Object{
-					ID:       strconv.FormatInt(file.Id, 10),
+					ID:       strconv.FormatInt(file.ID, 10),
 					Name:     file.Name,
 					Modified: lastOpTime,
 					Size:     file.Size,
 				},
-				Thumbnail: model.Thumbnail{Thumbnail: file.Icon.SmallUrl},
+				Thumbnail: model.Thumbnail{Thumbnail: file.Icon.SmallURL},
 			})
 		}
 
@@ -269,43 +269,12 @@ func (d *Cloud189) getFiles(fileId string) ([]model.Obj, error) {
 	return result, nil
 }
 
-// oldUpload 旧版上传方法（保留作为参考）
-// 参数:
-//   - dstDir: 目标目录对象
-//   - file: 文件流
-//
-// 返回:
-//   - error: 错误信息
-func (d *Cloud189) oldUpload(dstDir model.Obj, file model.FileStreamer) error {
-	res, err := base.RestyClient.R().
-		SetHeaders(d.header).
-		SetMultipartFormData(map[string]string{
-			"parentId":   dstDir.GetID(),
-			"sessionKey": "??",
-			"opertype":   "1",
-			"fname":      file.GetName(),
-		}).SetMultipartField("Filedata", file.GetName(), file.GetMimetype(), file).
-		Post("https://hb02.upload.cloud.189.cn/v1/DCIWebUploadAction")
-
-	if err != nil {
-		return errors.Wrap(err, "上传文件失败")
-	}
-
-	// 检查上传结果
-	if utils.GetBytes(res.Bytes(), "MD5").String() != "" {
-		return nil
-	}
-
-	log.Debugf("上传响应: %s", res.String())
-	return errors.New("上传失败: " + res.String())
-}
-
 // getSessionKey 获取会话密钥
 // 返回:
 //   - string: 会话密钥
 //   - error: 错误信息
 func (d *Cloud189) getSessionKey() (string, error) {
-	resp, err := d.request("https://cloud.189.cn/v2/getUserBriefInfo.action", http.MethodGet, nil, nil)
+	resp, err := d.request(_getUserBriefInfo, http.MethodGet, nil, nil)
 	if err != nil {
 		return "", errors.Wrap(err, "获取用户信息失败")
 	}
@@ -328,26 +297,26 @@ func (d *Cloud189) getResKey() (string, string, error) {
 
 	// 如果已有有效的RSA密钥，直接返回
 	if d.rsa.Expire > now {
-		return d.rsa.PubKey, d.rsa.PkId, nil
+		return d.rsa.PubKey, d.rsa.PkID, nil
 	}
 
 	// 获取新的RSA密钥
-	resp, err := d.request("https://cloud.189.cn/api/security/generateRsaKey.action", http.MethodGet, nil, nil)
+	resp, err := d.request(_generateRsaKey, http.MethodGet, nil, nil)
 	if err != nil {
 		return "", "", errors.Wrap(err, "获取RSA密钥失败")
 	}
 
 	// 解析响应
 	pubKey := utils.GetBytes(resp, "pubKey").String()
-	pkId := utils.GetBytes(resp, "pkId").String()
+	pkID := utils.GetBytes(resp, "pkId").String()
 	expire := utils.GetBytes(resp, "expire").Int()
 
 	// 更新缓存
 	d.rsa.PubKey = pubKey
-	d.rsa.PkId = pkId
+	d.rsa.PkID = pkID
 	d.rsa.Expire = expire
 
-	return pubKey, pkId, nil
+	return pubKey, pkID, nil
 }
 
 // uploadRequest 发送上传相关的请求
@@ -362,7 +331,7 @@ func (d *Cloud189) getResKey() (string, string, error) {
 func (d *Cloud189) uploadRequest(uri string, form map[string]string, resp any) ([]byte, error) {
 	// 生成请求参数
 	currentTime := strconv.FormatInt(time.Now().UnixMilli(), 10)
-	requestId := Random("xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx")
+	requestID := Random("xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx")
 	secretKey := Random("xxxxxxxxxxxx4xxxyxxxxxxxxxxxxxxx")
 	secretKey = secretKey[0 : 16+int(16*myrand.Rand.Float32())]
 
@@ -376,7 +345,7 @@ func (d *Cloud189) uploadRequest(uri string, form map[string]string, resp any) (
 		d.sessionKey, uri, currentTime, hexData), secretKey)
 
 	// 获取RSA密钥
-	pubKey, pkId, err := d.getResKey()
+	pubKey, pkID, err := d.getResKey()
 	if err != nil {
 		return nil, err
 	}
@@ -392,9 +361,9 @@ func (d *Cloud189) uploadRequest(uri string, form map[string]string, resp any) (
 			"SessionKey":     d.sessionKey,
 			"Signature":      signature,
 			"X-Request-Date": currentTime,
-			"X-Request-ID":   requestId,
+			"X-Request-ID":   requestID,
 			"EncryptionText": encryptedKey,
-			"PkId":           pkId,
+			"PkId":           pkID,
 		})
 
 	// 设置响应结构体
@@ -455,8 +424,8 @@ func (d *Cloud189) newUpload(ctx context.Context, dstDir model.Obj, file model.F
 	}
 
 	// 获取上传文件ID
-	uploadFileId := utils.GetBytes(res, "data", "uploadFileId").String()
-	if uploadFileId == "" {
+	uploadFileID := utils.GetBytes(res, "data", "uploadFileId").String()
+	if uploadFileID == "" {
 		return errors.New("获取上传文件ID失败")
 	}
 
@@ -504,7 +473,7 @@ func (d *Cloud189) newUpload(ctx context.Context, dstDir model.Obj, file model.F
 		var uploadUrlsResp UploadUrlsResp
 		_, err = d.uploadRequest("/person/getMultiUploadUrls", map[string]string{
 			"partInfo":     fmt.Sprintf("%s-%s", strconv.FormatInt(i, 10), sliceMD5Base64),
-			"uploadFileId": uploadFileId,
+			"uploadFileId": uploadFileID,
 		}, &uploadUrlsResp)
 
 		if err != nil {
@@ -564,7 +533,7 @@ func (d *Cloud189) newUpload(ctx context.Context, dstDir model.Obj, file model.F
 
 	// 提交上传
 	_, err = d.uploadRequest("/person/commitMultiUploadFile", map[string]string{
-		"uploadFileId": uploadFileId,
+		"uploadFileId": uploadFileID,
 		"fileMd5":      fileMD5,
 		"sliceMd5":     sliceMD5,
 		"lazyCheck":    "1",
