@@ -136,10 +136,10 @@ func (y *Cloud189PC) Init(ctx context.Context) (err error) {
 //   - storage: 要引用的驱动实例
 //
 // 返回值: 错误信息
-func (d *Cloud189PC) InitReference(storage driver.Driver) error {
+func (y *Cloud189PC) InitReference(storage driver.Driver) error {
 	refStorage, ok := storage.(*Cloud189PC)
 	if ok {
-		d.ref = refStorage
+		y.ref = refStorage
 		return nil
 	}
 	return errs.NotSupport

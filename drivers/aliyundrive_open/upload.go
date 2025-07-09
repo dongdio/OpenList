@@ -255,7 +255,9 @@ func (d *AliyundriveOpen) upload(ctx context.Context, dstDir model.Obj, stream m
 		// 获取完整哈希
 		hash := stream.GetHash().GetHash(utils.SHA1)
 		if len(hash) != utils.SHA1.Width {
-			_, hash, err = streamPkg.CacheFullInTempFileAndHash(stream, utils.SHA1)
+			cacheFileProgress := model.UpdateProgressWithRange(up, 0, 50)
+			up = model.UpdateProgressWithRange(up, 50, 100)
+			_, hash, err = streamPkg.CacheFullInTempFileAndHash(stream, cacheFileProgress, utils.SHA1)
 			if err != nil {
 				return nil, errors.Wrap(err, "计算完整哈希失败")
 			}

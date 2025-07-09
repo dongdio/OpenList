@@ -121,11 +121,11 @@ func (t *ArchiveDownloadTask) RunWithoutPushUploadTask() (*ArchiveContentUploadT
 		// Cache each stream that doesn't already have a file
 		for _, stream := range streams {
 			if stream.GetFile() == nil {
-				_, err = streamPkg.CacheFullInTempFileAndUpdateProgress(stream, func(progress float64) {
+				_, err = streamPkg.CacheFullInTempFileAndWriter(stream, func(progress float64) {
 					// Calculate overall progress including already processed streams
 					currentProgress := (float64(currentSize) + float64(stream.GetSize())*progress/100.0) / float64(totalSize)
 					t.SetProgress(currentProgress)
-				})
+				}, nil)
 
 				if err != nil {
 					return nil, errors.WithMessage(err, "failed to cache stream in temp file")

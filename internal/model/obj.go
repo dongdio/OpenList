@@ -31,6 +31,7 @@ type Obj interface {
 
 	// The internal information of the driver.
 	// If you want to use it, please understand what it means
+
 	GetID() string
 	GetPath() string
 }
@@ -41,20 +42,27 @@ type FileStreamer interface {
 	io.Closer
 	Obj
 	GetMimetype() string
-	// SetReader(io.Reader)
 	NeedStore() bool
 	IsForceStreamUpload() bool
 	GetExist() Obj
 	SetExist(Obj)
-	// for a non-seekable Stream, RangeRead supports peeking some data, and CacheFullInTempFile still works
+	// RangeRead for a non-seekable Stream, RangeRead supports peeking some data, and CacheFullInTempFile still works
 	RangeRead(http_range.Range) (io.Reader, error)
-	// for a non-seekable Stream, if Read is called, this function won't work
+	// CacheFullInTempFile for a non-seekable Stream, if Read is called, this function won't work
 	CacheFullInTempFile() (File, error)
 	SetTmpFile(r *os.File)
 	GetFile() File
 }
 
 type UpdateProgress func(percentage float64)
+
+func UpdateProgressWithRange(inner UpdateProgress, start, end float64) UpdateProgress {
+	return func(p float64) {
+		p = min(max(p, 0), 100)
+		scaled := start + (end-start)*(p/100.0)
+		inner(scaled)
+	}
+}
 
 type URL interface {
 	URL() string

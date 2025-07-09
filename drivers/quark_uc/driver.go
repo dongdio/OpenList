@@ -131,7 +131,7 @@ func (d *QuarkOrUC) Put(ctx context.Context, dstDir model.Obj, stream model.File
 		md5  hash.Hash
 		sha1 hash.Hash
 	)
-	writers := []io.Writer{}
+	writers := make([]io.Writer, 0)
 	if len(md5Str) != utils.MD5.Width {
 		md5 = utils.MD5.NewFunc()
 		writers = append(writers, md5)
@@ -142,7 +142,9 @@ func (d *QuarkOrUC) Put(ctx context.Context, dstDir model.Obj, stream model.File
 	}
 
 	if len(writers) > 0 {
-		_, err := streamPkg.CacheFullInTempFileAndWriter(stream, io.MultiWriter(writers...))
+		cacheFileProgress := model.UpdateProgressWithRange(up, 0, 50)
+		up = model.UpdateProgressWithRange(up, 50, 100)
+		_, err := streamPkg.CacheFullInTempFileAndWriter(stream, cacheFileProgress, io.MultiWriter(writers...))
 		if err != nil {
 			return err
 		}

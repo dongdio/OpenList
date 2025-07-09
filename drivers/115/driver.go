@@ -284,7 +284,10 @@ func (p *Pan115) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 	fullHash := stream.GetHash().GetHash(utils.SHA1)
 	if len(fullHash) <= 0 {
 		// 如果没有完整哈希，计算一个
-		_, fullHash, err = streamPkg.CacheFullInTempFileAndHash(stream, utils.SHA1)
+		cacheFileProgress := model.UpdateProgressWithRange(up, 0, 50)
+		up = model.UpdateProgressWithRange(up, 50, 100)
+		_, fullHash, err = streamPkg.CacheFullInTempFileAndHash(stream, cacheFileProgress, utils.SHA1)
+
 		if err != nil {
 			return nil, errors.Wrap(err, "计算完整哈希失败")
 		}

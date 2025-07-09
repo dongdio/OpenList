@@ -321,7 +321,10 @@ func (d *Open115) Put(ctx context.Context, dstDir model.Obj, file model.FileStre
 	sha1 := file.GetHash().GetHash(utils.SHA1)
 	if len(sha1) != utils.SHA1.Width {
 		// 如果没有SHA1哈希，计算一个
-		_, sha1, err = stream.CacheFullInTempFileAndHash(file, utils.SHA1)
+		cacheFileProgress := model.UpdateProgressWithRange(up, 0, 50)
+		up = model.UpdateProgressWithRange(up, 50, 100)
+		_, sha1, err = stream.CacheFullInTempFileAndHash(file, cacheFileProgress, utils.SHA1)
+
 		if err != nil {
 			return errors.Wrap(err, "计算文件SHA1哈希失败")
 		}
@@ -356,6 +359,7 @@ func (d *Open115) Put(ctx context.Context, dstDir model.Obj, file model.FileStre
 
 	// 如果状态为2，表示秒传成功
 	if resp.Status == 2 {
+		up(100)
 		return nil
 	}
 
@@ -402,6 +406,7 @@ func (d *Open115) Put(ctx context.Context, dstDir model.Obj, file model.FileStre
 
 		// 如果状态为2，表示秒传成功
 		if resp.Status == 2 {
+			up(100)
 			return nil
 		}
 	}
