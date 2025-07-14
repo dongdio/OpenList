@@ -183,7 +183,7 @@ func (d *AliDrive) Remove(ctx context.Context, obj model.Obj) error {
 
 // Put 上传文件
 func (d *AliDrive) Put(ctx context.Context, dstDir model.Obj, streamer model.FileStreamer, up driver.UpdateProgress) error {
-	file := stream.FileStream{
+	file := &stream.FileStream{
 		Obj:      streamer,
 		Reader:   streamer,
 		Mimetype: streamer.GetMimetype(),
@@ -222,7 +222,7 @@ func (d *AliDrive) Put(ctx context.Context, dstDir model.Obj, streamer model.Fil
 		}
 		reqBody["pre_hash"] = utils.HashData(utils.SHA1, buf.Bytes())
 		if localFile != nil {
-			if _, err := localFile.Seek(0, io.SeekStart); err != nil {
+			if _, err = localFile.Seek(0, io.SeekStart); err != nil {
 				return errors.Wrap(err, "文件指针重置失败")
 			}
 		} else {
@@ -232,7 +232,7 @@ func (d *AliDrive) Put(ctx context.Context, dstDir model.Obj, streamer model.Fil
 				io.Closer
 			}{
 				Reader: io.MultiReader(buf, file),
-				Closer: &file,
+				Closer: file,
 			}
 		}
 	} else {

@@ -34,17 +34,8 @@ type Addition struct {
 
 // 驱动配置
 var config = driver.Config{
-	Name:              "115 Open", // 驱动名称
-	LocalSort:         false,      // 是否使用本地排序
-	OnlyLocal:         false,      // 是否仅支持本地模式
-	OnlyProxy:         false,      // 是否仅支持代理模式
-	NoCache:           false,      // 是否禁用缓存
-	NoUpload:          false,      // 是否禁用上传功能
-	NeedMs:            false,      // 是否需要毫秒级时间戳
-	DefaultRoot:       "0",        // 默认根目录ID
-	CheckStatus:       false,      // 是否检查状态
-	Alert:             "",         // 警告信息
-	NoOverwriteUpload: false,      // 是否禁止覆盖上传
+	Name:        "115 Open",
+	DefaultRoot: "0",
 }
 
 // init 初始化函数，注册115开放平台驱动

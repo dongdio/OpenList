@@ -15,9 +15,9 @@ on:
         options:
           - 'true'
           - 'false'
-  release:
-    types:
-      - 'published'
+  push:
+    tags:
+      - 'v*'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -32,10 +32,7 @@ env:
   ARTIFACT_NAME: 'binaries_docker_release'
   ARTIFACT_NAME_LITE: 'binaries_docker_release_lite'
   RELEASE_PLATFORMS: 'linux/amd64,linux/arm64,linux/arm/v7,linux/386,linux/arm/v6,linux/s390x,linux/ppc64le,linux/riscv64'
-  IMAGE_PUSH: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'release' }}
-  IMAGE_IS_PROD: ${{ github.ref_type == 'tag' || github.event.inputs.as_latest == 'true' }}
-  IMAGE_TAGS_BETA: |
-    type=raw,value=beta,enable={{is_default_branch}}
+  IMAGE_PUSH: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
 
 permissions:
   packages: write
@@ -47,8 +44,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - uses: actions/setup-go@v5
         with:
@@ -64,44 +59,13 @@ jobs:
       - name: Download Musl Library
         if: steps.cache-musl.outputs.cache-hit != 'true'
         run: bash build.sh prepare docker-multiplatform
-
-      - name: Build go binary (beta)
-        if: env.IMAGE_IS_PROD != 'true'
-        run: |
-          # 创建日志文件
-          touch docker_build_log.txt
-
-          # 运行构建并捕获输出
-          bash build.sh beta docker-multiplatform | tee docker_build_log.txt
-
-          # 检查构建是否成功
-          if [ $? -ne 0 ]; then
-            echo "::error::Docker beta build failed. See log for details."
-            exit 1
-          fi
-
-          # 检查构建产物
-          echo "=== Docker build output ==="
-          find build -name "openlist*" -type f | sort
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build go binary (release)
-        if: env.IMAGE_IS_PROD == 'true'
-        run: |
-          # 创建日志文件
-          touch docker_release_build_log.txt
-
-          # 运行构建并捕获输出
-          bash build.sh release docker-multiplatform | tee docker_release_build_log.txt
-
-          # 检查构建是否成功
-          if [ $? -ne 0 ]; then
-            echo "::error::Docker release build failed. See log for details."
-            exit 1
-          fi
-
-          # 检查构建产物
-          echo "=== Docker release build output ==="
-          find build -name "openlist*" -type f | sort
+        run: bash build.sh release docker-multiplatform
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -113,16 +77,8 @@ jobs:
             !build/*.tgz
             !build/musl-libs/**
 
-      - name: Upload build logs
-        uses: actions/upload-artifact@v4
-        with:
-          name: docker-build-logs
-          path: |
-            docker_build_log.txt
-            docker_release_build_log.txt
-
   build_binary_lite:
-    name: Build Binaries for Docker Release
+    name: Build Binaries for Docker Release (Lite)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -145,14 +101,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build go binary (beta)
-        if: env.IMAGE_IS_PROD != 'true'
-        run: bash build.sh beta lite docker-multiplatform
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Build go binary (release)
-        if: env.IMAGE_IS_PROD == 'true'
         run: bash build.sh release lite docker-multiplatform
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -173,40 +122,29 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        image: [ 'latest', 'ffmpeg', 'aria2', 'aio' ]
+        image: ["latest", "ffmpeg", "aria2", "aio"]
         include:
-          - image: 'latest'
-            build_arg: ''
-            tag_favor: ''
-          - image: 'ffmpeg'
+          - image: "latest"
+            build_arg: ""
+            tag_favor: ""
+          - image: "ffmpeg"
             build_arg: INSTALL_FFMPEG=true
-            tag_favor: 'suffix=-ffmpeg,onlatest=true'
-          - image: 'aria2'
+            tag_favor: "suffix=-ffmpeg,onlatest=true"
+          - image: "aria2"
             build_arg: INSTALL_ARIA2=true
-            tag_favor: 'suffix=-aria2,onlatest=true'
-          - image: 'aio'
+            tag_favor: "suffix=-aria2,onlatest=true"
+          - image: "aio"
             build_arg: |
               INSTALL_FFMPEG=true
               INSTALL_ARIA2=true
-            tag_favor: 'suffix=-aio,onlatest=true'
+            tag_favor: "suffix=-aio,onlatest=true"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
       - uses: actions/download-artifact@v4
         with:
           name: ${{ env.ARTIFACT_NAME }}
           path: 'build/'
-
-      - name: Verify Docker build output
-        run: |
-          echo "=== Docker build files ==="
-          find build -type f | sort
-
-          echo "=== Docker executable files ==="
-          find build -name "openlist*" -type f -executable | sort
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -226,7 +164,7 @@ jobs:
         if: env.IMAGE_PUSH == 'true'
         uses: docker/login-action@v3
         with:
-          username: ${{ env.DOCKERHUB_ORG_NAME }}
+          username: ${{ vars.DOCKERHUB_ORG_NAME_BACKUP || env.DOCKERHUB_ORG_NAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Docker meta
@@ -237,13 +175,11 @@ jobs:
             ${{ env.REGISTRY }}/${{ env.GHCR_ORG_NAME }}/${{ env.IMAGE_NAME }}
             ${{ env.DOCKERHUB_ORG_NAME }}/${{ env.IMAGE_NAME_DOCKERHUB }}
           tags: >
-            ${{ env.IMAGE_IS_PROD == 'true' && (
-              github.event_name == 'workflow_dispatch'
+            ${{ github.event_name == 'workflow_dispatch'
                 && format('type=raw,value={0}', github.event.inputs.manual_tag)
-              || format('type=raw,value={0}', github.ref_name)
-            ) || env.IMAGE_TAGS_BETA }}
+              || format('type=raw,value={0}', github.ref_name) }}
           flavor: |
-            latest=${{ env.IMAGE_IS_PROD }}
+            latest=${{ github.event_name == 'push' || github.event.inputs.as_latest == 'true' }}
             ${{ matrix.tag_favor }}
 
       - name: Build and push
@@ -260,11 +196,11 @@ jobs:
 
   release_docker_lite:
     needs: build_binary_lite
-    name: Release Docker image
+    name: Release Docker image (Lite)
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        image: [ "latest", "ffmpeg", "aria2", "aio" ]
+        image: ["latest", "ffmpeg", "aria2", "aio"]
         include:
           - image: "latest"
             build_arg: ""
@@ -306,7 +242,7 @@ jobs:
         if: env.IMAGE_PUSH == 'true'
         uses: docker/login-action@v3
         with:
-          username: ${{ env.DOCKERHUB_ORG_NAME }}
+          username: ${{ vars.DOCKERHUB_ORG_NAME_BACKUP || env.DOCKERHUB_ORG_NAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Docker meta
@@ -317,13 +253,11 @@ jobs:
             ${{ env.REGISTRY }}/${{ env.GHCR_ORG_NAME }}/${{ env.IMAGE_NAME }}
             ${{ env.DOCKERHUB_ORG_NAME }}/${{ env.IMAGE_NAME_DOCKERHUB }}
           tags: >
-            ${{ env.IMAGE_IS_PROD == 'true' && (
-              github.event_name == 'workflow_dispatch'
+            ${{ github.event_name == 'workflow_dispatch'
                 && format('type=raw,value={0}', github.event.inputs.manual_tag)
-              || format('type=raw,value={0}', github.ref_name)
-            ) || env.IMAGE_TAGS_BETA }}
+              || format('type=raw,value={0}', github.ref_name) }}
           flavor: |
-            latest=${{ env.IMAGE_IS_PROD }}
+            latest=${{ github.event_name == 'push' || github.event.inputs.as_latest == 'true' }}
             ${{ matrix.tag_favor }}
 
       - name: Build and push

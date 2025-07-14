@@ -11,6 +11,7 @@ import (
 
 	"github.com/dongdio/OpenList/v4/consts"
 	_115 "github.com/dongdio/OpenList/v4/drivers/115"
+	open "github.com/dongdio/OpenList/v4/drivers/115_open"
 	"github.com/dongdio/OpenList/v4/drivers/pikpak"
 	"github.com/dongdio/OpenList/v4/drivers/thunder"
 	"github.com/dongdio/OpenList/v4/drivers/thunder_browser"
@@ -78,7 +79,7 @@ func AddURL(ctx context.Context, args *AddURLArgs) (task.TaskExtensionInfo, erro
 	// check tool is ready
 	if !tool.IsReady() {
 		// try to init tool
-		if _, err := tool.Init(); err != nil {
+		if _, err = tool.Init(); err != nil {
 			return nil, errors.Wrapf(err, "failed init offline download tool %s", args.Tool)
 		}
 	}
@@ -94,6 +95,12 @@ func AddURL(ctx context.Context, args *AddURLArgs) (task.TaskExtensionInfo, erro
 			tempDir = args.DstDirPath
 		} else {
 			tempDir = filepath.Join(setting.GetStr(consts.Pan115TempDir), uid)
+		}
+	case "115 Open":
+		if _, ok := storage.(*open.Open115); ok {
+			tempDir = args.DstDirPath
+		} else {
+			tempDir = filepath.Join(setting.GetStr(consts.Pan115OpenTempDir), uid)
 		}
 	case "PikPak":
 		if _, ok := storage.(*pikpak.PikPak); ok {

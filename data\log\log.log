@@ -1,0 +1,615 @@
+
+2025/07/14 13:23:09 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[142.294ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/07/14 13:23:09 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[281.863ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'test%' ORDER BY SCHEMA_NAME='test' DESC,SCHEMA_NAME limit 1
+
+2025/07/14 13:23:09 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[289.367ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.tables WHERE table_schema = 'test' AND table_name = 'x_storages' AND table_type = 'BASE TABLE'
+
+2025/07/14 13:23:09 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[140.144ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/07/14 13:23:10 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[280.381ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'test%' ORDER BY SCHEMA_NAME='test' DESC,SCHEMA_NAME limit 1
+
+2025/07/14 13:23:10 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[283.105ms] [34;1m[rows:-][0m SELECT * FROM `x_storages` LIMIT 1
+
+2025/07/14 13:23:10 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[280.486ms] [34;1m[rows:-][0m SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'test' AND table_name = 'x_storages' ORDER BY ORDINAL_POSITION
+
+2025/07/14 13:23:10 [32m
+[0m[33m[140.007ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/07/14 13:23:11 [32m
+[0m[33m[281.518ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'test%' ORDER BY SCHEMA_NAME='test' DESC,SCHEMA_NAME limit 1
+
+2025/07/14 13:23:11 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[281.432ms] [34;1m[rows:2][0m 
+SELECT
+	TABLE_NAME,
+	COLUMN_NAME,
+	INDEX_NAME,
+	NON_UNIQUE 
+FROM
+	information_schema.STATISTICS 
+WHERE
+	TABLE_SCHEMA = 'test' 
+	AND TABLE_NAME = 'x_storages' 
+ORDER BY
+	INDEX_NAME,
+	SEQ_IN_INDEX
+
+2025/07/14 13:23:11 [32m
+[0m[33m[140.488ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/07/14 13:23:11 [32m
+[0m[33m[281.945ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'test%' ORDER BY SCHEMA_NAME='test' DESC,SCHEMA_NAME limit 1
+
+2025/07/14 13:23:12 [32m
+[0m[33m[280.203ms] [34;1m[rows:-][0m SELECT count(*) FROM INFORMATION_SCHEMA.table_constraints WHERE constraint_schema = 'test' AND table_name = 'x_storages' AND constraint_name = 'uni_x_storages_mount_path'
+
+2025/07/14 13:23:12 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[139.962ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/07/14 13:23:12 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[281.448ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'test%' ORDER BY SCHEMA_NAME='test' DESC,SCHEMA_NAME limit 1
+
+2025/07/14 13:23:12 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[283.934ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.tables WHERE table_schema = 'test' AND table_name = 'x_users' AND table_type = 'BASE TABLE'
+
+2025/07/14 13:23:12 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[140.024ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/07/14 13:23:13 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[280.045ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'test%' ORDER BY SCHEMA_NAME='test' DESC,SCHEMA_NAME limit 1
+
+2025/07/14 13:23:13 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[279.686ms] [34;1m[rows:-][0m SELECT * FROM `x_users` LIMIT 1
+
+2025/07/14 13:23:13 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[285.322ms] [34;1m[rows:-][0m SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'test' AND table_name = 'x_users' ORDER BY ORDINAL_POSITION
+
+2025/07/14 13:23:13 [32m
+[0m[33m[140.074ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/07/14 13:23:14 [32m
+[0m[33m[281.772ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'test%' ORDER BY SCHEMA_NAME='test' DESC,SCHEMA_NAME limit 1
+
+2025/07/14 13:23:14 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[282.163ms] [34;1m[rows:2][0m 
+SELECT
+	TABLE_NAME,
+	COLUMN_NAME,
+	INDEX_NAME,
+	NON_UNIQUE 
+FROM
+	information_schema.STATISTICS 
+WHERE
+	TABLE_SCHEMA = 'test' 
+	AND TABLE_NAME = 'x_users' 
+ORDER BY
+	INDEX_NAME,
+	SEQ_IN_INDEX
+
+2025/07/14 13:23:14 [32m
+[0m[33m[140.467ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/07/14 13:23:14 [32m
+[0m[33m[283.090ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'test%' ORDER BY SCHEMA_NAME='test' DESC,SCHEMA_NAME limit 1
+
+2025/07/14 13:23:15 [32m
+[0m[33m[285.564ms] [34;1m[rows:-][0m SELECT count(*) FROM INFORMATION_SCHEMA.table_constraints WHERE constraint_schema = 'test' AND table_name = 'x_users' AND constraint_name = 'uni_x_users_username'
+
+2025/07/14 13:23:15 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[139.887ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/07/14 13:23:15 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[283.449ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'test%' ORDER BY SCHEMA_NAME='test' DESC,SCHEMA_NAME limit 1
+
+2025/07/14 13:23:15 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[281.786ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.tables WHERE table_schema = 'test' AND table_name = 'x_meta' AND table_type = 'BASE TABLE'
+
+2025/07/14 13:23:16 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[140.274ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/07/14 13:23:16 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[281.388ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'test%' ORDER BY SCHEMA_NAME='test' DESC,SCHEMA_NAME limit 1
+
+2025/07/14 13:23:16 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[280.901ms] [34;1m[rows:-][0m SELECT * FROM `x_meta` LIMIT 1
+
+2025/07/14 13:23:16 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[284.400ms] [34;1m[rows:-][0m SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'test' AND table_name = 'x_meta' ORDER BY ORDINAL_POSITION
+
+2025/07/14 13:23:17 [32m
+[0m[33m[140.530ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/07/14 13:23:17 [32m
+[0m[33m[286.771ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'test%' ORDER BY SCHEMA_NAME='test' DESC,SCHEMA_NAME limit 1
+
+2025/07/14 13:23:17 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[283.018ms] [34;1m[rows:2][0m 
+SELECT
+	TABLE_NAME,
+	COLUMN_NAME,
+	INDEX_NAME,
+	NON_UNIQUE 
+FROM
+	information_schema.STATISTICS 
+WHERE
+	TABLE_SCHEMA = 'test' 
+	AND TABLE_NAME = 'x_meta' 
+ORDER BY
+	INDEX_NAME,
+	SEQ_IN_INDEX
+
+2025/07/14 13:23:17 [32m
+[0m[33m[139.994ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/07/14 13:23:18 [32m
+[0m[33m[289.054ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'test%' ORDER BY SCHEMA_NAME='test' DESC,SCHEMA_NAME limit 1
+
+2025/07/14 13:23:18 [32m
+[0m[33m[284.776ms] [34;1m[rows:-][0m SELECT count(*) FROM INFORMATION_SCHEMA.table_constraints WHERE constraint_schema = 'test' AND table_name = 'x_meta' AND constraint_name = 'uni_x_meta_path'
+
+2025/07/14 13:23:18 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[139.978ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/07/14 13:23:18 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[281.128ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'test%' ORDER BY SCHEMA_NAME='test' DESC,SCHEMA_NAME limit 1
+
+2025/07/14 13:23:19 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[286.239ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.tables WHERE table_schema = 'test' AND table_name = 'x_setting_items' AND table_type = 'BASE TABLE'
+
+2025/07/14 13:23:19 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[139.967ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/07/14 13:23:19 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[288.130ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'test%' ORDER BY SCHEMA_NAME='test' DESC,SCHEMA_NAME limit 1
+
+2025/07/14 13:23:19 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[281.413ms] [34;1m[rows:-][0m SELECT * FROM `x_setting_items` LIMIT 1
+
+2025/07/14 13:23:19 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[286.939ms] [34;1m[rows:-][0m SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'test' AND table_name = 'x_setting_items' ORDER BY ORDINAL_POSITION
+
+2025/07/14 13:23:20 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[143.188ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/07/14 13:23:20 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[282.747ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'test%' ORDER BY SCHEMA_NAME='test' DESC,SCHEMA_NAME limit 1
+
+2025/07/14 13:23:20 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[290.130ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.tables WHERE table_schema = 'test' AND table_name = 'x_search_nodes' AND table_type = 'BASE TABLE'
+
+2025/07/14 13:23:20 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[141.235ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/07/14 13:23:21 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[282.281ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'test%' ORDER BY SCHEMA_NAME='test' DESC,SCHEMA_NAME limit 1
+
+2025/07/14 13:23:21 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[281.494ms] [34;1m[rows:-][0m SELECT * FROM `x_search_nodes` LIMIT 1
+
+2025/07/14 13:23:21 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[289.871ms] [34;1m[rows:-][0m SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'test' AND table_name = 'x_search_nodes' ORDER BY ORDINAL_POSITION
+
+2025/07/14 13:23:21 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[141.060ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/07/14 13:23:22 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[284.747ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'test%' ORDER BY SCHEMA_NAME='test' DESC,SCHEMA_NAME limit 1
+
+2025/07/14 13:23:22 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[282.390ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'test' AND table_name = 'x_search_nodes' AND index_name = 'idx_x_search_nodes_parent'
+
+2025/07/14 13:23:22 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[141.218ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/07/14 13:23:22 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[283.147ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'test%' ORDER BY SCHEMA_NAME='test' DESC,SCHEMA_NAME limit 1
+
+2025/07/14 13:23:23 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[284.568ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.tables WHERE table_schema = 'test' AND table_name = 'x_task_items' AND table_type = 'BASE TABLE'
+
+2025/07/14 13:23:23 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[141.125ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/07/14 13:23:23 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[281.781ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'test%' ORDER BY SCHEMA_NAME='test' DESC,SCHEMA_NAME limit 1
+
+2025/07/14 13:23:23 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[282.937ms] [34;1m[rows:-][0m SELECT * FROM `x_task_items` LIMIT 1
+
+2025/07/14 13:23:24 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[284.056ms] [34;1m[rows:-][0m SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'test' AND table_name = 'x_task_items' ORDER BY ORDINAL_POSITION
+
+2025/07/14 13:23:24 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[139.900ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/07/14 13:23:24 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[283.887ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'test%' ORDER BY SCHEMA_NAME='test' DESC,SCHEMA_NAME limit 1
+
+2025/07/14 13:23:24 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[282.602ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.tables WHERE table_schema = 'test' AND table_name = 'x_ssh_public_keys' AND table_type = 'BASE TABLE'
+
+2025/07/14 13:23:24 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[139.506ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/07/14 13:23:25 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[282.719ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'test%' ORDER BY SCHEMA_NAME='test' DESC,SCHEMA_NAME limit 1
+
+2025/07/14 13:23:25 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[287.641ms] [34;1m[rows:-][0m SELECT * FROM `x_ssh_public_keys` LIMIT 1
+
+2025/07/14 13:23:25 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:82
+[0m[33m[283.689ms] [34;1m[rows:-][0m SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'test' AND table_name = 'x_ssh_public_keys' ORDER BY ORDINAL_POSITION
+[36mINFO[0m[2025-07-14 13:23:25]/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:61 github.com/dongdio/OpenList/v4/internal/db.Init() database initialized successfully            
+[36mINFO[0m[2025-07-14 13:23:25]/home/admin/works/project/go/tmp/OpenList/initialize/db.go:63 github.com/dongdio/OpenList/v4/initialize.initializeDB() database connection established successfully 
+
+2025/07/14 13:23:26 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/user.go:15
+[0m[33m[283.160ms] [34;1m[rows:1][0m SELECT * FROM `x_users` WHERE `x_users`.`role` = 2 LIMIT 1
+
+2025/07/14 13:23:26 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/user.go:15
+[0m[33m[290.581ms] [34;1m[rows:1][0m SELECT * FROM `x_users` WHERE `x_users`.`role` = 1 LIMIT 1
+
+2025/07/14 13:23:26 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/settingitem.go:13
+[0m[33m[282.698ms] [34;1m[rows:95][0m SELECT * FROM `x_setting_items`
+[37mDEBU[0m[2025-07-14 13:23:26]/home/admin/works/project/go/tmp/OpenList/internal/op/hook.go:103 github.com/dongdio/OpenList/v4/internal/op.init.func8() filename char mapping: map[/:|]              
+[37mDEBU[0m[2025-07-14 13:23:26]/home/admin/works/project/go/tmp/OpenList/utility/search/search.go:93 github.com/dongdio/OpenList/v4/utility/search.init.1.func1() searcher init, mode: none                    
+[33mWARN[0m[2025-07-14 13:23:26]/home/admin/works/project/go/tmp/OpenList/utility/search/search.go:35 github.com/dongdio/OpenList/v4/utility/search.initSearcher() not enable search                            
+
+2025/07/14 13:23:27 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/settingitem.go:61
+[0m[33m[715.218ms] [34;1m[rows:12][0m INSERT INTO `x_setting_items` (`key`,`value`,`help`,`type`,`options`,`group`,`flag`,`index`) VALUES ('version','dev','','string','',1,2,0),('site_title','AList','','string','',1,0,1),('announcement','### repo
+https://github.com/alist-org/alist','','text','',1,0,2),('pagination_type','all','','select','all,pagination,load_more,auto_load_more',1,0,3),('default_page_size','30','','number','',1,0,4),('allow_indexed','false','','bool','',1,0,5),('allow_mounted','true','','bool','',1,0,6),('robots_txt','User-agent: *
+Allow: /','','text','',1,0,7),('logo','https://cdn.jsdelivr.net/gh/alist-org/logo@main/logo.svg','','text','',2,0,8),('favicon','https://cdn.jsdelivr.net/gh/alist-org/logo@main/logo.svg','','string','',2,0,9),('main_color','rgb(100, 209, 226)','','string','',2,0,10),('home_icon','🏠','','string','',2,0,11),('home_container','max_980px','','select','max_980px,hope_container',2,0,12),('settings_layout','responsive','','select','list,responsive',2,0,13),('text_types','txt,htm,html,xml,java,properties,sql,js,md,json,conf,ini,vue,php,py,bat,gitignore,yml,go,sh,c,cpp,h,hpp,tsx,vtt,srt,ass,rs,lrc','','text','',3,1,14),('audio_types','mp3,flac,ogg,m4a,wav,opus,wma','','text','',3,1,15),('video_types','mp4,mkv,avi,mov,rmvb,webm,flv,m3u8','','text','',3,1,16),('image_types','jpg,tiff,jpeg,png,gif,bmp,svg,ico,swf,webp','','text','',3,1,17),('proxy_types','m3u8','','text','',3,1,18),('proxy_ignore_headers','authorization,referer','','text','',3,1,19),('external_previews','{}','','text','',3,0,20),('iframe_previews','{
+	"doc,docx,xls,xlsx,ppt,pptx": {
+		"Microsoft":"https://view.officeapps.live.com/op/view.aspx?src=$e_url",
+		"Google":"https://docs.google.com/gview?url=$e_url&embedded=true"
+	},
+	"pdf": {
+		"PDF.js":"https://alist-org.github.io/pdf.js/web/viewer.html?file=$e_url"
+	},
+	"epub": {
+		"EPUB.js":"https://alist-org.github.io/static/epub.js/viewer.html?url=$e_url"
+	}
+}','','text','',3,0,21),('audio_cover','https://jsd.nn.ci/gh/alist-org/logo@main/logo.svg','','string','',3,0,22),('audio_autoplay','true','','bool','',3,0,23),('video_autoplay','true','','bool','',3,0,24),('preview_archives_by_default','true','','bool','',3,0,25),('readme_autorender','true','','bool','',3,0,26),('filter_readme_scripts','true','','bool','',3,0,27),('hide_files','/\/README.md/i','','text','',4,0,28),('package_download','true','','bool','',4,0,29),('customize_head','<script>
+    const originalConsole = window.console;
+    Object.defineProperty(window, ''console'', {
+        get: _ => {
+            return {
+                log: _ => { },
+                warn: _ => { },
+                info: _ => { },
+                debug: _ => { },
+            };
+        }
+    });
+    setTimeout(_ => {
+        Object.defineProperty(window, ''console'', {
+            get: _ => {
+                return originalConsole;
+            }
+        });
+    }, 8000);
+    document.querySelector(''html'').removeAttribute(''translate'');
+    setTimeout(_ => {
+        document.querySelector("head > script[src=''https://g.alicdn.com/IMM/office-js/1.1.5/aliyun-web-office-sdk.min.js'']").remove();
+        document.querySelector("head > meta[name=''apple-mobile-web-app-capable'']").remove();
+        document.querySelector("head > meta[name=''apple-mobile-web-app-title'']").remove();
+        document.querySelector("head > link[rel=''apple-touch-icon'']").remove();
+        document.querySelector("head > meta[name=''generator'']").remove();
+        document.querySelector("head > meta[name=''google'']").remove();
+        document.querySelector("head > meta[name=''theme-color'']").remove();
+    }, 1);
+    let headObserve = new MutationObserver(_ => {
+        try { document.querySelector("head > link[href=''https://registry.npmmirror.com/katex/0.16.11/files/dist/katex.min.css'']").remove(); } catch (e) { }
+        try { document.querySelector("head > link[rel=''manifest'']").remove(); } catch (e) { }
+    });
+    headObserve.observe(document.head, { childList: true, subtree: true });
+    setTimeout(_ => {
+        headObserve.disconnect();
+    }, 3000);
+</script>
+
+
+<link rel="dns-prefetch" href="https://fonts.googleapis.com">
+<link rel="dns-prefetch" href="https://fonts.gstatic.com">
+<link rel="dns-prefetch" href="https://cdn.jsdmirror.com">
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin="anonymous">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link rel="preconnect" href="https://cdn.jsdmirror.com" crossorigin="anonymous">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@100..900&display=swap" crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap" crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="https://cdn.jsdmirror.com/gh/kasuie/alist-customize@main/v3/css/index.min.css" type="text/css" crossorigin="anonymous">
+
+<style>
+    * {
+        font-family: "JetBrains Mono", "Noto Sans SC", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", system-ui, -apple-system, emoji, monospace !important;
+        font-feature-settings: "liga" off, "calt" off !important;
+        -webkit-font-smoothing: antialiased !important;
+        text-rendering: optimizeLegibility !important;
+    }
+
+    body {
+        <!-- background-image: url(""); -->
+        background-position: center center;
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+    }
+
+    div:has(> div.markdown > div.markdown-body) {
+        backdrop-filter: blur(8px);
+        background-color: rgba(32, 36, 37, 0.8);
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        border-bottom: 0 !important;
+    }
+
+    div.obj-box {
+        backdrop-filter: blur(8px);
+        background-color: rgba(32, 36, 37, 0.8);
+    }
+
+    nav[aria-label="breadcrumb"] {
+        backdrop-filter: blur(8px);
+        background-color: rgba(21, 23, 24, 0.8);
+        padding: .5rem 1rem;
+        border-radius: var(--hope-radii-xl);
+    }
+
+    #root>div.header {
+        display: none !important;
+    }
+
+    #root>div.hope-container>div.body {
+        min-height: unset !important;
+    }
+
+    #root>div.hope-center>div:nth-child(2) {
+        display: none !important;
+    }
+
+    #root>div.hope-center>div.hope-stack>div:nth-child(7) {
+        display: none !important;
+    }
+</style>
+','','text','',4,1,30),('customize_body','<div id="temp" style="display: none; visibility: hidden;">
+    <style>
+        .fcr {
+            display: flex;
+            flex-direction: column;
+
+            &>.box {
+                backdrop-filter: blur(8px);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                width: var(--hope-sizes-full);
+                border-radius: var(--hope-radii-xl);
+                padding: var(--hope-space-4);
+                background-color: rgba(32, 36, 37, 0.8);
+                box-shadow: var(--hope-shadows-lg);
+                margin-bottom: var(--hope-space-4);
+
+                &>.row {
+                    display: flex;
+                }
+            }
+
+            a {
+                &:hover {
+                    text-decoration: underline;
+                }
+            }
+        }
+    </style>
+    <div class="fcr">
+        <div class="box">
+            <span>🔒 Private use only.</span>
+        </div>
+        <div id="IPINFO" class="box" style="display: none;">
+            <span id="IP"></span>
+            <span id="LOC"></span>
+            <span id="LAT"></span>
+        </div>
+        <div class="box">
+            <div class="row">
+                <span><a href="https://www..com/policies/privacy" rel="privacy-policy">Privacy</a></span>
+                <span>&nbsp;|&nbsp;</span>
+                <span><a href="https://www..com/policies/terms" rel="terms-of-service">Terms</a></span>
+            </div>
+            <span>Copyright &copy; 2025</span>
+            <span><a href="https://www..com" style="font-weight: 800;"></a> All rights reserved.</span>
+            <span><a href="https://beian.miit.gov.cn/" target="_blank" rel="external noopener noreferrer nofollow">ICP备号</a></span>
+            <span><a href="https://www.beian.gov.cn/portal/registerSystemInfo?recordcode=" target="_blank" rel="external noopener noreferrer nofollow">公网安备号</a></span>
+        </div>
+        <div class="box">
+            <span>Delivered by <a target="_blank" rel="external noopener noreferrer nofollow" href="https://www.aliyun.com/minisite/goods?userCode=smzmcy90">AliYun</a></span>
+            <span>Hosted on <a target="_blank" rel="external noopener noreferrer nofollow" href="https://js.189.cn/">NKG Telecom</a></span>
+            <span>Powered by <a target="_blank" rel="external noopener noreferrer nofollow" href="https://github.com/OpenListTeam/OpenList">OpenList</a></span>
+        </div>
+    </div>
+</div>
+
+<script>
+    let observes = [];
+    observes[1] = new MutationObserver(
+        _ => {
+            if (document.querySelector("div.left-toolbar-box")) {
+                observes[1].disconnect();
+                document.querySelector("div.left-toolbar-box").parentElement.remove();
+            }
+        }
+    );
+    observes[2] = new MutationObserver(
+        _ => {
+            if (document.querySelector("#root > div.footer.hope-stack")) {
+                observes[2].disconnect();
+                let footer = document.querySelector("#root > div.footer.hope-stack");
+                let temp = document.querySelector("#temp");
+                footer.class = "footer";
+                footer.innerHTML = temp.innerHTML;
+                temp.remove();
+            }
+        }
+    );
+    observes[3] = new MutationObserver(
+        _ => {
+            if (document.querySelectorAll(''.markdown-body'')) {
+                document.querySelectorAll(''.markdown-body'').forEach((element) => {
+                    element.style.textAlign = ''center'';
+                });
+            }
+        }
+    );
+
+    observes.forEach((observer) => {
+        observer.observe(document.body, { childList: true, subtree: true });
+    });
+</script>
+<script>
+    const showIP = (ipInfo) => {
+        const ipElement = document.getElementById(''IP'');
+        ipElement.textContent = ipInfo.ip;
+        const locElement = document.getElementById(''LOC'');
+        locElement.textContent = `${ipInfo.city}, ${ipInfo.province}, ${ipInfo.country} ${ipInfo.asn_name}`;
+        const latElement = document.getElementById(''LAT'');
+        latElement.textContent = `${ipInfo.latitude}, ${ipInfo.longitude}`;
+        const ipInfoElement = document.getElementById(''IPINFO'');
+        ipInfoElement.style.display = ''flex'';
+    };
+    fetch(''https://api.ip.cc'')
+        .then(response => response.json())
+        .then(data => {
+            if (data.ip !== "") {
+                showIP(data);
+            }
+        });
+</script>
+<script src="https://cdn.jsdmirror.com/gh/kasuie/alist-customize@main/v3/js/index.min.js"></script>','','text','',4,1,31),('link_expiration','0','','number','',4,1,32),('sign_all','true','','bool','',4,1,33),('privacy_regs','(?:(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.){3}(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])
+([[:xdigit:]]{1,4}(?::[[:xdigit:]]{1,4}){7}|::|:(?::[[:xdigit:]]{1,4}){1,6}|[[:xdigit:]]{1,4}:(?::[[:xdigit:]]{1,4}){1,5}|(?:[[:xdigit:]]{1,4}:){2}(?::[[:xdigit:]]{1,4}){1,4}|(?:[[:xdigit:]]{1,4}:){3}(?::[[:xdigit:]]{1,4}){1,3}|(?:[[:xdigit:]]{1,4}:){4}(?::[[:xdigit:]]{1,4}){1,2}|(?:[[:xdigit:]]{1,4}:){5}:[[:xdigit:]]{1,4}|(?:[[:xdigit:]]{1,4}:){1,6}:)
+(?U)access_token=(.*)&','','text','',4,1,34),('ocr_api','https://api.nn.ci/ocr/file/json','','string','',4,0,35),('filename_char_mapping','{"/": "|"}','','text','',4,0,36),('forward_direct_link_params','false','','bool','',4,0,37),('ignore_direct_link_params','sign,alist_ts','','string','',4,0,38),('webauthn_login_enabled','false','','bool','',4,0,39),('token','alist-ebde7d42-7f43-42a4-8334-ac2acc015d268A0orDI34RhPziClyz3jImcCuVDRSUAUDocg7oxSf2e3VmdlJoSxt8aFJ5k9wLU3','','string','',0,1,40),('search_index','none','','select','database,database_non_full_text,bleve,meilisearch,none',6,0,41),('auto_update_index','false','','bool','',6,0,42),('ignore_paths','','one path per line','text','',6,1,43),('max_index_depth','20','max depth of index','number','',6,1,44),('index_progress','{"obj_count":0,"is_done":true,"last_done_time":null,"error":""}','','text','',0,1,45),('sso_login_enabled','false','','bool','',7,0,46),('sso_login_platform','','','select','Casdoor,Github,Microsoft,Google,Dingtalk,OIDC',7,0,47),('sso_client_id','','','string','',7,1,48),('sso_client_secret','','','string','',7,1,49),('sso_oidc_username_key','name','','string','',7,1,50),('sso_organization_name','','','string','',7,1,51),('sso_application_name','','','string','',7,1,52),('sso_endpoint_name','','','string','',7,1,53),('sso_jwt_public_key','','','string','',7,1,54),('sso_extra_scopes','','','string','',7,1,55),('sso_auto_register','false','','bool','',7,1,56),('sso_default_dir','/','','string','',7,1,57),('sso_default_permission','0','','number','',7,1,58),('sso_compatibility_mode','false','','bool','',7,0,59),('ldap_login_enabled','false','','bool','',8,0,60),('ldap_server','','','string','',8,1,61),('ldap_manager_dn','','','string','',8,1,62),('ldap_manager_password','','','string','',8,1,63),('ldap_user_search_base','','','string','',8,1,64),('ldap_user_search_filter','(uid=%s)','','string','',8,1,65),('ldap_default_dir','/','','string','',8,1,66),('ldap_default_permission','0','','number','',8,1,67),('ldap_login_tips','login with ldap','','string','',8,0,68),('s3_access_key_id','4v4Q1qICo6OQlj6leqLA','','string','',9,1,69),('s3_secret_access_key','4VuKlib1NrsDTLzJjcrNMYiGwuogD2izM24kPnS5','','string','',9,1,70),('s3_buckets','[]','','string','',9,1,71),('ftp_public_host','127.0.0.1','','string','',10,1,72),('ftp_pasv_port_map','','','text','',10,1,73),('ftp_proxy_user_agent','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36','','string','',10,1,74),('ftp_mandatory_tls','false','','bool','',10,1,75),('ftp_implicit_tls','false','','bool','',10,1,76),('ftp_tls_private_key_path','','','string','',10,1,77),('ftp_tls_public_cert_path','','','string','',10,1,78),('offline_download_task_threads_num','5','','number','',11,1,79),('offline_download_transfer_task_threads_num','5','','number','',11,1,80),('upload_task_threads_num','5','','number','',11,1,81),('copy_task_threads_num','5','','number','',11,1,82),('decompress_download_task_threads_num','5','','number','',11,1,83),('decompress_upload_task_threads_num','5','','number','',11,1,84),('max_client_download_speed','-1','','number','',11,1,85),('max_client_upload_speed','-1','','number','',11,1,86),('max_server_download_speed','-1','','number','',11,1,87),('max_server_upload_speed','-1','','number','',11,1,88),('transmission_uri','http://localhost:9091/transmission/rpc','','string','',5,1,89),('transmission_seedtime','0','','number','',5,1,90),('aria2_uri','http://localhost:6800/jsonrpc','','string','',5,1,91),('aria2_secret','','','string','',5,1,92),('qbittorrent_url','http://admin:adminadmin@localhost:8080/','','string','',5,1,93),('qbittorrent_seedtime','0','','number','',5,1,94) ON DUPLICATE KEY UPDATE `value`=VALUES(`value`),`help`=VALUES(`help`),`type`=VALUES(`type`),`options`=VALUES(`options`),`group`=VALUES(`group`),`flag`=VALUES(`flag`),`index`=VALUES(`index`)
+
+2025/07/14 13:23:27 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/tasks.go:11
+[0m[33m[280.618ms] [34;1m[rows:1][0m SELECT * FROM `x_task_items` WHERE `x_task_items`.`key` = 'copy' ORDER BY `x_task_items`.`key` LIMIT 1
+
+2025/07/14 13:23:27 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/tasks.go:11
+[0m[33m[284.683ms] [34;1m[rows:1][0m SELECT * FROM `x_task_items` WHERE `x_task_items`.`key` = 'move' ORDER BY `x_task_items`.`key` LIMIT 1
+
+2025/07/14 13:23:28 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/tasks.go:11
+[0m[33m[282.406ms] [34;1m[rows:1][0m SELECT * FROM `x_task_items` WHERE `x_task_items`.`key` = 'download' ORDER BY `x_task_items`.`key` LIMIT 1
+
+2025/07/14 13:23:28 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/tasks.go:11
+[0m[33m[282.942ms] [34;1m[rows:1][0m SELECT * FROM `x_task_items` WHERE `x_task_items`.`key` = 'transfer' ORDER BY `x_task_items`.`key` LIMIT 1
+
+2025/07/14 13:23:28 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/settingitem.go:21
+[0m[33m[280.649ms] [34;1m[rows:1][0m SELECT * FROM `x_setting_items` WHERE `key` = 'max_client_download_speed' ORDER BY `x_setting_items`.`key` LIMIT 1
+
+2025/07/14 13:23:29 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/settingitem.go:21
+[0m[33m[282.925ms] [34;1m[rows:1][0m SELECT * FROM `x_setting_items` WHERE `key` = 'max_client_upload_speed' ORDER BY `x_setting_items`.`key` LIMIT 1
+
+2025/07/14 13:23:29 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/settingitem.go:21
+[0m[33m[282.185ms] [34;1m[rows:1][0m SELECT * FROM `x_setting_items` WHERE `key` = 'max_server_download_speed' ORDER BY `x_setting_items`.`key` LIMIT 1
+
+2025/07/14 13:23:29 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/settingitem.go:21
+[0m[33m[281.335ms] [34;1m[rows:1][0m SELECT * FROM `x_setting_items` WHERE `key` = 'max_server_upload_speed' ORDER BY `x_setting_items`.`key` LIMIT 1
+
+2025/07/14 13:23:29 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/settingitem.go:21
+[0m[33m[284.778ms] [34;1m[rows:1][0m SELECT * FROM `x_setting_items` WHERE `key` = 'index_progress' ORDER BY `x_setting_items`.`key` LIMIT 1
+
+2025/07/14 13:23:30 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/user.go:55
+[0m[33m[145.069ms] [34;1m[rows:1][0m SELECT count(*) FROM `x_users`
+
+2025/07/14 13:23:30 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/user.go:58
+[0m[33m[141.052ms] [34;1m[rows:2][0m SELECT * FROM `x_users` ORDER BY `id` 
+
+2025/07/14 13:23:30 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/user.go:55
+[0m[33m[142.860ms] [34;1m[rows:1][0m SELECT count(*) FROM `x_users`
+
+2025/07/14 13:23:30 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/user.go:58
+[0m[33m[139.865ms] [34;1m[rows:2][0m SELECT * FROM `x_users` ORDER BY `id` 
+
+2025/07/14 13:23:30 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/settingitem.go:21
+[0m[33m[281.901ms] [34;1m[rows:1][0m SELECT * FROM `x_setting_items` WHERE `key` = 'transmission_uri' ORDER BY `x_setting_items`.`key` LIMIT 1
+
+2025/07/14 13:23:31 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/settingitem.go:21
+[0m[33m[284.798ms] [34;1m[rows:1][0m SELECT * FROM `x_setting_items` WHERE `key` = 'aria2_uri' ORDER BY `x_setting_items`.`key` LIMIT 1
+
+2025/07/14 13:23:31 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/settingitem.go:21
+[0m[33m[283.811ms] [34;1m[rows:1][0m SELECT * FROM `x_setting_items` WHERE `key` = 'aria2_secret' ORDER BY `x_setting_items`.`key` LIMIT 1
+
+2025/07/14 13:23:31 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/settingitem.go:21
+[0m[33m[282.898ms] [34;1m[rows:1][0m SELECT * FROM `x_setting_items` WHERE `key` = 'qbittorrent_url' ORDER BY `x_setting_items`.`key` LIMIT 1
+
+2025/07/14 13:23:31 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/storage.go:66
+[0m[33m[283.003ms] [34;1m[rows:1][0m SELECT * FROM `x_storages` WHERE `disabled` = false ORDER BY `order`, `id`
+
+2025/07/14 13:23:32 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/settingitem.go:21
+[0m[33m[282.186ms] [34;1m[rows:1][0m SELECT * FROM `x_setting_items` WHERE `key` = 'upload_task_threads_num' ORDER BY `x_setting_items`.`key` LIMIT 1
+
+2025/07/14 13:23:32 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/settingitem.go:21
+[0m[33m[282.924ms] [34;1m[rows:1][0m SELECT * FROM `x_setting_items` WHERE `key` = 'copy_task_threads_num' ORDER BY `x_setting_items`.`key` LIMIT 1
+
+2025/07/14 13:23:32 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/settingitem.go:21
+[0m[33m[284.117ms] [34;1m[rows:0][0m SELECT * FROM `x_setting_items` WHERE `key` = 'move_task_threads_num' ORDER BY `x_setting_items`.`key` LIMIT 1
+
+2025/07/14 13:23:33 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/settingitem.go:21
+[0m[33m[285.888ms] [34;1m[rows:1][0m SELECT * FROM `x_setting_items` WHERE `key` = 'offline_download_task_threads_num' ORDER BY `x_setting_items`.`key` LIMIT 1
+
+2025/07/14 13:23:33 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/storage.go:23 [33mSLOW SQL >= 1s
+[0m[31;1m[1149.496ms] [33m[rows:1][35m UPDATE `x_storages` SET `mount_path`='/local',`order`=0,`driver`='Local',`cache_expiration`=0,`status`='根目录 D:\ 不存在',`addition`='{"root_folder_path":"D:\\","thumbnail":false,"thumb_cache_folder":"","thumb_concurrency":"16","video_thumb_pos":"20%","show_hidden":true,"mkdir_perm":"777","recycle_bin_path":"delete permanently"}',`remark`='',`modified`='2025-06-18 14:45:08.307',`disabled`=false,`disable_index`=false,`enable_sign`=false,`order_by`='',`order_direction`='',`extract_folder`='',`web_proxy`=false,`webdav_policy`='native_proxy',`proxy_range`=false,`down_proxy_url`='' WHERE `id` = 1[0m
+
+2025/07/14 13:23:33 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/settingitem.go:21
+[0m[33m[282.807ms] [34;1m[rows:1][0m SELECT * FROM `x_setting_items` WHERE `key` = 'offline_download_transfer_task_threads_num' ORDER BY `x_setting_items`.`key` LIMIT 1
+
+2025/07/14 13:23:33 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/settingitem.go:21
+[0m[33m[286.288ms] [34;1m[rows:1][0m SELECT * FROM `x_setting_items` WHERE `key` = 'decompress_download_task_threads_num' ORDER BY `x_setting_items`.`key` LIMIT 1
+
+2025/07/14 13:23:33 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/settingitem.go:21
+[0m[33m[281.497ms] [34;1m[rows:1][0m SELECT * FROM `x_setting_items` WHERE `key` = 'decompress_upload_task_threads_num' ORDER BY `x_setting_items`.`key` LIMIT 1
+
+2025/07/14 13:23:34 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/settingitem.go:21
+[0m[33m[283.124ms] [34;1m[rows:1][0m SELECT * FROM `x_setting_items` WHERE `key` = 'favicon' ORDER BY `x_setting_items`.`key` LIMIT 1
+
+2025/07/14 13:23:34 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/settingitem.go:21
+[0m[33m[281.166ms] [34;1m[rows:1][0m SELECT * FROM `x_setting_items` WHERE `key` = 'site_title' ORDER BY `x_setting_items`.`key` LIMIT 1
+
+2025/07/14 13:23:34 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/settingitem.go:21
+[0m[33m[280.924ms] [34;1m[rows:1][0m SELECT * FROM `x_setting_items` WHERE `key` = 'customize_head' ORDER BY `x_setting_items`.`key` LIMIT 1
+
+2025/07/14 13:23:35 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/settingitem.go:21
+[0m[33m[282.996ms] [34;1m[rows:1][0m SELECT * FROM `x_setting_items` WHERE `key` = 'customize_body' ORDER BY `x_setting_items`.`key` LIMIT 1
+
+2025/07/14 13:23:35 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/settingitem.go:21
+[0m[33m[286.987ms] [34;1m[rows:1][0m SELECT * FROM `x_setting_items` WHERE `key` = 'main_color' ORDER BY `x_setting_items`.`key` LIMIT 1
+[GIN] 2025/07/14 - 13:24:07 | 200 |      109.68µs |       127.0.0.1 | GET      "/"
+[GIN] 2025/07/14 - 13:24:08 | 200 |     575.997µs |       127.0.0.1 | GET      "/assets/index-c0564af7.css"
+[GIN] 2025/07/14 - 13:24:08 | 200 |    4.015691ms |       127.0.0.1 | GET      "/assets/index-353054c4.js"
+[GIN] 2025/07/14 - 13:24:08 | 200 |     112.364µs |       127.0.0.1 | GET      "/assets/entry-f2face39.js"
+[GIN] 2025/07/14 - 13:24:08 | 200 |      37.237µs |       127.0.0.1 | GET      "/api/public/archive_extensions"
+
+2025/07/14 13:24:09 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/settingitem.go:37
+[0m[33m[289.958ms] [34;1m[rows:36][0m SELECT * FROM `x_setting_items` WHERE `flag` in (0,2)
+[GIN] 2025/07/14 - 13:24:09 | 200 |  290.435523ms |       127.0.0.1 | GET      "/api/public/settings"
+
+2025/07/14 13:24:09 [32m/home/admin/works/project/go/tmp/OpenList/internal/db/settingitem.go:21
+[0m[33m[282.081ms] [34;1m[rows:1][0m SELECT * FROM `x_setting_items` WHERE `key` = 'token' ORDER BY `x_setting_items`.`key` LIMIT 1
+[GIN] 2025/07/14 - 13:24:09 | 200 |   282.52693ms |       127.0.0.1 | GET      "/api/me"
+[31mERRO[0m[2025-07-14 13:24:09]/home/admin/works/project/go/tmp/OpenList/server/middlewares/error_log.go:68 github.com/dongdio/OpenList/v4/cmd.init.func10.ErrorLogging.12()  错误: code=401, message=访客用户已禁用，请登录           
+[GIN] 2025/07/14 - 13:24:09 | 200 |      84.988µs |       127.0.0.1 | GET      "/assets/index-110f9be0.js"
+[GIN] 2025/07/14 - 13:24:09 | 200 |       27.62µs |       127.0.0.1 | GET      "/assets/useTitle-97deb967.js"
+[GIN] 2025/07/14 - 13:24:09 | 200 |      62.908µs |       127.0.0.1 | GET      "/assets/webauthn-json.browser-ponyfill-29d8152c.js"
+[36mINFO[0m[2025-07-14 13:24:20]/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:115 github.com/dongdio/OpenList/v4/internal/db.Close() closing database connection                  
+[36mINFO[0m[2025-07-14 13:24:20]/home/admin/works/project/go/tmp/OpenList/internal/db/db.go:126 github.com/dongdio/OpenList/v4/internal/db.Close() database connection closed successfully      

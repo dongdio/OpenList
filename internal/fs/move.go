@@ -3,7 +3,6 @@ package fs
 import (
 	"context"
 	"fmt"
-	"net/http"
 	stdpath "path"
 	"sync"
 	"time"
@@ -366,24 +365,22 @@ func (t *MoveTask) copyFile(srcStorage, dstStorage driver.Driver, srcFilePath, d
 		return errors.WithMessagef(err, "failed to get source file [%s]", srcFilePath)
 	}
 
-	link, _, err := op.Link(t.Ctx(), srcStorage, srcFilePath, model.LinkArgs{
-		Header: http.Header{},
-	})
+	linkRes, _, err := op.Link(t.Ctx(), srcStorage, srcFilePath, model.LinkArgs{})
 	if err != nil {
 		return errors.WithMessagef(err, "failed to get link for [%s]", srcFilePath)
 	}
 
-	fs := stream.FileStream{
+	fs, err := stream.NewSeekableStream(&stream.FileStream{
 		Obj: srcFile,
 		Ctx: t.Ctx(),
-	}
+	}, linkRes)
 
-	ss, err := stream.NewSeekableStream(fs, link)
 	if err != nil {
+		_ = linkRes.Close()
 		return errors.WithMessagef(err, "failed to create stream for [%s]", srcFilePath)
 	}
 
-	return op.Put(t.Ctx(), dstStorage, dstDirPath, ss, nil, true)
+	return op.Put(t.Ctx(), dstStorage, dstDirPath, fs, nil, true)
 }
 
 // verifyDirectoryStructure compares source and destination directory structures

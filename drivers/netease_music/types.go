@@ -11,6 +11,7 @@ import (
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/sign"
 	"github.com/dongdio/OpenList/v4/server/common"
+	"github.com/dongdio/OpenList/v4/utility/stream"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 	"github.com/dongdio/OpenList/v4/utility/utils/random"
 )
@@ -54,7 +55,9 @@ func (lrc *LyricObj) getProxyLink(ctx context.Context) *model.Link {
 
 func (lrc *LyricObj) getLyricLink() *model.Link {
 	return &model.Link{
-		MFile: strings.NewReader(lrc.lyric),
+		RangeReader: &model.FileRangeReader{
+			RangeReaderIF: stream.GetRangeReaderFromMFile(int64(len(lrc.lyric)), strings.NewReader(lrc.lyric)),
+		},
 	}
 }
 

@@ -3,16 +3,18 @@ package alias
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	stdpath "path"
 	"strings"
 
-	"github.com/dongdio/OpenList/v4/utility/stream"
-
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/fs"
 	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/internal/sign"
+	"github.com/dongdio/OpenList/v4/server/common"
 	"github.com/dongdio/OpenList/v4/utility/errs"
+	"github.com/dongdio/OpenList/v4/utility/stream"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
@@ -112,21 +114,42 @@ func (d *Alias) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 		return nil, errs.ObjectNotFound
 	}
 	for _, dst := range dsts {
-		link, err := d.link(ctx, dst, sub, args)
-		if err == nil {
-			link.Expiration = nil // 去除非必要缓存，d.link里op.Lin有缓存
-			if !args.Redirect && len(link.URL) > 0 {
-				// 正常情况下 多并发 仅支持返回URL的驱动
-				// alias套娃alias 可以让crypt、mega等驱动(不返回URL的) 支持并发
-				if d.DownloadConcurrency > 0 {
-					link.Concurrency = d.DownloadConcurrency
-				}
-				if d.DownloadPartSize > 0 {
-					link.PartSize = d.DownloadPartSize * utils.KB
+		reqPath := stdpath.Join(dst, sub)
+		link, file, err := d.link(ctx, reqPath, args)
+		if err != nil {
+			continue
+		}
+		var resultLink *model.Link
+		if link != nil {
+			resultLink = &model.Link{
+				URL:         link.URL,
+				Header:      link.Header,
+				RangeReader: link.RangeReader,
+				SyncClosers: utils.NewSyncClosers(link),
+			}
+			if link.MFile != nil {
+				resultLink.RangeReader = &model.FileRangeReader{
+					RangeReaderIF: stream.GetRangeReaderFromMFile(file.GetSize(), link.MFile),
 				}
 			}
-			return link, nil
+
+		} else {
+			resultLink = &model.Link{
+				URL: fmt.Sprintf("%s/p%s?sign=%s",
+					common.GetApiUrl(ctx),
+					utils.EncodePath(reqPath, true),
+					sign.Sign(reqPath)),
+			}
 		}
+		if !args.Redirect {
+			if d.DownloadConcurrency > 0 {
+				resultLink.Concurrency = d.DownloadConcurrency
+			}
+			if d.DownloadPartSize > 0 {
+				resultLink.PartSize = d.DownloadPartSize * utils.KB
+			}
+		}
+		return resultLink, nil
 	}
 	return nil, errs.ObjectNotFound
 }
@@ -252,27 +275,30 @@ func (d *Alias) Put(ctx context.Context, dstDir model.Obj, s model.FileStreamer,
 	reqPath, err := d.getReqPath(ctx, dstDir, true)
 	if err == nil {
 		if len(reqPath) == 1 {
-			return fs.PutDirectly(ctx, *reqPath[0], s)
-		} else {
-			defer s.Close()
-			file, err := s.CacheFullInTempFile()
-			if err != nil {
-				return err
-			}
-			for _, path := range reqPath {
-				err = errors.Join(err, fs.PutDirectly(ctx, *path, &stream.FileStream{
-					Obj:          s,
-					Mimetype:     s.GetMimetype(),
-					WebPutAsTask: s.NeedStore(),
-					Reader:       file,
-				}))
-				_, e := file.Seek(0, io.SeekStart)
-				if e != nil {
-					return errors.Join(err, e)
-				}
-			}
+			return fs.PutDirectly(ctx, *reqPath[0], &stream.FileStream{
+				Obj:          s,
+				Mimetype:     s.GetMimetype(),
+				WebPutAsTask: s.NeedStore(),
+				Reader:       s,
+			})
+		}
+		file, err := s.CacheFullInTempFile()
+		if err != nil {
 			return err
 		}
+		for _, path := range reqPath {
+			err = errors.Join(err, fs.PutDirectly(ctx, *path, &stream.FileStream{
+				Obj:          s,
+				Mimetype:     s.GetMimetype(),
+				WebPutAsTask: s.NeedStore(),
+				Reader:       file,
+			}))
+			_, e := file.Seek(0, io.SeekStart)
+			if e != nil {
+				return errors.Join(err, e)
+			}
+		}
+		return err
 	}
 	if errs.IsNotImplement(err) {
 		return errors.New("same-name dirs cannot be Put")
@@ -339,14 +365,6 @@ func (d *Alias) Extract(ctx context.Context, obj model.Obj, args model.ArchiveIn
 	for _, dst := range dsts {
 		link, err := d.extract(ctx, dst, sub, args)
 		if err == nil {
-			if !args.Redirect && len(link.URL) > 0 {
-				if d.DownloadConcurrency > 0 {
-					link.Concurrency = d.DownloadConcurrency
-				}
-				if d.DownloadPartSize > 0 {
-					link.PartSize = d.DownloadPartSize * utils.KB
-				}
-			}
 			return link, nil
 		}
 	}
@@ -371,19 +389,20 @@ func (d *Alias) ArchiveDecompress(ctx context.Context, srcObj, dstDir model.Obj,
 	if err != nil {
 		return err
 	}
-	if len(srcPath) == len(dstPath) {
+	switch {
+	case len(srcPath) == len(dstPath):
 		for i := range srcPath {
 			_, e := fs.ArchiveDecompress(ctx, *srcPath[i], *dstPath[i], args)
 			err = errors.Join(err, e)
 		}
 		return err
-	} else if len(srcPath) == 1 || !d.ProtectSameName {
+	case len(srcPath) == 1 || !d.ProtectSameName:
 		for _, path := range dstPath {
 			_, e := fs.ArchiveDecompress(ctx, *srcPath[0], *path, args)
 			err = errors.Join(err, e)
 		}
 		return err
-	} else {
+	default:
 		return errors.New("parallel paths mismatch")
 	}
 }

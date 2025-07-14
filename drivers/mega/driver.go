@@ -15,6 +15,7 @@ import (
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/http_range"
+	"github.com/dongdio/OpenList/v4/utility/stream"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
@@ -85,17 +86,11 @@ func (d *Mega) GetRoot(ctx context.Context) (model.Obj, error) {
 
 func (d *Mega) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	if node, ok := file.(*MegaNode); ok {
-
-		// down, err := d.c.NewDownload(n.Node)
-		// if err != nil {
-		//	return nil, errors.Errorf("open download file failed: %w", err)
-		// }
-
 		size := file.GetSize()
 		resultRangeReader := func(ctx context.Context, httpRange http_range.Range) (io.ReadCloser, error) {
 			length := httpRange.Length
-			if httpRange.Length >= 0 && httpRange.Start+httpRange.Length >= size {
-				length = -1
+			if httpRange.Length < 0 || httpRange.Start+httpRange.Length >= size {
+				length = size - httpRange.Start
 			}
 			var down *mega.Download
 			err := utils.Retry(3, time.Second, func() (err error) {
@@ -113,11 +108,9 @@ func (d *Mega) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*
 
 			return readers.NewLimitedReadCloser(oo, length), nil
 		}
-		resultRangeReadCloser := &model.RangeReadCloser{RangeReader: resultRangeReader}
-		resultLink := &model.Link{
-			RangeReadCloser: resultRangeReadCloser,
-		}
-		return resultLink, nil
+		return &model.Link{
+			RangeReader: stream.RateLimitRangeReaderFunc(resultRangeReader),
+		}, nil
 	}
 	return nil, errors.Errorf("unable to convert dir to mega n")
 }

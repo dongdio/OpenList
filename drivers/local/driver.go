@@ -24,6 +24,7 @@ import (
 	"github.com/dongdio/OpenList/v4/internal/sign"
 	"github.com/dongdio/OpenList/v4/server/common"
 	"github.com/dongdio/OpenList/v4/utility/errs"
+	"github.com/dongdio/OpenList/v4/utility/stream"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
@@ -342,7 +343,13 @@ func (d *Local) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 		}
 		link.MFile = fileHandle
 	}
-
+	if link.MFile != nil && !d.Config().OnlyLinkMFile {
+		link.AddIfCloser(link.MFile)
+		link.RangeReader = &model.FileRangeReader{
+			RangeReaderIF: stream.GetRangeReaderFromMFile(file.GetSize(), link.MFile),
+		}
+		link.MFile = nil
+	}
 	return &link, nil
 }
 

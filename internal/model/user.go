@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/OpenListTeam/go-cache"
 	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/pkg/errors"
 
@@ -20,6 +21,14 @@ const (
 )
 
 const StaticHashSalt = "https://github.com/alist-org/alist"
+
+// LoginCache 用于跟踪 IP 登录尝试次数的缓存
+var LoginCache = cache.NewMemCache[int]()
+
+var (
+	DefaultLockDuration   = time.Minute * 5
+	DefaultMaxAuthRetries = 5
+)
 
 type User struct {
 	ID       uint   `json:"id" gorm:"primaryKey"`                      // unique key

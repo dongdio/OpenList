@@ -9,6 +9,7 @@ permissions:
 
 jobs:
   prepare_release:
+    name: Set Prerelease
     runs-on: ubuntu-latest
     outputs:
       release_id: ${{ github.event.release.id }}
@@ -98,12 +99,14 @@ jobs:
   release-lite:
     strategy:
       matrix:
-        platform: [ ubuntu-latest ]
-        go-version: [ '1.21' ]
-    name: Release Lite
-    runs-on: ${{ matrix.platform }}
+        build-type: [ 'standard', 'lite' ]
+        target-platform: [ '', 'android', 'freebsd', 'linux_musl', 'linux_musl_arm' ]
+        go-version: [ '1.24.4' ]
+    name: Release ${{ matrix.target-platform && format('{0} ', matrix.target-platform) || '' }}${{ matrix.build-type == 'lite' && 'Lite' || '' }}
+    runs-on: ubuntu-latest
     steps:
       - name: Free Disk Space (Ubuntu)
+        if: matrix.target-platform == ''
         uses: jlumbroso/free-disk-space@main
         with:
           # this might remove tools that are actually needed,
@@ -119,13 +122,6 @@ jobs:
           docker-images: true
           swap-storage: true
 
-      - name: Prerelease
-        uses: irongut/EditRelease@v1.2.0
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          id: ${{ github.event.release.id }}
-          prerelease: true
-
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
@@ -137,6 +133,7 @@ jobs:
           fetch-depth: 0
 
       - name: Install dependencies
+        if: matrix.target-platform == ''
         run: |
           sudo snap install zig --classic --beta
           docker pull crazymax/xgo:latest
@@ -145,7 +142,7 @@ jobs:
 
       - name: Build
         run: |
-          bash build.sh release lite
+          bash build.sh release ${{ matrix.build-type == 'lite' && 'lite' || '' }} ${{ matrix.target-platform }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

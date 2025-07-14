@@ -10,6 +10,7 @@ package webdav
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -24,6 +25,7 @@ import (
 	"github.com/dongdio/OpenList/v4/internal/sign"
 	"github.com/dongdio/OpenList/v4/server/common"
 	"github.com/dongdio/OpenList/v4/utility/errs"
+	"github.com/dongdio/OpenList/v4/utility/net"
 	"github.com/dongdio/OpenList/v4/utility/stream"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
@@ -366,11 +368,15 @@ func (h *Handler) handleGetHeadPost(w http.ResponseWriter, r *http.Request) (sta
 		if err != nil {
 			return http.StatusInternalServerError, err
 		}
+		defer link.Close()
 		if storage.GetStorage().ProxyRange {
 			common.ProxyRange(ctx, link, fi.GetSize())
 		}
 		err = common.Proxy(w, r, link, fi)
 		if err != nil {
+			if statusCode, ok := errors.Unwrap(err).(net.ErrorHttpStatusCode); ok {
+				return int(statusCode), err
+			}
 			return http.StatusInternalServerError, errors.Errorf("webdav proxy error: %+v", err)
 		}
 	} else if storage.GetStorage().WebdavProxy() && downProxyUrl != "" {
@@ -385,6 +391,7 @@ func (h *Handler) handleGetHeadPost(w http.ResponseWriter, r *http.Request) (sta
 		if err != nil {
 			return http.StatusInternalServerError, err
 		}
+		defer link.Close()
 		http.Redirect(w, r, link.URL, http.StatusFound)
 	}
 	return 0, nil
@@ -426,6 +433,12 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) (status i
 }
 
 func (h *Handler) handlePut(w http.ResponseWriter, r *http.Request) (status int, err error) {
+	defer func() {
+		if n, _ := io.ReadFull(r.Body, []byte{0}); n == 1 {
+			_, _ = utils.CopyWithBuffer(io.Discard, r.Body)
+		}
+		_ = r.Body.Close()
+	}()
 	reqPath, status, err := h.stripPrefix(r.URL.Path)
 	if err != nil {
 		return status, err
@@ -465,8 +478,6 @@ func (h *Handler) handlePut(w http.ResponseWriter, r *http.Request) (status int,
 		return http.StatusNotFound, err
 	}
 
-	_ = r.Body.Close()
-	_ = fsStream.Close()
 	// TODO(rost): Returning 405 Method Not Allowed might not be appropriate.
 	if err != nil {
 		return http.StatusMethodNotAllowed, err

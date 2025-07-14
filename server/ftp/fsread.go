@@ -71,25 +71,22 @@ func OpenDownload(ctx context.Context, reqPath string, offset int64) (*FileDownl
 	}
 
 	// 创建文件流
-	fileStream := stream.FileStream{
+	fileStream, err := stream.NewSeekableStream(&stream.FileStream{
 		Obj: obj,
 		Ctx: ctx,
-	}
-
-	// 创建可查找的流
-	ss, err := stream.NewSeekableStream(fileStream, link)
+	}, link)
 	if err != nil {
+		_ = link.Close()
 		return nil, err
 	}
-
 	// 创建支持随机访问的读取器
-	reader, err := stream.NewReadAtSeeker(ss, offset)
+	reader, err := stream.NewReadAtSeeker(fileStream, offset)
 	if err != nil {
-		_ = ss.Close()
+		_ = fileStream.Close()
 		return nil, err
 	}
 
-	return &FileDownloadProxy{File: reader, Closer: ss, ctx: ctx}, nil
+	return &FileDownloadProxy{File: reader, Closer: fileStream, ctx: ctx}, nil
 }
 
 // Read 从文件读取数据

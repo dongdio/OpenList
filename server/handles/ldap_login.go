@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-ldap/ldap/v3"
@@ -29,11 +28,6 @@ func LoginLdap(c *gin.Context) {
 	loginLdap(c, &req)
 }
 
-const (
-	defaultTimes    = 5
-	defaultDuration = 5 * time.Minute
-)
-
 func loginLdap(c *gin.Context, req *LoginRequest) {
 	enabled := setting.GetBool(consts.LdapLoginEnabled)
 	if !enabled {
@@ -43,10 +37,10 @@ func loginLdap(c *gin.Context, req *LoginRequest) {
 
 	// check count of login
 	ip := c.ClientIP()
-	count, ok := loginAttemptsCache.Get(ip)
+	count, ok := model.LoginCache.Get(ip)
 	if ok && count >= defaultMaxLoginAttempts {
 		common.ErrorStrResp(c, "Too many unsuccessful sign-in attempts have been made using an incorrect username or password, Try again later.", 429)
-		loginAttemptsCache.Expire(ip, defaultLoginCacheDuration)
+		model.LoginCache.Expire(ip, defaultLoginCacheDuration)
 		return
 	}
 
@@ -101,7 +95,7 @@ func loginLdap(c *gin.Context, req *LoginRequest) {
 	if err != nil {
 		utils.Log.Errorf("Failed to auth. %v", err)
 		common.ErrorResp(c, err, 400)
-		loginAttemptsCache.Set(ip, count+1)
+		model.LoginCache.Set(ip, count+1)
 		return
 	} else {
 		utils.Log.Infof("Auth successful username:%s", req.Username)
@@ -113,7 +107,7 @@ func loginLdap(c *gin.Context, req *LoginRequest) {
 		user, err = ladpRegister(req.Username)
 		if err != nil {
 			common.ErrorResp(c, err, 400)
-			loginAttemptsCache.Set(ip, count+1)
+			model.LoginCache.Set(ip, count+1)
 			return
 		}
 	}
@@ -125,7 +119,7 @@ func loginLdap(c *gin.Context, req *LoginRequest) {
 		return
 	}
 	common.SuccessResp(c, gin.H{"token": token})
-	loginAttemptsCache.Del(ip)
+	model.LoginCache.Del(ip)
 }
 
 func ladpRegister(username string) (*model.User, error) {

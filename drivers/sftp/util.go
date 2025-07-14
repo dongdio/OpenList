@@ -1,16 +1,26 @@
 package sftp
 
 import (
+	"fmt"
 	"path"
 
 	"github.com/pkg/sftp"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
+
+	"github.com/dongdio/OpenList/v4/utility/singleflight"
 )
 
 // do others that not defined in Driver interface
 
 func (d *SFTP) initClient() error {
+	err, _, _ := singleflight.ErrorGroup.Do(fmt.Sprintf("SFTP.initClient:%p", d), func() (error, error) {
+		return d._initClient(), nil
+	})
+	return err
+}
+
+func (d *SFTP) _initClient() error {
 	var auth ssh.AuthMethod
 	if len(d.PrivateKey) > 0 {
 		var err error
@@ -27,12 +37,12 @@ func (d *SFTP) initClient() error {
 	} else {
 		auth = ssh.Password(d.Password)
 	}
-	config := &ssh.ClientConfig{
+	conf := &ssh.ClientConfig{
 		User:            d.Username,
 		Auth:            []ssh.AuthMethod{auth},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
-	conn, err := ssh.Dial("tcp", d.Address, config)
+	conn, err := ssh.Dial("tcp", d.Address, conf)
 	if err != nil {
 		return err
 	}
@@ -52,7 +62,9 @@ func (d *SFTP) clientReconnectOnConnectionError() error {
 		return nil
 	}
 	log.Debugf("[sftp] discarding closed sftp connection: %v", err)
-	_ = d.client.Close()
+	if d.client != nil {
+		_ = d.client.Close()
+	}
 	err = d.initClient()
 	return err
 }
@@ -77,12 +89,12 @@ func (d *SFTP) removeDirectory(remotePath string) error {
 	for _, backupDir := range remoteFiles {
 		remoteFilePath := path.Join(remotePath, backupDir.Name())
 		if backupDir.IsDir() {
-			err := d.removeDirectory(remoteFilePath)
+			err = d.removeDirectory(remoteFilePath)
 			if err != nil {
 				return err
 			}
 		} else {
-			err := d.removeFile(remoteFilePath)
+			err = d.removeFile(remoteFilePath)
 			if err != nil {
 				return err
 			}

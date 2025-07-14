@@ -3,7 +3,6 @@ package fs
 import (
 	"context"
 	"fmt"
-	"net/http"
 	stdpath "path"
 	"time"
 
@@ -149,27 +148,23 @@ func handleSynchronousCopy(ctx context.Context, srcStorage, dstStorage driver.Dr
 	// For non-directory objects, perform a direct copy
 	if !srcObj.IsDir() {
 		// Get a link to the source file
-		linkRes, _, err := op.Link(ctx, srcStorage, srcObjActualPath, model.LinkArgs{
-			Header: http.Header{},
-		})
+		linkRes, _, err := op.Link(ctx, srcStorage, srcObjActualPath, model.LinkArgs{})
 		if err != nil {
 			return nil, errors.WithMessagef(err, "failed to get link for [%s]", srcObjPath)
 		}
 
 		// Create a file stream for the source object
-		fileStream := stream.FileStream{
+		fileStream, err := stream.NewSeekableStream(&stream.FileStream{
 			Obj: srcObj,
 			Ctx: ctx,
-		}
-
-		// Create a seekable stream from the link
-		seekableStream, err := stream.NewSeekableStream(fileStream, linkRes)
+		}, linkRes)
 		if err != nil {
+			_ = linkRes.Close()
 			return nil, errors.WithMessagef(err, "failed to create stream for [%s]", srcObjPath)
 		}
 
 		// Perform the direct upload to the destination
-		return nil, op.Put(ctx, dstStorage, dstDirActualPath, seekableStream, nil, false)
+		return nil, op.Put(ctx, dstStorage, dstDirActualPath, fileStream, nil, false)
 	}
 
 	// Directory handling would go through the task-based approach anyway
@@ -252,26 +247,23 @@ func copyFileBetween2Storages(t *CopyTask, srcStorage, dstStorage driver.Driver,
 
 	var linkRes *model.Link
 	// Get a link to the source file
-	linkRes, _, err = op.Link(t.Ctx(), srcStorage, srcFilePath, model.LinkArgs{
-		Header: http.Header{},
-	})
+	linkRes, _, err = op.Link(t.Ctx(), srcStorage, srcFilePath, model.LinkArgs{})
 	if err != nil {
 		return errors.WithMessagef(err, "failed to get link for [%s]", srcFilePath)
 	}
 
 	// Create a file stream for the source file
-	fileStream := stream.FileStream{
+	fileStream, err := stream.NewSeekableStream(&stream.FileStream{
 		Obj: srcFile,
 		Ctx: t.Ctx(),
-	}
+	}, linkRes)
 
-	// Create a seekable stream from the link
-	seekableStream, err := stream.NewSeekableStream(fileStream, linkRes)
 	if err != nil {
+		_ = linkRes.Close()
 		return errors.WithMessagef(err, "failed to create stream for [%s]", srcFilePath)
 	}
 
 	// Upload the file to the destination
 	// Pass the progress callback function to update task progress
-	return op.Put(t.Ctx(), dstStorage, dstDirPath, seekableStream, t.SetProgress, true)
+	return op.Put(t.Ctx(), dstStorage, dstDirPath, fileStream, t.SetProgress, true)
 }

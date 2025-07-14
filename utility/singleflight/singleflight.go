@@ -15,6 +15,8 @@ import (
 	"sync"
 )
 
+var ErrorGroup Group[error]
+
 // errGoexit indicates the runtime.Goexit was called in
 // the user given function.
 var errGoexit = errors.New("runtime.Goexit was called")
@@ -75,8 +77,9 @@ type call[T any] struct {
 // Group represents a class of work and forms a namespace in
 // which units of work can be executed with duplicate suppression.
 type Group[T any] struct {
-	mu sync.Mutex          // protects m
-	m  map[string]*call[T] // lazily initialized
+	mu       sync.Mutex          // protects m
+	m        map[string]*call[T] // lazily initialized
+	Remember bool
 }
 
 // Result holds the results of Do, so they can be passed
@@ -160,7 +163,7 @@ func (g *Group[T]) doCall(c *call[T], key string, fn func() (T, error)) {
 		g.mu.Lock()
 		defer g.mu.Unlock()
 		c.wg.Done()
-		if g.m[key] == c {
+		if !g.Remember && g.m[key] == c {
 			delete(g.m, key)
 		}
 

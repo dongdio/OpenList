@@ -2,12 +2,10 @@ package handles
 
 import (
 	"fmt"
-	"io"
 	stdpath "path"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/dongdio/OpenList/v4/internal/fs"
 	"github.com/dongdio/OpenList/v4/internal/model"
@@ -415,7 +413,7 @@ func Link(c *gin.Context) {
 	}
 
 	// 如果是仅本地存储，生成签名URL
-	if storage.Config().OnlyLocal {
+	if storage.Config().NoLinkURL || storage.Config().OnlyLinkMFile {
 		common.SuccessResp(c, model.Link{
 			URL: fmt.Sprintf("%s/p%s?d&sign=%s",
 				common.GetApiUrl(c),
@@ -426,21 +424,11 @@ func Link(c *gin.Context) {
 	}
 
 	// 获取存储链接
-	link, _, err := fs.Link(c, rawPath, model.LinkArgs{
-		IP:     c.ClientIP(),
-		Header: c.Request.Header,
-	})
+	link, _, err := fs.Link(c, rawPath, model.LinkArgs{IP: c.ClientIP(), Header: c.Request.Header, Redirect: true})
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}
-	if clr, ok := link.MFile.(io.Closer); ok {
-		defer func(clr io.Closer) {
-			err := clr.Close()
-			if err != nil {
-				log.Errorf("close link data error: %v", err)
-			}
-		}(clr)
-	}
+	defer link.Close()
 	common.SuccessResp(c, link)
 }

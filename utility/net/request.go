@@ -15,6 +15,7 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/utility/http_range"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
@@ -73,7 +74,7 @@ func NewDownloader(options ...func(*Downloader)) *Downloader {
 func (d Downloader) Download(ctx context.Context, p *HttpRequestParams) (io.ReadCloser, error) {
 	var finalP HttpRequestParams
 	awsutil.Copy(&finalP, p)
-	if finalP.Range.Length == -1 {
+	if finalP.Range.Length < 0 || finalP.Range.Start+finalP.Range.Length > finalP.Size {
 		finalP.Range.Length = finalP.Size - finalP.Range.Start
 	}
 	impl := downloader{params: &finalP, cfg: d, ctx: ctx}
@@ -123,7 +124,7 @@ type ConcurrencyLimit struct {
 }
 
 // ErrExceedMaxConcurrency 表示超出最大并发数的错误
-var ErrExceedMaxConcurrency = errors.New("exceed maximum concurrency")
+var ErrExceedMaxConcurrency = ErrorHttpStatusCode(http.StatusTooManyRequests)
 
 // sub 减少并发限制计数
 func (l *ConcurrencyLimit) sub() error {
@@ -211,7 +212,7 @@ func (d *downloader) download() (io.ReadCloser, error) {
 	d.pos = d.params.Range.Start
 	d.maxPos = d.params.Range.Start + d.params.Range.Length
 	d.concurrency = d.cfg.Concurrency
-	d.sendChunkTask(true)
+	_ = d.sendChunkTask(true)
 
 	var rc io.ReadCloser = NewMultiReadCloser(d.bufs[0], d.interrupt, d.finishBuf)
 
@@ -403,39 +404,76 @@ func (d *downloader) downloadChunk(ch *chunk) error {
 	return nil
 }
 
+var errCancelConcurrency = errors.New("cancel concurrency")
+var errInfiniteRetry = errors.New("infinite retry")
+
 // tryDownloadChunk 尝试下载分块
 func (d *downloader) tryDownloadChunk(params *HttpRequestParams, ch *chunk) (int64, error) {
 	resp, err := d.cfg.HttpClient(d.ctx, params)
 	if err != nil {
-		return 0, err
+		statusCode, ok := errors.Unwrap(err).(ErrorHttpStatusCode)
+		if !ok {
+			return 0, err
+		}
+		if statusCode == http.StatusRequestedRangeNotSatisfiable {
+			return 0, err
+		}
+		if ch.id == 0 { // 第1个任务 有限的重试，超过重试就会结束请求
+			switch statusCode {
+			default:
+				return 0, err
+			case http.StatusTooManyRequests:
+			case http.StatusBadGateway:
+			case http.StatusServiceUnavailable:
+			case http.StatusGatewayTimeout:
+			}
+			<-time.After(time.Millisecond * 200)
+			return 0, &errNeedRetry{err: err}
+		}
+
+		// 来到这 说明第1个分片下载 连接成功了
+		// 后续分片下载出错都当超载处理
+		log.Debugf("err chunk_%d, try downloading:%v", ch.id, err)
+
+		d.m.Lock()
+		isCancelConcurrency := ch.newConcurrency
+		if d.concurrency > 0 { // 取消剩余的并发任务
+			// 用于计算实际的并发数
+			d.concurrency = -d.concurrency
+			isCancelConcurrency = true
+		}
+		if isCancelConcurrency {
+			d.concurrency--
+			d.chunkChannel <- *ch
+			d.m.Unlock()
+			return 0, errCancelConcurrency
+		}
+		d.m.Unlock()
+		if ch.id != d.readingID { // 正在被读取的优先重试
+			d.m2.Lock()
+			defer d.m2.Unlock()
+			<-time.After(time.Millisecond * 200)
+		}
+		return 0, errInfiniteRetry
 	}
 	defer resp.Body.Close()
 
-	// 检查响应状态
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusPartialContent {
-		return 0, errors.Errorf("unexpected status code: %d", resp.StatusCode)
-	}
-
-	// 检查总字节数
-	if err = d.checkTotalBytes(resp); err != nil {
-		return 0, err
-	}
-
-	// 读取响应体
-	n, err := io.Copy(ch.buf, resp.Body)
-	if err != nil {
-		// 检查是否需要重试
-		if strings.Contains(err.Error(), "connection reset by peer") ||
-			strings.Contains(err.Error(), "use of closed network connection") ||
-			strings.Contains(err.Error(), "unexpected EOF") {
-			return n, &errNeedRetry{err: err}
+	// only check file size on the first task
+	if ch.id == 0 {
+		err = d.checkTotalBytes(resp)
+		if err != nil {
+			return 0, err
 		}
-		return n, err
 	}
+	_ = d.sendChunkTask(true)
+	n, err := utils.CopyWithBuffer(ch.buf, resp.Body)
 
-	// 检查是否下载了预期的字节数
+	if err != nil {
+		return n, &errNeedRetry{err: err}
+	}
 	if n != ch.size {
-		return n, errors.Errorf("expected %d bytes, got %d", ch.size, n)
+		err = fmt.Errorf("chunk download size incorrect, expected=%d, got=%d", ch.size, n)
+		return n, &errNeedRetry{err: err}
 	}
 
 	return n, nil
@@ -514,24 +552,28 @@ type chunk struct {
 
 // DefaultHttpRequestFunc 是默认的HTTP请求函数
 func DefaultHttpRequestFunc(ctx context.Context, params *HttpRequestParams) (*http.Response, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, params.URL, nil)
-	if err != nil {
-		return nil, err
-	}
+	header := http_range.ApplyRangeToHttpHeader(params.Range, params.HeaderRef)
+	return RequestHttp(ctx, "GET", header, params.URL)
+}
 
-	// 设置Range头
-	if params.Range.Length > 0 {
-		req.Header.Set("Range", fmt.Sprintf("bytes=%d-%d", params.Range.Start, params.Range.Start+params.Range.Length-1))
-	}
-
-	// 复制其他头部
-	if params.HeaderRef != nil {
-		for k, v := range params.HeaderRef {
-			req.Header[k] = v
+func GetRangeReaderHttpRequestFunc(rangeReader model.RangeReaderIF) HttpRequestFunc {
+	return func(ctx context.Context, params *HttpRequestParams) (*http.Response, error) {
+		rc, err := rangeReader.RangeRead(ctx, params.Range)
+		if err != nil {
+			return nil, err
 		}
+
+		return &http.Response{
+			StatusCode: http.StatusPartialContent,
+			Status:     http.StatusText(http.StatusPartialContent),
+			Body:       rc,
+			Header: http.Header{
+				"Content-Range": {params.Range.ContentRange(params.Size)},
+			},
+			ContentLength: params.Range.Length,
+		}, nil
 	}
 
-	return http.DefaultClient.Do(req)
 }
 
 // HttpRequestParams 包含HTTP请求的参数

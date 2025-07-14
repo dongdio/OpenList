@@ -55,6 +55,12 @@ func getFileHashes(c *gin.Context) map[*utils.HashType]string {
 
 // FsStream 处理流式上传文件请求
 func FsStream(c *gin.Context) {
+	defer func() {
+		if n, _ := io.ReadFull(c.Request.Body, []byte{0}); n == 1 {
+			_, _ = utils.CopyWithBuffer(io.Discard, c.Request.Body)
+		}
+		_ = c.Request.Body.Close()
+	}()
 	// 获取上传路径
 	path := c.GetHeader("File-Path")
 	if path == "" {
@@ -84,8 +90,6 @@ func FsStream(c *gin.Context) {
 	// 检查文件是否存在（如果不允许覆盖）
 	if !overwrite {
 		if res, _ := fs.Get(c, path, &fs.GetArgs{NoLog: true}); res != nil {
-			// 丢弃请求体数据
-			_, _ = utils.CopyWithBuffer(io.Discard, c.Request.Body)
 			common.ErrorStrResp(c, "file exists", 403)
 			return
 		}
@@ -135,25 +139,15 @@ func FsStream(c *gin.Context) {
 	} else {
 		err = fs.PutDirectly(c, dir, s, true)
 	}
-
-	// 确保请求体被关闭
-	defer c.Request.Body.Close()
-
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}
-
 	// 处理上传结果
 	if t == nil {
-		// 确保读取完所有请求体数据
-		if n, _ := io.ReadFull(c.Request.Body, []byte{0}); n == 1 {
-			_, _ = utils.CopyWithBuffer(io.Discard, c.Request.Body)
-		}
 		common.SuccessResp(c)
 		return
 	}
-
 	// 返回任务信息
 	common.SuccessResp(c, gin.H{
 		"task": getTaskInfo(t),
@@ -162,6 +156,12 @@ func FsStream(c *gin.Context) {
 
 // FsForm 处理表单上传文件请求
 func FsForm(c *gin.Context) {
+	defer func() {
+		if n, _ := io.ReadFull(c.Request.Body, []byte{0}); n == 1 {
+			_, _ = utils.CopyWithBuffer(io.Discard, c.Request.Body)
+		}
+		_ = c.Request.Body.Close()
+	}()
 	// 获取上传路径
 	path := c.GetHeader("File-Path")
 	if path == "" {
@@ -191,7 +191,6 @@ func FsForm(c *gin.Context) {
 	// 检查文件是否存在（如果不允许覆盖）
 	if !overwrite {
 		if res, _ := fs.Get(c, path, &fs.GetArgs{NoLog: true}); res != nil {
-			_, _ = utils.CopyWithBuffer(io.Discard, c.Request.Body)
 			common.ErrorStrResp(c, "file exists", 403)
 			return
 		}
@@ -237,7 +236,7 @@ func FsForm(c *gin.Context) {
 	}
 
 	// 创建文件流对象
-	s := stream.FileStream{
+	s := &stream.FileStream{
 		Obj: &model.Object{
 			Name:     name,
 			Size:     file.Size,
@@ -256,9 +255,9 @@ func FsForm(c *gin.Context) {
 		s.Reader = struct {
 			io.Reader
 		}{f}
-		t, err = fs.PutAsTask(c, dir, &s)
+		t, err = fs.PutAsTask(c, dir, s)
 	} else {
-		err = fs.PutDirectly(c, dir, &s, true)
+		err = fs.PutDirectly(c, dir, s, true)
 	}
 
 	if err != nil {

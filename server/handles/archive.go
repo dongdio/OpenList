@@ -396,7 +396,7 @@ func ArchiveDown(c *gin.Context) {
 	}
 
 	// 下载文件
-	down(c, link)
+	redirect(c, link)
 }
 
 // ArchiveProxy 代理归档文件中的内容
@@ -433,7 +433,7 @@ func ArchiveProxy(c *gin.Context) {
 		}
 
 		// 本地代理
-		localProxy(c, link, file, storage.GetStorage().ProxyRange)
+		proxy(c, link, file, storage.GetStorage().ProxyRange)
 	} else {
 		common.ErrorStrResp(c, "proxy not allowed", 403)
 	}

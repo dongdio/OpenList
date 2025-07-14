@@ -25,7 +25,6 @@ var config = driver.Config{
 	Name:        "115 Cloud", // 驱动名称
 	DefaultRoot: "0",         // 默认根目录ID
 	// OnlyProxy:   true,      // 是否仅支持代理模式（已注释）
-	// OnlyLocal:         true, // 是否仅支持本地模式（已注释）
 	// NoOverwriteUpload: true, // 是否禁止覆盖上传（已注释）
 }
 

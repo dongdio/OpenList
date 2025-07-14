@@ -8,11 +8,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/pkg/errors"
-
 	"github.com/dongdio/OpenList/v4/internal/model"
-	"github.com/dongdio/OpenList/v4/utility/http_range"
-	net2 "github.com/dongdio/OpenList/v4/utility/net"
+	"github.com/dongdio/OpenList/v4/utility/net"
 	"github.com/dongdio/OpenList/v4/utility/stream"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
@@ -33,102 +30,49 @@ import (
 // 返回:
 //   - error: 错误信息
 func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.Obj) error {
-	// 参数检查
-	if link == nil || file == nil {
-		return errors.Errorf("无效的链接或文件")
-	}
-
-	// 使用MFile直接提供文件内容
 	if link.MFile != nil {
-		if clr, ok := link.MFile.(io.Closer); ok {
-			defer clr.Close()
-		}
-		// 设置响应头
-		attachHeader(w, file)
-
-		// 设置内容类型
-		contentType := link.Header.Get("Content-Type")
-		if contentType != "" {
-			w.Header().Set("Content-Type", contentType)
-		}
-
-		// 处理文件读取限速
+		attachHeader(w, file, link.Header)
 		http.ServeContent(w, r, file.GetName(), file.ModTime(), link.MFile)
 		return nil
-	} else if link.RangeReadCloser != nil {
-		// 使用RangeReadCloser处理范围请求
-		attachHeader(w, file)
-		return net2.ServeHTTP(w, r, file.GetName(), file.ModTime(), file.GetSize(), &stream.RateLimitRangeReadCloser{
-			RangeReadCloserIF: link.RangeReadCloser,
-			Limiter:           stream.ServerDownloadLimit,
-		})
-	} else if link.Concurrency > 0 || link.PartSize > 0 {
-		// 使用分块下载处理大文件
-		attachHeader(w, file)
-		size := file.GetSize()
+	}
 
-		// 创建范围读取函数
-		rangeReader := func(ctx context.Context, httpRange http_range.Range) (io.ReadCloser, error) {
-			// 获取请求头
-			requestHeader := ctx.Value("request_header")
-			if requestHeader == nil {
-				requestHeader = http.Header{}
-			}
-			header := net2.ProcessHeader(requestHeader.(http.Header), link.Header)
-
-			// 创建下载器
-			down := net2.NewDownloader(func(d *net2.Downloader) {
-				d.Concurrency = link.Concurrency
-				d.PartSize = link.PartSize
-			})
-
-			// 设置请求参数
-			req := &net2.HttpRequestParams{
-				URL:       link.URL,
-				Range:     httpRange,
-				Size:      size,
-				HeaderRef: header,
-			}
-
-			// 执行下载
-			rc, err := down.Download(ctx, req)
-			return rc, err
+	if link.Concurrency > 0 || link.PartSize > 0 {
+		attachHeader(w, file, link.Header)
+		rrf, _ := stream.GetRangeReaderFromLink(file.GetSize(), link)
+		if link.RangeReader == nil {
+			r = r.WithContext(context.WithValue(r.Context(), net.RequestHeaderKey{}, r.Header))
 		}
-
-		// 提供HTTP服务
-		return net2.ServeHTTP(w, r, file.GetName(), file.ModTime(), file.GetSize(), &stream.RateLimitRangeReadCloser{
-			RangeReadCloserIF: &model.RangeReadCloser{RangeReader: rangeReader},
-			Limiter:           stream.ServerDownloadLimit,
+		return net.ServeHTTP(w, r, file.GetName(), file.ModTime(), file.GetSize(), &model.RangeReadCloser{
+			RangeReader: rrf,
 		})
-	} else {
-		// 透明代理
-		// 处理请求头
-		header := net2.ProcessHeader(r.Header, link.Header)
+	}
 
-		// 发送HTTP请求
-		res, err := net2.RequestHttp(r.Context(), r.Method, header, link.URL)
-		if err != nil {
-			return err
-		}
-		defer res.Body.Close()
-
-		// 复制响应头
-		maps.Copy(w.Header(), res.Header)
-		w.WriteHeader(res.StatusCode)
-
-		// 处理HEAD请求
-		if r.Method == http.MethodHead {
-			return nil
-		}
-
-		// 复制响应体，带限速
-		_, err = utils.CopyWithBuffer(w, &stream.RateLimitReader{
-			Reader:  res.Body,
-			Limiter: stream.ServerDownloadLimit,
-			Ctx:     r.Context(),
+	if link.RangeReader != nil {
+		attachHeader(w, file, link.Header)
+		return net.ServeHTTP(w, r, file.GetName(), file.ModTime(), file.GetSize(), &model.RangeReadCloser{
+			RangeReader: link.RangeReader,
 		})
+	}
+
+	// transparent proxy
+	header := net.ProcessHeader(r.Header, link.Header)
+	res, err := net.RequestHttp(r.Context(), r.Method, header, link.URL)
+	if err != nil {
 		return err
 	}
+	defer res.Body.Close()
+
+	maps.Copy(w.Header(), res.Header)
+	w.WriteHeader(res.StatusCode)
+	if r.Method == http.MethodHead {
+		return nil
+	}
+	_, err = utils.CopyWithBuffer(w, &stream.RateLimitReader{
+		Reader:  res.Body,
+		Limiter: stream.ServerDownloadLimit,
+		Ctx:     r.Context(),
+	})
+	return err
 }
 
 // attachHeader 为响应添加附件相关的头信息
@@ -136,7 +80,7 @@ func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.
 // 参数:
 //   - w: HTTP响应写入器
 //   - file: 文件对象
-func attachHeader(w http.ResponseWriter, file model.Obj) {
+func attachHeader(w http.ResponseWriter, file model.Obj, header http.Header) {
 	fileName := file.GetName()
 	// 设置Content-Disposition头，使浏览器将内容作为附件处理
 	w.Header().Set("Content-Disposition", utils.GenerateContentDisposition(fileName))
@@ -144,6 +88,10 @@ func attachHeader(w http.ResponseWriter, file model.Obj) {
 	w.Header().Set("Content-Type", utils.GetMimeType(fileName))
 	// 设置ETag
 	w.Header().Set("Etag", GetEtag(file))
+	contentType := header.Get("Content-Type")
+	if len(contentType) > 0 {
+		w.Header().Set("Content-Type", contentType)
+	}
 }
 
 // GetEtag 获取文件的ETag值
@@ -181,19 +129,17 @@ func ProxyRange(ctx context.Context, link *model.Link, size int64) {
 	if link == nil {
 		return
 	}
-
 	// 如果已经有MFile，不需要设置RangeReadCloser
 	if link.MFile != nil {
 		return
 	}
-
 	// 如果RangeReadCloser为nil，尝试从链接创建
-	if link.RangeReadCloser == nil && !strings.HasPrefix(link.URL, GetApiUrl(ctx)+"/") {
-		var rrc, err = stream.GetRangeReadCloserFromLink(size, link)
+	if link.RangeReader == nil && !strings.HasPrefix(link.URL, GetApiUrl(ctx)+"/") {
+		var rrc, err = stream.GetRangeReaderFromLink(size, link)
 		if err != nil {
 			return
 		}
-		link.RangeReadCloser = rrc
+		link.RangeReader = rrc
 	}
 }
 

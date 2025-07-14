@@ -28,7 +28,11 @@ func (d *AliyundriveOpen) _refreshToken() (string, string, error) {
 			AccessToken  string `json:"access_token"`  // 新的访问令牌
 			ErrorMessage string `json:"text"`          // 错误信息
 		}
-
+		// 根据AlipanType选项设置driver_txt
+		driverTxt := "alicloud_qr"
+		if d.AlipanType == "alipanTV" {
+			driverTxt = "alicloud_tv"
+		}
 		// 发送请求到在线API
 		_, err := base.RestyClient.R().
 			SetResult(&resp).
@@ -36,7 +40,7 @@ func (d *AliyundriveOpen) _refreshToken() (string, string, error) {
 			SetQueryParams(map[string]string{
 				"refresh_ui": d.RefreshToken, // 当前的刷新令牌
 				"server_use": "true",         // 服务器端使用标记
-				"driver_txt": "alicloud_qr",  // 驱动类型标记
+				"driver_txt": driverTxt,      // 驱动类型标记
 			}).
 			Get(u)
 		if err != nil {
@@ -329,7 +333,7 @@ func (d *AliyundriveOpen) removeDuplicateFiles(ctx context.Context, parentPath s
 
 	// 删除所有重复文件，保留指定ID的文件
 	for _, file := range duplicates {
-		err := d.Remove(ctx, file)
+		err = d.Remove(ctx, file)
 		if err != nil {
 			return errors.Wrapf(err, "删除重复文件 [%s] 失败", file.GetID())
 		}

@@ -31,11 +31,12 @@ type Addition struct {
 
 // 驱动配置
 var config = driver.Config{
-	Name:        "Local", // 驱动名称
-	OnlyLocal:   true,    // 仅本地操作
-	LocalSort:   true,    // 本地排序
-	NoCache:     true,    // 不使用缓存
-	DefaultRoot: "/",     // 默认根路径
+	Name:          "Local", // 驱动名称
+	LocalSort:     true,    // 本地排序
+	NoCache:       true,    // 不使用缓存
+	DefaultRoot:   "/",     // 默认根路径
+	OnlyLinkMFile: false,
+	NoLinkURL:     true,
 }
 
 // init 初始化函数，注册本地存储驱动

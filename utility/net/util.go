@@ -392,3 +392,5 @@ func GetRangedHttpReader(readCloser io.ReadCloser, offset, length int64) (io.Rea
 		remaining: int(length),
 	}, nil
 }
+
+type RequestHeaderKey struct{}

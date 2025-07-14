@@ -321,7 +321,7 @@ func GetUnwrap(ctx context.Context, storage driver.Driver, path string) (model.O
 var linkCache = cache.NewMemCache(cache.WithShards[*model.Link](16))
 
 // Group to prevent duplicate concurrent link fetches
-var linkG singleflight.Group[*model.Link]
+var linkG = singleflight.Group[*model.Link]{Remember: true}
 
 // Link gets a download link for a file
 // Uses cache when available to avoid repeated requests
@@ -350,6 +350,7 @@ func Link(ctx context.Context, storage driver.Driver, path string, args model.Li
 		return link, file, nil
 	}
 
+	var forget utils.CloseFunc
 	// Function to fetch link
 	fetchLinkFn := func() (*model.Link, error) {
 		link, err := storage.Link(ctx, file, args)
@@ -367,13 +368,27 @@ func Link(ctx context.Context, storage driver.Driver, path string, args model.Li
 	}
 
 	// Skip singleflight for local-only operations
-	if storage.Config().OnlyLocal {
+	if storage.Config().OnlyLinkMFile {
 		link, err := fetchLinkFn()
 		return link, file, err
 	}
 
+	forget = func() error {
+		if forget != nil {
+			forget = nil
+			linkG.Forget(key)
+		}
+		return nil
+	}
+
 	// Use singleflight to prevent duplicate fetches
 	link, err, _ := linkG.Do(key, fetchLinkFn)
+	if err == nil && !link.AcquireReference() {
+		link, err, _ = linkG.Do(key, fetchLinkFn)
+		if err == nil {
+			link.AcquireReference()
+		}
+	}
 	return link, file, err
 }
 
@@ -692,17 +707,17 @@ func Remove(ctx context.Context, storage driver.Driver, path string) error {
 
 // Put uploads a file to the specified directory
 func Put(ctx context.Context, storage driver.Driver, dstDirPath string, file model.FileStreamer, up driver.UpdateProgress, lazyCache ...bool) error {
-	// Check if storage is initialized
-	if storage.Config().CheckStatus && storage.GetStorage().Status != WORK {
-		return errors.Errorf("storage not initialized: %s", storage.GetStorage().Status)
-	}
-
+	closeFunc := file.Close
 	// Ensure file is closed after upload
 	defer func() {
-		if err := file.Close(); err != nil {
+		if err := closeFunc(); err != nil {
 			log.Errorf("failed to close file streamer: %v", err)
 		}
 	}()
+
+	if storage.Config().CheckStatus && storage.GetStorage().Status != WORK {
+		return errors.Errorf("storage not init: %s", storage.GetStorage().Status)
+	}
 
 	// Special handling for UrlTree driver
 	if storage.GetStorage().Driver == "UrlTree" {

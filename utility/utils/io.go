@@ -3,11 +3,12 @@ package utils
 import (
 	"bytes"
 	"context"
+	"errors"
+	"fmt"
 	"io"
 	"sync"
 	"time"
 
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -146,59 +147,116 @@ func Retry(attempts int, sleep time.Duration, f func() error) (err error) {
 			return nil
 		}
 	}
-	return errors.Errorf("after %d attempts, last error: %s", attempts, err)
+	return fmt.Errorf("after %d attempts, last error: %s", attempts, err)
 }
 
 type ClosersIF interface {
 	io.Closer
 	Add(closer io.Closer)
-	TryAdd(reader io.Reader)
-	AddClosers(closers Closers)
-	GetClosers() Closers
+	AddIfCloser(a any)
 }
+type Closers []io.Closer
 
-type Closers struct {
-	closers []io.Closer
+func (c *Closers) Close() error {
+	var errs []error
+	for _, closer := range *c {
+		if closer != nil {
+			errs = append(errs, closer.Close())
+		}
+	}
+	*c = (*c)[:0]
+	return errors.Join(errs...)
 }
-
-func (c *Closers) GetClosers() Closers {
-	return *c
+func (c *Closers) Add(closer io.Closer) {
+	if closer != nil {
+		*c = append(*c, closer)
+	}
+}
+func (c *Closers) AddIfCloser(a any) {
+	if closer, ok := a.(io.Closer); ok {
+		*c = append(*c, closer)
+	}
 }
 
 var _ ClosersIF = (*Closers)(nil)
 
-func (c *Closers) Close() error {
-	var err error
+func NewClosers(c ...io.Closer) Closers {
+	return Closers(c)
+}
+
+type SyncClosersIF interface {
+	ClosersIF
+	AcquireReference() bool
+}
+
+type SyncClosers struct {
+	closers []io.Closer
+	mu      sync.Mutex
+	ref     int
+}
+
+var _ SyncClosersIF = (*SyncClosers)(nil)
+
+func (c *SyncClosers) AcquireReference() bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if len(c.closers) == 0 {
+		return false
+	}
+	c.ref++
+	log.Debugf("SyncClosers.AcquireReference %p,ref=%d\n", c, c.ref)
+	return true
+}
+
+func (c *SyncClosers) Close() error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	defer log.Debugf("SyncClosers.Close %p,ref=%d\n", c, c.ref)
+	if c.ref > 1 {
+		c.ref--
+		return nil
+	}
+	c.ref = 0
+
+	var errs []error
 	for _, closer := range c.closers {
 		if closer != nil {
-			err = errors.WithStack(closer.Close())
+			errs = append(errs, closer.Close())
 		}
 	}
-	return errors.Wrap(err, "failed to close")
+	c.closers = c.closers[:0]
+	return errors.Join(errs...)
 }
 
-func (c *Closers) Add(closer io.Closer) {
+func (c *SyncClosers) Add(closer io.Closer) {
 	if closer != nil {
+		c.mu.Lock()
 		c.closers = append(c.closers, closer)
-	}
-
-}
-func (c *Closers) AddClosers(closers Closers) {
-	c.closers = append(c.closers, closers.closers...)
-}
-
-func (c *Closers) TryAdd(reader io.Reader) {
-	if closer, ok := reader.(io.Closer); ok {
-		c.closers = append(c.closers, closer)
+		c.mu.Unlock()
 	}
 }
 
-func NewClosers(c ...io.Closer) Closers {
-	return Closers{c}
+func (c *SyncClosers) AddIfCloser(a any) {
+	if closer, ok := a.(io.Closer); ok {
+		c.mu.Lock()
+		c.closers = append(c.closers, closer)
+		c.mu.Unlock()
+	}
+}
+
+func NewSyncClosers(c ...io.Closer) SyncClosers {
+	return SyncClosers{closers: c}
+}
+
+type Ordered interface {
+	~int | ~int8 | ~int16 | ~int32 | ~int64 |
+		~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~uintptr |
+		~float32 | ~float64 |
+		~string
 }
 
 var IoBuffPool = &sync.Pool{
-	New: func() any {
+	New: func() interface{} {
 		return make([]byte, 32*1024*2) // Two times of size in io package
 	},
 }

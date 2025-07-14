@@ -29,6 +29,9 @@ type Addition struct {
 	// UseOnlineAPI 是否使用在线API刷新令牌
 	// 启用后将使用外部API服务刷新令牌，无需提供ClientID和ClientSecret
 	UseOnlineAPI bool `json:"use_online_api" default:"true"`
+	// AlipanType 阿里云盘类型
+	// - default: 默认
+	AlipanType string `json:"alipan_type" required:"true" type:"select" default:"default" options:"default,alipanTV"`
 	// APIAddress API地址，用于刷新令牌
 	// 仅当UseOnlineAPI为true时有效
 	APIAddress string `json:"api_url_address" default:"https://api.oplist.org/alicloud/renewapi"`
@@ -60,12 +63,6 @@ type Addition struct {
 // 驱动配置
 var config = driver.Config{
 	Name:              "AliyundriveOpen", // 驱动名称
-	LocalSort:         false,             // 是否使用本地排序（否：使用API排序）
-	OnlyLocal:         false,             // 是否只使用本地操作（否：可使用远程API操作）
-	OnlyProxy:         false,             // 是否只使用代理（否：可直接连接）
-	NoCache:           false,             // 是否禁用缓存（否：启用缓存）
-	NoUpload:          false,             // 是否禁用上传（否：允许上传）
-	NeedMs:            false,             // 是否需要毫秒级时间（否：秒级时间足够）
 	DefaultRoot:       "root",            // 默认根目录ID
 	NoOverwriteUpload: true,              // 是否禁止覆盖上传（是：禁止覆盖）
 }

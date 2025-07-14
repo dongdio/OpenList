@@ -1,8 +1,6 @@
 name: build
 
 on:
-  push:
-    branches: [ 'main' ]
   pull_request:
     branches: [ 'main' ]
   workflow_dispatch:
@@ -15,7 +13,6 @@ jobs:
   build:
     strategy:
       matrix:
-        platform: [ ubuntu-latest ]
         target:
           - darwin-amd64
           - darwin-arm64
@@ -25,7 +22,7 @@ jobs:
           - windows-arm64
     #          - android-arm64
     name: Build ${{ matrix.target }}
-    runs-on: ${{ matrix.platform }}
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4

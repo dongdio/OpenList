@@ -6,7 +6,6 @@ import (
 	"image/png"
 	"time"
 
-	"github.com/OpenListTeam/go-cache"
 	"github.com/gin-gonic/gin"
 	"github.com/pquerna/otp/totp"
 
@@ -25,9 +24,6 @@ const (
 	// QR 码尺寸
 	qrCodeSize = 400
 )
-
-// 用于跟踪 IP 登录尝试次数的缓存
-var loginAttemptsCache = cache.NewMemCache[int]()
 
 // LoginRequest 登录请求参数
 type LoginRequest struct {
@@ -65,10 +61,10 @@ func LoginHash(c *gin.Context) {
 func processLogin(c *gin.Context, req *LoginRequest) {
 	// 检查速率限制
 	ip := c.ClientIP()
-	attempts, ok := loginAttemptsCache.Get(ip)
+	attempts, ok := model.LoginCache.Get(ip)
 	if ok && attempts >= defaultMaxLoginAttempts {
 		common.ErrorStrResp(c, "Too many unsuccessful sign-in attempts have been made using an incorrect username or password. Try again later.", 429)
-		loginAttemptsCache.Expire(ip, defaultLoginCacheDuration)
+		model.LoginCache.Expire(ip, defaultLoginCacheDuration)
 		return
 	}
 
@@ -80,7 +76,7 @@ func processLogin(c *gin.Context, req *LoginRequest) {
 		return
 	}
 
-	if err := user.ValidatePwdStaticHash(req.Password); err != nil {
+	if err = user.ValidatePwdStaticHash(req.Password); err != nil {
 		common.ErrorResp(c, err, 400)
 		incrementLoginAttempts(ip)
 		return
@@ -109,17 +105,17 @@ func processLogin(c *gin.Context, req *LoginRequest) {
 	}
 
 	// 登录成功 - 清除速率限制计数器
-	loginAttemptsCache.Del(ip)
+	model.LoginCache.Del(ip)
 	common.SuccessResp(c, gin.H{"token": token})
 }
 
 // incrementLoginAttempts 增加 IP 的失败登录尝试次数
 func incrementLoginAttempts(ip string) {
-	count, ok := loginAttemptsCache.Get(ip)
+	count, ok := model.LoginCache.Get(ip)
 	if !ok {
 		count = 0
 	}
-	loginAttemptsCache.Set(ip, count+1)
+	model.LoginCache.Set(ip, count+1)
 }
 
 // UserResponse 扩展 User 模型，用于 API 响应

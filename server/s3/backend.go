@@ -1,21 +1,21 @@
-package s3
-
 // Credits: https://pkg.go.dev/github.com/rclone/rclone@v1.65.2/cmd/serve/s3
-// Package s3 implements a fake s3 server for alist
+// Package s3 implements a fake s3 server for openlist
+package s3
 
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
 	"io"
-	"maps"
 	"path"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/itsHenry35/gofakes3"
 	"github.com/ncw/swift/v2"
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/dongdio/OpenList/v4/internal/fs"
@@ -28,44 +28,42 @@ import (
 )
 
 var (
-	// emptyPrefix represents an empty S3 prefix
 	emptyPrefix = &gofakes3.Prefix{}
-	// timeFormat defines the time format used in S3 responses
-	timeFormat = "Mon, 2 Jan 2006 15:04:05 GMT"
+	timeFormat  = "Mon, 2 Jan 2006 15:04:05 GMT"
 )
 
-// s3Backend implements the gofakes3.Backend interface to provide
-// an S3 compatible backend for OpenList
+// s3Backend implements the gofacess3.Backend interface to make an S3
+// backend for gofakes3
 type s3Backend struct {
-	meta *sync.Map // Stores object metadata
+	meta *sync.Map
 }
 
-// newBackend creates a new S3 backend instance
+// newBackend creates a new SimpleBucketBackend.
 func newBackend() gofakes3.Backend {
 	return &s3Backend{
 		meta: new(sync.Map),
 	}
 }
 
-// ListBuckets returns all configured buckets
+// ListBuckets always returns the default bucket.
 func (b *s3Backend) ListBuckets(ctx context.Context) ([]gofakes3.BucketInfo, error) {
 	buckets, err := getAndParseBuckets()
 	if err != nil {
 		return nil, err
 	}
-
 	var response []gofakes3.BucketInfo
-	for _, bucket := range buckets {
-		node, _ := fs.Get(ctx, bucket.Path, &fs.GetArgs{})
+	for _, b := range buckets {
+		node, _ := fs.Get(ctx, b.Path, &fs.GetArgs{})
 		response = append(response, gofakes3.BucketInfo{
-			Name:         bucket.Name,
+			// Name:         gofakes3.URLEncode(b.Name),
+			Name:         b.Name,
 			CreationDate: gofakes3.NewContentTime(node.ModTime()),
 		})
 	}
 	return response, nil
 }
 
-// ListBucket lists objects in the specified bucket with optional prefix and pagination
+// ListBucket lists the objects in the given bucket.
 func (b *s3Backend) ListBucket(ctx context.Context, bucketName string, prefix *gofakes3.Prefix, page gofakes3.ListBucketPage) (*gofakes3.ObjectList, error) {
 	bucket, err := getBucketByName(bucketName)
 	if err != nil {
@@ -73,12 +71,11 @@ func (b *s3Backend) ListBucket(ctx context.Context, bucketName string, prefix *g
 	}
 	bucketPath := bucket.Path
 
-	// Use empty prefix if none provided
 	if prefix == nil {
 		prefix = emptyPrefix
 	}
 
-	// Handle empty prefix and delimiter cases
+	// workaround
 	if strings.TrimSpace(prefix.Prefix) == "" {
 		prefix.HasPrefix = false
 	}
@@ -87,187 +84,145 @@ func (b *s3Backend) ListBucket(ctx context.Context, bucketName string, prefix *g
 	}
 
 	response := gofakes3.NewObjectList()
-	pathTmp, remaining := prefixParser(prefix)
+	path, remaining := prefixParser(prefix)
 
-	// List entries recursively
-	err = b.entryListR(bucketPath, pathTmp, remaining, prefix.HasDelimiter, response)
-	if errors.Is(err, gofakes3.ErrNoSuchKey) {
-		// AWS returns an empty list for non-existent paths
+	err = b.entryListR(bucketPath, path, remaining, prefix.HasDelimiter, response)
+	if err == gofakes3.ErrNoSuchKey {
+		// AWS just returns an empty list
 		response = gofakes3.NewObjectList()
 	} else if err != nil {
 		return nil, err
 	}
 
-	// Apply pagination
 	return b.pager(response, page)
 }
 
-// HeadObject returns metadata for the specified object without retrieving its contents
+// HeadObject returns the fileinfo for the given object name.
+//
+// Note that the metadata is not supported yet.
 func (b *s3Backend) HeadObject(ctx context.Context, bucketName, objectName string) (*gofakes3.Object, error) {
 	bucket, err := getBucketByName(bucketName)
 	if err != nil {
 		return nil, err
 	}
+	bucketPath := bucket.Path
 
-	// Construct full path to the object
-	objectPath := path.Join(bucket.Path, objectName)
-
-	// Get file metadata and information
-	fileMeta, _ := op.GetNearestMeta(objectPath)
-	node, err := fs.Get(context.WithValue(ctx, "meta", fileMeta), objectPath, &fs.GetArgs{})
+	fp := path.Join(bucketPath, objectName)
+	fmeta, _ := op.GetNearestMeta(fp)
+	node, err := fs.Get(context.WithValue(ctx, "meta", fmeta), fp, &fs.GetArgs{})
 	if err != nil {
 		return nil, gofakes3.KeyNotFound(objectName)
 	}
 
-	// Directories are not valid S3 objects
 	if node.IsDir() {
 		return nil, gofakes3.KeyNotFound(objectName)
 	}
 
-	// Prepare metadata
 	size := node.GetSize()
+	// hash := getFileHashByte(fobj)
+
 	meta := map[string]string{
 		"Last-Modified": node.ModTime().Format(timeFormat),
-		"Content-Type":  utils.GetMimeType(objectPath),
+		"Content-Type":  utils.GetMimeType(fp),
 	}
 
-	// Add custom metadata if available
-	if val, ok := b.meta.Load(objectPath); ok {
+	if val, ok := b.meta.Load(fp); ok {
 		metaMap := val.(map[string]string)
-		maps.Copy(meta, metaMap)
+		for k, v := range metaMap {
+			meta[k] = v
+		}
 	}
 
 	return &gofakes3.Object{
-		Name:     objectName,
+		Name: objectName,
+		// Hash:     hash,
 		Metadata: meta,
 		Size:     size,
 		Contents: noOpReadCloser{},
 	}, nil
 }
 
-// GetObject retrieves an object from the filesystem
-func (b *s3Backend) GetObject(ctx context.Context, bucketName, objectName string, rangeRequest *gofakes3.ObjectRangeRequest) (obj *gofakes3.Object, err error) {
+// GetObject fetchs the object from the filesystem.
+func (b *s3Backend) GetObject(ctx context.Context, bucketName, objectName string, rangeRequest *gofakes3.ObjectRangeRequest) (s3Obj *gofakes3.Object, err error) {
 	bucket, err := getBucketByName(bucketName)
 	if err != nil {
 		return nil, err
 	}
+	bucketPath := bucket.Path
 
-	// Construct full path to the object
-	objectPath := path.Join(bucket.Path, objectName)
-
-	// Get file metadata and information
-	fileMeta, _ := op.GetNearestMeta(objectPath)
-	ctxWithMeta := context.WithValue(ctx, "meta", fileMeta)
-	node, err := fs.Get(ctxWithMeta, objectPath, &fs.GetArgs{})
+	fp := path.Join(bucketPath, objectName)
+	fmeta, _ := op.GetNearestMeta(fp)
+	node, err := fs.Get(context.WithValue(ctx, "meta", fmeta), fp, &fs.GetArgs{})
 	if err != nil {
 		return nil, gofakes3.KeyNotFound(objectName)
 	}
 
-	// Directories are not valid S3 objects
 	if node.IsDir() {
 		return nil, gofakes3.KeyNotFound(objectName)
 	}
 
-	// Get file link for reading
-	link, file, err := fs.Link(ctx, objectPath, model.LinkArgs{})
+	link, file, err := fs.Link(ctx, fp, model.LinkArgs{})
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		if s3Obj == nil {
+			_ = link.Close()
+		}
+	}()
+
+	size := file.GetSize()
+	rnge, err := rangeRequest.Range(size)
 	if err != nil {
 		return nil, err
 	}
 
-	// Process range request if present
-	size := file.GetSize()
-	var fileRange *gofakes3.ObjectRange
-	if rangeRequest != nil {
-		fileRange, err = rangeRequest.Range(size)
-		if err != nil {
-			return nil, err
-		}
+	rrf, err := stream.GetRangeReaderFromLink(size, link)
+	if err != nil {
+		return nil, fmt.Errorf("the remote storage driver need to be enhanced to support s3")
 	}
 
-	// Ensure the storage driver supports required functionality
-	if link.RangeReadCloser == nil && link.MFile == nil && len(link.URL) == 0 {
-		return nil, errors.New("the remote storage driver need to be enhanced to support s3")
-	}
-
-	// Set up the reader based on available options
-	var reader io.ReadCloser
-	startOffset := int64(0)
-	length := int64(-1)
-
-	if fileRange != nil {
-		startOffset, length = fileRange.Start, fileRange.Length
-	}
-
-	if link.MFile != nil {
-		// Use memory-mapped file if available
-		_, err = link.MFile.Seek(startOffset, io.SeekStart)
-		if err != nil {
-			return nil, err
-		}
-		if rdr2, ok := link.MFile.(io.ReadCloser); ok {
-			reader = rdr2
-		} else {
-			reader = io.NopCloser(link.MFile)
-		}
+	var rd io.Reader
+	if rnge != nil {
+		rd, err = rrf.RangeRead(ctx, http_range.Range(*rnge))
 	} else {
-		// Use range reader for remote files
-		// Adjust length if it would exceed file size
-		remoteFileSize := file.GetSize()
-		if length >= 0 && startOffset+length >= remoteFileSize {
-			length = -1
-		}
-
-		rangeReadCloser := link.RangeReadCloser
-
-		// Convert URL to range reader if needed
-		if len(link.URL) > 0 {
-			converted, err := stream.GetRangeReadCloserFromLink(remoteFileSize, link)
-			if err != nil {
-				return nil, err
-			}
-			rangeReadCloser = converted
-		}
-
-		if rangeReadCloser != nil {
-			remoteReader, err := rangeReadCloser.RangeRead(ctx, http_range.Range{Start: startOffset, Length: length})
-			if err != nil {
-				return nil, err
-			}
-			reader = utils.ReadCloser{Reader: remoteReader, Closer: rangeReadCloser}
-		} else {
-			return nil, errs.NotSupport
-		}
+		rd, err = rrf.RangeRead(ctx, http_range.Range{Length: -1})
+	}
+	if err != nil {
+		return nil, err
 	}
 
-	// Prepare metadata
 	meta := map[string]string{
-		"Last-Modified": node.ModTime().Format(timeFormat),
-		"Content-Type":  utils.GetMimeType(objectPath),
+		"Last-Modified":       node.ModTime().Format(timeFormat),
+		"Content-Disposition": utils.GenerateContentDisposition(file.GetName()),
+		"Content-Type":        utils.GetMimeType(fp),
 	}
 
-	// Add custom metadata if available
-	if val, ok := b.meta.Load(objectPath); ok {
+	if val, ok := b.meta.Load(fp); ok {
 		metaMap := val.(map[string]string)
-		maps.Copy(meta, metaMap)
+		for k, v := range metaMap {
+			meta[k] = v
+		}
 	}
 
 	return &gofakes3.Object{
-		Name:     objectName,
+		// Name: gofakes3.URLEncode(objectName),
+		Name: objectName,
+		// Hash:     "",
 		Metadata: meta,
 		Size:     size,
-		Range:    fileRange,
-		Contents: reader,
+		Range:    rnge,
+		Contents: utils.ReadCloser{Reader: rd, Closer: link},
 	}, nil
 }
 
-// TouchObject creates or updates metadata on specified object
-// Currently not implemented
-func (b *s3Backend) TouchObject(ctx context.Context, objectPath string, meta map[string]string) (result gofakes3.PutObjectResult, err error) {
+// TouchObject creates or updates meta on specified object.
+func (b *s3Backend) TouchObject(ctx context.Context, fp string, meta map[string]string) (result gofakes3.PutObjectResult, err error) {
 	// TODO: implement
 	return result, gofakes3.ErrNotImplemented
 }
 
-// PutObject creates or overwrites an object
+// PutObject creates or overwrites the object with the given name.
 func (b *s3Backend) PutObject(
 	ctx context.Context, bucketName, objectName string,
 	meta map[string]string,
@@ -277,223 +232,189 @@ func (b *s3Backend) PutObject(
 	if err != nil {
 		return result, err
 	}
+	bucketPath := bucket.Path
 
-	// Check if this is a directory object (ends with '/')
 	isDir := strings.HasSuffix(objectName, "/")
 	log.Debugf("isDir: %v", isDir)
 
-	// Construct full path to the object
-	objectPath := path.Join(bucket.Path, objectName)
-	log.Debugf("objectPath: %s, bucketPath: %s, objectName: %s", objectPath, bucket.Path, objectName)
+	fp := path.Join(bucketPath, objectName)
+	log.Debugf("fp: %s, bucketPath: %s, objectName: %s", fp, bucketPath, objectName)
 
-	// Determine the target path for the operation
-	var targetPath string
+	var reqPath string
 	if isDir {
-		targetPath = objectPath + "/"
+		reqPath = fp + "/"
 	} else {
-		targetPath = path.Dir(objectPath)
+		reqPath = path.Dir(fp)
 	}
-	log.Debugf("targetPath: %s", targetPath)
+	log.Debugf("reqPath: %s", reqPath)
+	fmeta, _ := op.GetNearestMeta(fp)
+	ctx = context.WithValue(ctx, "meta", fmeta)
 
-	// Get metadata and prepare context
-	fileMeta, _ := op.GetNearestMeta(objectPath)
-	ctxWithMeta := context.WithValue(ctx, "meta", fileMeta)
-
-	// Check if the target path exists
-	_, err = fs.Get(ctxWithMeta, targetPath, &fs.GetArgs{})
+	_, err = fs.Get(ctx, reqPath, &fs.GetArgs{})
 	if err != nil {
 		if errs.IsObjectNotFound(err) && strings.Contains(objectName, "/") {
-			// Create parent directories if needed
-			log.Debugf("targetPath: %s not found and objectName contains /, need to makeDir", targetPath)
-			err = fs.MakeDir(ctxWithMeta, targetPath, true)
+			log.Debugf("reqPath: %s not found and objectName contains /, need to makeDir", reqPath)
+			err = fs.MakeDir(ctx, reqPath, true)
 			if err != nil {
-				return result, errors.WithMessagef(err, "failed to makeDir, targetPath: %s", targetPath)
+				return result, errors.WithMessagef(err, "failed to makeDir, reqPath: %s", reqPath)
 			}
 		} else {
 			return result, gofakes3.KeyNotFound(objectName)
 		}
 	}
 
-	// For directory objects, just ensure the directory exists
 	if isDir {
 		return result, nil
 	}
 
-	// Extract modification time from metadata if available
-	var modTime time.Time
+	var ti time.Time
+
 	if val, ok := meta["X-Amz-Meta-Mtime"]; ok {
-		modTime, _ = swift.FloatStringToTime(val)
-	} else if val, ok = meta["mtime"]; ok {
-		modTime, _ = swift.FloatStringToTime(val)
+		ti, _ = swift.FloatStringToTime(val)
 	}
 
-	// Prepare object for upload
+	if val, ok := meta["mtime"]; ok {
+		ti, _ = swift.FloatStringToTime(val)
+	}
+
 	obj := model.Object{
-		Name:     path.Base(objectPath),
+		Name:     path.Base(fp),
 		Size:     size,
-		Modified: modTime,
+		Modified: ti,
 		Ctime:    time.Now(),
 	}
-
-	// Set up stream parameters
-	streamParam := &stream.FileStream{
+	stream := &stream.FileStream{
 		Obj:      &obj,
 		Reader:   input,
 		Mimetype: meta["Content-Type"],
 	}
 
-	// Upload the file
-	err = fs.PutDirectly(ctxWithMeta, targetPath, streamParam)
+	err = fs.PutDirectly(ctx, reqPath, stream)
 	if err != nil {
 		return result, err
 	}
 
-	// Close the stream and handle any errors
-	if err = streamParam.Close(); err != nil {
-		// Remove file if close operation failed
-		_ = fs.Remove(ctxWithMeta, objectPath)
-		return result, err
-	}
+	// if err := stream.Close(); err != nil {
+	// 	// remove file when close error occurred (FsPutErr)
+	// 	_ = fs.Remove(ctx, fp)
+	// 	return result, err
+	// }
 
-	// Store metadata for future reference
-	b.meta.Store(objectPath, meta)
+	b.meta.Store(fp, meta)
 
 	return result, nil
 }
 
-// DeleteMulti deletes multiple objects in a single request
+// DeleteMulti deletes multiple objects in a single request.
 func (b *s3Backend) DeleteMulti(ctx context.Context, bucketName string, objects ...string) (result gofakes3.MultiDeleteResult, rerr error) {
-	for _, objectName := range objects {
-		err := b.deleteObject(ctx, bucketName, objectName)
-		if err == nil {
-			result.Deleted = append(result.Deleted, gofakes3.ObjectID{
-				Key: objectName,
+	for _, object := range objects {
+		if err := b.deleteObject(ctx, bucketName, object); err != nil {
+			log.Errorf("delete object failed: %v", err)
+			result.Error = append(result.Error, gofakes3.ErrorResult{
+				Code:    gofakes3.ErrInternal,
+				Message: gofakes3.ErrInternal.Message(),
+				Key:     object,
 			})
-			continue
+		} else {
+			result.Deleted = append(result.Deleted, gofakes3.ObjectID{
+				Key: object,
+			})
 		}
-		log.Errorf("serve s3, delete object failed: %v", err)
-		result.Error = append(result.Error, gofakes3.ErrorResult{
-			Code:    gofakes3.ErrInternal,
-			Message: gofakes3.ErrInternal.Message(),
-			Key:     objectName,
-		})
 	}
 
 	return result, nil
 }
 
-// DeleteObject deletes a single object
+// DeleteObject deletes the object with the given name.
 func (b *s3Backend) DeleteObject(ctx context.Context, bucketName, objectName string) (result gofakes3.ObjectDeleteResult, rerr error) {
 	return result, b.deleteObject(ctx, bucketName, objectName)
 }
 
-// deleteObject is a helper method to delete an object from the filesystem
+// deleteObject deletes the object from the filesystem.
 func (b *s3Backend) deleteObject(ctx context.Context, bucketName, objectName string) error {
 	bucket, err := getBucketByName(bucketName)
 	if err != nil {
 		return err
 	}
+	bucketPath := bucket.Path
 
-	// Construct full path to the object
-	objectPath := path.Join(bucket.Path, objectName)
-
-	// Get metadata and prepare context
-	fileMeta, _ := op.GetNearestMeta(objectPath)
-	ctxWithMeta := context.WithValue(ctx, "meta", fileMeta)
-
-	// S3 does not report an error when attempting to delete a key that does not exist
-	// So we need to skip IsNotExist errors
-	if _, err = fs.Get(ctxWithMeta, objectPath, &fs.GetArgs{}); err != nil && !errs.IsObjectNotFound(err) {
+	fp := path.Join(bucketPath, objectName)
+	fmeta, _ := op.GetNearestMeta(fp)
+	// S3 does not report an error when attemping to delete a key that does not exist, so
+	// we need to skip IsNotExist errors.
+	if _, err := fs.Get(context.WithValue(ctx, "meta", fmeta), fp, &fs.GetArgs{}); err != nil && !errs.IsObjectNotFound(err) {
 		return err
 	}
 
-	// Remove the object
-	return fs.Remove(ctx, objectPath)
+	fs.Remove(ctx, fp)
+	return nil
 }
 
-// CreateBucket creates a new bucket (not implemented)
+// CreateBucket creates a new bucket.
 func (b *s3Backend) CreateBucket(ctx context.Context, name string) error {
 	return gofakes3.ErrNotImplemented
 }
 
-// DeleteBucket deletes a bucket (not implemented)
+// DeleteBucket deletes the bucket with the given name.
 func (b *s3Backend) DeleteBucket(ctx context.Context, name string) error {
 	return gofakes3.ErrNotImplemented
 }
 
-// BucketExists checks if the specified bucket exists
+// BucketExists checks if the bucket exists.
 func (b *s3Backend) BucketExists(ctx context.Context, name string) (exists bool, err error) {
 	buckets, err := getAndParseBuckets()
 	if err != nil {
 		return false, err
 	}
-
-	for _, bucket := range buckets {
-		if bucket.Name == name {
+	for _, b := range buckets {
+		if b.Name == name {
 			return true, nil
 		}
 	}
-
 	return false, nil
 }
 
-// CopyObject copies an object from source to destination
+// CopyObject copy specified object from srcKey to dstKey.
 func (b *s3Backend) CopyObject(ctx context.Context, srcBucket, srcKey, dstBucket, dstKey string, meta map[string]string) (result gofakes3.CopyObjectResult, err error) {
-	// If source and destination are the same, just update metadata (not implemented yet)
 	if srcBucket == dstBucket && srcKey == dstKey {
-		// TODO: update metadata
+		// TODO: update meta
 		return result, nil
 	}
 
-	// Get source bucket
-	srcBucketObj, err := getBucketByName(srcBucket)
+	srcB, err := getBucketByName(srcBucket)
 	if err != nil {
 		return result, err
 	}
+	srcBucketPath := srcB.Path
 
-	// Construct full path to the source object
-	srcPath := path.Join(srcBucketObj.Path, srcKey)
+	srcFp := path.Join(srcBucketPath, srcKey)
+	fmeta, _ := op.GetNearestMeta(srcFp)
+	srcNode, err := fs.Get(context.WithValue(ctx, "meta", fmeta), srcFp, &fs.GetArgs{})
 
-	// Get metadata and prepare context
-	fileMeta, _ := op.GetNearestMeta(srcPath)
-	ctxWithMeta := context.WithValue(ctx, "meta", fileMeta)
-
-	// Get source object info
-	srcNode, err := fs.Get(ctxWithMeta, srcPath, &fs.GetArgs{})
+	c, err := b.GetObject(ctx, srcBucket, srcKey, nil)
 	if err != nil {
-		return result, err
-	}
-
-	// Get the object content
-	sourceObj, err := b.GetObject(ctx, srcBucket, srcKey, nil)
-	if err != nil {
-		return result, err
+		return
 	}
 	defer func() {
-		_ = sourceObj.Contents.Close()
+		_ = c.Contents.Close()
 	}()
 
-	// Merge metadata from source and destination
-	for k, v := range sourceObj.Metadata {
+	for k, v := range c.Metadata {
 		if _, found := meta[k]; !found && k != "X-Amz-Acl" {
 			meta[k] = v
 		}
 	}
-
-	// Set modification time if not provided
 	if _, ok := meta["mtime"]; !ok {
 		meta["mtime"] = swift.TimeToFloatString(srcNode.ModTime())
 	}
 
-	// Put the object at the destination
-	_, err = b.PutObject(ctx, dstBucket, dstKey, meta, sourceObj.Contents, sourceObj.Size)
+	_, err = b.PutObject(ctx, dstBucket, dstKey, meta, c.Contents, c.Size)
 	if err != nil {
-		return result, err
+		return
 	}
 
-	// Return success result
 	return gofakes3.CopyObjectResult{
-		ETag:         `"` + hex.EncodeToString(sourceObj.Hash) + `"`,
+		ETag:         `"` + hex.EncodeToString(c.Hash) + `"`,
 		LastModified: gofakes3.NewContentTime(srcNode.ModTime()),
 	}, nil
 }

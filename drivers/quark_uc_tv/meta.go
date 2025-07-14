@@ -30,7 +30,6 @@ func init() {
 		return &QuarkUCTV{
 			config: driver.Config{
 				Name:              "QuarkTV",
-				OnlyLocal:         false,
 				DefaultRoot:       "0",
 				NoOverwriteUpload: true,
 				NoUpload:          true,
@@ -49,7 +48,7 @@ func init() {
 		return &QuarkUCTV{
 			config: driver.Config{
 				Name:              "UCTV",
-				OnlyLocal:         false,
+				OnlyProxy:         false,
 				DefaultRoot:       "0",
 				NoOverwriteUpload: true,
 				NoUpload:          true,

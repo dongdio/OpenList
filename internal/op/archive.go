@@ -39,14 +39,6 @@ func GetArchiveMeta(ctx context.Context, storage driver.Driver, path string, arg
 	path = utils.FixAndCleanPath(path)
 	key := Key(storage, path)
 
-	// Return cached metadata if available and refresh not requested
-	if !args.Refresh {
-		if meta, ok := archiveMetaCache.Get(key); ok {
-			log.Debugf("using cached archive metadata for %s", path)
-			return meta, nil
-		}
-	}
-
 	// Function to retrieve metadata
 	fetchMetaFn := func() (*model.ArchiveMetaProvider, error) {
 		_, metaProvider, err := getArchiveMeta(ctx, storage, path, args)
@@ -63,8 +55,15 @@ func GetArchiveMeta(ctx context.Context, storage driver.Driver, path string, arg
 	}
 
 	// Skip singleflight for local-only operations
-	if storage.Config().OnlyLocal {
+	if storage.Config().OnlyLinkMFile {
 		return fetchMetaFn()
+	}
+
+	if !args.Refresh {
+		if meta, ok := archiveMetaCache.Get(key); ok {
+			log.Debugf("use cache when get %s archive meta", path)
+			return meta, nil
+		}
 	}
 
 	// Use singleflight to prevent duplicate fetches
@@ -84,8 +83,7 @@ func GetArchiveToolAndStream(ctx context.Context, storage driver.Driver, path st
 	// Extract file extension
 	baseName, ext, found := strings.Cut(obj.GetName(), ".")
 	if !found {
-		// Clean up resources if no extension found
-		closeResources(link)
+		_ = link.Close()
 		return nil, nil, nil, errors.New("failed to get archive tool: file has no extension")
 	}
 
@@ -96,17 +94,14 @@ func GetArchiveToolAndStream(ctx context.Context, storage driver.Driver, path st
 		var fallbackErr error
 		partExt, archiveTool, fallbackErr = tool2.GetArchiveTool(stdpath.Ext(obj.GetName()))
 		if fallbackErr != nil {
-			// Clean up resources on failure
-			closeResources(link)
+			_ = link.Close()
 			return nil, nil, nil, errors.WithMessagef(errors.WithStack(fallbackErr), "failed to get archive tool for extension: %s", ext)
 		}
 	}
 
-	// Create seekable stream from file
-	fileStream, err := stream.NewSeekableStream(stream.FileStream{Ctx: ctx, Obj: obj}, link)
+	fileStream, err := stream.NewSeekableStream(&stream.FileStream{Ctx: ctx, Obj: obj}, link)
 	if err != nil {
-		// Clean up resources on failure
-		closeResources(link)
+		_ = link.Close()
 		return nil, nil, nil, errors.WithMessagef(err, "failed to create stream for %s", path)
 	}
 
@@ -119,16 +114,6 @@ func GetArchiveToolAndStream(ctx context.Context, storage driver.Driver, path st
 	}
 
 	return obj, archiveTool, streams, nil
-}
-
-// closeResources closes any open resources in a link
-func closeResources(link *model.Link) {
-	if clr, ok := link.MFile.(io.Closer); ok {
-		_ = clr.Close()
-	}
-	if link.RangeReadCloser != nil {
-		_ = link.RangeReadCloser.Close()
-	}
 }
 
 // appendPartStreams loads additional parts of a multi-part archive
@@ -146,11 +131,9 @@ func appendPartStreams(ctx context.Context, storage driver.Driver, path string, 
 		if err != nil {
 			break // No more parts found
 		}
-
-		partStream, err := stream.NewSeekableStream(stream.FileStream{Ctx: ctx, Obj: partObj}, link)
+		partStream, err := stream.NewSeekableStream(&stream.FileStream{Ctx: ctx, Obj: partObj}, link)
 		if err != nil {
-			// Clean up on error
-			closeResources(link)
+			_ = link.Close()
 			closeAllStreams(streams)
 			return nil
 		}
@@ -509,15 +492,15 @@ func ArchiveGet(ctx context.Context, storage driver.Driver, path string, args mo
 
 // extractLink holds a link and object together for caching
 type extractLink struct {
-	Link *model.Link
-	Obj  model.Obj
+	*model.Link
+	Obj model.Obj
 }
 
 // Cache for extracted file links
 var extractCache = cache.NewMemCache(cache.WithShards[*extractLink](16))
 
 // Group to prevent duplicate concurrent extractions
-var extractG singleflight.Group[*extractLink]
+var extractG = singleflight.Group[*extractLink]{Remember: true}
 
 // DriverExtract extracts a file from an archive using the driver's capabilities
 func DriverExtract(ctx context.Context, storage driver.Driver, path string, args model.ArchiveInnerArgs) (*model.Link, model.Obj, error) {
@@ -532,10 +515,9 @@ func DriverExtract(ctx context.Context, storage driver.Driver, path string, args
 	// Check cache
 	if link, ok := extractCache.Get(key); ok {
 		return link.Link, link.Obj, nil
-	} else if link, ok = extractCache.Get(key + ":" + args.IP); ok {
-		return link.Link, link.Obj, nil
 	}
 
+	var forget utils.CloseFunc
 	// Function to perform extraction
 	extractFn := func() (*extractLink, error) {
 		link, err := driverExtract(ctx, storage, path, args)
@@ -547,21 +529,34 @@ func DriverExtract(ctx context.Context, storage driver.Driver, path string, args
 		if link.Link.Expiration != nil {
 			extractCache.Set(key, link, cache.WithEx[*extractLink](*link.Link.Expiration))
 		}
-
+		link.Add(forget)
 		return link, nil
 	}
 
 	// Skip singleflight for local-only operations
-	if storage.Config().OnlyLocal {
+	if storage.Config().OnlyLinkMFile {
 		link, err := extractFn()
 		if err != nil {
 			return nil, nil, err
 		}
 		return link.Link, link.Obj, nil
 	}
+	forget = func() error {
+		if forget != nil {
+			forget = nil
+			linkG.Forget(key)
+		}
+		return nil
+	}
 
 	// Use singleflight to prevent duplicate extractions
 	link, err, _ := extractG.Do(key, extractFn)
+	if err == nil && !link.AcquireReference() {
+		link, err, _ = extractG.Do(key, extractFn)
+		if err == nil {
+			link.AcquireReference()
+		}
+	}
 	if err != nil {
 		return nil, nil, err
 	}

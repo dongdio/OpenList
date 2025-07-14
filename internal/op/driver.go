@@ -129,7 +129,15 @@ func getMainItems(config driver.Config) []driver.Item {
 	}
 
 	// Add proxy options if the driver supports it
-	if !config.OnlyProxy && !config.OnlyLocal {
+	if config.MustProxy() {
+		items = append(items, driver.Item{
+			Name:     "webdav_policy",
+			Type:     consts.TypeSelect,
+			Default:  "native_proxy",
+			Options:  "use_proxy_url,native_proxy",
+			Required: true,
+		})
+	} else {
 		items = append(items, []driver.Item{
 			{
 				Name: "web_proxy",
@@ -158,16 +166,6 @@ func getMainItems(config driver.Config) []driver.Item {
 			}
 			items = append(items, item)
 		}
-	} else {
-		// For proxy-only or local-only drivers
-		items = append(items, driver.Item{
-			Name:     "webdav_policy",
-			Type:     consts.TypeSelect,
-			Default:  "native_proxy",
-			Options:  "use_proxy_url,native_proxy",
-			Required: true,
-			Help:     "WebDAV access policy for this storage",
-		})
 	}
 
 	// Add download proxy URL option

@@ -5,6 +5,7 @@ import (
 
 	"github.com/dongdio/OpenList/v4/consts"
 	_115 "github.com/dongdio/OpenList/v4/drivers/115"
+	_115_open "github.com/dongdio/OpenList/v4/drivers/115_open"
 	"github.com/dongdio/OpenList/v4/drivers/pikpak"
 	"github.com/dongdio/OpenList/v4/drivers/thunder"
 	"github.com/dongdio/OpenList/v4/drivers/thunder_browser"
@@ -130,6 +131,50 @@ func SetTransmission(c *gin.Context) {
 		return
 	}
 
+	common.SuccessResp(c, "ok")
+}
+
+type Set115OpenReq struct {
+	TempDir string `json:"temp_dir" form:"temp_dir"`
+}
+
+func Set115Open(c *gin.Context) {
+	var req Set115OpenReq
+	if err := c.ShouldBind(&req); err != nil {
+		common.ErrorResp(c, err, 400)
+		return
+	}
+	if req.TempDir != "" {
+		storage, _, err := op.GetStorageAndActualPath(req.TempDir)
+		if err != nil {
+			common.ErrorStrResp(c, "storage does not exists", 400)
+			return
+		}
+		if storage.Config().CheckStatus && storage.GetStorage().Status != op.WORK {
+			common.ErrorStrResp(c, "storage not init: "+storage.GetStorage().Status, 400)
+			return
+		}
+		if _, ok := storage.(*_115_open.Open115); !ok {
+			common.ErrorStrResp(c, "unsupported storage driver for offline download, only 115 Open is supported", 400)
+			return
+		}
+	}
+	items := []model.SettingItem{
+		{Key: consts.Pan115OpenTempDir, Value: req.TempDir, Type: consts.TypeString, Group: model.OFFLINE_DOWNLOAD, Flag: model.PRIVATE},
+	}
+	if err := op.SaveSettingItems(items); err != nil {
+		common.ErrorResp(c, err, 500)
+		return
+	}
+	_tool, err := tool.Tools.Get("115 Open")
+	if err != nil {
+		common.ErrorResp(c, err, 500)
+		return
+	}
+	if _, err := _tool.Init(); err != nil {
+		common.ErrorResp(c, err, 500)
+		return
+	}
 	common.SuccessResp(c, "ok")
 }
 

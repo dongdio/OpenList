@@ -3,7 +3,6 @@ package handles
 import (
 	"bytes"
 	"fmt"
-	"io"
 	stdpath "path"
 	"strconv"
 	"strings"
@@ -22,6 +21,7 @@ import (
 	"github.com/dongdio/OpenList/v4/internal/setting"
 	"github.com/dongdio/OpenList/v4/internal/sign"
 	"github.com/dongdio/OpenList/v4/server/common"
+	"github.com/dongdio/OpenList/v4/utility/net"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
@@ -56,7 +56,7 @@ func Down(c *gin.Context) {
 		common.ErrorResp(c, err, 500)
 		return
 	}
-	down(c, link)
+	redirect(c, link)
 }
 
 // Proxy 处理需要代理的文件下载请求
@@ -100,25 +100,15 @@ func Proxy(c *gin.Context) {
 			common.ErrorResp(c, err, 500)
 			return
 		}
-
-		// 本地代理处理
-		localProxy(c, link, file, storage.GetStorage().ProxyRange)
+		proxy(c, link, file, storage.GetStorage().ProxyRange)
 	} else {
 		common.ErrorStrResp(c, "proxy not allowed", 403)
 	}
 }
 
-// down 处理文件下载重定向
-func down(c *gin.Context, link *model.Link) {
-	if clr, ok := link.MFile.(io.Closer); ok {
-		defer func(clr io.Closer) {
-			err := clr.Close()
-
-			if err != nil {
-				log.Errorf("close link data error: %v", err)
-			}
-		}(clr)
-	}
+// redirect 处理文件下载重定向
+func redirect(c *gin.Context, link *model.Link) {
+	defer link.Close()
 	var err error
 	// 设置安全相关头部
 	c.Header("Referrer-Policy", "no-referrer")
@@ -144,7 +134,8 @@ func down(c *gin.Context, link *model.Link) {
 }
 
 // localProxy 本地代理文件下载
-func localProxy(c *gin.Context, link *model.Link, file model.Obj, proxyRange bool) {
+func proxy(c *gin.Context, link *model.Link, file model.Obj, proxyRange bool) {
+	defer link.Close()
 	// 处理URL参数转发
 	if link.URL != "" && setting.GetBool(consts.ForwardDirectLinkParams) {
 		query := c.Request.URL.Query()
@@ -219,7 +210,10 @@ func localProxy(c *gin.Context, link *model.Link, file model.Obj, proxyRange boo
 		log.Errorf("%s %s local proxy error: %+v", c.Request.Method, c.Request.URL.Path, err)
 	} else {
 		// 否则返回错误响应
-		common.ErrorResp(c, err, 500, true)
+		var statusCode net.ErrorHttpStatusCode
+		if errors.As(errors.Unwrap(err), &statusCode) {
+			common.ErrorResp(c, err, int(statusCode), true)
+		}
 	}
 }
 
