@@ -12,6 +12,7 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
@@ -117,7 +118,7 @@ func transferStd(ctx context.Context, tempDir, dstDirPath string, deletePolicy D
 	if err != nil {
 		return err
 	}
-	taskCreator, _ := ctx.Value("user").(*model.User)
+	taskCreator, _ := ctx.Value(consts.UserKey).(*model.User)
 	for _, entry := range entries {
 		t := &TransferTask{
 			TaskExtension: task.TaskExtension{
@@ -217,7 +218,7 @@ func transferObj(ctx context.Context, tempDir, dstDirPath string, deletePolicy D
 	if err != nil {
 		return errors.WithMessagef(err, "failed list src [%s] objs", tempDir)
 	}
-	taskCreator, _ := ctx.Value("user").(*model.User) // taskCreator is nil when convert failed
+	taskCreator, _ := ctx.Value(consts.UserKey).(*model.User) // taskCreator is nil when convert failed
 	for _, obj := range objs {
 		t := &TransferTask{
 			TaskExtension: task.TaskExtension{

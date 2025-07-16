@@ -224,33 +224,6 @@ func (d *Local) FileInfoToObj(ctx context.Context, fileInfo fs.FileInfo, reqPath
 	return &fileObj
 }
 
-// GetMeta 获取文件元数据
-// 参数:
-//   - ctx: 上下文
-//   - path: 文件路径
-//
-// 返回:
-//   - model.Obj: 文件对象
-//   - error: 错误信息
-func (d *Local) GetMeta(ctx context.Context, path string) (model.Obj, error) {
-	// 获取文件信息
-	fileInfo, err := os.Stat(path)
-	if err != nil {
-		return nil, errors.Wrap(err, "获取文件信息失败")
-	}
-
-	// 转换为对象
-	fileObj := d.FileInfoToObj(ctx, fileInfo, path, filepath.Dir(path))
-
-	// 注释掉的哈希设置代码，可能用于将来实现
-	// h := "123123"
-	// if s, ok := fileInfo.(model.SetHash); ok && fileObj.GetHash() == ("","")  {
-	//	s.SetHash(h,"SHA1")
-	// }
-
-	return fileObj, nil
-}
-
 // Get 获取指定路径的文件对象
 // 实现driver.Driver接口
 func (d *Local) Get(ctx context.Context, path string) (model.Obj, error) {

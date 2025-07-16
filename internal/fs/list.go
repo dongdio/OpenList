@@ -6,6 +6,7 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
 	"github.com/dongdio/OpenList/v4/utility/utils"
@@ -13,8 +14,8 @@ import (
 
 // List files
 func list(ctx context.Context, path string, args *ListArgs) ([]model.Obj, error) {
-	meta, _ := ctx.Value("meta").(*model.Meta)
-	user, _ := ctx.Value("user").(*model.User)
+	meta, _ := ctx.Value(consts.MetaKey).(*model.Meta)
+	user, _ := ctx.Value(consts.UserKey).(*model.User)
 	virtualFiles := op.GetStorageVirtualFilesByPath(path)
 	storage, actualPath, err := op.GetStorageAndActualPath(path)
 	if err != nil && len(virtualFiles) == 0 {

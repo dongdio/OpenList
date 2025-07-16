@@ -25,7 +25,7 @@ import (
 
 type FtpMainDriver struct {
 	settings     *ftpserver.Settings
-	proxyHeader  *http.Header
+	proxyHeader  http.Header
 	clients      map[uint32]ftpserver.ClientContext
 	shutdownLock sync.RWMutex
 	isShutdown   bool
@@ -33,8 +33,6 @@ type FtpMainDriver struct {
 }
 
 func NewMainDriver() (*FtpMainDriver, error) {
-	header := &http.Header{}
-	header.Add("User-Agent", setting.GetStr(consts.FTPProxyUserAgent))
 	transferType := ftpserver.TransferTypeASCII
 	if conf.Conf.FTP.DefaultTransferBinary {
 		transferType = ftpserver.TransferTypeBinary
@@ -81,7 +79,9 @@ func NewMainDriver() (*FtpMainDriver, error) {
 			ActiveConnectionsCheck:   activeConnCheck,
 			PasvConnectionsCheck:     pasvConnCheck,
 		},
-		proxyHeader:  header,
+		proxyHeader: http.Header{
+			"User-Agent": {setting.GetStr(consts.FTPProxyUserAgent)},
+		},
 		clients:      make(map[uint32]ftpserver.ClientContext),
 		shutdownLock: sync.RWMutex{},
 		isShutdown:   false,
@@ -133,14 +133,14 @@ func (d *FtpMainDriver) AuthUser(cc ftpserver.ClientContext, user, pass string) 
 	}
 
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, "user", userObj)
+	ctx = context.WithValue(ctx, consts.UserKey, userObj)
 	if user == "anonymous" || user == "guest" {
-		ctx = context.WithValue(ctx, "meta_pass", pass)
+		ctx = context.WithValue(ctx, consts.MetaPassKey, pass)
 	} else {
-		ctx = context.WithValue(ctx, "meta_pass", "")
+		ctx = context.WithValue(ctx, consts.MetaPassKey, "")
 	}
-	ctx = context.WithValue(ctx, "client_ip", cc.RemoteAddr().String())
-	ctx = context.WithValue(ctx, "proxy_header", d.proxyHeader)
+	ctx = context.WithValue(ctx, consts.ClientIPKey, cc.RemoteAddr().String())
+	ctx = context.WithValue(ctx, consts.ProxyHeaderKey, d.proxyHeader)
 	return ftp.NewAferoAdapter(ctx), nil
 }
 

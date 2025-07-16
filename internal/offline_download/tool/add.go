@@ -123,7 +123,7 @@ func AddURL(ctx context.Context, args *AddURLArgs) (task.TaskExtensionInfo, erro
 		}
 	}
 
-	taskCreator, _ := ctx.Value("user").(*model.User) // taskCreator is nil when convert failed
+	taskCreator, _ := ctx.Value(consts.UserKey).(*model.User) // taskCreator is nil when convert failed
 	t := &DownloadTask{
 		TaskExtension: task.TaskExtension{
 			Creator: taskCreator,

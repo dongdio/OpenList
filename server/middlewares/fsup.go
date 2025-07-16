@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 
+	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
 	"github.com/dongdio/OpenList/v4/server/common"
@@ -37,22 +38,15 @@ func FsUp(c *gin.Context) {
 	}
 
 	// 获取用户信息
-	userObj, exists := c.Get("user")
+	userObj, exists := c.Value(consts.UserKey).(*model.User)
 	if !exists {
 		common.ErrorStrResp(c, "用户未认证", 401)
 		c.Abort()
 		return
 	}
 
-	user, ok := userObj.(*model.User)
-	if !ok {
-		common.ErrorStrResp(c, "用户数据类型错误", 500)
-		c.Abort()
-		return
-	}
-
 	// 构建完整路径
-	path, err = user.JoinPath(path)
+	path, err = userObj.JoinPath(path)
 	if err != nil {
 		common.ErrorResp(c, errors.Wrap(err, "路径构建失败"), 403)
 		c.Abort()
@@ -72,7 +66,7 @@ func FsUp(c *gin.Context) {
 	}
 
 	// 检查访问权限和写入权限
-	if !(common.CanAccess(user, meta, path, password) && (user.CanWrite() || common.CanWrite(meta, parentDir))) {
+	if !(common.CanAccess(userObj, meta, path, password) && (userObj.CanWrite() || common.CanWrite(meta, parentDir))) {
 		common.ErrorResp(c, errs.PermissionDenied, 403)
 		c.Abort()
 		return

@@ -22,7 +22,7 @@ type TaskExtension struct {
 
 func (t *TaskExtension) SetCtx(ctx context.Context) {
 	if t.Creator != nil {
-		ctx = context.WithValue(ctx, "user", t.Creator)
+		ctx = context.WithValue(ctx, consts.UserKey, t.Creator)
 	}
 	if len(t.ApiUrl) > 0 {
 		ctx = context.WithValue(ctx, consts.ApiUrlKey, t.ApiUrl)

@@ -10,6 +10,7 @@ import (
 	ftpserver "github.com/fclairamb/ftpserverlib"
 	"github.com/spf13/afero"
 
+	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/fs"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/utility/errs"
@@ -114,7 +115,7 @@ func (a *AferoAdapter) GetHandle(name string, flags int, offset int64) (ftpserve
 	}
 
 	// 获取用户并转换路径
-	user, ok := a.ctx.Value("user").(*model.User)
+	user, ok := a.ctx.Value(consts.UserKey).(*model.User)
 	if !ok {
 		return nil, errors.New("user not found in context")
 	}

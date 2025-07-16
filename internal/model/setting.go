@@ -35,6 +35,8 @@ type SettingItem struct {
 	Index          uint   `json:"index"`
 }
 
+var InitialSettings func() []SettingItem
+
 func (s SettingItem) IsDeprecated() bool {
 	return s.Flag == DEPRECATED
 }

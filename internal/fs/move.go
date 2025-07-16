@@ -10,6 +10,7 @@ import (
 	"github.com/OpenListTeam/tache"
 	"github.com/pkg/errors"
 
+	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
@@ -608,7 +609,7 @@ func _moveWithValidation(ctx context.Context, srcObjPath, dstDirPath string, val
 		}
 	}
 
-	taskCreator, _ := ctx.Value("user").(*model.User)
+	taskCreator, _ := ctx.Value(consts.UserKey).(*model.User)
 
 	// Create task immediately without any synchronous checks to avoid blocking frontend
 	// All validation and type checking will be done asynchronously in the Run method

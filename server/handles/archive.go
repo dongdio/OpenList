@@ -86,7 +86,7 @@ func FsArchiveMeta(c *gin.Context) {
 	}
 
 	// 获取用户并验证权限
-	user := c.MustGet("user").(*model.User)
+	user := c.Value(consts.UserKey).(*model.User)
 	if !user.CanReadArchives() {
 		common.ErrorResp(c, errs.PermissionDenied, 403)
 		return
@@ -105,8 +105,7 @@ func FsArchiveMeta(c *gin.Context) {
 		common.ErrorResp(c, err, 500, true)
 		return
 	}
-	c.Set("meta", meta)
-
+	common.GinWithValue(c, consts.MetaKey, meta)
 	// 验证访问权限
 	if !common.CanAccess(user, meta, reqPath, req.Password) {
 		common.ErrorStrResp(c, "password is incorrect or you have no permission", 403)
@@ -123,7 +122,7 @@ func FsArchiveMeta(c *gin.Context) {
 	}
 
 	// 获取归档元数据
-	ret, err := fs.ArchiveMeta(c, reqPath, model.ArchiveMetaArgs{
+	ret, err := fs.ArchiveMeta(c.Request.Context(), reqPath, model.ArchiveMetaArgs{
 		ArchiveArgs: archiveArgs,
 		Refresh:     req.Refresh,
 	})
@@ -184,7 +183,7 @@ func FsArchiveList(c *gin.Context) {
 	req.Validate()
 
 	// 获取用户并验证权限
-	user := c.MustGet("user").(*model.User)
+	user := c.Value(consts.UserKey).(*model.User)
 	if !user.CanReadArchives() {
 		common.ErrorResp(c, errs.PermissionDenied, 403)
 		return
@@ -203,7 +202,7 @@ func FsArchiveList(c *gin.Context) {
 		common.ErrorResp(c, err, 500, true)
 		return
 	}
-	c.Set("meta", meta)
+	common.GinWithValue(c, consts.MetaKey, meta)
 
 	// 验证访问权限
 	if !common.CanAccess(user, meta, reqPath, req.Password) {
@@ -212,7 +211,7 @@ func FsArchiveList(c *gin.Context) {
 	}
 
 	// 获取归档文件列表
-	objs, err := fs.ArchiveList(c, reqPath, model.ArchiveListArgs{
+	objs, err := fs.ArchiveList(c.Request.Context(), reqPath, model.ArchiveListArgs{
 		ArchiveInnerArgs: model.ArchiveInnerArgs{
 			ArchiveArgs: model.ArchiveArgs{
 				LinkArgs: model.LinkArgs{
@@ -296,7 +295,7 @@ func FsArchiveDecompress(c *gin.Context) {
 	}
 
 	// 获取用户并验证权限
-	user := c.MustGet("user").(*model.User)
+	user := c.Value(consts.UserKey).(*model.User)
 	if !user.CanDecompress() {
 		common.ErrorResp(c, errs.PermissionDenied, 403)
 		return
@@ -323,7 +322,7 @@ func FsArchiveDecompress(c *gin.Context) {
 	// 处理每个源文件
 	tasks := make([]task.TaskExtensionInfo, 0, len(srcPaths))
 	for _, srcPath := range srcPaths {
-		tk, err := fs.ArchiveDecompress(c, srcPath, dstDir, model.ArchiveDecompressArgs{
+		tk, err := fs.ArchiveDecompress(c.Request.Context(), srcPath, dstDir, model.ArchiveDecompressArgs{
 			ArchiveInnerArgs: model.ArchiveInnerArgs{
 				ArchiveArgs: model.ArchiveArgs{
 					LinkArgs: model.LinkArgs{
@@ -359,7 +358,7 @@ func FsArchiveDecompress(c *gin.Context) {
 // ArchiveDown 下载归档文件中的内容
 func ArchiveDown(c *gin.Context) {
 	// 获取路径参数
-	archiveRawPath := c.MustGet("path").(string)
+	archiveRawPath := c.Value(consts.PathKey).(string)
 	innerPath := utils.FixAndCleanPath(c.Query("inner"))
 	password := c.Query("pass")
 	filename := stdpath.Base(innerPath)
@@ -378,7 +377,7 @@ func ArchiveDown(c *gin.Context) {
 	}
 
 	// 提取归档文件内容
-	link, _, err := fs.ArchiveDriverExtract(c, archiveRawPath, model.ArchiveInnerArgs{
+	link, _, err := fs.ArchiveDriverExtract(c.Request.Context(), archiveRawPath, model.ArchiveInnerArgs{
 		ArchiveArgs: model.ArchiveArgs{
 			LinkArgs: model.LinkArgs{
 				IP:       c.ClientIP(),
@@ -402,7 +401,7 @@ func ArchiveDown(c *gin.Context) {
 // ArchiveProxy 代理归档文件中的内容
 func ArchiveProxy(c *gin.Context) {
 	// 获取路径参数
-	archiveRawPath := c.MustGet("path").(string)
+	archiveRawPath := c.Value(consts.PathKey).(string)
 	innerPath := utils.FixAndCleanPath(c.Query("inner"))
 	password := c.Query("pass")
 	filename := stdpath.Base(innerPath)
@@ -417,7 +416,7 @@ func ArchiveProxy(c *gin.Context) {
 	// 检查是否可以代理
 	if canProxy(storage, filename) {
 		// 提取归档文件内容
-		link, file, err := fs.ArchiveDriverExtract(c, archiveRawPath, model.ArchiveInnerArgs{
+		link, file, err := fs.ArchiveDriverExtract(c.Request.Context(), archiveRawPath, model.ArchiveInnerArgs{
 			ArchiveArgs: model.ArchiveArgs{
 				LinkArgs: model.LinkArgs{
 					Header: c.Request.Header,
@@ -442,12 +441,12 @@ func ArchiveProxy(c *gin.Context) {
 // ArchiveInternalExtract 内部提取归档文件内容
 func ArchiveInternalExtract(c *gin.Context) {
 	// 获取路径参数
-	archiveRawPath := c.MustGet("path").(string)
+	archiveRawPath := c.Value(consts.PathKey).(string)
 	innerPath := utils.FixAndCleanPath(c.Query("inner"))
 	password := c.Query("pass")
 
 	// 提取归档文件内容
-	rc, size, err := fs.ArchiveInternalExtract(c, archiveRawPath, model.ArchiveInnerArgs{
+	rc, size, err := fs.ArchiveInternalExtract(c.Request.Context(), archiveRawPath, model.ArchiveInnerArgs{
 		ArchiveArgs: model.ArchiveArgs{
 			LinkArgs: model.LinkArgs{
 				Header: c.Request.Header,

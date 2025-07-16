@@ -8,7 +8,6 @@ import (
 	"io"
 	"math/rand"
 	"mime"
-	"net/http"
 	"os"
 	stdpath "path"
 	"path/filepath"
@@ -87,13 +86,10 @@ func (t *ArchiveDownloadTask) RunWithoutPushUploadTask() (*ArchiveContentUploadT
 	}
 
 	// Get the archive tool and stream
-	srcObj, archiveTool, streams, err := op.GetArchiveToolAndStream(t.Ctx(), t.srcStorage, t.SrcObjPath, model.LinkArgs{
-		Header: http.Header{},
-	})
+	srcObj, archiveTool, streams, err := op.GetArchiveToolAndStream(t.Ctx(), t.srcStorage, t.SrcObjPath, model.LinkArgs{})
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed to get archive tool and stream")
 	}
-
 	// Ensure all streams are closed
 	defer func() {
 		for _, stream := range streams {
@@ -497,7 +493,7 @@ func archiveDecompress(ctx context.Context, srcObjPath, dstDirPath string, args 
 	}
 
 	// Get the task creator (user) from context
-	taskCreator, _ := ctx.Value("user").(*model.User)
+	taskCreator, _ := ctx.Value(consts.UserKey).(*model.User)
 
 	// Create decompression task
 	downloadTask := &ArchiveDownloadTask{

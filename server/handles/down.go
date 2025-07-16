@@ -29,7 +29,7 @@ import (
 // 根据存储配置决定是直接重定向还是通过代理下载
 func Down(c *gin.Context) {
 	// 获取文件路径
-	rawPath := c.MustGet("path").(string)
+	rawPath := c.Value(consts.PathKey).(string)
 	filename := stdpath.Base(rawPath)
 
 	// 获取存储驱动
@@ -46,7 +46,7 @@ func Down(c *gin.Context) {
 	}
 
 	// 直接获取下载链接并重定向
-	link, _, err := fs.Link(c, rawPath, model.LinkArgs{
+	link, _, err := fs.Link(c.Request.Context(), rawPath, model.LinkArgs{
 		IP:       c.ClientIP(),
 		Header:   c.Request.Header,
 		Type:     c.Query("type"),
@@ -62,7 +62,7 @@ func Down(c *gin.Context) {
 // Proxy 处理需要代理的文件下载请求
 func Proxy(c *gin.Context) {
 	// 获取文件路径
-	rawPath := c.MustGet("path").(string)
+	rawPath := c.Value(consts.PathKey).(string)
 	filename := stdpath.Base(rawPath)
 
 	// 获取存储驱动
@@ -92,7 +92,7 @@ func Proxy(c *gin.Context) {
 		}
 
 		// 获取文件链接
-		link, file, err := fs.Link(c, rawPath, model.LinkArgs{
+		link, file, err := fs.Link(c.Request.Context(), rawPath, model.LinkArgs{
 			Header: c.Request.Header,
 			Type:   c.Query("type"),
 		})

@@ -112,7 +112,7 @@ func _copy(ctx context.Context, srcObjPath, dstDirPath string, lazyCache ...bool
 	}
 
 	// Get the task creator (user) from context
-	taskCreator, _ := ctx.Value("user").(*model.User)
+	taskCreator, _ := ctx.Value(consts.UserKey).(*model.User)
 
 	// Create and configure the copy task
 	t := &CopyTask{

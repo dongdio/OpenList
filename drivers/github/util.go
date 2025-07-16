@@ -13,6 +13,7 @@ import (
 	"github.com/pkg/errors"
 	"resty.dev/v3"
 
+	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
@@ -97,7 +98,7 @@ func getPathCommonAncestor(a, b string) (ancestor, aChildName, bChildName, aRest
 }
 
 func getUsername(ctx context.Context) string {
-	user, ok := ctx.Value("user").(*model.User)
+	user, ok := ctx.Value(consts.UserKey).(*model.User)
 	if !ok {
 		return "<system>"
 	}

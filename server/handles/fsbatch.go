@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 
+	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/fs"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
@@ -40,7 +41,7 @@ func FsRecursiveMove(c *gin.Context) {
 	}
 
 	// 获取用户并验证权限
-	user := c.MustGet("user").(*model.User)
+	user := c.Value(consts.UserKey).(*model.User)
 	if !user.CanMove() {
 		common.ErrorResp(c, errs.PermissionDenied, 403)
 		return
@@ -76,10 +77,10 @@ func FsRecursiveMove(c *gin.Context) {
 		common.ErrorResp(c, err, 500, true)
 		return
 	}
-	c.Set("meta", meta)
+	common.GinWithValue(c, consts.MetaKey, meta)
 
 	// 获取源目录下的文件列表
-	rootFiles, err := fs.List(c, srcDir, &fs.ListArgs{})
+	rootFiles, err := fs.List(c.Request.Context(), srcDir, &fs.ListArgs{})
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return
@@ -119,7 +120,7 @@ func FsRecursiveMove(c *gin.Context) {
 		if movingFile.IsDir() {
 			// 如果是目录，递归处理子文件
 			subFilePath := movingFileName
-			subFiles, err := fs.List(c, movingFileName, &fs.ListArgs{Refresh: true})
+			subFiles, err := fs.List(c.Request.Context(), movingFileName, &fs.ListArgs{Refresh: true})
 			if err != nil {
 				common.ErrorResp(c, err, 500)
 				return
@@ -160,12 +161,13 @@ func FsRecursiveMove(c *gin.Context) {
 	movedCount := 0
 	totalFiles := len(movingFileNames)
 
+	var ctx = c.Request.Context()
 	for i, fileName := range movingFileNames {
 		// 是否是最后一个文件
 		isLast := i >= totalFiles-1
 
 		// 移动文件
-		err := fs.Move(c, fileName, dstDir, !isLast)
+		err = fs.Move(ctx, fileName, dstDir, !isLast)
 		if err != nil {
 			common.ErrorResp(c, err, 500)
 			return
@@ -202,7 +204,7 @@ func FsBatchRename(c *gin.Context) {
 	}
 
 	// 获取用户并验证权限
-	user := c.MustGet("user").(*model.User)
+	user := c.Value(consts.UserKey).(*model.User)
 	if !user.CanRename() {
 		common.ErrorResp(c, errs.PermissionDenied, 403)
 		return
@@ -221,10 +223,11 @@ func FsBatchRename(c *gin.Context) {
 		common.ErrorResp(c, err, 500, true)
 		return
 	}
-	c.Set("meta", meta)
+	common.GinWithValue(c, consts.MetaKey, meta)
 
 	// 执行重命名操作
 	renamedCount := 0
+	ctx := c.Request.Context()
 	for _, renameObject := range req.RenameObjects {
 		if renameObject.SrcName == "" || renameObject.NewName == "" {
 			continue
@@ -234,7 +237,7 @@ func FsBatchRename(c *gin.Context) {
 		filePath := stdpath.Join(reqPath, renameObject.SrcName)
 
 		// 执行重命名
-		if err := fs.Rename(c, filePath, renameObject.NewName); err != nil {
+		if err = fs.Rename(ctx, filePath, renameObject.NewName); err != nil {
 			common.ErrorResp(c, err, 500)
 			return
 		}
@@ -263,7 +266,7 @@ func FsRegexRename(c *gin.Context) {
 	}
 
 	// 获取用户并验证权限
-	user := c.MustGet("user").(*model.User)
+	user := c.Value(consts.UserKey).(*model.User)
 	if !user.CanRename() {
 		common.ErrorResp(c, errs.PermissionDenied, 403)
 		return
@@ -282,17 +285,17 @@ func FsRegexRename(c *gin.Context) {
 		common.ErrorResp(c, err, 500, true)
 		return
 	}
-	c.Set("meta", meta)
+	common.GinWithValue(c, consts.MetaKey, meta)
 
 	// 编译源文件名正则表达式
 	srcRegexp, err := regexp.Compile(req.SrcNameRegex)
 	if err != nil {
-		common.ErrorResp(c, errors.Errorf("invalid source name regex: %w", err), 400)
+		common.ErrorResp(c, errors.Wrap(err, "invalid source name regex"), 400)
 		return
 	}
 
 	// 获取目录下的文件列表
-	files, err := fs.List(c, reqPath, &fs.ListArgs{})
+	files, err := fs.List(c.Request.Context(), reqPath, &fs.ListArgs{})
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return
@@ -300,6 +303,7 @@ func FsRegexRename(c *gin.Context) {
 
 	// 执行重命名操作
 	renamedCount := 0
+	ctx := c.Request.Context()
 	for _, file := range files {
 		// 检查文件名是否匹配正则表达式
 		if !srcRegexp.MatchString(file.GetName()) {
@@ -315,7 +319,7 @@ func FsRegexRename(c *gin.Context) {
 			continue
 		}
 		// 执行重命名
-		if err := fs.Rename(c, filePath, newFileName); err != nil {
+		if err = fs.Rename(ctx, filePath, newFileName); err != nil {
 			common.ErrorResp(c, err, 500)
 			return
 		}

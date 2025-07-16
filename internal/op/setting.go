@@ -191,45 +191,33 @@ func GetSettingItemsInGroups(groups []int) ([]model.SettingItem, error) {
 
 // SaveSettingItems saves multiple setting items, handling hooks as needed
 func SaveSettingItems(items []model.SettingItem) error {
-	noHookItems := make([]model.SettingItem, 0)
-	errs := make([]error, 0)
-
 	// Process items with hooks first
 	for i := range items {
-		hasHook, err := HandleSettingItemHook(&items[i])
-		if hasHook {
-			if err != nil {
-				errs = append(errs, err)
-			} else {
-				if err = db.SaveSettingItem(&items[i]); err != nil {
-					errs = append(errs, err)
-				}
-			}
-		} else {
-			noHookItems = append(noHookItems, items[i])
+		item := &items[i]
+		if it, ok := MigrationSettingItems[item.Key]; ok &&
+			item.Value == it.MigrationValue {
+			item.Value = it.Value
+		}
+		if ok, err := HandleSettingItemHook(item); ok && err != nil {
+			return errors.Errorf("failed to execute hook on %s: %+v", item.Key, err)
 		}
 	}
-
-	// Process items without hooks in bulk
-	if len(noHookItems) > 0 {
-		if err := db.SaveSettingItems(noHookItems); err != nil {
-			errs = append(errs, err)
-		}
+	err := db.SaveSettingItems(items)
+	if err != nil {
+		return errors.Errorf("failed save setting: %+v", err)
 	}
-
-	// Update cache if at least some items were saved successfully
-	if len(errs) < len(items)-len(noHookItems)+1 {
-		SettingCacheUpdate()
-	}
-
-	return utils.MergeErrors(errs...)
+	return nil
 }
 
 // SaveSettingItem saves a single setting item, handling hooks as needed
 func SaveSettingItem(item *model.SettingItem) error {
+	if it, ok := MigrationSettingItems[item.Key]; ok &&
+		item.Value == it.MigrationValue {
+		item.Value = it.Value
+	}
 	// Process hook if applicable
 	if _, err := HandleSettingItemHook(item); err != nil {
-		return err
+		return errors.Errorf("failed to execute hook on %s: %+v", item.Key, err)
 	}
 
 	// Save to database
@@ -261,3 +249,9 @@ func DeleteSettingItemByKey(key string) error {
 	// Delete from database
 	return db.DeleteSettingItemByKey(key)
 }
+
+type MigrationValueItem struct {
+	MigrationValue, Value string
+}
+
+var MigrationSettingItems map[string]MigrationValueItem

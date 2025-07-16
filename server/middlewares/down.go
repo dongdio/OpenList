@@ -35,7 +35,7 @@ func Down(verifyFunc func(string, string) error) func(c *gin.Context) {
 		}
 
 		// 将路径保存到上下文中
-		c.Set("path", rawPath)
+		common.GinWithValue(c, consts.PathKey, rawPath)
 
 		// 获取最近的元数据
 		meta, err := op.GetNearestMeta(rawPath)
@@ -48,7 +48,7 @@ func Down(verifyFunc func(string, string) error) func(c *gin.Context) {
 		}
 
 		// 将元数据保存到上下文中
-		c.Set("meta", meta)
+		common.GinWithValue(c, consts.MetaKey, meta)
 
 		// 验证签名
 		if needSign(meta, rawPath) {

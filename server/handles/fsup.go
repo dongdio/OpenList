@@ -9,6 +9,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/fs"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/server/common"
@@ -80,7 +81,7 @@ func FsStream(c *gin.Context) {
 	overwrite := c.GetHeader("Overwrite") != "false"
 
 	// 获取用户并验证路径
-	user := c.MustGet("user").(*model.User)
+	user := c.Value(consts.UserKey).(*model.User)
 	path, err = user.JoinPath(path)
 	if err != nil {
 		common.ErrorResp(c, err, 403)
@@ -89,7 +90,7 @@ func FsStream(c *gin.Context) {
 
 	// 检查文件是否存在（如果不允许覆盖）
 	if !overwrite {
-		if res, _ := fs.Get(c, path, &fs.GetArgs{NoLog: true}); res != nil {
+		if res, _ := fs.Get(c.Request.Context(), path, &fs.GetArgs{NoLog: true}); res != nil {
 			common.ErrorStrResp(c, "file exists", 403)
 			return
 		}
@@ -135,9 +136,9 @@ func FsStream(c *gin.Context) {
 	// 根据是否作为任务执行上传
 	var t task.TaskExtensionInfo
 	if asTask {
-		t, err = fs.PutAsTask(c, dir, s)
+		t, err = fs.PutAsTask(c.Request.Context(), dir, s)
 	} else {
-		err = fs.PutDirectly(c, dir, s, true)
+		err = fs.PutDirectly(c.Request.Context(), dir, s, true)
 	}
 	if err != nil {
 		common.ErrorResp(c, err, 500)
@@ -181,7 +182,7 @@ func FsForm(c *gin.Context) {
 	overwrite := c.GetHeader("Overwrite") != "false"
 
 	// 获取用户并验证路径
-	user := c.MustGet("user").(*model.User)
+	user := c.Value(consts.UserKey).(*model.User)
 	path, err = user.JoinPath(path)
 	if err != nil {
 		common.ErrorResp(c, err, 403)
@@ -190,7 +191,7 @@ func FsForm(c *gin.Context) {
 
 	// 检查文件是否存在（如果不允许覆盖）
 	if !overwrite {
-		if res, _ := fs.Get(c, path, &fs.GetArgs{NoLog: true}); res != nil {
+		if res, _ := fs.Get(c.Request.Context(), path, &fs.GetArgs{NoLog: true}); res != nil {
 			common.ErrorStrResp(c, "file exists", 403)
 			return
 		}
@@ -255,9 +256,9 @@ func FsForm(c *gin.Context) {
 		s.Reader = struct {
 			io.Reader
 		}{f}
-		t, err = fs.PutAsTask(c, dir, s)
+		t, err = fs.PutAsTask(c.Request.Context(), dir, s)
 	} else {
-		err = fs.PutDirectly(c, dir, s, true)
+		err = fs.PutDirectly(c.Request.Context(), dir, s, true)
 	}
 
 	if err != nil {

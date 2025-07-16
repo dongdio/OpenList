@@ -1,6 +1,6 @@
 module github.com/dongdio/OpenList/v4
 
-go 1.24.4
+go 1.24.5
 
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.18.1
@@ -49,7 +49,6 @@ require (
 	github.com/jlaffaye/ftp v0.2.1-0.20240918233326-1b970516f5d3
 	github.com/kdomanski/iso9660 v0.4.0
 	github.com/klauspost/compress v1.18.0
-	github.com/larksuite/oapi-sdk-go/v3 v3.4.21
 	github.com/maruel/natural v1.1.1
 	github.com/meilisearch/meilisearch-go v0.32.0
 	github.com/mholt/archives v0.1.3
@@ -98,7 +97,7 @@ require (
 	github.com/Azure/go-ntlmssp v0.0.0-20221128193559-754e69321358 // indirect
 	github.com/Max-Sum/base32768 v0.0.0-20230304063302-18e6ce5945fd // indirect
 	github.com/OpenListTeam/gsync v0.1.0 // indirect
-	github.com/RoaringBitmap/roaring/v2 v2.7.0 // indirect
+	github.com/RoaringBitmap/roaring/v2 v2.8.0 // indirect
 	github.com/STARRY-S/zip v0.2.3 // indirect
 	github.com/abbot/go-http-auth v0.4.0 // indirect
 	github.com/aead/ecdh v0.2.0 // indirect
@@ -146,7 +145,7 @@ require (
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
 	github.com/fclairamb/go-log v0.6.0 // indirect
 	github.com/filecoin-project/go-clock v0.1.0 // indirect
-	github.com/fxamacker/cbor/v2 v2.8.0 // indirect
+	github.com/fxamacker/cbor/v2 v2.9.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.9 // indirect
 	github.com/geoffgarside/ber v1.2.0 // indirect
 	github.com/gin-contrib/sse v1.1.0 // indirect
@@ -160,7 +159,7 @@ require (
 	github.com/go-sql-driver/mysql v1.9.3 // indirect
 	github.com/go-webauthn/x v0.1.23 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect
-	github.com/golang-jwt/jwt/v5 v5.2.2 // indirect
+	github.com/golang-jwt/jwt/v5 v5.2.3 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/golang/snappy v1.0.0 // indirect
 	github.com/google/go-tpm v0.9.5 // indirect
@@ -184,7 +183,7 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/jzelinskie/whirlpool v0.0.0-20201016144138-0675e54bb004 // indirect
-	github.com/klauspost/cpuid/v2 v2.2.11 // indirect
+	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/klauspost/pgzip v1.2.6 // indirect
 	github.com/kr/fs v0.1.0 // indirect
 	github.com/lanrat/extsort v1.0.2 // indirect
@@ -260,8 +259,8 @@ require (
 	golang.org/x/sys v0.34.0 // indirect
 	golang.org/x/term v0.33.0 // indirect
 	golang.org/x/tools v0.35.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20250707201910-8d1bb00bc6a7 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250707201910-8d1bb00bc6a7 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20250715232539-7130f93afb79 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250715232539-7130f93afb79 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/go-jose/go-jose.v2 v2.6.3 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect

@@ -6,6 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/fs"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
@@ -18,7 +19,7 @@ import (
 // path: 目录路径
 func Mkdir(ctx context.Context, path string) error {
 	// 获取用户信息
-	user, ok := ctx.Value("user").(*model.User)
+	user, ok := ctx.Value(consts.UserKey).(*model.User)
 	if !ok {
 		return errs.PermissionDenied
 	}
@@ -55,7 +56,7 @@ func Mkdir(ctx context.Context, path string) error {
 // path: 文件或目录路径
 func Remove(ctx context.Context, path string) error {
 	// 获取用户信息
-	user, ok := ctx.Value("user").(*model.User)
+	user, ok := ctx.Value(consts.UserKey).(*model.User)
 	if !ok {
 		return errs.PermissionDenied
 	}
@@ -81,7 +82,7 @@ func Remove(ctx context.Context, path string) error {
 // newPath: 新路径
 func Rename(ctx context.Context, oldPath, newPath string) error {
 	// 获取用户信息
-	user, ok := ctx.Value("user").(*model.User)
+	user, ok := ctx.Value(consts.UserKey).(*model.User)
 	if !ok {
 		return errs.PermissionDenied
 	}

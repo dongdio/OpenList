@@ -10,6 +10,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/utility/http_range"
 	"github.com/dongdio/OpenList/v4/utility/net"
@@ -39,7 +40,7 @@ func GetRangeReaderFromLink(size int64, link *model.Link) (model.RangeReaderIF, 
 					Size:  size,
 				}
 			} else {
-				requestHeader, _ := ctx.Value(net.RequestHeaderKey{}).(http.Header)
+				requestHeader, _ := ctx.Value(consts.RequestHeaderKey).(http.Header)
 				header := net.ProcessHeader(requestHeader, link.Header)
 				req = &net.HttpRequestParams{
 					Range:     httpRange,
@@ -68,13 +69,14 @@ func GetRangeReaderFromLink(size int64, link *model.Link) (model.RangeReaderIF, 
 		if httpRange.Length < 0 || httpRange.Start+httpRange.Length > size {
 			httpRange.Length = size - httpRange.Start
 		}
-		requestHeader, _ := ctx.Value(net.RequestHeaderKey{}).(http.Header)
+		requestHeader, _ := ctx.Value(consts.RequestHeaderKey).(http.Header)
 		header := net.ProcessHeader(requestHeader, link.Header)
 		header = http_range.ApplyRangeToHttpHeader(httpRange, header)
 
 		response, err := net.RequestHttp(ctx, "GET", header, link.URL)
 		if err != nil {
-			if _, ok := errors.Unwrap(err).(net.ErrorHttpStatusCode); ok {
+			var errorHttpStatusCode net.ErrorHttpStatusCode
+			if errors.As(errors.Unwrap(err), &errorHttpStatusCode) {
 				return nil, err
 			}
 			return nil, fmt.Errorf("http request failure, err:%w", err)

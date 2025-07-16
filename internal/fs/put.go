@@ -8,6 +8,7 @@ import (
 	"github.com/OpenListTeam/tache"
 	"github.com/pkg/errors"
 
+	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
@@ -56,7 +57,7 @@ func putAsTask(ctx context.Context, dstDirPath string, file model.FileStreamer) 
 		// file.SetReader(tempFile)
 		// file.SetTmpFile(tempFile)
 	}
-	taskCreator, _ := ctx.Value("user").(*model.User) // taskCreator is nil when convert failed
+	taskCreator, _ := ctx.Value(consts.UserKey).(*model.User) // taskCreator is nil when convert failed
 	t := &UploadTask{
 		TaskExtension: task.TaskExtension{
 			Creator: taskCreator,

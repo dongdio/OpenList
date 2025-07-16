@@ -10,6 +10,7 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/fs"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
@@ -32,7 +33,7 @@ type FileDownloadProxy struct {
 // 返回文件下载代理和错误
 func OpenDownload(ctx context.Context, reqPath string, offset int64) (*FileDownloadProxy, error) {
 	// 获取用户信息
-	user, ok := ctx.Value("user").(*model.User)
+	user, ok := ctx.Value(consts.UserKey).(*model.User)
 	if !ok {
 		return nil, errs.PermissionDenied
 	}
@@ -47,25 +48,22 @@ func OpenDownload(ctx context.Context, reqPath string, offset int64) (*FileDownl
 	}
 
 	// 将元数据添加到上下文
-	ctx = context.WithValue(ctx, "meta", meta)
+	ctx = context.WithValue(ctx, consts.MetaKey, meta)
 
 	// 检查用户是否有权限访问
-	metaPass, _ := ctx.Value("meta_pass").(string)
+	metaPass, _ := ctx.Value(consts.MetaPassKey).(string)
 	if !common.CanAccess(user, meta, reqPath, metaPass) {
 		return nil, errs.PermissionDenied
 	}
 
 	// 获取下载链接
-	header, ok := ctx.Value("proxy_header").(*http.Header)
+
+	header, ok := ctx.Value(consts.ProxyHeaderKey).(http.Header)
 	if !ok || header == nil {
 		return nil, errors.New("proxy header not found in context")
 	}
-
-	clientIP, _ := ctx.Value("client_ip").(string)
-	link, obj, err := fs.Link(ctx, reqPath, model.LinkArgs{
-		IP:     clientIP,
-		Header: *header,
-	})
+	clientIP, _ := ctx.Value(consts.ClientIPKey).(string)
+	link, obj, err := fs.Link(ctx, reqPath, model.LinkArgs{IP: clientIP, Header: header})
 	if err != nil {
 		return nil, err
 	}
@@ -160,7 +158,7 @@ func (o *OsFileInfoAdapter) Sys() any {
 // 返回文件信息和错误
 func Stat(ctx context.Context, path string) (os.FileInfo, error) {
 	// 获取用户信息
-	user, ok := ctx.Value("user").(*model.User)
+	user, ok := ctx.Value(consts.UserKey).(*model.User)
 	if !ok {
 		return nil, errs.PermissionDenied
 	}
@@ -181,10 +179,10 @@ func Stat(ctx context.Context, path string) (os.FileInfo, error) {
 	}
 
 	// 将元数据添加到上下文
-	ctx = context.WithValue(ctx, "meta", meta)
+	ctx = context.WithValue(ctx, consts.MetaKey, meta)
 
 	// 检查访问权限
-	metaPass, _ := ctx.Value("meta_pass").(string)
+	metaPass, _ := ctx.Value(consts.MetaPassKey).(string)
 	if !common.CanAccess(user, meta, reqPath, metaPass) {
 		return nil, errs.PermissionDenied
 	}
@@ -204,7 +202,7 @@ func Stat(ctx context.Context, path string) (os.FileInfo, error) {
 // 返回目录中文件信息的列表和错误
 func List(ctx context.Context, path string) ([]os.FileInfo, error) {
 	// 获取用户信息
-	user, ok := ctx.Value("user").(*model.User)
+	user, ok := ctx.Value(consts.UserKey).(*model.User)
 	if !ok {
 		return nil, errs.PermissionDenied
 	}
@@ -225,10 +223,10 @@ func List(ctx context.Context, path string) ([]os.FileInfo, error) {
 	}
 
 	// 将元数据添加到上下文
-	ctx = context.WithValue(ctx, "meta", meta)
+	ctx = context.WithValue(ctx, consts.MetaKey, meta)
 
 	// 检查访问权限
-	metaPass, _ := ctx.Value("meta_pass").(string)
+	metaPass, _ := ctx.Value(consts.MetaPassKey).(string)
 	if !common.CanAccess(user, meta, reqPath, metaPass) {
 		return nil, errs.PermissionDenied
 	}

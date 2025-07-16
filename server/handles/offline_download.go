@@ -87,7 +87,7 @@ func SetQbittorrent(c *gin.Context) {
 		return
 	}
 
-	if _, err := qbTool.Init(); err != nil {
+	if _, err = qbTool.Init(); err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}
@@ -126,7 +126,7 @@ func SetTransmission(c *gin.Context) {
 		return
 	}
 
-	if _, err := transmissionTool.Init(); err != nil {
+	if _, err = transmissionTool.Init(); err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}
@@ -171,7 +171,7 @@ func Set115Open(c *gin.Context) {
 		common.ErrorResp(c, err, 500)
 		return
 	}
-	if _, err := _tool.Init(); err != nil {
+	if _, err = _tool.Init(); err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}
@@ -226,7 +226,7 @@ func Set115(c *gin.Context) {
 		return
 	}
 
-	if _, err := cloudTool.Init(); err != nil {
+	if _, err = cloudTool.Init(); err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}
@@ -282,7 +282,7 @@ func SetPikPak(c *gin.Context) {
 		return
 	}
 
-	if _, err := pikpakTool.Init(); err != nil {
+	if _, err = pikpakTool.Init(); err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}
@@ -338,7 +338,7 @@ func SetThunder(c *gin.Context) {
 		return
 	}
 
-	if _, err := thunderTool.Init(); err != nil {
+	if _, err = thunderTool.Init(); err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}
@@ -422,7 +422,7 @@ type AddOfflineDownloadReq struct {
 
 // AddOfflineDownload 添加离线下载任务
 func AddOfflineDownload(c *gin.Context) {
-	user := c.MustGet("user").(*model.User)
+	user := c.Value(consts.UserKey).(*model.User)
 	if !user.CanAddOfflineDownloadTasks() {
 		common.ErrorStrResp(c, "permission denied", 403)
 		return

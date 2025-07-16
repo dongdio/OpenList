@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pquerna/otp/totp"
 
+	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
 	"github.com/dongdio/OpenList/v4/server/common"
@@ -126,7 +127,7 @@ type UserResponse struct {
 
 // CurrentUser 返回当前认证用户的信息
 func CurrentUser(c *gin.Context) {
-	user := c.MustGet("user").(*model.User)
+	user := c.Value(consts.UserKey).(*model.User)
 
 	// 创建包含净化用户数据的响应
 	userResp := UserResponse{
@@ -160,7 +161,7 @@ func UpdateCurrent(c *gin.Context) {
 		return
 	}
 
-	user := c.MustGet("user").(*model.User)
+	user := c.Value(consts.UserKey).(*model.User)
 	if user.IsGuest() {
 		common.ErrorStrResp(c, "Guest user cannot update profile", 403)
 		return
@@ -191,7 +192,7 @@ func UpdateCurrent(c *gin.Context) {
 
 // Generate2FA 为当前用户创建新的 2FA 密钥和 QR 码
 func Generate2FA(c *gin.Context) {
-	user := c.MustGet("user").(*model.User)
+	user := c.Value(consts.UserKey).(*model.User)
 	if user.IsGuest() {
 		common.ErrorStrResp(c, "Guest user cannot enable 2FA", 403)
 		return
@@ -243,7 +244,7 @@ func Verify2FA(c *gin.Context) {
 		return
 	}
 
-	user := c.MustGet("user").(*model.User)
+	user := c.Value(consts.UserKey).(*model.User)
 	if user.IsGuest() {
 		common.ErrorStrResp(c, "Guest user cannot enable 2FA", 403)
 		return

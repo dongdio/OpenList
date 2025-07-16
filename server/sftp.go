@@ -21,16 +21,16 @@ import (
 )
 
 type SftpDriver struct {
-	proxyHeader *http.Header
+	proxyHeader http.Header
 	config      *sftpd.Config
 }
 
 func NewSftpDriver() (*SftpDriver, error) {
 	sftp.InitHostKey(global.DataDir)
-	header := &http.Header{}
-	header.Add("User-Agent", setting.GetStr(consts.FTPProxyUserAgent))
 	return &SftpDriver{
-		proxyHeader: header,
+		proxyHeader: http.Header{
+			"User-Agent": {setting.GetStr(consts.FTPProxyUserAgent)},
+		},
 	}, nil
 }
 
@@ -64,10 +64,10 @@ func (d *SftpDriver) GetFileSystem(sc *ssh.ServerConn) (sftpd.FileSystem, error)
 		return nil, err
 	}
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, "user", userObj)
-	ctx = context.WithValue(ctx, "meta_pass", "")
-	ctx = context.WithValue(ctx, "client_ip", sc.RemoteAddr().String())
-	ctx = context.WithValue(ctx, "proxy_header", d.proxyHeader)
+	ctx = context.WithValue(ctx, consts.UserKey, userObj)
+	ctx = context.WithValue(ctx, consts.MetaPassKey, "")
+	ctx = context.WithValue(ctx, consts.ClientIPKey, sc.RemoteAddr().String())
+	ctx = context.WithValue(ctx, consts.ProxyHeaderKey, d.proxyHeader)
 	return &sftp.DriverAdapter{FtpDriver: ftp.NewAferoAdapter(ctx)}, nil
 }
 

@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 
+	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
 	"github.com/dongdio/OpenList/v4/server/common"
@@ -36,7 +37,7 @@ func Search(c *gin.Context) {
 	}
 
 	// Get user and validate permissions
-	user := c.MustGet("user").(*model.User)
+	user := c.Value(consts.UserKey).(*model.User)
 
 	// Convert relative path to absolute path
 	var err error

@@ -1,6 +1,7 @@
 package initialize
 
 import (
+	"sort"
 	"strconv"
 
 	"github.com/pkg/errors"
@@ -17,10 +18,20 @@ import (
 	"github.com/dongdio/OpenList/v4/utility/utils/random"
 )
 
-var initialSettingItems []model.SettingItem
-
 func initSettings() {
-	InitialSettings()
+	// 为了给handle中传递函数，不能将函数变量放到global中，会导致循环引用
+	// 引用该函数的文件为：server/handlers/setting.go(DefaultSettings)
+	model.InitialSettings = InitialSettings
+
+	items := InitialSettings()
+	isActive := func(key string) bool {
+		for _, item := range items {
+			if item.Key == key {
+				return true
+			}
+		}
+		return false
+	}
 	// check deprecated
 	settings, err := op.GetSettingItems()
 	if err != nil {
@@ -37,15 +48,17 @@ func initSettings() {
 		}
 		settingMap[v.Key] = &v
 	}
+	op.MigrationSettingItems = map[string]op.MigrationValueItem{}
 	// create or save setting
-	save := false
-	for i := range initialSettingItems {
-		item := &initialSettingItems[i]
+	var saveItems []model.SettingItem
+	for i := range items {
+		item := &items[i]
 		item.Index = uint(i)
-		if len(item.MigrationValue) == 0 {
-			item.MigrationValue = item.Value
+		migrationValue := item.MigrationValue
+		if len(migrationValue) > 0 {
+			op.MigrationSettingItems[item.Key] = op.MigrationValueItem{MigrationValue: item.MigrationValue, Value: item.Value}
+			item.MigrationValue = ""
 		}
-		// err
 		stored, ok := settingMap[item.Key]
 		if !ok {
 			stored, err = op.GetSettingItemByKey(item.Key)
@@ -54,7 +67,8 @@ func initSettings() {
 				continue
 			}
 		}
-		if stored != nil && item.Key != consts.VERSION && stored.Value != item.MigrationValue {
+		if item.Key != consts.VERSION && stored != nil &&
+			(len(migrationValue) == 0 || stored.Value != migrationValue) {
 			item.Value = stored.Value
 		}
 		_, err = op.HandleSettingItemHook(item)
@@ -62,28 +76,18 @@ func initSettings() {
 			utils.Log.Errorf("failed to execute hook on %s: %+v", item.Key, err)
 			continue
 		}
-		// save
 		if stored == nil || *item != *stored {
-			save = true
+			saveItems = append(saveItems, *item)
 		}
 	}
-	if save {
-		err = db.SaveSettingItems(initialSettingItems)
+	if len(saveItems) > 0 {
+		err = db.SaveSettingItems(saveItems)
 		if err != nil {
 			utils.Log.Fatalf("failed save setting: %+v", err)
 		} else {
 			op.SettingCacheUpdate()
 		}
 	}
-}
-
-func isActive(key string) bool {
-	for _, item := range initialSettingItems {
-		if item.Key == key {
-			return true
-		}
-	}
-	return false
 }
 
 func InitialSettings() []model.SettingItem {
@@ -93,7 +97,7 @@ func InitialSettings() []model.SettingItem {
 	} else {
 		token = random.Token()
 	}
-	initialSettingItems = []model.SettingItem{
+	initialSettingItems := []model.SettingItem{
 		// site settings
 		{Key: consts.VERSION, Value: conf.Version, Type: consts.TypeString, Group: model.SITE, Flag: model.READONLY},
 		// {Key: conf.ApiUrl, Value: "", Type: conf.TypeString, Group: model.SITE},
@@ -225,7 +229,12 @@ func InitialSettings() []model.SettingItem {
 		{Key: consts.StreamMaxServerDownloadSpeed, Value: "-1", Type: consts.TypeNumber, Group: model.TRAFFIC, Flag: model.PRIVATE},
 		{Key: consts.StreamMaxServerUploadSpeed, Value: "-1", Type: consts.TypeNumber, Group: model.TRAFFIC, Flag: model.PRIVATE},
 	}
-	initialSettingItems = append(initialSettingItems, tool.Tools.Items()...)
+	additionalSettingItems := tool.Tools.Items()
+	// 固定顺序
+	sort.Slice(additionalSettingItems, func(i, j int) bool {
+		return additionalSettingItems[i].Key < additionalSettingItems[j].Key
+	})
+	initialSettingItems = append(initialSettingItems, additionalSettingItems...)
 	if global.Dev {
 		initialSettingItems = append(initialSettingItems, []model.SettingItem{
 			{Key: "test_deprecated", Value: "test_value", Type: consts.TypeString, Flag: model.DEPRECATED},

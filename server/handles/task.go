@@ -7,6 +7,7 @@ import (
 	"github.com/OpenListTeam/tache"
 	"github.com/gin-gonic/gin"
 
+	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/fs"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/offline_download/tool"
@@ -79,7 +80,7 @@ func argsContains[T comparable](v T, slice ...T) bool {
 // getUserInfo 获取当前用户信息
 // 返回值: isAdmin, userID, isValid
 func getUserInfo(c *gin.Context) (bool, uint, bool) {
-	user, ok := c.Value("user").(*model.User)
+	user, ok := c.Value(consts.UserKey).(*model.User)
 	if !ok {
 		return false, 0, false
 	}

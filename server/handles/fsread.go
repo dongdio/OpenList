@@ -73,7 +73,7 @@ func FsList(c *gin.Context) {
 	req.Validate()
 
 	// 获取用户和路径
-	user := c.MustGet("user").(*model.User)
+	user := c.Value(consts.UserKey).(*model.User)
 	reqPath, err := user.JoinPath(req.Path)
 	if err != nil {
 		common.ErrorResp(c, err, 403)
@@ -86,7 +86,7 @@ func FsList(c *gin.Context) {
 		common.ErrorResp(c, err, 500, true)
 		return
 	}
-	c.Set("meta", meta)
+	common.GinWithValue(c, consts.MetaKey, meta)
 
 	// 检查访问权限
 	if !common.CanAccess(user, meta, reqPath, req.Password) {
@@ -101,7 +101,7 @@ func FsList(c *gin.Context) {
 	}
 
 	// 获取文件列表
-	objs, err := fs.List(c, reqPath, &fs.ListArgs{Refresh: req.Refresh})
+	objs, err := fs.List(c.Request.Context(), reqPath, &fs.ListArgs{Refresh: req.Refresh})
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return
@@ -137,7 +137,7 @@ func FsDirs(c *gin.Context) {
 	}
 
 	// 获取用户
-	user := c.MustGet("user").(*model.User)
+	user := c.Value(consts.UserKey).(*model.User)
 
 	// 处理路径
 	reqPath := req.Path
@@ -161,7 +161,7 @@ func FsDirs(c *gin.Context) {
 		common.ErrorResp(c, err, 500, true)
 		return
 	}
-	c.Set("meta", meta)
+	common.GinWithValue(c, consts.MetaKey, meta)
 
 	// 检查访问权限
 	if !common.CanAccess(user, meta, reqPath, req.Password) {
@@ -170,7 +170,7 @@ func FsDirs(c *gin.Context) {
 	}
 
 	// 获取文件列表
-	objs, err := fs.List(c, reqPath, &fs.ListArgs{})
+	objs, err := fs.List(c.Request.Context(), reqPath, &fs.ListArgs{})
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return
@@ -301,7 +301,7 @@ func FsGet(c *gin.Context) {
 	}
 
 	// 获取用户和路径
-	user := c.MustGet("user").(*model.User)
+	user := c.Value(consts.UserKey).(*model.User)
 	reqPath, err := user.JoinPath(req.Path)
 	if err != nil {
 		common.ErrorResp(c, err, 403)
@@ -314,7 +314,7 @@ func FsGet(c *gin.Context) {
 		common.ErrorResp(c, err, 500)
 		return
 	}
-	c.Set("meta", meta)
+	common.GinWithValue(c, consts.MetaKey, meta)
 
 	// 检查访问权限
 	if !common.CanAccess(user, meta, reqPath, req.Password) {
@@ -323,7 +323,7 @@ func FsGet(c *gin.Context) {
 	}
 
 	// 获取文件对象
-	obj, err := fs.Get(c, reqPath, &fs.GetArgs{})
+	obj, err := fs.Get(c.Request.Context(), reqPath, &fs.GetArgs{})
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return
@@ -368,7 +368,7 @@ func FsGet(c *gin.Context) {
 				rawURL = url
 			} else {
 				// 如果存储不是代理，使用fs.Link获取原始URL
-				link, _, err := fs.Link(c, reqPath, model.LinkArgs{
+				link, _, err := fs.Link(c.Request.Context(), reqPath, model.LinkArgs{
 					IP:       c.ClientIP(),
 					Header:   c.Request.Header,
 					Redirect: true,
@@ -386,7 +386,7 @@ func FsGet(c *gin.Context) {
 	// 获取相关文件
 	var related []model.Obj
 	parentPath := stdpath.Dir(reqPath)
-	sameLevelFiles, err := fs.List(c, parentPath, &fs.ListArgs{})
+	sameLevelFiles, err := fs.List(c.Request.Context(), parentPath, &fs.ListArgs{})
 	if err == nil {
 		related = filterRelated(sameLevelFiles, obj)
 	}
@@ -451,7 +451,7 @@ func FsOther(c *gin.Context) {
 	}
 
 	// 获取用户和路径
-	user := c.MustGet("user").(*model.User)
+	user := c.Value(consts.UserKey).(*model.User)
 	var err error
 	req.Path, err = user.JoinPath(req.Path)
 	if err != nil {
@@ -465,7 +465,7 @@ func FsOther(c *gin.Context) {
 		common.ErrorResp(c, err, 500)
 		return
 	}
-	c.Set("meta", meta)
+	common.GinWithValue(c, consts.MetaKey, meta)
 
 	// 检查访问权限
 	if !common.CanAccess(user, meta, req.Path, req.Password) {
@@ -474,7 +474,7 @@ func FsOther(c *gin.Context) {
 	}
 
 	// 执行其他操作
-	res, err := fs.Other(c, req.FsOtherArgs)
+	res, err := fs.Other(c.Request.Context(), req.FsOtherArgs)
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return

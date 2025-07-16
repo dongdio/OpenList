@@ -27,7 +27,7 @@ func Auth(c *gin.Context) {
 			c.Abort()
 			return
 		}
-		c.Set("user", admin)
+		common.GinWithValue(c, consts.UserKey, admin)
 		log.Debugf("使用管理员令牌: %+v", admin)
 		c.Next()
 		return
@@ -46,7 +46,7 @@ func Auth(c *gin.Context) {
 			c.Abort()
 			return
 		}
-		c.Set("user", guest)
+		common.GinWithValue(c, consts.UserKey, guest)
 		log.Debugf("使用访客: %+v", guest)
 		c.Next()
 		return
@@ -81,8 +81,7 @@ func Auth(c *gin.Context) {
 		c.Abort()
 		return
 	}
-
-	c.Set("user", user)
+	common.GinWithValue(c, consts.UserKey, user)
 	log.Debugf("使用登录令牌: %+v", user)
 	c.Next()
 }
@@ -100,7 +99,7 @@ func Authn(c *gin.Context) {
 			c.Abort()
 			return
 		}
-		c.Set("user", admin)
+		common.GinWithValue(c, consts.UserKey, admin)
 		log.Debugf("使用管理员令牌: %+v", admin)
 		c.Next()
 		return
@@ -114,7 +113,7 @@ func Authn(c *gin.Context) {
 			c.Abort()
 			return
 		}
-		c.Set("user", guest)
+		common.GinWithValue(c, consts.UserKey, guest)
 		log.Debugf("使用访客: %+v", guest)
 		c.Next()
 		return
@@ -150,7 +149,7 @@ func Authn(c *gin.Context) {
 		return
 	}
 
-	c.Set("user", user)
+	common.GinWithValue(c, consts.UserKey, user)
 	log.Debugf("使用登录令牌: %+v", user)
 	c.Next()
 }
@@ -158,21 +157,14 @@ func Authn(c *gin.Context) {
 // AuthNotGuest 中间件，确保用户不是访客
 // 需要在Auth或Authn中间件之后使用
 func AuthNotGuest(c *gin.Context) {
-	user, ok := c.Get("user")
+	user, ok := c.Value(consts.UserKey).(*model.User)
 	if !ok {
 		common.ErrorStrResp(c, "用户未认证", 401)
 		c.Abort()
 		return
 	}
 
-	userObj, ok := user.(*model.User)
-	if !ok {
-		common.ErrorStrResp(c, "用户数据类型错误", 500)
-		c.Abort()
-		return
-	}
-
-	if userObj.IsGuest() {
+	if user.IsGuest() {
 		common.ErrorStrResp(c, "您是访客用户，没有权限执行此操作", 403)
 		c.Abort()
 		return
@@ -184,21 +176,14 @@ func AuthNotGuest(c *gin.Context) {
 // AuthAdmin 中间件，确保用户是管理员
 // 需要在Auth或Authn中间件之后使用
 func AuthAdmin(c *gin.Context) {
-	user, ok := c.Get("user")
+	user, ok := c.Value(consts.UserKey).(*model.User)
 	if !ok {
 		common.ErrorStrResp(c, "用户未认证", 401)
 		c.Abort()
 		return
 	}
 
-	userObj, ok := user.(*model.User)
-	if !ok {
-		common.ErrorStrResp(c, "用户数据类型错误", 500)
-		c.Abort()
-		return
-	}
-
-	if !userObj.IsAdmin() {
+	if !user.IsAdmin() {
 		common.ErrorStrResp(c, "您不是管理员，没有权限执行此操作", 403)
 		c.Abort()
 		return

@@ -12,6 +12,7 @@ import (
 	ftpserver "github.com/fclairamb/ftpserverlib"
 	"github.com/pkg/errors"
 
+	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/conf"
 	"github.com/dongdio/OpenList/v4/internal/fs"
 	"github.com/dongdio/OpenList/v4/internal/model"
@@ -35,7 +36,7 @@ type FileUploadProxy struct {
 // path: 文件路径
 func uploadAuth(ctx context.Context, path string) error {
 	// 获取用户信息
-	user, ok := ctx.Value("user").(*model.User)
+	user, ok := ctx.Value(consts.UserKey).(*model.User)
 	if !ok {
 		return errs.PermissionDenied
 	}
@@ -50,7 +51,7 @@ func uploadAuth(ctx context.Context, path string) error {
 	}
 
 	// 检查权限
-	metaPass, _ := ctx.Value("meta_pass").(string)
+	metaPass, _ := ctx.Value(consts.MetaPassKey).(string)
 	if !(common.CanAccess(user, meta, path, metaPass) &&
 		((user.CanFTPManage() && user.CanWrite()) || common.CanWrite(meta, stdpath.Dir(path)))) {
 		return errs.PermissionDenied

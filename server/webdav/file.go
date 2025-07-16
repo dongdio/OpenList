@@ -58,7 +58,7 @@ func moveFiles(ctx context.Context, src, dst string, overwrite bool) (status int
 	dstName := path.Base(dst)
 
 	// 获取用户信息
-	userVal := ctx.Value("user")
+	userVal := ctx.Value(consts.UserKey)
 	if userVal == nil {
 		return http.StatusUnauthorized, errors.New("未找到用户信息")
 	}

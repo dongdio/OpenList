@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 
+	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/fs"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
@@ -31,7 +32,7 @@ func FsMkdir(c *gin.Context) {
 		return
 	}
 
-	user := c.MustGet("user").(*model.User)
+	user := c.Value(consts.UserKey).(*model.User)
 	reqPath, err := user.JoinPath(req.Path)
 	if err != nil {
 		common.ErrorResp(c, err, 403)
@@ -52,7 +53,7 @@ func FsMkdir(c *gin.Context) {
 		}
 	}
 
-	if err = fs.MakeDir(c, reqPath); err != nil {
+	if err = fs.MakeDir(c.Request.Context(), reqPath); err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}
@@ -81,7 +82,7 @@ func FsMove(c *gin.Context) {
 		return
 	}
 
-	user := c.MustGet("user").(*model.User)
+	user := c.Value(consts.UserKey).(*model.User)
 	if !user.CanMove() {
 		common.ErrorResp(c, errs.PermissionDenied, 403)
 		return
@@ -99,9 +100,10 @@ func FsMove(c *gin.Context) {
 		return
 	}
 
+	ctx := c.Request.Context()
 	if !req.Overwrite {
 		for _, name := range req.Names {
-			if res, _ := fs.Get(c, stdpath.Join(dstDir, name), &fs.GetArgs{NoLog: true}); res != nil {
+			if res, _ := fs.Get(ctx, stdpath.Join(dstDir, name), &fs.GetArgs{NoLog: true}); res != nil {
 				common.ErrorStrResp(c, fmt.Sprintf("file [%s] exists", name), 403)
 				return
 			}
@@ -113,7 +115,7 @@ func FsMove(c *gin.Context) {
 	for i, name := range req.Names {
 		// 最后一个参数表示是否懒加载缓存（当有多个文件时）
 		isLazyCache := len(req.Names) > i+1
-		t, err := fs.MoveWithTaskAndValidation(c, stdpath.Join(srcDir, name), dstDir, !req.Overwrite, isLazyCache)
+		t, err := fs.MoveWithTaskAndValidation(ctx, stdpath.Join(srcDir, name), dstDir, !req.Overwrite, isLazyCache)
 		if err != nil {
 			common.ErrorResp(c, err, 500)
 			return
@@ -150,7 +152,7 @@ func FsCopy(c *gin.Context) {
 		return
 	}
 
-	user := c.MustGet("user").(*model.User)
+	user := c.Value(consts.UserKey).(*model.User)
 	if !user.CanCopy() {
 		common.ErrorResp(c, errs.PermissionDenied, 403)
 		return
@@ -168,9 +170,10 @@ func FsCopy(c *gin.Context) {
 		return
 	}
 
+	ctx := c.Request.Context()
 	if !req.Overwrite {
 		for _, name := range req.Names {
-			if res, _ := fs.Get(c, stdpath.Join(dstDir, name), &fs.GetArgs{NoLog: true}); res != nil {
+			if res, _ := fs.Get(ctx, stdpath.Join(dstDir, name), &fs.GetArgs{NoLog: true}); res != nil {
 				common.ErrorStrResp(c, fmt.Sprintf("file [%s] exists", name), 403)
 				return
 			}
@@ -182,7 +185,7 @@ func FsCopy(c *gin.Context) {
 	for i, name := range req.Names {
 		// 最后一个参数表示是否懒加载缓存（当有多个文件时）
 		isLazyCache := len(req.Names) > i+1
-		t, err := fs.Copy(c, stdpath.Join(srcDir, name), dstDir, isLazyCache)
+		t, err := fs.Copy(ctx, stdpath.Join(srcDir, name), dstDir, isLazyCache)
 		if err != nil {
 			common.ErrorResp(c, err, 500)
 			return
@@ -221,7 +224,7 @@ func FsRename(c *gin.Context) {
 		return
 	}
 
-	user := c.MustGet("user").(*model.User)
+	user := c.Value(consts.UserKey).(*model.User)
 	if !user.CanRename() {
 		common.ErrorResp(c, errs.PermissionDenied, 403)
 		return
@@ -233,18 +236,19 @@ func FsRename(c *gin.Context) {
 		return
 	}
 
+	ctx := c.Request.Context()
 	// 检查是否存在同名文件（如果不允许覆盖）
 	if !req.Overwrite {
 		dstPath := stdpath.Join(stdpath.Dir(reqPath), req.Name)
 		if dstPath != reqPath {
-			if res, _ := fs.Get(c, dstPath, &fs.GetArgs{NoLog: true}); res != nil {
+			if res, _ := fs.Get(ctx, dstPath, &fs.GetArgs{NoLog: true}); res != nil {
 				common.ErrorStrResp(c, fmt.Sprintf("file [%s] exists", req.Name), 403)
 				return
 			}
 		}
 	}
 
-	if err = fs.Rename(c, reqPath, req.Name); err != nil {
+	if err = fs.Rename(ctx, reqPath, req.Name); err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}
@@ -271,7 +275,7 @@ func FsRemove(c *gin.Context) {
 		return
 	}
 
-	user := c.MustGet("user").(*model.User)
+	user := c.Value(consts.UserKey).(*model.User)
 	if !user.CanRemove() {
 		common.ErrorResp(c, errs.PermissionDenied, 403)
 		return
@@ -283,9 +287,10 @@ func FsRemove(c *gin.Context) {
 		return
 	}
 
+	ctx := c.Request.Context()
 	for _, name := range req.Names {
 		filePath := stdpath.Join(reqDir, name)
-		err := fs.Remove(c, filePath)
+		err = fs.Remove(ctx, filePath)
 		if err != nil {
 			common.ErrorResp(c, err, 500)
 			return
@@ -308,7 +313,7 @@ func FsRemoveEmptyDirectory(c *gin.Context) {
 		return
 	}
 
-	user := c.MustGet("user").(*model.User)
+	user := c.Value(consts.UserKey).(*model.User)
 	if !user.CanRemove() {
 		common.ErrorResp(c, errs.PermissionDenied, 403)
 		return
@@ -325,9 +330,10 @@ func FsRemoveEmptyDirectory(c *gin.Context) {
 		common.ErrorResp(c, err, 500, true)
 		return
 	}
-	c.Set("meta", meta)
+	common.GinWithValue(c, consts.MetaKey, meta)
 
-	rootFiles, err := fs.List(c, srcDir, &fs.ListArgs{})
+	ctx := c.Request.Context()
+	rootFiles, err := fs.List(ctx, srcDir, &fs.ListArgs{})
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return
@@ -360,7 +366,7 @@ func FsRemoveEmptyDirectory(c *gin.Context) {
 			continue
 		}
 
-		subFiles, err := fs.List(c, removingFilePath, &fs.ListArgs{Refresh: true})
+		subFiles, err := fs.List(ctx, removingFilePath, &fs.ListArgs{Refresh: true})
 		if err != nil {
 			common.ErrorResp(c, err, 500)
 			return
@@ -368,7 +374,7 @@ func FsRemoveEmptyDirectory(c *gin.Context) {
 
 		if len(subFiles) == 0 {
 			// 删除空目录
-			err = fs.Remove(c, removingFilePath)
+			err = fs.Remove(ctx, removingFilePath)
 			if err != nil {
 				common.ErrorResp(c, err, 500)
 				return
@@ -424,7 +430,7 @@ func Link(c *gin.Context) {
 	}
 
 	// 获取存储链接
-	link, _, err := fs.Link(c, rawPath, model.LinkArgs{IP: c.ClientIP(), Header: c.Request.Header, Redirect: true})
+	link, _, err := fs.Link(c.Request.Context(), rawPath, model.LinkArgs{IP: c.ClientIP(), Header: c.Request.Header, Redirect: true})
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return

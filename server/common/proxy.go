@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/utility/net"
 	"github.com/dongdio/OpenList/v4/utility/stream"
@@ -40,7 +41,7 @@ func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.
 		attachHeader(w, file, link.Header)
 		rrf, _ := stream.GetRangeReaderFromLink(file.GetSize(), link)
 		if link.RangeReader == nil {
-			r = r.WithContext(context.WithValue(r.Context(), net.RequestHeaderKey{}, r.Header))
+			r = r.WithContext(context.WithValue(r.Context(), consts.RequestHeaderKey, r.Header))
 		}
 		return net.ServeHTTP(w, r, file.GetName(), file.ModTime(), file.GetSize(), &model.RangeReadCloser{
 			RangeReader: rrf,
@@ -106,7 +107,7 @@ func GetEtag(file model.Obj) string {
 	// 尝试使用文件哈希作为ETag
 	hash := ""
 	for _, v := range file.GetHash().Export() {
-		if strings.Compare(v, hash) > 0 {
+		if v > hash {
 			hash = v
 		}
 	}

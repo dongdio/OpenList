@@ -184,7 +184,7 @@ func BeginAuthnRegistration(c *gin.Context) {
 	}
 
 	// 获取当前用户
-	user := c.MustGet("user").(*model.User)
+	user := c.Value(consts.UserKey).(*model.User)
 
 	// 创建 WebAuthn 实例
 	authnInstance, err := authn.NewAuthnInstance(c)
@@ -224,7 +224,7 @@ func FinishAuthnRegistration(c *gin.Context) {
 	}
 
 	// 获取当前用户
-	user := c.MustGet("user").(*model.User)
+	user := c.Value(consts.UserKey).(*model.User)
 
 	// 获取会话数据
 	sessionDataString := c.GetHeader(HeaderSessionData)
@@ -279,7 +279,7 @@ func FinishAuthnRegistration(c *gin.Context) {
 // DeleteAuthnLogin 删除 WebAuthn 登录凭证
 func DeleteAuthnLogin(c *gin.Context) {
 	// 获取当前用户
-	user := c.MustGet("user").(*model.User)
+	user := c.Value(consts.UserKey).(*model.User)
 
 	// 解析请求
 	var req DeleteAuthnRequest
@@ -312,7 +312,7 @@ func DeleteAuthnLogin(c *gin.Context) {
 // GetAuthnCredentials 获取用户的 WebAuthn 凭证列表
 func GetAuthnCredentials(c *gin.Context) {
 	// 获取当前用户
-	user := c.MustGet("user").(*model.User)
+	user := c.Value(consts.UserKey).(*model.User)
 
 	// 获取用户凭证
 	credentials := user.WebAuthnCredentials()

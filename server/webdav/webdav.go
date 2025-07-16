@@ -20,6 +20,7 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/fs"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/sign"
@@ -310,7 +311,7 @@ func (h *Handler) handleOptions(w http.ResponseWriter, r *http.Request) (status 
 
 	// 获取用户信息
 	ctx := r.Context()
-	user, ok := ctx.Value("user").(*model.User)
+	user, ok := ctx.Value(consts.UserKey).(*model.User)
 	if !ok || user == nil {
 		return http.StatusUnauthorized, errors.New("未找到用户信息")
 	}
@@ -344,7 +345,7 @@ func (h *Handler) handleGetHeadPost(w http.ResponseWriter, r *http.Request) (sta
 	}
 	// TODO: check locks for read-only access??
 	ctx := r.Context()
-	user := ctx.Value("user").(*model.User)
+	user := ctx.Value(consts.UserKey).(*model.User)
 	reqPath, err = user.JoinPath(reqPath)
 	if err != nil {
 		return http.StatusForbidden, err
@@ -409,7 +410,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) (status i
 	defer release()
 
 	ctx := r.Context()
-	user := ctx.Value("user").(*model.User)
+	user := ctx.Value(consts.UserKey).(*model.User)
 	reqPath, err = user.JoinPath(reqPath)
 	if err != nil {
 		return 403, err
@@ -454,7 +455,7 @@ func (h *Handler) handlePut(w http.ResponseWriter, r *http.Request) (status int,
 	// TODO(rost): Support the If-Match, If-None-Match headers? See bradfitz'
 	// comments in http.checkEtag.
 	ctx := r.Context()
-	user := ctx.Value("user").(*model.User)
+	user := ctx.Value(consts.UserKey).(*model.User)
 	reqPath, err = user.JoinPath(reqPath)
 	if err != nil {
 		return http.StatusForbidden, err
@@ -506,7 +507,7 @@ func (h *Handler) handleMkcol(w http.ResponseWriter, r *http.Request) (status in
 	defer release()
 
 	ctx := r.Context()
-	user := ctx.Value("user").(*model.User)
+	user := ctx.Value(consts.UserKey).(*model.User)
 	reqPath, err = user.JoinPath(reqPath)
 	if err != nil {
 		return 403, err
@@ -570,7 +571,7 @@ func (h *Handler) handleCopyMove(w http.ResponseWriter, r *http.Request) (status
 	}
 
 	ctx := r.Context()
-	user := ctx.Value("user").(*model.User)
+	user := ctx.Value(consts.UserKey).(*model.User)
 	src, err = user.JoinPath(src)
 	if err != nil {
 		return 403, err
@@ -634,7 +635,7 @@ func (h *Handler) handleLock(w http.ResponseWriter, r *http.Request) (retStatus 
 	}
 
 	ctx := r.Context()
-	user := ctx.Value("user").(*model.User)
+	user := ctx.Value(consts.UserKey).(*model.User)
 	token, ld, now, created := "", LockDetails{}, time.Now(), false
 	if li == (lockInfo{}) {
 		// An empty lockInfo means to refresh the lock.
@@ -751,10 +752,11 @@ func (h *Handler) handlePropfind(w http.ResponseWriter, r *http.Request) (status
 	if err != nil {
 		return status, err
 	}
-	ctx := r.Context()
-	userAgent := r.Header.Get("User-Agent")
-	ctx = context.WithValue(ctx, "userAgent", userAgent)
-	user := ctx.Value("user").(*model.User)
+	var (
+		userAgent = r.Header.Get("User-Agent")
+		ctx       = context.WithValue(r.Context(), consts.UserAgentKey, userAgent)
+		user      = ctx.Value(consts.UserKey).(*model.User)
+	)
 	reqPath, err = user.JoinPath(reqPath)
 	if err != nil {
 		return 403, err
@@ -833,12 +835,12 @@ func (h *Handler) handleProppatch(w http.ResponseWriter, r *http.Request) (statu
 	defer release()
 
 	ctx := r.Context()
-	user := ctx.Value("user").(*model.User)
+	user := ctx.Value(consts.UserKey).(*model.User)
 	reqPath, err = user.JoinPath(reqPath)
 	if err != nil {
 		return 403, err
 	}
-	if _, err := fs.Get(ctx, reqPath, &fs.GetArgs{}); err != nil {
+	if _, err = fs.Get(ctx, reqPath, &fs.GetArgs{}); err != nil {
 		if errs.IsObjectNotFound(err) {
 			return http.StatusNotFound, err
 		}

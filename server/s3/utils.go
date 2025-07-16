@@ -52,7 +52,7 @@ func getBucketByName(name string) (Bucket, error) {
 func getDirEntries(path string) ([]model.Obj, error) {
 	ctx := context.Background()
 	meta, _ := op.GetNearestMeta(path)
-	ctxWithMeta := context.WithValue(ctx, "meta", meta)
+	ctxWithMeta := context.WithValue(ctx, consts.MetaKey, meta)
 
 	fileInfo, err := fs.Get(ctxWithMeta, path, &fs.GetArgs{})
 	if err != nil {

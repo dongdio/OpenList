@@ -39,7 +39,7 @@ func CreateStorage(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	if id, err := op.CreateStorage(c, req); err != nil {
+	if id, err := op.CreateStorage(c.Request.Context(), req); err != nil {
 		common.ErrorWithDataResp(c, err, 500, gin.H{
 			"id": id,
 		}, true)
@@ -56,7 +56,7 @@ func UpdateStorage(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	if err := op.UpdateStorage(c, req); err != nil {
+	if err := op.UpdateStorage(c.Request.Context(), req); err != nil {
 		common.ErrorResp(c, err, 500, true)
 	} else {
 		common.SuccessResp(c)
@@ -70,7 +70,7 @@ func DeleteStorage(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	if err := op.DeleteStorageByID(c, uint(id)); err != nil {
+	if err = op.DeleteStorageByID(c.Request.Context(), uint(id)); err != nil {
 		common.ErrorResp(c, err, 500, true)
 		return
 	}
@@ -84,7 +84,7 @@ func DisableStorage(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	if err := op.DisableStorage(c, uint(id)); err != nil {
+	if err = op.DisableStorage(c.Request.Context(), uint(id)); err != nil {
 		common.ErrorResp(c, err, 500, true)
 		return
 	}
@@ -98,7 +98,7 @@ func EnableStorage(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	if err := op.EnableStorage(c, uint(id)); err != nil {
+	if err = op.EnableStorage(c.Request.Context(), uint(id)); err != nil {
 		common.ErrorResp(c, err, 500, true)
 		return
 	}
