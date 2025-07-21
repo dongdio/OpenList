@@ -272,7 +272,7 @@ func (d *ChaoXing) Put(ctx context.Context, dstDir model.Obj, file model.FileStr
 		return err
 	}
 	var fileRsp UploadFileDataRsp
-	err = utils.Json.Unmarshal(bodys, &fileRsp)
+	err = utils.JSONTool.Unmarshal(bodys, &fileRsp)
 	if err != nil {
 		return err
 	}
@@ -280,7 +280,7 @@ func (d *ChaoXing) Put(ctx context.Context, dstDir model.Obj, file model.FileStr
 		return errors.New(fileRsp.Msg)
 	}
 	uploadDoneParam := UploadDoneParam{Key: fileRsp.ObjectID, Cataid: "100000019", Param: fileRsp.Data}
-	params, err := utils.Json.Marshal(uploadDoneParam)
+	params, err := utils.JSONTool.Marshal(uploadDoneParam)
 	if err != nil {
 		return err
 	}

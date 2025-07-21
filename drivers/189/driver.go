@@ -143,7 +143,7 @@ func (d *Cloud189) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 	}
 
 	// 序列化任务信息
-	taskInfosBytes, err := utils.Json.Marshal(taskInfos)
+	taskInfosBytes, err := utils.JSONTool.Marshal(taskInfos)
 	if err != nil {
 		return errors.Wrap(err, "序列化任务信息失败")
 	}
@@ -205,7 +205,7 @@ func (d *Cloud189) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 	}
 
 	// 序列化任务信息
-	taskInfosBytes, err := utils.Json.Marshal(taskInfos)
+	taskInfosBytes, err := utils.JSONTool.Marshal(taskInfos)
 	if err != nil {
 		return errors.Wrap(err, "序列化任务信息失败")
 	}
@@ -241,7 +241,7 @@ func (d *Cloud189) Remove(ctx context.Context, obj model.Obj) error {
 	}
 
 	// 序列化任务信息
-	taskInfosBytes, err := utils.Json.Marshal(taskInfos)
+	taskInfosBytes, err := utils.JSONTool.Marshal(taskInfos)
 	if err != nil {
 		return errors.Wrap(err, "序列化任务信息失败")
 	}

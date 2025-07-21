@@ -153,7 +153,7 @@ func FsArchiveMeta(c *gin.Context) {
 		IsEncrypted: ret.IsEncrypted(),
 		Content:     toContentResp(ret.GetTree()),
 		Sort:        ret.Sort,
-		RawURL:      fmt.Sprintf("%s%s%s", common.GetApiUrl(c), api, utils.EncodePath(reqPath, true)),
+		RawURL:      fmt.Sprintf("%s%s%s", common.GetApiURL(c), api, utils.EncodePath(reqPath, true)),
 		Sign:        signature,
 	})
 }
@@ -255,14 +255,14 @@ type StringOrArray []string
 func (s *StringOrArray) UnmarshalJSON(data []byte) error {
 	// 尝试解析为单个字符串
 	var value string
-	if err := utils.Json.Unmarshal(data, &value); err == nil {
+	if err := utils.JSONTool.Unmarshal(data, &value); err == nil {
 		*s = []string{value}
 		return nil
 	}
 
 	// 尝试解析为字符串数组
 	var sliceValue []string
-	if err := utils.Json.Unmarshal(data, &sliceValue); err != nil {
+	if err := utils.JSONTool.Unmarshal(data, &sliceValue); err != nil {
 		return err
 	}
 	*s = sliceValue

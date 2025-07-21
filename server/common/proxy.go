@@ -65,7 +65,7 @@ func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.
 
 	// transparent proxy
 	header := net.ProcessHeader(r.Header, link.Header)
-	res, err := net.RequestHttp(r.Context(), r.Method, header, link.URL)
+	res, err := net.RequestHTTP(r.Context(), r.Method, header, link.URL)
 	if err != nil {
 		return err
 	}
@@ -144,7 +144,7 @@ func GetEtag(file model.Obj, size int64) string {
 // 返回:
 //   - *model.Link: 修改后的链接对象
 func ProxyRange(ctx context.Context, link *model.Link, size int64) *model.Link {
-	if link.MFile == nil && link.RangeReader == nil && !strings.HasPrefix(link.URL, GetApiUrl(ctx)+"/") {
+	if link.MFile == nil && link.RangeReader == nil && !strings.HasPrefix(link.URL, GetApiURL(ctx)+"/") {
 		if link.ContentLength > 0 {
 			size = link.ContentLength
 		}

@@ -192,7 +192,7 @@ func (p *Pan115) DownloadWithUA(pickCode, ua string) (*driver115.DownloadInfo, e
 	result := driver115.DownloadResp{}
 
 	// 准备请求参数
-	params, err := utils.Json.Marshal(map[string]string{"pick_code": pickCode})
+	params, err := utils.JSONTool.Marshal(map[string]string{"pick_code": pickCode})
 	if err != nil {
 		return nil, errors.Wrap(err, "序列化请求参数失败")
 	}
@@ -359,7 +359,7 @@ func (p *Pan115) rapidUpload(fileSize int64, fileName, dirID, preID, fileID stri
 		}
 
 		// 解析响应
-		if err = driver115.CheckErr(utils.Json.Unmarshal(decrypted, &result), &result, resp); err != nil {
+		if err = driver115.CheckErr(utils.JSONTool.Unmarshal(decrypted, &result), &result, resp); err != nil {
 			return nil, errors.Wrap(err, "解析响应失败")
 		}
 
@@ -470,7 +470,7 @@ func (p *Pan115) UploadByOSS(ctx context.Context, params *driver115.UploadOSSPar
 
 	// 解析上传结果
 	var uploadResult UploadResult
-	if err = utils.Json.Unmarshal(bodyBytes, &uploadResult); err != nil {
+	if err = utils.JSONTool.Unmarshal(bodyBytes, &uploadResult); err != nil {
 		return nil, errors.Wrap(err, "解析上传结果失败")
 	}
 
@@ -678,7 +678,7 @@ LOOP:
 
 	// 解析上传结果
 	var uploadResult UploadResult
-	if err = utils.Json.Unmarshal(bodyBytes, &uploadResult); err != nil {
+	if err = utils.JSONTool.Unmarshal(bodyBytes, &uploadResult); err != nil {
 		return nil, errors.Wrap(err, "解析上传结果失败")
 	}
 

@@ -210,7 +210,7 @@ func (c *Common) Request(url, method string, callback base.ReqCallback, resp any
 	}
 
 	var erron ErrResp
-	utils.Json.Unmarshal(res.Bytes(), &erron)
+	utils.JSONTool.Unmarshal(res.Bytes(), &erron)
 	if erron.IsError() {
 		return nil, &erron
 	}

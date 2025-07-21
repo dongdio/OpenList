@@ -6,9 +6,9 @@ import (
 	"github.com/dongdio/OpenList/v4/internal/model"
 )
 
-func GetSSHPublicKeyByUserId(userId uint, pageIndex, pageSize int) (keys []model.SSHPublicKey, count int64, err error) {
+func GetSSHPublicKeyByUserID(userID uint, pageIndex, pageSize int) (keys []model.SSHPublicKey, count int64, err error) {
 	keyDB := db.Model(&model.SSHPublicKey{})
-	query := model.SSHPublicKey{UserId: userId}
+	query := model.SSHPublicKey{UserId: userID}
 	if err := keyDB.Where(query).Count(&count).Error; err != nil {
 		return nil, 0, errors.Wrapf(err, "failed get user's keys count")
 	}
@@ -18,7 +18,7 @@ func GetSSHPublicKeyByUserId(userId uint, pageIndex, pageSize int) (keys []model
 	return keys, count, nil
 }
 
-func GetSSHPublicKeyById(id uint) (*model.SSHPublicKey, error) {
+func GetSSHPublicKeyByID(id uint) (*model.SSHPublicKey, error) {
 	var k model.SSHPublicKey
 	if err := db.First(&k, id).Error; err != nil {
 		return nil, errors.Wrapf(err, "failed get old key")
@@ -26,8 +26,8 @@ func GetSSHPublicKeyById(id uint) (*model.SSHPublicKey, error) {
 	return &k, nil
 }
 
-func GetSSHPublicKeyByUserTitle(userId uint, title string) (*model.SSHPublicKey, error) {
-	key := model.SSHPublicKey{UserId: userId, Title: title}
+func GetSSHPublicKeyByUserTitle(userID uint, title string) (*model.SSHPublicKey, error) {
+	key := model.SSHPublicKey{UserId: userID, Title: title}
 	if err := db.Where(key).First(&key).Error; err != nil {
 		return nil, errors.Wrapf(err, "failed find key with title of user")
 	}
@@ -53,6 +53,6 @@ func GetSSHPublicKeys(pageIndex, pageSize int) (keys []model.SSHPublicKey, count
 	return keys, count, nil
 }
 
-func DeleteSSHPublicKeyById(id uint) error {
+func DeleteSSHPublicKeyByID(id uint) error {
 	return errors.WithStack(db.Delete(&model.SSHPublicKey{}, id).Error)
 }

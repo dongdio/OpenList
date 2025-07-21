@@ -127,7 +127,7 @@ func initStorage(ctx context.Context, storage model.Storage, storageDriver drive
 	}()
 
 	// Unmarshal additional configuration
-	err = utils.Json.UnmarshalFromString(driverStorage.Addition, storageDriver.GetAddition())
+	err = utils.JSONTool.UnmarshalFromString(driverStorage.Addition, storageDriver.GetAddition())
 	if err == nil {
 		// Handle reference storages
 		if ref, ok := storageDriver.(driver.Reference); ok {
@@ -179,7 +179,7 @@ func initStorage(ctx context.Context, storage model.Storage, storageDriver drive
 
 // EnableStorage enables a previously disabled storage
 func EnableStorage(ctx context.Context, id uint) error {
-	storage, err := db.GetStorageById(id)
+	storage, err := db.GetStorageByID(id)
 	if err != nil {
 		return errors.WithMessage(err, "failed to get storage")
 	}
@@ -202,7 +202,7 @@ func EnableStorage(ctx context.Context, id uint) error {
 
 // DisableStorage disables an active storage
 func DisableStorage(ctx context.Context, id uint) error {
-	storage, err := db.GetStorageById(id)
+	storage, err := db.GetStorageByID(id)
 	if err != nil {
 		return errors.WithMessage(err, "failed to get storage")
 	}
@@ -240,7 +240,7 @@ func DisableStorage(ctx context.Context, id uint) error {
 // UpdateStorage updates an existing storage configuration
 // This includes re-initializing the driver with the new configuration
 func UpdateStorage(ctx context.Context, storage model.Storage) error {
-	oldStorage, err := db.GetStorageById(storage.ID)
+	oldStorage, err := db.GetStorageByID(storage.ID)
 	if err != nil {
 		return errors.WithMessage(err, "failed to get old storage")
 	}
@@ -293,7 +293,7 @@ func UpdateStorage(ctx context.Context, storage model.Storage) error {
 
 // DeleteStorageByID completely removes a storage
 func DeleteStorageByID(ctx context.Context, id uint) error {
-	storage, err := db.GetStorageById(id)
+	storage, err := db.GetStorageByID(id)
 	if err != nil {
 		return errors.WithMessage(err, "failed to get storage")
 	}
@@ -319,7 +319,7 @@ func DeleteStorageByID(ctx context.Context, id uint) error {
 	}
 
 	// Delete from database
-	if err = db.DeleteStorageById(id); err != nil {
+	if err = db.DeleteStorageByID(id); err != nil {
 		return errors.WithMessage(err, "failed to delete storage from database")
 	}
 
@@ -340,7 +340,7 @@ func saveDriverStorage(driver driver.Driver) error {
 	addition := driver.GetAddition()
 
 	// Serialize addition data
-	additionJSON, err := utils.Json.MarshalToString(addition)
+	additionJSON, err := utils.JSONTool.MarshalToString(addition)
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal addition data")
 	}

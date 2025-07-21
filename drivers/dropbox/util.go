@@ -66,7 +66,7 @@ func (d *Dropbox) refreshToken() error {
 	if resp.StatusCode() != 200 {
 		return errors.Errorf("failed to refresh token: %s", resp.String())
 	}
-	_ = utils.Json.UnmarshalFromString(resp.String(), &tokenResp)
+	_ = utils.JSONTool.UnmarshalFromString(resp.String(), &tokenResp)
 	d.AccessToken = tokenResp.AccessToken
 	op.MustSaveDriverStorage(d)
 	return nil
@@ -77,7 +77,7 @@ func (d *Dropbox) request(uri, method string, callback base.ReqCallback, retry .
 	req := base.RestyClient.R().
 		SetAuthToken(d.AccessToken)
 	if d.RootNamespaceId != "" {
-		apiPathRootJson, err := utils.Json.
+		apiPathRootJson, err := utils.JSONTool.
 			MarshalToString(map[string]any{
 				".tag": "root",
 				"root": d.RootNamespaceId,
@@ -201,7 +201,7 @@ func (d *Dropbox) finishUploadSession(ctx context.Context, toPath string, offset
 		},
 	}
 
-	argsJson, err := utils.Json.MarshalToString(uploadFinishArgs)
+	argsJson, err := utils.JSONTool.MarshalToString(uploadFinishArgs)
 	if err != nil {
 		return err
 	}

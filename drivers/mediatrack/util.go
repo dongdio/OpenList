@@ -32,7 +32,7 @@ func (d *MediaTrack) request(url string, method string, callback base.ReqCallbac
 		return nil, errors.New(e.Message)
 	}
 	if resp != nil {
-		err = utils.Json.Unmarshal(res.Bytes(), resp)
+		err = utils.JSONTool.Unmarshal(res.Bytes(), resp)
 	}
 	return res.Bytes(), err
 }

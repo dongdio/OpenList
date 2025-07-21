@@ -187,7 +187,7 @@ func (c *Common) Request(url, method string, callback base.ReqCallback, resp any
 	}
 
 	var erron ErrResp
-	utils.Json.Unmarshal(res.Bytes(), &erron)
+	utils.JSONTool.Unmarshal(res.Bytes(), &erron)
 	if erron.IsError() {
 		// review_panel 表示需要短信验证码进行验证
 		if erron.ErrorMsg == "review_panel" {
@@ -205,7 +205,7 @@ func (c *Common) getReviewData(res *resty.Response) error {
 	var reviewResp LoginReviewResp
 	var reviewData ReviewData
 
-	if err := utils.Json.Unmarshal(res.Bytes(), &reviewResp); err != nil {
+	if err := utils.JSONTool.Unmarshal(res.Bytes(), &reviewResp); err != nil {
 		return err
 	}
 
@@ -219,7 +219,7 @@ func (c *Common) getReviewData(res *resty.Response) error {
 	}
 
 	// 将reviewData转为JSON字符串
-	reviewDataJSON, _ := utils.Json.MarshalIndent(reviewData, "", "  ")
+	reviewDataJSON, _ := utils.JSONTool.MarshalIndent(reviewData, "", "  ")
 	// reviewDataJSON, _ := utils.Json.Marshal(reviewData)
 
 	return errors.Errorf(`

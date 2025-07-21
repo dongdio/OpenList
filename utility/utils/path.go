@@ -8,8 +8,7 @@ import (
 	"github.com/dongdio/OpenList/v4/utility/errs"
 )
 
-// FixAndCleanPath
-// The upper layer of the root directory is still the root directory.
+// FixAndCleanPath The upper layer of the root directory is still the root directory.
 // So ".." And "." will be cleared
 // for example
 // 1. ".." or "." => "/"

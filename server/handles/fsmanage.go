@@ -422,7 +422,7 @@ func Link(c *gin.Context) {
 	if storage.Config().NoLinkURL || storage.Config().OnlyLinkMFile {
 		common.SuccessResp(c, model.Link{
 			URL: fmt.Sprintf("%s/p%s?d&sign=%s",
-				common.GetApiUrl(c),
+				common.GetApiURL(c),
 				utils.EncodePath(rawPath, true),
 				sign.Sign(rawPath)),
 		})

@@ -59,7 +59,7 @@ func (p *Cloud115) AddURL(args *tool.AddUrlArgs) (string, error) {
 	}
 	driver115, ok := storage.(*_115.Pan115)
 	if !ok {
-		return "", errors.Errorf("unsupported storage driver for offline download, only 115 Cloud is supported")
+		return "", errors.New("unsupported storage driver for offline download, only 115 Cloud is supported")
 	}
 
 	ctx := context.Background()
@@ -75,7 +75,7 @@ func (p *Cloud115) AddURL(args *tool.AddUrlArgs) (string, error) {
 
 	hashs, err := driver115.OfflineDownload(ctx, []string{args.Url}, parentDir)
 	if err != nil || len(hashs) < 1 {
-		return "", errors.Errorf("failed to add offline download task: %w", err)
+		return "", errors.Wrapf(err, "failed to add offline download task")
 	}
 
 	return hashs[0], nil
@@ -88,7 +88,7 @@ func (p *Cloud115) Remove(task *tool.DownloadTask) error {
 	}
 	driver115, ok := storage.(*_115.Pan115)
 	if !ok {
-		return errors.Errorf("unsupported storage driver for offline download, only 115 Cloud is supported")
+		return errors.New("unsupported storage driver for offline download, only 115 Cloud is supported")
 	}
 
 	ctx := context.Background()
@@ -105,7 +105,7 @@ func (p *Cloud115) Status(task *tool.DownloadTask) (*tool.Status, error) {
 	}
 	driver115, ok := storage.(*_115.Pan115)
 	if !ok {
-		return nil, errors.Errorf("unsupported storage driver for offline download, only 115 Cloud is supported")
+		return nil, errors.New("unsupported storage driver for offline download, only 115 Cloud is supported")
 	}
 
 	tasks, err := driver115.OfflineList(context.Background())
@@ -121,19 +121,20 @@ func (p *Cloud115) Status(task *tool.DownloadTask) (*tool.Status, error) {
 		Err:       nil,
 	}
 	for _, t := range tasks {
-		if t.InfoHash == task.GID {
-			s.Progress = t.Percent
-			s.Status = t.GetStatus()
-			s.Completed = t.IsDone()
-			s.TotalBytes = t.Size
-			if t.IsFailed() {
-				s.Err = errors.Errorf(t.GetStatus())
-			}
-			return s, nil
+		if t.InfoHash != task.GID {
+			continue
 		}
+		s.Progress = t.Percent
+		s.Status = t.GetStatus()
+		s.Completed = t.IsDone()
+		s.TotalBytes = t.Size
+		if t.IsFailed() {
+			s.Err = errors.New(t.GetStatus())
+		}
+		return s, nil
 	}
-	s.Err = errors.Errorf("the task has been deleted")
-	return nil, nil
+	s.Err = errors.New("the task has been deleted")
+	return s, nil
 }
 
 var _ tool.Tool = (*Cloud115)(nil)

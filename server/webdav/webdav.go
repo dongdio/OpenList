@@ -363,8 +363,8 @@ func (h *Handler) handleGetHeadPost(w http.ResponseWriter, r *http.Request) (sta
 	}
 	// Let ServeContent determine the Content-Type header.
 	storage, _ := fs.GetStorage(reqPath, &fs.GetStoragesArgs{})
-	downProxyUrl := storage.GetStorage().DownProxyUrl
-	if storage.GetStorage().WebdavNative() || (storage.GetStorage().WebdavProxy() && downProxyUrl == "") {
+	downProxyURL := storage.GetStorage().DownProxyUrl
+	if storage.GetStorage().WebdavNative() || (storage.GetStorage().WebdavProxy() && downProxyURL == "") {
 		link, _, err := fs.Link(ctx, reqPath, model.LinkArgs{Header: r.Header})
 		if err != nil {
 			return http.StatusInternalServerError, err
@@ -375,15 +375,15 @@ func (h *Handler) handleGetHeadPost(w http.ResponseWriter, r *http.Request) (sta
 		}
 		err = common.Proxy(w, r, link, fi)
 		if err != nil {
-			var statusCode net.ErrorHttpStatusCode
+			var statusCode net.ErrorHTTPStatusCode
 			if errors.As(errors.Unwrap(err), &statusCode) {
 				return int(statusCode), err
 			}
 			return http.StatusInternalServerError, errors.Errorf("webdav proxy error: %+v", err)
 		}
-	} else if storage.GetStorage().WebdavProxy() && downProxyUrl != "" {
+	} else if storage.GetStorage().WebdavProxy() && downProxyURL != "" {
 		u := fmt.Sprintf("%s%s?sign=%s",
-			strings.Split(downProxyUrl, "\n")[0],
+			strings.Split(downProxyURL, "\n")[0],
 			utils.EncodePath(reqPath, true),
 			sign.Sign(reqPath))
 		w.Header().Set("Cache-Control", "max-age=0, no-cache, no-store, must-revalidate")
@@ -637,7 +637,8 @@ func (h *Handler) handleLock(w http.ResponseWriter, r *http.Request) (retStatus 
 
 	ctx := r.Context()
 	user := ctx.Value(consts.UserKey).(*model.User)
-	token, ld, now, created := "", LockDetails{}, time.Now(), false
+	token, now, created := "", time.Now(), false
+	var ld LockDetails
 	if li == (lockInfo{}) {
 		// An empty lockInfo means to refresh the lock.
 		ih, ok := parseIfHeader(r.Header.Get("If"))

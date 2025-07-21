@@ -664,7 +664,7 @@ func (xc *XunLeiCommon) CoreLogin(username string, password string) (sessionID s
 		return "", err
 	}
 
-	if err = utils.Json.Unmarshal(res, &resp); err != nil {
+	if err = utils.JSONTool.Unmarshal(res, &resp); err != nil {
 		return "", err
 	}
 

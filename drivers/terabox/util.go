@@ -256,7 +256,7 @@ func (d *Terabox) manage(opera string, filelist any) ([]byte, error) {
 		"onnest": "fail",
 		"opera":  opera,
 	}
-	marshal, err := utils.Json.Marshal(filelist)
+	marshal, err := utils.JSONTool.Marshal(filelist)
 	if err != nil {
 		return nil, err
 	}

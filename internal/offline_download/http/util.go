@@ -1,13 +1,14 @@
 package http
 
 import (
-	"github.com/pkg/errors"
 	"mime"
+
+	"github.com/pkg/errors"
 )
 
 func parseFilenameFromContentDisposition(contentDisposition string) (string, error) {
 	if contentDisposition == "" {
-		return "", errors.Errorf("Content-Disposition is empty")
+		return "", errors.New("Content-Disposition is empty")
 	}
 	_, params, err := mime.ParseMediaType(contentDisposition)
 	if err != nil {
@@ -15,7 +16,7 @@ func parseFilenameFromContentDisposition(contentDisposition string) (string, err
 	}
 	filename := params["filename"]
 	if filename == "" {
-		return "", errors.Errorf("filename not found in Content-Disposition: [%s]", contentDisposition)
+		return "", errors.New("filename not found in Content-Disposition: " + contentDisposition)
 	}
 	return filename, nil
 }

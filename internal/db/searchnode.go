@@ -59,7 +59,7 @@ func SearchNode(req model.SearchReq, useFullText bool) ([]model.SearchNode, int6
 	var searchDB *gorm.DB
 	if !useFullText || conf.Conf.Database.Type == "sqlite3" {
 		keywordsClause := db.Where("1 = 1")
-		for _, keyword := range strings.Fields(req.Keywords) {
+		for keyword := range strings.FieldsSeq(req.Keywords) {
 			keywordsClause = keywordsClause.Where("name LIKE ?", fmt.Sprintf("%%%s%%", keyword))
 		}
 		searchDB = db.Model(&model.SearchNode{}).Where(whereInParent(req.Parent)).Where(keywordsClause)

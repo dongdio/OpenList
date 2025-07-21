@@ -14,7 +14,7 @@ func GetMetaByPath(path string) (*model.Meta, error) {
 	return &meta, nil
 }
 
-func GetMetaById(id uint) (*model.Meta, error) {
+func GetMetaByID(id uint) (*model.Meta, error) {
 	var u model.Meta
 	if err := db.First(&u, id).Error; err != nil {
 		return nil, errors.Wrapf(err, "failed get old meta")
@@ -41,6 +41,6 @@ func GetMetas(pageIndex, pageSize int) (metas []model.Meta, count int64, err err
 	return metas, count, nil
 }
 
-func DeleteMetaById(id uint) error {
+func DeleteMetaByID(id uint) error {
 	return errors.WithStack(db.Delete(&model.Meta{}, id).Error)
 }

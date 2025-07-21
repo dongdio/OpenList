@@ -9,11 +9,11 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-var Json = sonic.ConfigDefault
+var JSONTool = sonic.ConfigDefault
 
-// WriteJsonToFile write struct to json file
-func WriteJsonToFile(dst string, data any) bool {
-	str, err := Json.MarshalIndent(data, "", "  ")
+// WriteJSONToFile write struct to json file
+func WriteJSONToFile(dst string, data any) bool {
+	str, err := JSONTool.MarshalIndent(data, "", "  ")
 	if err != nil {
 		log.Errorf("failed convert Conf to []byte:%s", err.Error())
 		return false

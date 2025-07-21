@@ -6,8 +6,8 @@ import (
 	"github.com/dongdio/OpenList/v4/internal/model"
 )
 
-func GetTaskDataByType(type_s string) (*model.TaskItem, error) {
-	task := model.TaskItem{Key: type_s}
+func GetTaskDataByType(taskType string) (*model.TaskItem, error) {
+	task := model.TaskItem{Key: taskType}
 	if err := db.Where(task).First(&task).Error; err != nil {
 		return nil, errors.Wrapf(err, "failed find task")
 	}
@@ -22,11 +22,11 @@ func CreateTaskData(t *model.TaskItem) error {
 	return errors.WithStack(db.Create(t).Error)
 }
 
-func GetTaskDataFunc(type_s string, enabled bool) func() ([]byte, error) {
+func GetTaskDataFunc(taskType string, enabled bool) func() ([]byte, error) {
 	if !enabled {
 		return nil
 	}
-	task, err := GetTaskDataByType(type_s)
+	task, err := GetTaskDataByType(taskType)
 	if err != nil {
 		return nil
 	}
@@ -35,7 +35,7 @@ func GetTaskDataFunc(type_s string, enabled bool) func() ([]byte, error) {
 	}
 }
 
-func UpdateTaskDataFunc(type_s string, enabled bool) func([]byte) error {
+func UpdateTaskDataFunc(taskType string, enabled bool) func([]byte) error {
 	if !enabled {
 		return nil
 	}
@@ -44,6 +44,6 @@ func UpdateTaskDataFunc(type_s string, enabled bool) func([]byte) error {
 		if s == "null" || s == "" {
 			s = "[]"
 		}
-		return UpdateTaskData(&model.TaskItem{Key: type_s, PersistData: s})
+		return UpdateTaskData(&model.TaskItem{Key: taskType, PersistData: s})
 	}
 }

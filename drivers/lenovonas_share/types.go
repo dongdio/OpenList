@@ -18,7 +18,7 @@ func (f *File) UnmarshalJSON(data []byte) error {
 		Alias: (*Alias)(f),
 	}
 
-	if err := utils.Json.Unmarshal(data, aux); err != nil {
+	if err := utils.JSONTool.Unmarshal(data, aux); err != nil {
 		return err
 	}
 

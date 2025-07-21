@@ -124,7 +124,7 @@ type ConcurrencyLimit struct {
 }
 
 // ErrExceedMaxConcurrency 表示超出最大并发数的错误
-var ErrExceedMaxConcurrency = ErrorHttpStatusCode(http.StatusTooManyRequests)
+var ErrExceedMaxConcurrency = ErrorHTTPStatusCode(http.StatusTooManyRequests)
 
 // sub 减少并发限制计数
 func (l *ConcurrencyLimit) sub() error {
@@ -411,7 +411,7 @@ var errInfiniteRetry = errors.New("infinite retry")
 func (d *downloader) tryDownloadChunk(params *HttpRequestParams, ch *chunk) (int64, error) {
 	resp, err := d.cfg.HttpClient(d.ctx, params)
 	if err != nil {
-		statusCode, ok := errors.Unwrap(err).(ErrorHttpStatusCode)
+		statusCode, ok := errors.Unwrap(err).(ErrorHTTPStatusCode)
 		if !ok {
 			return 0, err
 		}
@@ -553,7 +553,7 @@ type chunk struct {
 // DefaultHttpRequestFunc 是默认的HTTP请求函数
 func DefaultHttpRequestFunc(ctx context.Context, params *HttpRequestParams) (*http.Response, error) {
 	header := http_range.ApplyRangeToHttpHeader(params.Range, params.HeaderRef)
-	return RequestHttp(ctx, "GET", header, params.URL)
+	return RequestHTTP(ctx, "GET", header, params.URL)
 }
 
 func GetRangeReaderHttpRequestFunc(rangeReader model.RangeReaderIF) HttpRequestFunc {

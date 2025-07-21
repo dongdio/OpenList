@@ -23,7 +23,7 @@ type IRootPath interface {
 	GetRootPath() string
 }
 
-type IRootId interface {
+type IRootID interface {
 	GetRootId() string
 }
 
@@ -43,6 +43,6 @@ func (r *RootPath) SetRootPath(path string) {
 	r.RootFolderPath = path
 }
 
-func (r RootID) GetRootId() string {
+func (r RootID) GetRootID() string {
 	return r.RootFolderID
 }

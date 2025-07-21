@@ -128,8 +128,8 @@ func (d *Seafile) listLibraries() (resp []LibraryItemResp, err error) {
 			putLibraryMap(library, index+1)
 		} else {
 			libraryInfo := LibraryInfo{}
-			data, _ := utils.Json.Marshal(library)
-			_ = utils.Json.Unmarshal(data, &libraryInfo)
+			data, _ := utils.JSONTool.Marshal(library)
+			_ = utils.JSONTool.Unmarshal(data, &libraryInfo)
 			libraryMap[name] = &libraryInfo
 		}
 	}

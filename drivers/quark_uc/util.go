@@ -259,7 +259,7 @@ func (d *QuarkOrUC) upCommit(pre UpPreResp, md5s []string) error {
 	m := md5.New()
 	m.Write([]byte(body))
 	contentMd5 := base64.StdEncoding.EncodeToString(m.Sum(nil))
-	callbackBytes, err := utils.Json.Marshal(pre.Data.Callback)
+	callbackBytes, err := utils.JSONTool.Marshal(pre.Data.Callback)
 	if err != nil {
 		return err
 	}

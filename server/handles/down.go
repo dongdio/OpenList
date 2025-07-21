@@ -75,11 +75,11 @@ func Proxy(c *gin.Context) {
 	// 检查是否可以代理
 	if canProxy(storage, filename) {
 		// 检查是否配置了下载代理URL
-		downProxyUrl := storage.GetStorage().DownProxyUrl
-		if downProxyUrl != "" {
+		downProxyURL := storage.GetStorage().DownProxyUrl
+		if downProxyURL != "" {
 			// 如果没有传递'd'参数，则重定向到代理URL
 			if _, hasDownloadParam := c.GetQuery("d"); !hasDownloadParam {
-				proxyUrls := strings.Split(downProxyUrl, "\n")
+				proxyUrls := strings.Split(downProxyURL, "\n")
 				if len(proxyUrls) > 0 {
 					URL := fmt.Sprintf("%s%s?sign=%s",
 						proxyUrls[0],
@@ -182,7 +182,7 @@ func proxy(c *gin.Context, link *model.Link, file model.Obj, proxyRange bool) {
 			// 将Markdown转换为HTML
 			var html bytes.Buffer
 			if err = goldmark.Convert(buf.Bytes(), &html); err != nil {
-				err = errors.Errorf("markdown conversion failed: %w", err)
+				err = errors.Wrap(err, "markdown conversion failed")
 			} else {
 				// 清空原缓冲区并进行安全过滤
 				buf.Reset()
@@ -210,7 +210,7 @@ func proxy(c *gin.Context, link *model.Link, file model.Obj, proxyRange bool) {
 		log.Errorf("%s %s local proxy error: %+v", c.Request.Method, c.Request.URL.Path, err)
 	} else {
 		// 否则返回错误响应
-		var statusCode net.ErrorHttpStatusCode
+		var statusCode net.ErrorHTTPStatusCode
 		if errors.As(errors.Unwrap(err), &statusCode) {
 			common.ErrorResp(c, err, int(statusCode), true)
 		}

@@ -60,7 +60,7 @@ func (p *PikPak) AddURL(args *tool.AddUrlArgs) (string, error) {
 	}
 	pikpakDriver, ok := storage.(*pikpak.PikPak)
 	if !ok {
-		return "", errors.Errorf("unsupported storage driver for offline download, only Pikpak is supported")
+		return "", errors.New("unsupported storage driver for offline download, only Pikpak is supported")
 	}
 
 	ctx := context.Background()
@@ -76,7 +76,7 @@ func (p *PikPak) AddURL(args *tool.AddUrlArgs) (string, error) {
 
 	t, err := pikpakDriver.OfflineDownload(ctx, args.Url, parentDir, "")
 	if err != nil {
-		return "", errors.Errorf("failed to add offline download task: %w", err)
+		return "", errors.Wrapf(err, "failed to add offline download task")
 	}
 
 	return t.ID, nil
@@ -89,7 +89,7 @@ func (p *PikPak) Remove(task *tool.DownloadTask) error {
 	}
 	pikpakDriver, ok := storage.(*pikpak.PikPak)
 	if !ok {
-		return errors.Errorf("unsupported storage driver for offline download, only Pikpak is supported")
+		return errors.New("unsupported storage driver for offline download, only Pikpak is supported")
 	}
 	ctx := context.Background()
 	err = pikpakDriver.DeleteOfflineTasks(ctx, []string{task.GID}, false)
@@ -106,7 +106,7 @@ func (p *PikPak) Status(task *tool.DownloadTask) (*tool.Status, error) {
 	}
 	pikpakDriver, ok := storage.(*pikpak.PikPak)
 	if !ok {
-		return nil, errors.Errorf("unsupported storage driver for offline download, only Pikpak is supported")
+		return nil, errors.New("unsupported storage driver for offline download, only Pikpak is supported")
 	}
 	tasks, err := p.GetTasks(pikpakDriver)
 	if err != nil {
@@ -120,21 +120,22 @@ func (p *PikPak) Status(task *tool.DownloadTask) (*tool.Status, error) {
 		Err:       nil,
 	}
 	for _, t := range tasks {
-		if t.ID == task.GID {
-			s.Progress = float64(t.Progress)
-			s.Status = t.Message
-			s.Completed = (t.Phase == "PHASE_TYPE_COMPLETE")
-			s.TotalBytes, err = strconv.ParseInt(t.FileSize, 10, 64)
-			if err != nil {
-				s.TotalBytes = 0
-			}
-			if t.Phase == "PHASE_TYPE_ERROR" {
-				s.Err = errors.Errorf(t.Message)
-			}
-			return s, nil
+		if t.ID != task.GID {
+			continue
 		}
+		s.Progress = float64(t.Progress)
+		s.Status = t.Message
+		s.Completed = (t.Phase == "PHASE_TYPE_COMPLETE")
+		s.TotalBytes, err = strconv.ParseInt(t.FileSize, 10, 64)
+		if err != nil {
+			s.TotalBytes = 0
+		}
+		if t.Phase == "PHASE_TYPE_ERROR" {
+			s.Err = errors.New(t.Message)
+		}
+		return s, nil
 	}
-	s.Err = errors.Errorf("the task has been deleted")
+	s.Err = errors.New("the task has been deleted")
 	return s, nil
 }
 

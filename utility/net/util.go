@@ -365,8 +365,8 @@ func (l *LimitedReadCloser) Close() error {
 	return l.rc.Close()
 }
 
-// GetRangedHttpReader 获取指定范围的 HTTP 读取器
-func GetRangedHttpReader(readCloser io.ReadCloser, offset, length int64) (io.ReadCloser, error) {
+// GetRangedHTTPReader 获取指定范围的 HTTP 读取器
+func GetRangedHTTPReader(readCloser io.ReadCloser, offset, length int64) (io.ReadCloser, error) {
 	if offset > 0 {
 		// 跳过偏移量
 		n, err := io.CopyN(io.Discard, readCloser, offset)

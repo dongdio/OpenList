@@ -178,7 +178,7 @@ func (u *User) WebAuthnDisplayName() string {
 
 func (u *User) WebAuthnCredentials() []webauthn.Credential {
 	var res []webauthn.Credential
-	err := utils.Json.Unmarshal([]byte(u.Authn), &res)
+	err := utils.JSONTool.Unmarshal([]byte(u.Authn), &res)
 	if err != nil {
 		fmt.Println(err)
 	}

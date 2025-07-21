@@ -85,7 +85,7 @@ func createDefaultConfig(configPath string) {
 	conf.Conf.LastLaunchedVersion = conf.Version
 
 	// Write the configuration to file
-	if !utils.WriteJsonToFile(configPath, conf.Conf) {
+	if !utils.WriteJSONToFile(configPath, conf.Conf) {
 		log.Fatal("failed to write default config file")
 	}
 }
@@ -100,7 +100,7 @@ func loadExistingConfig(configPath string) {
 
 	// Parse the configuration
 	conf.Conf = conf.DefaultConfig()
-	err = utils.Json.Unmarshal(configBytes, conf.Conf)
+	err = utils.JSONTool.Unmarshal(configBytes, conf.Conf)
 	if err != nil {
 		log.Fatalf("failed to parse config file: %v", err)
 	}
@@ -117,7 +117,7 @@ func loadExistingConfig(configPath string) {
 
 // updateConfigFile writes the current configuration back to the file
 func updateConfigFile(configPath string) {
-	confBody, err := utils.Json.MarshalIndent(conf.Conf, "", "  ")
+	confBody, err := utils.JSONTool.MarshalIndent(conf.Conf, "", "  ")
 	if err != nil {
 		log.Fatalf("failed to marshal config: %v", err)
 	}

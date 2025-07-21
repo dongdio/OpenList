@@ -18,7 +18,7 @@ func (t ToolsManager) Get(name string) (Tool, error) {
 	if tool, ok := t[name]; ok {
 		return tool, nil
 	}
-	return nil, errors.Errorf("tool %s not found", name)
+	return nil, errors.New("tool " + name + " not found")
 }
 
 func (t ToolsManager) Add(tool Tool) {

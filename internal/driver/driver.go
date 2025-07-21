@@ -13,11 +13,14 @@ type Driver interface {
 
 type Meta interface {
 	Config() Config
+
 	// GetStorage just get raw storage, no need to implement, because model.Storage have implemented
 	GetStorage() *model.Storage
 	SetStorage(model.Storage)
+
 	// GetAddition Additional is used for unmarshal of JSON, so need return pointer
 	GetAddition() Additional
+
 	// Init If already initialized, drop first
 	Init(ctx context.Context) error
 	Drop(ctx context.Context) error
@@ -32,6 +35,7 @@ type Reader interface {
 	// if identify files by path, need to set ID with path,like path.Join(dir.GetID(), obj.GetName())
 	// if identify files by id, need to set ID with corresponding id
 	List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error)
+
 	// Link get url/filepath/reader of file
 	Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error)
 }

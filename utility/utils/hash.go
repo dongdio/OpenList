@@ -199,7 +199,7 @@ func NewHashInfo(ht *HashType, str string) HashInfo {
 }
 
 func (hi HashInfo) String() string {
-	result, err := Json.Marshal(hi.h)
+	result, err := JSONTool.Marshal(hi.h)
 	if err != nil {
 		return ""
 	}
@@ -208,7 +208,7 @@ func (hi HashInfo) String() string {
 func FromString(str string) HashInfo {
 	hi := NewHashInfo(nil, "")
 	var tmp map[string]string
-	err := Json.Unmarshal([]byte(str), &tmp)
+	err := JSONTool.Unmarshal([]byte(str), &tmp)
 	if err != nil {
 		log.Warnf("failed to unmarsh HashInfo from string=%s", str)
 	} else {

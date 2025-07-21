@@ -309,7 +309,7 @@ func (d *BaiduPhoto) Put(ctx context.Context, dstDir model.Obj, stream model.Fil
 	}
 	contentMd5 := hex.EncodeToString(fileMd5H.Sum(nil))
 	sliceMd5 := hex.EncodeToString(sliceMd5H2.Sum(nil))
-	blockListStr, _ := utils.Json.MarshalToString(sliceMD5List)
+	blockListStr, _ := utils.JSONTool.MarshalToString(sliceMD5List)
 
 	// step.2 预上传
 	params := map[string]string{

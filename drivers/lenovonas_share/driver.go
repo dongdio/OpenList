@@ -3,6 +3,7 @@ package LenovoNasShare
 import (
 	"context"
 	"net/http"
+	"strings"
 	"time"
 
 	"resty.dev/v3"
@@ -32,6 +33,10 @@ func (d *LenovoNasShare) Init(ctx context.Context) error {
 	if err := d.getStoken(); err != nil {
 		return err
 	}
+	if !d.ShowRootFolder && d.RootFolderPath == "" {
+		list, _ := d.List(ctx, File{}, model.ListArgs{})
+		d.RootFolderPath = list[0].GetPath()
+	}
 	return nil
 }
 
@@ -43,12 +48,16 @@ func (d *LenovoNasShare) List(ctx context.Context, dir model.Obj, args model.Lis
 	d.checkStoken() // 检查stoken是否过期
 	files := make([]File, 0)
 
+	path := dir.GetPath()
+	if path == "" && !d.ShowRootFolder && d.RootFolderPath != "" {
+		path = d.RootFolderPath
+	}
 	var resp Files
 	query := map[string]string{
 		"code":   d.ShareId,
 		"num":    "5000",
 		"stoken": d.stoken,
-		"path":   dir.GetPath(),
+		"path":   path,
 	}
 	_, err := d.request(d.Host+"/oneproxy/api/share/v1/files", http.MethodGet, func(req *resty.Request) {
 		req.SetQueryParams(query)
@@ -73,6 +82,8 @@ func (d *LenovoNasShare) getStoken() error { // 获取stoken
 	if d.Host == "" {
 		d.Host = "https://siot-share.lenovo.com.cn"
 	}
+	parts := strings.Split(d.ShareId, "/")
+	d.ShareId = parts[len(parts)-1]
 	query := map[string]string{
 		"code":     d.ShareId,
 		"password": d.SharePwd,
@@ -101,10 +112,9 @@ func (d *LenovoNasShare) Link(ctx context.Context, file model.Obj, args model.Li
 	if err != nil {
 		return nil, err
 	}
-	downloadUrl := d.Host + "/oneproxy/api/share/v1/file/download?code=" + d.ShareId + "&dtoken=" + utils.GetBytes(resp, "data", "param", "dtoken").String()
-
+	downloadURL := d.Host + "/oneproxy/api/share/v1/file/download?code=" + d.ShareId + "&dtoken=" + utils.GetBytes(resp, "data", "param", "dtoken").String()
 	link := model.Link{
-		URL: downloadUrl,
+		URL: downloadURL,
 		Header: http.Header{
 			"Referer": []string{"https://siot-share.lenovo.com.cn"},
 		},

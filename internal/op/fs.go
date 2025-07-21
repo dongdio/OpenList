@@ -277,7 +277,7 @@ func getRootObject(ctx context.Context, storage driver.Driver) (model.Obj, error
 	var rootObj model.Obj
 
 	switch r := storage.GetAddition().(type) {
-	case driver.IRootId:
+	case driver.IRootID:
 		rootObj = &model.Object{
 			ID:       r.GetRootId(),
 			Name:     RootName,

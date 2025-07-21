@@ -64,7 +64,7 @@ func (d *KodBox) request(method string, pathname string, callback base.ReqCallba
 			return nil, err
 		}
 
-		err := utils.Json.Unmarshal(res.Bytes(), &commonResp)
+		err := utils.JSONTool.Unmarshal(res.Bytes(), &commonResp)
 		if err != nil {
 			return nil, err
 		}

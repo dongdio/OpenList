@@ -21,6 +21,9 @@ type StaticTokenBucket struct {
 // NewStaticTokenBucket 创建一个新的固定大小令牌桶
 // size: 桶的容量（最大令牌数）
 func NewStaticTokenBucket(size int) StaticTokenBucket {
+	if size <= 0 {
+		size = 1
+	}
 	bucket := make(chan struct{}, size)
 	// 初始化桶，填满令牌
 	for i := 0; i < size; i++ {
@@ -33,6 +36,9 @@ func NewStaticTokenBucket(size int) StaticTokenBucket {
 // oldBucket: 旧的令牌桶
 // size: 新桶的容量
 func NewStaticTokenBucketWithMigration(oldBucket TokenBucket, size int) StaticTokenBucket {
+	if size <= 0 {
+		size = 1
+	}
 	// 如果有旧桶，尝试迁移令牌
 	if oldBucket == nil {
 		// 如果没有旧桶或旧桶类型不匹配，创建新桶
@@ -56,7 +62,7 @@ func NewStaticTokenBucketWithMigration(oldBucket TokenBucket, size int) StaticTo
 	}
 
 	// 异步迁移剩余令牌
-	if migrateSize != 0 {
+	if migrateSize > 0 {
 		go func() {
 			for range migrateSize {
 				// 从旧桶取出令牌放入新桶

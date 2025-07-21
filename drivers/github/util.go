@@ -42,7 +42,7 @@ func calculateBase64Length(inputLength int64) int64 {
 
 func toErr(res *resty.Response) error {
 	var errMsg ErrResp
-	if err := utils.Json.Unmarshal(res.Bytes(), &errMsg); err != nil {
+	if err := utils.JSONTool.Unmarshal(res.Bytes(), &errMsg); err != nil {
 		return errors.New(res.Status())
 	} else {
 		return errors.Errorf("%s: %s", res.Status(), errMsg.Message)

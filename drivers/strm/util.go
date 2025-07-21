@@ -130,7 +130,7 @@ func (d *Strm) getLink(ctx context.Context, path string) string {
 	if len(apiUrl) > 0 {
 		apiUrl = strings.TrimSuffix(apiUrl, "/")
 	} else {
-		apiUrl = common.GetApiUrl(ctx)
+		apiUrl = common.GetApiURL(ctx)
 	}
 	if d.EncodePath {
 		path = utils.EncodePath(path, true)

@@ -106,7 +106,7 @@ func getSecretKey() ([]byte, []byte) {
 }
 
 func weapi(data map[string]string) map[string]string {
-	text, _ := utils.Json.Marshal(data)
+	text, _ := utils.JSONTool.Marshal(data)
 	secretKey, reversedKey := getSecretKey()
 	params := []byte(base64.StdEncoding.EncodeToString(aesCBCEncrypt(text, presetKey, iv)))
 	return map[string]string{
@@ -116,7 +116,7 @@ func weapi(data map[string]string) map[string]string {
 }
 
 func eapi(url string, data map[string]any) map[string]string {
-	text, _ := utils.Json.Marshal(data)
+	text, _ := utils.JSONTool.Marshal(data)
 	msg := "nobody" + url + "use" + string(text) + "md5forencrypt"
 	h := md5.New()
 	h.Write([]byte(msg))
@@ -128,7 +128,7 @@ func eapi(url string, data map[string]any) map[string]string {
 }
 
 func linuxapi(data map[string]any) map[string]string {
-	text, _ := utils.Json.Marshal(data)
+	text, _ := utils.JSONTool.Marshal(data)
 	return map[string]string{
 		"eparams": strings.ToUpper(hex.EncodeToString(aesECBEncrypt(text, linuxapiKey))),
 	}

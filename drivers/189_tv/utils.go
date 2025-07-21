@@ -140,7 +140,7 @@ func (y *Cloud189TV) put(ctx context.Context, url string, headers map[string]str
 	}
 
 	var erron RespErr
-	utils.Json.Unmarshal(body, &erron)
+	utils.JSONTool.Unmarshal(body, &erron)
 	xml.Unmarshal(body, &erron)
 	if erron.HasError() {
 		return nil, &erron
@@ -484,7 +484,7 @@ func (y *Cloud189TV) CreateBatchTask(aType string, familyID string, targetFolder
 	_, err := y.post(ApiUrl+"/batch/createBatchTask.action", func(req *resty.Request) {
 		req.SetFormData(map[string]string{
 			"type":      aType,
-			"taskInfos": MustString(utils.Json.MarshalToString(taskInfos)),
+			"taskInfos": MustString(utils.JSONTool.MarshalToString(taskInfos)),
 		})
 		if targetFolderId != "" {
 			req.SetFormData(map[string]string{"targetFolderId": targetFolderId})
@@ -537,7 +537,7 @@ func (y *Cloud189TV) ManageBatchTask(aType string, taskID string, targetFolderId
 			"targetFolderId": targetFolderId,
 			"type":           aType,
 			"taskId":         taskID,
-			"taskInfos":      MustString(utils.Json.MarshalToString(taskInfos)),
+			"taskInfos":      MustString(utils.JSONTool.MarshalToString(taskInfos)),
 		})
 	}, nil)
 	return err

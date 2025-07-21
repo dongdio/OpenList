@@ -109,7 +109,7 @@ func (d *NeteaseMusic) getSongObjs(args model.ListArgs) ([]model.Obj, error) {
 	}
 
 	var resp ListResp
-	err = utils.Json.Unmarshal(body, &resp)
+	err = utils.JSONTool.Unmarshal(body, &resp)
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +162,7 @@ func (d *NeteaseMusic) getSongLink(file model.Obj) (*model.Link, error) {
 	}
 
 	var resp SongResp
-	err = utils.Json.Unmarshal(body, &resp)
+	err = utils.JSONTool.Unmarshal(body, &resp)
 	if err != nil {
 		return nil, err
 	}

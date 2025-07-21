@@ -30,11 +30,11 @@ func NewProgress(total int64, up UpdateProgress) *Progress {
 	}
 }
 
-type RateLimitReader = stream.RateLimitReader
-
-type RateLimitWriter = stream.RateLimitWriter
-
-type RateLimitFile = stream.RateLimitFile
+type (
+	RateLimitReader = stream.RateLimitReader
+	RateLimitWriter = stream.RateLimitWriter
+	RateLimitFile   = stream.RateLimitFile
+)
 
 func NewLimitedUploadStream(ctx context.Context, r io.Reader) *RateLimitReader {
 	return &RateLimitReader{
@@ -56,8 +56,8 @@ func ServerUploadLimitWaitN(ctx context.Context, n int) error {
 	return stream.ServerUploadLimit.WaitN(ctx, n)
 }
 
-type ReaderWithCtx = stream.ReaderWithCtx
-
-type ReaderUpdatingProgress = stream.ReaderUpdatingProgress
-
-type SimpleReaderWithSize = stream.SimpleReaderWithSize
+type (
+	ReaderWithCtx          = stream.ReaderWithCtx
+	ReaderUpdatingProgress = stream.ReaderUpdatingProgress
+	SimpleReaderWithSize   = stream.SimpleReaderWithSize
+)

@@ -65,7 +65,7 @@ func AddURL(ctx context.Context, args *AddURLArgs) (task.TaskExtensionInfo, erro
 	}
 	// try putting url
 	if args.Tool == "SimpleHttp" {
-		err = tryPutUrl(ctx, args.DstDirPath, args.URL)
+		err = tryPutURL(ctx, args.DstDirPath, args.URL)
 		if err == nil || !errors.Is(err, errs.NotImplement) {
 			return nil, err
 		}
@@ -139,7 +139,7 @@ func AddURL(ctx context.Context, args *AddURLArgs) (task.TaskExtensionInfo, erro
 	return t, nil
 }
 
-func tryPutUrl(ctx context.Context, path, urlStr string) error {
+func tryPutURL(ctx context.Context, path, urlStr string) error {
 	var dstName string
 	u, err := url.Parse(urlStr)
 	if err == nil {

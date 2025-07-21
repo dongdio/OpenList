@@ -54,17 +54,17 @@ func writeFile(name string, data any) {
 	}
 	oldData := make(map[string]any)
 	newData := make(map[string]any)
-	err = utils.Json.Unmarshal(content, &oldData)
+	err = utils.JSONTool.Unmarshal(content, &oldData)
 	if err != nil {
 		log.Errorf("failed to unmarshal %s.json: %+v", name, err)
 		return
 	}
-	content, err = utils.Json.Marshal(data)
+	content, err = utils.JSONTool.Marshal(data)
 	if err != nil {
 		log.Errorf("failed to marshal json: %+v", err)
 		return
 	}
-	err = utils.Json.Unmarshal(content, &newData)
+	err = utils.JSONTool.Unmarshal(content, &newData)
 	if err != nil {
 		log.Errorf("failed to unmarshal json: %+v", err)
 		return
@@ -73,7 +73,7 @@ func writeFile(name string, data any) {
 		log.Infof("%s.json no changed, skip", name)
 	} else {
 		log.Infof("%s.json changed, update file", name)
-		utils.WriteJsonToFile(fmt.Sprintf("lang/%s.json", name), newData)
+		utils.WriteJSONToFile(fmt.Sprintf("lang/%s.json", name), newData)
 	}
 }
 

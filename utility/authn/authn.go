@@ -13,7 +13,7 @@ import (
 )
 
 func NewAuthnInstance(ctx *gin.Context) (*webauthn.WebAuthn, error) {
-	siteUrl, err := url.Parse(common.GetApiUrl(ctx.Request.Context()))
+	siteUrl, err := url.Parse(common.GetApiURL(ctx.Request.Context()))
 	if err != nil {
 		return nil, err
 	}

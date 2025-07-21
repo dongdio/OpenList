@@ -59,7 +59,7 @@ func (d *Dropbox) GetRootNamespaceId(ctx context.Context) (string, error) {
 		return "", err
 	}
 	var currentAccountResp CurrentAccountResp
-	err = utils.Json.Unmarshal(res, &currentAccountResp)
+	err = utils.JSONTool.Unmarshal(res, &currentAccountResp)
 	if err != nil {
 		return "", err
 	}
@@ -209,7 +209,7 @@ func (d *Dropbox) Put(ctx context.Context, dstDir model.Obj, stream model.FileSt
 				SessionID: sessionId,
 			},
 		}
-		argsJson, err := utils.Json.MarshalToString(args)
+		argsJson, err := utils.JSONTool.MarshalToString(args)
 		if err != nil {
 			return err
 		}

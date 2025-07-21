@@ -136,7 +136,7 @@ func (d *Terabox) Put(ctx context.Context, dstDir model.Obj, stream model.FileSt
 		return err
 	}
 	var locateupload_resp LocateUploadResp
-	err = utils.Json.Unmarshal(resp.Bytes(), &locateupload_resp)
+	err = utils.JSONTool.Unmarshal(resp.Bytes(), &locateupload_resp)
 	if err != nil {
 		log.Debugln(resp)
 		return err
@@ -246,7 +246,7 @@ func (d *Terabox) Put(ctx context.Context, dstDir model.Obj, stream model.FileSt
 		"rtype": "1",
 	}
 
-	uploadBlockListStr, err := utils.Json.MarshalToString(uploadBlockList)
+	uploadBlockListStr, err := utils.JSONTool.MarshalToString(uploadBlockList)
 	if err != nil {
 		return err
 	}

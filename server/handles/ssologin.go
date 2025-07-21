@@ -81,11 +81,11 @@ func verifyState(clientID, ip, state string) bool {
 }
 
 // 构建SSO重定向URI
-func ssoRedirectUri(c *gin.Context, useCompatibility bool, method string) string {
+func ssoRedirectURI(c *gin.Context, useCompatibility bool, method string) string {
 	if useCompatibility {
-		return common.GetApiUrl(c) + "/api/auth/" + method
+		return common.GetApiURL(c) + "/api/auth/" + method
 	}
-	return common.GetApiUrl(c) + "/api/auth/sso_callback" + "?method=" + method
+	return common.GetApiURL(c) + "/api/auth/sso_callback" + "?method=" + method
 }
 
 // SSOLoginRedirect 处理SSO登录重定向
@@ -111,7 +111,7 @@ func SSOLoginRedirect(c *gin.Context) {
 	platform := setting.GetStr(consts.SSOLoginPlatform)
 
 	// 构建重定向URL
-	redirectUri := ssoRedirectUri(c, useCompatibility, method)
+	redirectUri := ssoRedirectURI(c, useCompatibility, method)
 
 	// 构建URL参数
 	urlValues := url.Values{}
@@ -169,7 +169,7 @@ func SSOLoginRedirect(c *gin.Context) {
 func GetOIDCClient(c *gin.Context, useCompatibility bool, redirectUri, method string) (*oauth2.Config, error) {
 	// 如果未提供重定向URI，则构建一个
 	if redirectUri == "" {
-		redirectUri = ssoRedirectUri(c, useCompatibility, method)
+		redirectUri = ssoRedirectURI(c, useCompatibility, method)
 	}
 
 	// 获取OIDC配置
@@ -256,7 +256,7 @@ func parseJWT(p string) ([]byte, error) {
 	// 解码载荷部分
 	payload, err := base64.RawURLEncoding.DecodeString(parts[1])
 	if err != nil {
-		return nil, errors.Errorf("oidc: malformed jwt payload: %w", err)
+		return nil, errors.Wrap(err, "oidc: malformed jwt payload")
 	}
 
 	return payload, nil
@@ -366,7 +366,7 @@ func OIDCLoginCallback(c *gin.Context) {
 	// 处理获取SSO ID请求
 	if method == MethodGetSSOID {
 		if useCompatibility {
-			c.Redirect(http.StatusFound, common.GetApiUrl(c)+"/@manage?sso_id="+userID)
+			c.Redirect(http.StatusFound, common.GetApiURL(c)+"/@manage?sso_id="+userID)
 			return
 		}
 
@@ -396,13 +396,12 @@ func OIDCLoginCallback(c *gin.Context) {
 
 	// 返回令牌
 	if useCompatibility {
-		c.Redirect(http.StatusFound, common.GetApiUrl(c)+"/@login?token="+token)
+		c.Redirect(http.StatusFound, common.GetApiURL(c)+"/@login?token="+token)
 		return
 	}
 
 	c.Data(http.StatusOK, "text/html; charset=utf-8",
 		[]byte(generatePostMessageHTML(map[string]string{"token": token})))
-	return
 }
 
 // SSOLoginCallback 处理SSO登录回调
@@ -517,7 +516,7 @@ func SSOLoginCallback(c *gin.Context) {
 			Post(tokenUrl)
 	} else {
 		// 构建重定向URI
-		redirectUri := ssoRedirectUri(c, useCompatibility, method)
+		redirectUri := ssoRedirectURI(c, useCompatibility, method)
 
 		// 其他平台使用表单格式
 		formData := map[string]string{
@@ -585,7 +584,7 @@ func SSOLoginCallback(c *gin.Context) {
 	// 处理获取SSO ID请求
 	if method == MethodGetSSOID {
 		if useCompatibility {
-			c.Redirect(http.StatusFound, common.GetApiUrl(c)+"/@manage?sso_id="+userID)
+			c.Redirect(http.StatusFound, common.GetApiURL(c)+"/@manage?sso_id="+userID)
 			return
 		}
 
@@ -618,7 +617,7 @@ func SSOLoginCallback(c *gin.Context) {
 
 	// 返回令牌
 	if useCompatibility {
-		c.Redirect(http.StatusFound, common.GetApiUrl(c)+"/@login?token="+token)
+		c.Redirect(http.StatusFound, common.GetApiURL(c)+"/@login?token="+token)
 		return
 	}
 

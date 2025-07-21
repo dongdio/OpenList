@@ -137,7 +137,7 @@ func (d *Alias) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 		} else {
 			resultLink = &model.Link{
 				URL: fmt.Sprintf("%s/p%s?sign=%s",
-					common.GetApiUrl(ctx),
+					common.GetApiURL(ctx),
 					utils.EncodePath(reqPath, true),
 					sign.Sign(reqPath)),
 			}

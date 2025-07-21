@@ -11,7 +11,7 @@ import (
 	"github.com/dongdio/OpenList/v4/internal/conf"
 )
 
-// GetApiUrlFromRequest 根据请求信息生成API的完整URL
+// GetApiURLFromRequest 根据请求信息生成API的完整URL
 // 如果配置中的SiteURL已经是完整URL，则直接使用
 // 否则根据请求信息构建完整URL
 // 参数:
@@ -19,7 +19,7 @@ import (
 //
 // 返回:
 //   - 完整的API URL，不带尾部斜杠
-func GetApiUrlFromRequest(r *http.Request) string {
+func GetApiURLFromRequest(r *http.Request) string {
 	api := conf.Conf.SiteURL
 	// 如果已经是完整URL（以http开头）
 	if strings.HasPrefix(api, "http") {
@@ -48,7 +48,7 @@ func GetApiUrlFromRequest(r *http.Request) string {
 	return strings.TrimSuffix(api, "/")
 }
 
-func GetApiUrl(ctx context.Context) string {
+func GetApiURL(ctx context.Context) string {
 	api, _ := ctx.Value(consts.ApiUrlKey).(string)
 	return api
 }

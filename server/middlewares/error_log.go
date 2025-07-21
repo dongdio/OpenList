@@ -38,7 +38,7 @@ func ErrorLogging() gin.HandlerFunc {
 			}
 
 			// 尝试将响应体解析为JSON
-			if err := utils.Json.Unmarshal(w.body.Bytes(), &jsonBody); err == nil {
+			if err := utils.JSONTool.Unmarshal(w.body.Bytes(), &jsonBody); err == nil {
 				// 如果code不是200，说明有错误
 				if jsonBody.Code != 200 {
 					errorMsg = fmt.Sprintf(" 错误: code=%d, message=%s", jsonBody.Code, jsonBody.Message)

@@ -681,7 +681,7 @@ func (d *Github) get(path string) (*Object, error) {
 		return nil, toErr(res)
 	}
 	var resp Object
-	err = utils.Json.Unmarshal(res.Bytes(), &resp)
+	err = utils.JSONTool.Unmarshal(res.Bytes(), &resp)
 	return &resp, err
 }
 
@@ -732,14 +732,14 @@ func (d *Github) putBlob(ctx context.Context, s model.FileStreamer, up driver.Up
 	}
 	if res.StatusCode != 201 {
 		var errMsg ErrResp
-		if err = utils.Json.Unmarshal(resBody, &errMsg); err != nil {
+		if err = utils.JSONTool.Unmarshal(resBody, &errMsg); err != nil {
 			return "", errors.New(res.Status)
 		} else {
 			return "", errors.Errorf("%s: %s", res.Status, errMsg.Message)
 		}
 	}
 	var resp PutBlobResp
-	if err = utils.Json.Unmarshal(resBody, &resp); err != nil {
+	if err = utils.JSONTool.Unmarshal(resBody, &resp); err != nil {
 		return "", err
 	}
 	return resp.Sha, nil
@@ -781,7 +781,7 @@ func (d *Github) getTree(sha string) (*TreeResp, error) {
 		return nil, toErr(res)
 	}
 	var resp TreeResp
-	if err = utils.Json.Unmarshal(res.Bytes(), &resp); err != nil {
+	if err = utils.JSONTool.Unmarshal(res.Bytes(), &resp); err != nil {
 		return nil, err
 	}
 	return &resp, nil
@@ -819,7 +819,7 @@ func (d *Github) newTree(baseSha string, tree []any) (string, error) {
 		return "", toErr(res)
 	}
 	var resp TreeResp
-	if err = utils.Json.Unmarshal(res.Bytes(), &resp); err != nil {
+	if err = utils.JSONTool.Unmarshal(res.Bytes(), &resp); err != nil {
 		return "", err
 	}
 	return resp.Sha, nil
@@ -848,7 +848,7 @@ func (d *Github) commit(message, treeSha string) error {
 		return toErr(res)
 	}
 	var resp CommitResp
-	if err = utils.Json.Unmarshal(res.Bytes(), &resp); err != nil {
+	if err = utils.JSONTool.Unmarshal(res.Bytes(), &resp); err != nil {
 		return err
 	}
 
@@ -877,7 +877,7 @@ func (d *Github) getBranchHead() (string, error) {
 		return "", toErr(res)
 	}
 	var resp BranchResp
-	if err = utils.Json.Unmarshal(res.Bytes(), &resp); err != nil {
+	if err = utils.JSONTool.Unmarshal(res.Bytes(), &resp); err != nil {
 		return "", err
 	}
 	return resp.Commit.Sha, nil
@@ -937,7 +937,7 @@ func (d *Github) getRepo() (*RepoResp, error) {
 		return nil, toErr(res)
 	}
 	var resp RepoResp
-	if err = utils.Json.Unmarshal(res.Bytes(), &resp); err != nil {
+	if err = utils.JSONTool.Unmarshal(res.Bytes(), &resp); err != nil {
 		return nil, err
 	}
 	return &resp, nil
@@ -952,7 +952,7 @@ func (d *Github) getAuthenticatedUser() (*UserResp, error) {
 		return nil, toErr(res)
 	}
 	resp := &UserResp{}
-	if err = utils.Json.Unmarshal(res.Bytes(), resp); err != nil {
+	if err = utils.JSONTool.Unmarshal(res.Bytes(), resp); err != nil {
 		return nil, err
 	}
 	return resp, nil

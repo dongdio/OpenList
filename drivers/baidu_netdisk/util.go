@@ -276,7 +276,7 @@ func (d *BaiduNetdisk) manage(opera string, filelist any) ([]byte, error) {
 		"method": "filemanager",
 		"opera":  opera,
 	}
-	marshal, _ := utils.Json.MarshalToString(filelist)
+	marshal, _ := utils.JSONTool.MarshalToString(filelist)
 	return d.postForm("/xpan/file", params, map[string]string{
 		"async":    "0",
 		"filelist": marshal,

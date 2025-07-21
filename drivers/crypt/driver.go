@@ -167,7 +167,7 @@ func (d *Crypt) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([
 			if d.Thumbnail && thumb == "" {
 				thumbPath := stdpath.Join(args.ReqPath, ".thumbnails", name+".webp")
 				thumb = fmt.Sprintf("%s/d%s?sign=%s",
-					common.GetApiUrl(ctx),
+					common.GetApiURL(ctx),
 					utils.EncodePath(thumbPath, true),
 					sign.Sign(thumbPath))
 			}
@@ -364,7 +364,6 @@ func (d *Crypt) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 		return errors.Errorf("failed to convert path to remote path: %w", err)
 	}
 	return op.Copy(ctx, d.remoteStorage, srcRemoteActualPath, dstRemoteActualPath)
-
 }
 
 func (d *Crypt) Remove(ctx context.Context, obj model.Obj) error {
@@ -378,13 +377,13 @@ func (d *Crypt) Remove(ctx context.Context, obj model.Obj) error {
 func (d *Crypt) Put(ctx context.Context, dstDir model.Obj, streamer model.FileStreamer, up driver.UpdateProgress) error {
 	dstDirActualPath, err := d.getActualPathForRemote(dstDir.GetPath(), true)
 	if err != nil {
-		return errors.Errorf("failed to convert path to remote path: %w", err)
+		return errors.Errorf("failed to convert path to remote path: %v", err)
 	}
 
 	// Encrypt the data into wrappedIn
 	wrappedIn, err := d.cipher.EncryptData(streamer)
 	if err != nil {
-		return errors.Errorf("failed to EncryptData: %w", err)
+		return errors.Errorf("failed to EncryptData: %v", err)
 	}
 
 	// doesn't support seekableStream, since rapid-upload is not working for encrypted data

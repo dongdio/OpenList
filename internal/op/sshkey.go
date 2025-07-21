@@ -35,13 +35,13 @@ func CreateSSHPublicKey(key *model.SSHPublicKey) (error, bool) {
 
 // GetSSHPublicKeyByUserID retrieves a paginated list of SSH public keys for a user
 func GetSSHPublicKeyByUserID(userID uint, pageIndex, pageSize int) (keys []model.SSHPublicKey, count int64, err error) {
-	return db.GetSSHPublicKeyByUserId(userID, pageIndex, pageSize)
+	return db.GetSSHPublicKeyByUserID(userID, pageIndex, pageSize)
 }
 
 // GetSSHPublicKeyByIDAndUserID retrieves a specific SSH public key for a user
 // Ensures the key belongs to the specified user
 func GetSSHPublicKeyByIDAndUserID(id uint, userID uint) (*model.SSHPublicKey, error) {
-	key, err := db.GetSSHPublicKeyById(id)
+	key, err := db.GetSSHPublicKeyByID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -61,5 +61,5 @@ func UpdateSSHPublicKey(key *model.SSHPublicKey) error {
 
 // DeleteSSHPublicKeyByID deletes an SSH public key by its ID
 func DeleteSSHPublicKeyByID(keyID uint) error {
-	return db.DeleteSSHPublicKeyById(keyID)
+	return db.DeleteSSHPublicKeyByID(keyID)
 }

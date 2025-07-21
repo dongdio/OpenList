@@ -80,7 +80,7 @@ func (d *LanZou) _post(url string, callback base.ReqCallback, resp any, up bool)
 	case 1, 2, 4:
 		if resp != nil {
 			// 返回类型不统一,忽略错误
-			_ = utils.Json.Unmarshal(data, resp)
+			_ = utils.JSONTool.Unmarshal(data, resp)
 		}
 		return data, nil
 	case 9: // 登录过期

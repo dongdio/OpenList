@@ -75,11 +75,11 @@ func (d *CloudreveV4) request(method string, path string, callback base.ReqCallb
 
 	if out != nil && r.Data != nil {
 		var marshal []byte
-		marshal, err = utils.Json.Marshal(r.Data)
+		marshal, err = utils.JSONTool.Marshal(r.Data)
 		if err != nil {
 			return err
 		}
-		err = utils.Json.Unmarshal(marshal, out)
+		err = utils.JSONTool.Unmarshal(marshal, out)
 		if err != nil {
 			return err
 		}
@@ -93,9 +93,6 @@ func (d *CloudreveV4) login() error {
 	err := d.request(http.MethodGet, "/site/config/login", nil, &siteConfig)
 	if err != nil {
 		return err
-	}
-	if !siteConfig.Authn {
-		return errors.New("authn not support")
 	}
 	var prepareLogin PrepareLoginResp
 	err = d.request(http.MethodGet, "/session/prepare?email="+d.Addition.Username, nil, &prepareLogin)
@@ -231,7 +228,7 @@ func (d *CloudreveV4) upLocal(ctx context.Context, file model.FileStreamer, u Fi
 					return true
 				}
 				var retryResp Resp
-				jErr := utils.Json.Unmarshal(r.Bytes(), &retryResp)
+				jErr := utils.JSONTool.Unmarshal(r.Bytes(), &retryResp)
 				if jErr != nil {
 					return true
 				}
@@ -296,7 +293,7 @@ func (d *CloudreveV4) upRemote(ctx context.Context, file model.FileStreamer, u F
 				return err
 			}
 			var up Resp
-			err = utils.Json.Unmarshal(body, &up)
+			err = utils.JSONTool.Unmarshal(body, &up)
 			if err != nil {
 				return err
 			}

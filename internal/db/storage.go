@@ -23,8 +23,8 @@ func UpdateStorage(storage *model.Storage) error {
 	return errors.WithStack(db.Save(storage).Error)
 }
 
-// DeleteStorageById just delete storage from database by id
-func DeleteStorageById(id uint) error {
+// DeleteStorageByID just delete storage from database by id
+func DeleteStorageByID(id uint) error {
 	return errors.WithStack(db.Delete(&model.Storage{}, id).Error)
 }
 
@@ -42,8 +42,8 @@ func GetStorages(pageIndex, pageSize int) ([]model.Storage, int64, error) {
 	return storages, count, nil
 }
 
-// GetStorageById Get Storage by id, used to update storage usually
-func GetStorageById(id uint) (*model.Storage, error) {
+// GetStorageByID Get Storage by id, used to update storage usually
+func GetStorageByID(id uint) (*model.Storage, error) {
 	var storage model.Storage
 	storage.ID = id
 	if err := db.First(&storage).Error; err != nil {

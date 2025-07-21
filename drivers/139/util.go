@@ -133,7 +133,7 @@ func (d *Yun139) request(pathname string, method string, callback base.ReqCallba
 	if callback != nil {
 		callback(request)
 	}
-	bodyData, err := utils.Json.Marshal(request.Body)
+	bodyData, err := utils.JSONTool.Marshal(request.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -172,7 +172,7 @@ func (d *Yun139) request(pathname string, method string, callback base.ReqCallba
 		return nil, errors.New(errorResp.Message)
 	}
 	if resp != nil {
-		err = utils.Json.Unmarshal(response.Bytes(), resp)
+		err = utils.JSONTool.Unmarshal(response.Bytes(), resp)
 		if err != nil {
 			return nil, err
 		}
@@ -186,7 +186,7 @@ func (d *Yun139) requestRoute(data any, resp any) ([]byte, error) {
 	ts := time.Now().Format(time.DateTime)
 	req := base.RestyClient.R().SetBody(data)
 
-	body, err := utils.Json.Marshal(data)
+	body, err := utils.JSONTool.Marshal(data)
 	if err != nil {
 		return nil, err
 	}
@@ -225,7 +225,7 @@ func (d *Yun139) requestRoute(data any, resp any) ([]byte, error) {
 		return nil, errors.New(e.Message)
 	}
 	if resp != nil {
-		err = utils.Json.Unmarshal(res.Bytes(), resp)
+		err = utils.JSONTool.Unmarshal(res.Bytes(), resp)
 		if err != nil {
 			return nil, err
 		}
@@ -474,7 +474,7 @@ func (d *Yun139) personalRequest(pathname string, method string, callback base.R
 	if callback != nil {
 		callback(req)
 	}
-	body, err := utils.Json.Marshal(req.Body)
+	body, err := utils.JSONTool.Marshal(req.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -518,7 +518,7 @@ func (d *Yun139) personalRequest(pathname string, method string, callback base.R
 		return nil, errors.New(e.Message)
 	}
 	if resp != nil {
-		err = utils.Json.Unmarshal(res.Bytes(), resp)
+		err = utils.JSONTool.Unmarshal(res.Bytes(), resp)
 		if err != nil {
 			return nil, err
 		}

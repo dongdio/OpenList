@@ -87,10 +87,10 @@ func (d *MoPan) Init(ctx context.Context) error {
 		})
 
 	var deviceInfo mopan.DeviceInfo
-	if strings.TrimSpace(d.DeviceInfo) != "" && utils.Json.UnmarshalFromString(d.DeviceInfo, &deviceInfo) == nil {
+	if strings.TrimSpace(d.DeviceInfo) != "" && utils.JSONTool.UnmarshalFromString(d.DeviceInfo, &deviceInfo) == nil {
 		d.client.SetDeviceInfo(&deviceInfo)
 	}
-	d.DeviceInfo, _ = utils.Json.MarshalToString(d.client.GetDeviceInfo())
+	d.DeviceInfo, _ = utils.JSONTool.MarshalToString(d.client.GetDeviceInfo())
 
 	if strings.Contains(d.SMSCode, "send") {
 		if _, err := d.client.LoginBySms(d.Phone); err != nil {

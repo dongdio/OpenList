@@ -26,7 +26,7 @@ type Bucket struct {
 // getAndParseBuckets retrieves and parses the S3 bucket configurations
 func getAndParseBuckets() ([]Bucket, error) {
 	var buckets []Bucket
-	err := utils.Json.Unmarshal([]byte(setting.GetStr(consts.S3Buckets)), &buckets)
+	err := utils.JSONTool.Unmarshal([]byte(setting.GetStr(consts.S3Buckets)), &buckets)
 	return buckets, err
 }
 

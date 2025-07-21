@@ -108,7 +108,7 @@ func (d *Cloud189) newLogin() error {
 		return errors.Wrap(err, "获取加密配置失败")
 	}
 
-	err = utils.Json.Unmarshal(res.Bytes(), &encryptConf)
+	err = utils.JSONTool.Unmarshal(res.Bytes(), &encryptConf)
 	if err != nil {
 		return errors.Wrap(err, "解析加密配置失败")
 	}

@@ -79,11 +79,11 @@ func (d *Cloudreve) request(method string, path string, callback base.ReqCallbac
 	}
 	if out != nil && r.Data != nil {
 		var marshal []byte
-		marshal, err = utils.Json.Marshal(r.Data)
+		marshal, err = utils.JSONTool.Marshal(r.Data)
 		if err != nil {
 			return err
 		}
-		err = utils.Json.Unmarshal(marshal, out)
+		err = utils.JSONTool.Unmarshal(marshal, out)
 		if err != nil {
 			return err
 		}
@@ -211,7 +211,7 @@ func (d *Cloudreve) upLocal(ctx context.Context, stream model.FileStreamer, u Up
 					return true
 				}
 				var retryResp Resp
-				jErr := utils.Json.Unmarshal(r.Bytes(), &retryResp)
+				jErr := utils.JSONTool.Unmarshal(r.Bytes(), &retryResp)
 				if jErr != nil {
 					return true
 				}

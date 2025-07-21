@@ -19,12 +19,12 @@ import (
 func Progress() (*model.IndexProgress, error) {
 	p := setting.GetStr(consts.IndexProgress)
 	var progress model.IndexProgress
-	err := utils.Json.UnmarshalFromString(p, &progress)
+	err := utils.JSONTool.UnmarshalFromString(p, &progress)
 	return &progress, err
 }
 
 func WriteProgress(progress *model.IndexProgress) {
-	p, err := utils.Json.MarshalToString(progress)
+	p, err := utils.JSONTool.MarshalToString(progress)
 	if err != nil {
 		log.Errorf("marshal progress error: %+v", err)
 	}

@@ -76,7 +76,7 @@ func (d *DoubaoShare) request(path string, method string, callback base.ReqCallb
 
 	body := res.Bytes()
 	// 先解析为通用响应
-	if err = utils.Json.Unmarshal(body, &commonResp); err != nil {
+	if err = utils.JSONTool.Unmarshal(body, &commonResp); err != nil {
 		return nil, err
 	}
 	// 检查响应是否成功
@@ -85,7 +85,7 @@ func (d *DoubaoShare) request(path string, method string, callback base.ReqCallb
 	}
 
 	if resp != nil {
-		if err = utils.Json.Unmarshal(body, resp); err != nil {
+		if err = utils.JSONTool.Unmarshal(body, resp); err != nil {
 			return body, err
 		}
 	}

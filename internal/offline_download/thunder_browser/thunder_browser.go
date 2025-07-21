@@ -80,15 +80,15 @@ func (t *ThunderBrowser) AddURL(args *tool.AddUrlArgs) (string, error) {
 	case *thunder_browser.ThunderBrowserExpert:
 		task, err = v.OfflineDownload(ctx, args.Url, parentDir, "")
 	default:
-		return "", errors.Errorf("unsupported storage driver for offline download, only ThunderBrowser is supported")
+		return "", errors.New("unsupported storage driver for offline download, only ThunderBrowser is supported")
 	}
 
 	if err != nil {
-		return "", errors.Errorf("failed to add offline download task: %w", err)
+		return "", errors.Wrapf(err, "failed to add offline download task")
 	}
 
 	if task == nil {
-		return "", errors.Errorf("failed to add offline download task: task is nil")
+		return "", errors.New("failed to add offline download task: task is nil")
 	}
 
 	return task.ID, nil
@@ -108,7 +108,7 @@ func (t *ThunderBrowser) Remove(task *tool.DownloadTask) error {
 	case *thunder_browser.ThunderBrowserExpert:
 		err = v.DeleteOfflineTasks(ctx, []string{task.GID})
 	default:
-		return errors.Errorf("unsupported storage driver for offline download, only ThunderBrowser is supported")
+		return errors.New("unsupported storage driver for offline download, only ThunderBrowser is supported")
 	}
 
 	if err != nil {
@@ -131,7 +131,7 @@ func (t *ThunderBrowser) Status(task *tool.DownloadTask) (*tool.Status, error) {
 	case *thunder_browser.ThunderBrowserExpert:
 		tasks, err = t.GetTasksExpert(v)
 	default:
-		return nil, errors.Errorf("unsupported storage driver for offline download, only ThunderBrowser is supported")
+		return nil, errors.New("unsupported storage driver for offline download, only ThunderBrowser is supported")
 	}
 
 	if err != nil {
@@ -147,19 +147,20 @@ func (t *ThunderBrowser) Status(task *tool.DownloadTask) (*tool.Status, error) {
 	}
 
 	for _, t := range tasks {
-		if t.ID == task.GID {
-			s.Progress = float64(t.Progress)
-			s.Status = t.Message
-			s.Completed = t.Phase == "PHASE_TYPE_COMPLETE"
-			s.TotalBytes, err = strconv.ParseInt(t.FileSize, 10, 64)
-			if err != nil {
-				s.TotalBytes = 0
-			}
-			if t.Phase == "PHASE_TYPE_ERROR" {
-				s.Err = errors.New(t.Message)
-			}
-			return s, nil
+		if t.ID != task.GID {
+			continue
 		}
+		s.Progress = float64(t.Progress)
+		s.Status = t.Message
+		s.Completed = t.Phase == "PHASE_TYPE_COMPLETE"
+		s.TotalBytes, err = strconv.ParseInt(t.FileSize, 10, 64)
+		if err != nil {
+			s.TotalBytes = 0
+		}
+		if t.Phase == "PHASE_TYPE_ERROR" {
+			s.Err = errors.New(t.Message)
+		}
+		return s, nil
 	}
 
 	s.Err = errors.Errorf("the task has been deleted")

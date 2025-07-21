@@ -315,7 +315,7 @@ func (d *PikPak) OfflineList(ctx context.Context, nextPageToken string, phase []
 				"in": strings.Join(phase, ","),
 			},
 		}
-		filtersJSON, err := utils.Json.Marshal(filters)
+		filtersJSON, err := utils.JSONTool.Marshal(filters)
 		if err != nil {
 			return nil, errors.Errorf("failed to marshal filters: %w", err)
 		}

@@ -188,7 +188,7 @@ func (u *uploader) upload(ctx context.Context, stream model.FileStreamer, up dri
 		return err
 	}
 	var resp HostsResp
-	err = utils.Json.Unmarshal(body, &resp)
+	err = utils.JSONTool.Unmarshal(body, &resp)
 	if err != nil {
 		return err
 	}

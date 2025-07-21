@@ -34,7 +34,7 @@ func GetUserBySSOID(ssoID string) (*model.User, error) {
 	return &user, nil
 }
 
-func GetUserById(id uint) (*model.User, error) {
+func GetUserByID(id uint) (*model.User, error) {
 	var u model.User
 	if err := db.First(&u, id).Error; err != nil {
 		return nil, errors.Wrapf(err, "failed get old user")
@@ -61,7 +61,7 @@ func GetUsers(pageIndex, pageSize int) (users []model.User, count int64, err err
 	return users, count, nil
 }
 
-func DeleteUserById(id uint) error {
+func DeleteUserByID(id uint) error {
 	return errors.WithStack(db.Delete(&model.User{}, id).Error)
 }
 
@@ -77,7 +77,7 @@ func RegisterAuthn(u *model.User, credential *webauthn.Credential) error {
 	if credential != nil {
 		exists = append(exists, *credential)
 	}
-	res, err := utils.Json.Marshal(exists)
+	res, err := utils.JSONTool.Marshal(exists)
 	if err != nil {
 		return err
 	}
@@ -95,7 +95,7 @@ func RemoveAuthn(u *model.User, id string) error {
 		}
 	}
 
-	res, err := utils.Json.Marshal(exists)
+	res, err := utils.JSONTool.Marshal(exists)
 	if err != nil {
 		return err
 	}

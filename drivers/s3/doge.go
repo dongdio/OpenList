@@ -31,7 +31,7 @@ type Credentials struct {
 func getCredentials(AccessKey, SecretKey string) (rst Credentials, err error) {
 	apiPath := "/auth/tmp_token.json"
 	var reqBody []byte
-	reqBody, err = utils.Json.Marshal(map[string]any{"channel": "OSS_FULL", "scopes": []string{"*"}})
+	reqBody, err = utils.JSONTool.Marshal(map[string]any{"channel": "OSS_FULL", "scopes": []string{"*"}})
 	if err != nil {
 		return
 	}
@@ -53,7 +53,7 @@ func getCredentials(AccessKey, SecretKey string) (rst Credentials, err error) {
 	}
 
 	var tmpTokenResp TmpTokenResponse
-	err = utils.Json.Unmarshal(resp.Bytes(), &tmpTokenResp)
+	err = utils.JSONTool.Unmarshal(resp.Bytes(), &tmpTokenResp)
 	if err != nil {
 		return rst, err
 	}

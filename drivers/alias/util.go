@@ -102,7 +102,7 @@ func (d *Alias) link(ctx context.Context, reqPath string, args model.LinkArgs) (
 		return nil, nil, err
 	}
 	// proxy || ftp,s3
-	if !args.Redirect || len(common.GetApiUrl(ctx)) == 0 {
+	if !args.Redirect || len(common.GetApiURL(ctx)) == 0 {
 		return op.Link(ctx, storage, reqActualPath, args)
 	}
 	obj, err := fs.Get(ctx, reqPath, &fs.GetArgs{NoLog: true})
@@ -199,7 +199,7 @@ func (d *Alias) extract(ctx context.Context, dst, sub string, args model.Archive
 		}
 		link := &model.Link{
 			URL: fmt.Sprintf("%s/ap%s?inner=%s&pass=%s&sign=%s",
-				common.GetApiUrl(ctx),
+				common.GetApiURL(ctx),
 				utils.EncodePath(reqPath, true),
 				utils.EncodePath(args.InnerPath, true),
 				url.QueryEscape(args.Password),

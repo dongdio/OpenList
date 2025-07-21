@@ -61,7 +61,7 @@ func (d *Open123) Request(apiInfo *ApiInfo, method string, callback base.ReqCall
 
 		// 解析为通用响应
 		var baseResp BaseResp
-		if err = utils.Json.Unmarshal(body, &baseResp); err != nil {
+		if err = utils.JSONTool.Unmarshal(body, &baseResp); err != nil {
 			return nil, err
 		}
 

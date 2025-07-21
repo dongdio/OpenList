@@ -73,10 +73,10 @@ func GetRangeReaderFromLink(size int64, link *model.Link) (model.RangeReaderIF, 
 		header := net.ProcessHeader(requestHeader, link.Header)
 		header = http_range.ApplyRangeToHttpHeader(httpRange, header)
 
-		response, err := net.RequestHttp(ctx, "GET", header, link.URL)
+		response, err := net.RequestHTTP(ctx, "GET", header, link.URL)
 		if err != nil {
-			var errorHttpStatusCode net.ErrorHttpStatusCode
-			if errors.As(errors.Unwrap(err), &errorHttpStatusCode) {
+			var errorHTTPStatusCode net.ErrorHTTPStatusCode
+			if errors.As(errors.Unwrap(err), &errorHTTPStatusCode) {
 				return nil, err
 			}
 			return nil, fmt.Errorf("http request failure, err:%w", err)
@@ -86,7 +86,7 @@ func GetRangeReaderFromLink(size int64, link *model.Link) (model.RangeReaderIF, 
 			return response.Body, nil
 		} else if response.StatusCode == http.StatusOK {
 			log.Warnf("remote http server not supporting range request, expect low perfromace!")
-			readCloser, err := net.GetRangedHttpReader(response.Body, httpRange.Start, httpRange.Length)
+			readCloser, err := net.GetRangedHTTPReader(response.Body, httpRange.Start, httpRange.Length)
 			if err != nil {
 				return nil, err
 			}

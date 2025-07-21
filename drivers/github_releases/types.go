@@ -26,7 +26,7 @@ func (m *MountPoint) RequestRelease(get func(url string) (*resty.Response, error
 	if m.Release == nil || refresh {
 		resp, _ := get("https://api.github.com/repos/" + m.Repo + "/releases/latest")
 		m.Release = new(Release)
-		_ = utils.Json.Unmarshal(resp.Bytes(), m.Release)
+		_ = utils.JSONTool.Unmarshal(resp.Bytes(), m.Release)
 	}
 }
 
@@ -39,7 +39,7 @@ func (m *MountPoint) RequestReleases(get func(url string) (*resty.Response, erro
 	if m.Releases == nil || refresh {
 		resp, _ := get("https://api.github.com/repos/" + m.Repo + "/releases")
 		m.Releases = new([]Release)
-		_ = utils.Json.Unmarshal(resp.Bytes(), m.Releases)
+		_ = utils.JSONTool.Unmarshal(resp.Bytes(), m.Releases)
 	}
 }
 
@@ -147,7 +147,7 @@ func (m *MountPoint) GetOtherFile(get func(url string) (*resty.Response, error),
 	if m.OtherFile == nil || refresh {
 		resp, _ := get("https://api.github.com/repos/" + m.Repo + "/contents")
 		m.OtherFile = new([]FileInfo)
-		_ = utils.Json.Unmarshal(resp.Bytes(), m.OtherFile)
+		_ = utils.JSONTool.Unmarshal(resp.Bytes(), m.OtherFile)
 	}
 
 	files := make([]File, 0)

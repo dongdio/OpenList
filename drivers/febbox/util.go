@@ -112,7 +112,7 @@ func (d *FebBox) getFiles(dirID string, page, pageLimit int64) (*[]File, error) 
 		return nil, err
 	}
 
-	if err = utils.Json.Unmarshal(res, &fileList); err != nil {
+	if err = utils.JSONTool.Unmarshal(res, &fileList); err != nil {
 		return nil, err
 	}
 
@@ -134,7 +134,7 @@ func (d *FebBox) getDownloadLink(id string, ip string) (string, error) {
 		return "", err
 	}
 
-	if err = utils.Json.Unmarshal(res, &fileDownloadResp); err != nil {
+	if err = utils.JSONTool.Unmarshal(res, &fileDownloadResp); err != nil {
 		return "", err
 	}
 	if len(fileDownloadResp.Data) == 0 {

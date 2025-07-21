@@ -19,7 +19,6 @@ import (
 	"github.com/dongdio/OpenList/v4/internal/op"
 	"github.com/dongdio/OpenList/v4/internal/setting"
 	"github.com/dongdio/OpenList/v4/utility/errs"
-
 	"github.com/dongdio/OpenList/v4/utility/generic"
 	"github.com/dongdio/OpenList/v4/utility/search/searcher"
 	"github.com/dongdio/OpenList/v4/utility/utils"

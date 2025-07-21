@@ -162,7 +162,7 @@ func (d *BaiduNetdisk) PutRapid(ctx context.Context, dstDir model.Obj, stream mo
 	path := stdpath.Join(dstDir.GetPath(), stream.GetName())
 	mtime := stream.ModTime().Unix()
 	ctime := stream.CreateTime().Unix()
-	blockList, _ := utils.Json.MarshalToString([]string{contentMd5})
+	blockList, _ := utils.JSONTool.MarshalToString([]string{contentMd5})
 
 	var newFile File
 	_, err := d.create(path, streamSize, 0, "", blockList, &newFile, mtime, ctime)
@@ -253,7 +253,7 @@ func (d *BaiduNetdisk) Put(ctx context.Context, dstDir model.Obj, stream model.F
 	}
 	contentMd5 := hex.EncodeToString(fileMd5H.Sum(nil))
 	sliceMd5 := hex.EncodeToString(sliceMd5H2.Sum(nil))
-	blockListStr, _ := utils.Json.MarshalToString(blockList)
+	blockListStr, _ := utils.JSONTool.MarshalToString(blockList)
 	path := stdpath.Join(dstDir.GetPath(), stream.GetName())
 	mtime := stream.ModTime().Unix()
 	ctime := stream.CreateTime().Unix()

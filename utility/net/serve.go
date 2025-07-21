@@ -122,7 +122,7 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request, name string, modTime time
 		reader, err := rangeReadCloser.RangeRead(ctx, http_range.Range{Length: -1})
 		if err != nil {
 			code = http.StatusRequestedRangeNotSatisfiable
-			if statusCode, ok := errors.Unwrap(err).(ErrorHttpStatusCode); ok {
+			if statusCode, ok := errors.Unwrap(err).(ErrorHTTPStatusCode); ok {
 				code = int(statusCode)
 			}
 			http.Error(w, err.Error(), code)
@@ -145,7 +145,7 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request, name string, modTime time
 		sendContent, err = rangeReadCloser.RangeRead(ctx, ra)
 		if err != nil {
 			code = http.StatusRequestedRangeNotSatisfiable
-			if statusCode, ok := errors.Unwrap(err).(ErrorHttpStatusCode); ok {
+			if statusCode, ok := errors.Unwrap(err).(ErrorHTTPStatusCode); ok {
 				code = int(statusCode)
 			}
 			http.Error(w, err.Error(), code)
@@ -160,7 +160,7 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request, name string, modTime time
 			http.Error(w, err.Error(), http.StatusRequestedRangeNotSatisfiable)
 		}
 		code = http.StatusPartialContent
-		if statusCode, ok := errors.Unwrap(err).(ErrorHttpStatusCode); ok {
+		if statusCode, ok := errors.Unwrap(err).(ErrorHTTPStatusCode); ok {
 			code = int(statusCode)
 		}
 		pr, pw := io.Pipe()
@@ -235,9 +235,9 @@ func ProcessHeader(origin, override http.Header) http.Header {
 	return result
 }
 
-// RequestHttp deal with Header properly then send the request
-func RequestHttp(ctx context.Context, httpMethod string, headerOverride http.Header, URL string) (*http.Response, error) {
-	req, err := http.NewRequestWithContext(ctx, httpMethod, URL, nil)
+// RequestHTTP deal with Header properly then send the request
+func RequestHTTP(ctx context.Context, method string, headerOverride http.Header, URL string) (*http.Response, error) {
+	req, err := http.NewRequestWithContext(ctx, method, URL, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -264,14 +264,14 @@ func RequestHttp(ctx context.Context, httpMethod string, headerOverride http.Hea
 		_ = res.Body.Close()
 		msg := string(all)
 		log.Debugln(msg)
-		return nil, fmt.Errorf("http request [%s] failure,status: %w response:%s", URL, ErrorHttpStatusCode(res.StatusCode), msg)
+		return nil, fmt.Errorf("http request [%s] failure,status: %w response:%s", URL, ErrorHTTPStatusCode(res.StatusCode), msg)
 	}
 	return res, nil
 }
 
-type ErrorHttpStatusCode int
+type ErrorHTTPStatusCode int
 
-func (e ErrorHttpStatusCode) Error() string {
+func (e ErrorHTTPStatusCode) Error() string {
 	return fmt.Sprintf("%d|%s", e, http.StatusText(int(e)))
 }
 

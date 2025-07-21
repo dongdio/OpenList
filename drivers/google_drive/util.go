@@ -122,7 +122,7 @@ func (d *GoogleDrive) refreshToken() error {
 
 		// Now let's unmarshal the data into `payload`
 		var jsonData googleDriveServiceAccount
-		err = utils.Json.Unmarshal(gdsaFileThisContent, &jsonData)
+		err = utils.JSONTool.Unmarshal(gdsaFileThisContent, &jsonData)
 		if err != nil {
 			return err
 		}

@@ -93,7 +93,7 @@ func getMetaByPath(path string) (*model.Meta, error) {
 
 // DeleteMetaByID deletes metadata by its ID and removes it from cache
 func DeleteMetaByID(id uint) error {
-	old, err := db.GetMetaById(id)
+	old, err := db.GetMetaByID(id)
 	if err != nil {
 		return errors.Wrap(err, "failed to get meta before deletion")
 	}
@@ -102,7 +102,7 @@ func DeleteMetaByID(id uint) error {
 	metaCache.Del(old.Path)
 
 	// Delete from database
-	return db.DeleteMetaById(id)
+	return db.DeleteMetaByID(id)
 }
 
 // UpdateMeta updates metadata and refreshes the cache
@@ -114,7 +114,7 @@ func UpdateMeta(meta *model.Meta) error {
 	meta.Path = utils.FixAndCleanPath(meta.Path)
 
 	// Get the old metadata to find its path
-	old, err := db.GetMetaById(meta.ID)
+	old, err := db.GetMetaByID(meta.ID)
 	if err != nil {
 		return errors.Wrap(err, "failed to get old meta for update")
 	}
@@ -143,7 +143,7 @@ func CreateMeta(meta *model.Meta) error {
 
 // GetMetaByID retrieves metadata by its ID directly from the database
 func GetMetaByID(id uint) (*model.Meta, error) {
-	meta, err := db.GetMetaById(id)
+	meta, err := db.GetMetaByID(id)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get meta by id")
 	}

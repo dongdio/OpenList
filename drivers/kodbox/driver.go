@@ -55,12 +55,12 @@ func (d *KodBox) List(ctx context.Context, dir model.Obj, args model.ListArgs) (
 		return nil, err
 	}
 
-	dataBytes, err := utils.Json.Marshal(resp.Data)
+	dataBytes, err := utils.JSONTool.Marshal(resp.Data)
 	if err != nil {
 		return nil, err
 	}
 
-	err = utils.Json.Unmarshal(dataBytes, &listPathData)
+	err = utils.JSONTool.Unmarshal(dataBytes, &listPathData)
 	if err != nil {
 		return nil, err
 	}

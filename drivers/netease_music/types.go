@@ -48,7 +48,7 @@ type LyricObj struct {
 }
 
 func (lrc *LyricObj) getProxyLink(ctx context.Context) *model.Link {
-	rawURL := common.GetApiUrl(ctx) + "/p" + lrc.Path
+	rawURL := common.GetApiURL(ctx) + "/p" + lrc.Path
 	rawURL = utils.EncodePath(rawURL, true) + "?type=parsed&sign=" + sign.Sign(lrc.Path)
 	return &model.Link{URL: rawURL}
 }

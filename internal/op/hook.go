@@ -96,7 +96,7 @@ var settingItemHooks = map[string]SettingItemHook{
 
 	// Process filename character mapping
 	consts.FilenameCharMapping: func(item *model.SettingItem) error {
-		err := utils.Json.UnmarshalFromString(item.Value, &conf.FilenameCharMap)
+		err := utils.JSONTool.UnmarshalFromString(item.Value, &conf.FilenameCharMap)
 		if err != nil {
 			return errors.Wrap(err, "failed to parse filename character mapping")
 		}

@@ -162,6 +162,7 @@ type SeekableStream struct {
 	*FileStream
 	// should have one of belows to support rangeRead
 	rangeReadCloser model.RangeReadCloserIF
+	size            int64
 }
 
 func NewSeekableStream(fs *FileStream, link *model.Link) (*SeekableStream, error) {
@@ -360,11 +361,11 @@ func (c *headCache) read(p []byte) (n int, err error) {
 	return
 }
 
-func (r *headCache) Close() error {
-	for i := range r.bufs {
-		r.bufs[i] = nil
+func (c *headCache) Close() error {
+	for i := range c.bufs {
+		c.bufs[i] = nil
 	}
-	r.bufs = nil
+	c.bufs = nil
 	return nil
 }
 
