@@ -242,9 +242,6 @@ func copyFileBetween2Storages(t *CopyTask, srcStorage, dstStorage driver.Driver,
 		return errors.WithMessagef(err, "failed to get source file [%s]", srcFilePath)
 	}
 
-	// Set total bytes for progress tracking
-	t.SetTotalBytes(srcFile.GetSize())
-
 	var linkRes *model.Link
 	// Get a link to the source file
 	linkRes, _, err = op.Link(t.Ctx(), srcStorage, srcFilePath, model.LinkArgs{})
@@ -262,6 +259,8 @@ func copyFileBetween2Storages(t *CopyTask, srcStorage, dstStorage driver.Driver,
 		_ = linkRes.Close()
 		return errors.WithMessagef(err, "failed to create stream for [%s]", srcFilePath)
 	}
+
+	t.SetTotalBytes(fileStream.GetSize())
 
 	// Upload the file to the destination
 	// Pass the progress callback function to update task progress

@@ -7,10 +7,9 @@ import (
 	stdpath "path"
 	"strings"
 
-	"github.com/dongdio/OpenList/v4/utility/stream"
-
 	"github.com/dongdio/OpenList/v4/internal/model"
 	tool2 "github.com/dongdio/OpenList/v4/utility/archive/tool"
+	"github.com/dongdio/OpenList/v4/utility/stream"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
@@ -19,7 +18,8 @@ type Archives struct {
 
 func (Archives) AcceptedExtensions() []string {
 	return []string{
-		".br", ".bz2", ".gz", ".lz4", ".lz", ".sz", ".s2", ".xz", ".zz", ".zst", ".tar",
+		".br", ".bz2", ".gz", ".lz4", ".lz", ".mz", ".sz", ".s2", ".xz", ".zz", ".zst", ".tar",
+		".tgz", ".tlz4", ".tlz", ".tbz2", ".txz", ".tzst",
 	}
 }
 

@@ -156,7 +156,7 @@ func proxy(c *gin.Context, link *model.Link, file model.Obj, proxyRange bool) {
 
 	// 处理范围请求
 	if proxyRange {
-		common.ProxyRange(c, link, file.GetSize())
+		link = common.ProxyRange(c, link, file.GetSize())
 	}
 
 	// 创建响应写入器

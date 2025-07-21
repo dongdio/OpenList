@@ -32,25 +32,33 @@ import (
 //   - error: 错误信息
 func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.Obj) error {
 	if link.MFile != nil {
-		attachHeader(w, file, link.Header)
+		attachHeader(w, file, link)
 		http.ServeContent(w, r, file.GetName(), file.ModTime(), link.MFile)
 		return nil
 	}
 
 	if link.Concurrency > 0 || link.PartSize > 0 {
-		attachHeader(w, file, link.Header)
-		rrf, _ := stream.GetRangeReaderFromLink(file.GetSize(), link)
+		attachHeader(w, file, link)
+		size := link.ContentLength
+		if size <= 0 {
+			size = file.GetSize()
+		}
+		rrf, _ := stream.GetRangeReaderFromLink(size, link)
 		if link.RangeReader == nil {
 			r = r.WithContext(context.WithValue(r.Context(), consts.RequestHeaderKey, r.Header))
 		}
-		return net.ServeHTTP(w, r, file.GetName(), file.ModTime(), file.GetSize(), &model.RangeReadCloser{
+		return net.ServeHTTP(w, r, file.GetName(), file.ModTime(), size, &model.RangeReadCloser{
 			RangeReader: rrf,
 		})
 	}
 
 	if link.RangeReader != nil {
-		attachHeader(w, file, link.Header)
-		return net.ServeHTTP(w, r, file.GetName(), file.ModTime(), file.GetSize(), &model.RangeReadCloser{
+		attachHeader(w, file, link)
+		size := link.ContentLength
+		if size <= 0 {
+			size = file.GetSize()
+		}
+		return net.ServeHTTP(w, r, file.GetName(), file.ModTime(), size, &model.RangeReadCloser{
 			RangeReader: link.RangeReader,
 		})
 	}
@@ -81,17 +89,22 @@ func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.
 // 参数:
 //   - w: HTTP响应写入器
 //   - file: 文件对象
-func attachHeader(w http.ResponseWriter, file model.Obj, header http.Header) {
+func attachHeader(w http.ResponseWriter, file model.Obj, link *model.Link) {
 	fileName := file.GetName()
 	// 设置Content-Disposition头，使浏览器将内容作为附件处理
 	w.Header().Set("Content-Disposition", utils.GenerateContentDisposition(fileName))
 	// 设置内容类型
 	w.Header().Set("Content-Type", utils.GetMimeType(fileName))
-	// 设置ETag
-	w.Header().Set("Etag", GetEtag(file))
-	contentType := header.Get("Content-Type")
+	size := link.ContentLength
+	if size <= 0 {
+		size = file.GetSize()
+	}
+	w.Header().Set("Etag", GetEtag(file, size))
+	contentType := link.Header.Get("Content-Type")
 	if len(contentType) > 0 {
 		w.Header().Set("Content-Type", contentType)
+	} else {
+		w.Header().Set("Content-Type", utils.GetMimeType(fileName))
 	}
 }
 
@@ -100,10 +113,11 @@ func attachHeader(w http.ResponseWriter, file model.Obj, header http.Header) {
 //
 // 参数:
 //   - file: 文件对象
+//   - size: 文件大小
 //
 // 返回:
 //   - string: ETag值
-func GetEtag(file model.Obj) string {
+func GetEtag(file model.Obj, size int64) string {
 	// 尝试使用文件哈希作为ETag
 	hash := ""
 	for _, v := range file.GetHash().Export() {
@@ -116,7 +130,7 @@ func GetEtag(file model.Obj) string {
 	}
 
 	// 如果没有哈希，使用修改时间和大小组合（类似nginx的做法）
-	return fmt.Sprintf(`"%x-%x"`, file.ModTime().Unix(), file.GetSize())
+	return fmt.Sprintf(`"%x-%x"`, file.ModTime().Unix(), size)
 }
 
 // ProxyRange 为链接设置范围读取器
@@ -126,22 +140,24 @@ func GetEtag(file model.Obj) string {
 // 参数:
 //   - link: 链接对象
 //   - size: 文件大小
-func ProxyRange(ctx context.Context, link *model.Link, size int64) {
-	if link == nil {
-		return
-	}
-	// 如果已经有MFile，不需要设置RangeReadCloser
-	if link.MFile != nil {
-		return
-	}
-	// 如果RangeReadCloser为nil，尝试从链接创建
-	if link.RangeReader == nil && !strings.HasPrefix(link.URL, GetApiUrl(ctx)+"/") {
-		var rrc, err = stream.GetRangeReaderFromLink(size, link)
-		if err != nil {
-			return
+//
+// 返回:
+//   - *model.Link: 修改后的链接对象
+func ProxyRange(ctx context.Context, link *model.Link, size int64) *model.Link {
+	if link.MFile == nil && link.RangeReader == nil && !strings.HasPrefix(link.URL, GetApiUrl(ctx)+"/") {
+		if link.ContentLength > 0 {
+			size = link.ContentLength
 		}
-		link.RangeReader = rrc
+		rrf, err := stream.GetRangeReaderFromLink(size, link)
+		if err == nil {
+			return &model.Link{
+				RangeReader:   rrf,
+				ContentLength: size,
+			}
+		}
+
 	}
+	return link
 }
 
 // InterceptResponseWriter 拦截响应写入的ResponseWriter

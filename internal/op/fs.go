@@ -343,7 +343,7 @@ func Link(ctx context.Context, storage driver.Driver, path string, args model.Li
 	}
 
 	// Create cache key
-	key := Key(storage, path)
+	key := stdpath.Join(Key(storage, path), args.Type)
 
 	// Check cache
 	if link, ok := linkCache.Get(key); ok {
@@ -370,6 +370,9 @@ func Link(ctx context.Context, storage driver.Driver, path string, args model.Li
 	// Skip singleflight for local-only operations
 	if storage.Config().OnlyLinkMFile {
 		link, err := fetchLinkFn()
+		if err != nil {
+			return nil, nil, err
+		}
 		return link, file, err
 	}
 
@@ -388,6 +391,9 @@ func Link(ctx context.Context, storage driver.Driver, path string, args model.Li
 		if err == nil {
 			link.AcquireReference()
 		}
+	}
+	if err != nil {
+		return nil, nil, err
 	}
 	return link, file, err
 }

@@ -301,10 +301,18 @@ func (d *Local) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 			if err != nil {
 				return nil, errors.Wrap(err, "打开缩略图文件失败")
 			}
+			// Get thumbnail file size for Content-Length
+			stat, err := fileHandle.Stat()
+			if err != nil {
+				fileHandle.Close()
+				return nil, err
+			}
+			link.ContentLength = stat.Size()
 			link.MFile = fileHandle
 		} else {
 			// 使用内存中的缩略图
 			link.MFile = bytes.NewReader(buffer.Bytes())
+			link.ContentLength = int64(buffer.Len())
 			// 不设置Content-Length，让http包自动计算
 			// link.Header.Set("Content-Length", strconv.Itoa(buffer.Len()))
 		}
