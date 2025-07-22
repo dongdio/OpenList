@@ -343,20 +343,12 @@ func FsGet(c *gin.Context) {
 	// 处理非目录文件
 	if !obj.IsDir() {
 		if storage.Config().MustProxy() || storage.GetStorage().WebProxy {
-			// 处理需要代理的情况
-			query := ""
-			if isEncrypt(meta, reqPath) || setting.GetBool(consts.SignAll) {
-				query = "?sign=" + sign.Sign(reqPath)
-			}
-
-			// 使用下载代理URL或默认API URL
-			if storage.GetStorage().DownProxyUrl != "" {
-				proxyUrls := strings.Split(storage.GetStorage().DownProxyUrl, "\n")
-				rawURL = fmt.Sprintf("%s%s?sign=%s",
-					proxyUrls[0],
-					utils.EncodePath(reqPath, true),
-					sign.Sign(reqPath))
-			} else {
+			rawURL = common.GenerateDownProxyURL(storage.GetStorage(), reqPath)
+			if rawURL == "" {
+				query := ""
+				if isEncrypt(meta, reqPath) || setting.GetBool(consts.SignAll) {
+					query = "?sign=" + sign.Sign(reqPath)
+				}
 				rawURL = fmt.Sprintf("%s/p%s%s",
 					common.GetApiURL(c),
 					utils.EncodePath(reqPath, true),
@@ -382,7 +374,6 @@ func FsGet(c *gin.Context) {
 			}
 		}
 	}
-
 	// 获取相关文件
 	var related []model.Obj
 	parentPath := stdpath.Dir(reqPath)

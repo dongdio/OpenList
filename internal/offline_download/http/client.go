@@ -38,7 +38,7 @@ func (s SimpleHttp) IsReady() bool {
 	return true
 }
 
-func (s SimpleHttp) AddURL(args *tool.AddUrlArgs) (string, error) {
+func (s SimpleHttp) AddURL(args *tool.AddURLLinkArgs) (string, error) {
 	panic("should not be called")
 }
 
@@ -56,7 +56,7 @@ func (s SimpleHttp) Run(task *tool.DownloadTask) error {
 	if streamPut {
 		method = http.MethodHead
 	}
-	req, err := http.NewRequestWithContext(task.Ctx(), method, task.Url, nil)
+	req, err := http.NewRequestWithContext(task.Ctx(), method, task.URL, nil)
 	if err != nil {
 		return err
 	}

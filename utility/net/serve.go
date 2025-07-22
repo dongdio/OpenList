@@ -242,7 +242,7 @@ func RequestHTTP(ctx context.Context, method string, headerOverride http.Header,
 		return nil, err
 	}
 	req.Header = headerOverride
-	res, err := HttpClient().Do(req)
+	res, err := GetHTTPClient().Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -278,9 +278,9 @@ func (e ErrorHTTPStatusCode) Error() string {
 var once sync.Once
 var httpClient *http.Client
 
-func HttpClient() *http.Client {
+func GetHTTPClient() *http.Client {
 	once.Do(func() {
-		httpClient = NewHttpClient()
+		httpClient = NewHTTPClient()
 		httpClient.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 			if len(via) >= 10 {
 				return errors.New("stopped after 10 redirects")
@@ -292,12 +292,12 @@ func HttpClient() *http.Client {
 	return httpClient
 }
 
-func NewHttpClient() *http.Client {
+func NewHTTPClient() *http.Client {
 	return &http.Client{
 		Timeout: time.Hour * 48,
 		Transport: &http.Transport{
 			Proxy:           http.ProxyFromEnvironment,
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: conf.Conf.TlsInsecureSkipVerify},
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: conf.Conf.TLSInsecureSkipVerify},
 		},
 	}
 }

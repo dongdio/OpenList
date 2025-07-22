@@ -3,7 +3,6 @@ package local
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"io/fs"
 	"net/http"
@@ -16,7 +15,7 @@ import (
 
 	"github.com/OpenListTeam/times"
 	cp "github.com/otiai10/copy"
-	pkgerrors "github.com/pkg/errors"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	_ "golang.org/x/image/webp"
 
@@ -63,7 +62,7 @@ func (d *Local) Init(ctx context.Context) error {
 	} else {
 		v, err := strconv.ParseUint(d.MkdirPerm, 8, 32)
 		if err != nil {
-			return pkgerrors.Wrapf(err, "无法解析目录权限值 '%s'，请使用有效的八进制数字", d.MkdirPerm)
+			return errors.Wrapf(err, "无法解析目录权限值 '%s'，请使用有效的八进制数字", d.MkdirPerm)
 		}
 		d.mkdirPerm = int32(v)
 	}
@@ -71,14 +70,14 @@ func (d *Local) Init(ctx context.Context) error {
 	// 检查根目录是否存在
 	rootPath := d.GetRootPath()
 	if !utils.Exists(rootPath) {
-		return pkgerrors.Errorf("根目录 '%s' 不存在，请先创建该目录", rootPath)
+		return errors.Errorf("根目录 '%s' 不存在，请先创建该目录", rootPath)
 	}
 
 	// 如果根路径不是绝对路径，转换为绝对路径
 	if !filepath.IsAbs(rootPath) {
 		abs, err := filepath.Abs(rootPath)
 		if err != nil {
-			return pkgerrors.Wrapf(err, "无法将根路径 '%s' 转换为绝对路径", rootPath)
+			return errors.Wrapf(err, "无法将根路径 '%s' 转换为绝对路径", rootPath)
 		}
 		d.Addition.RootFolderPath = abs
 	}
@@ -88,7 +87,7 @@ func (d *Local) Init(ctx context.Context) error {
 		if !utils.Exists(d.ThumbCacheFolder) {
 			err := os.MkdirAll(d.ThumbCacheFolder, os.FileMode(d.mkdirPerm))
 			if err != nil {
-				return pkgerrors.Wrapf(err, "无法创建缩略图缓存目录 '%s'", d.ThumbCacheFolder)
+				return errors.Wrapf(err, "无法创建缩略图缓存目录 '%s'", d.ThumbCacheFolder)
 			}
 		}
 
@@ -96,7 +95,7 @@ func (d *Local) Init(ctx context.Context) error {
 		testFile := filepath.Join(d.ThumbCacheFolder, ".write_test")
 		err := os.WriteFile(testFile, []byte("test"), 0666)
 		if err != nil {
-			return pkgerrors.Wrapf(err, "缩略图缓存目录 '%s' 不可写", d.ThumbCacheFolder)
+			return errors.Wrapf(err, "缩略图缓存目录 '%s' 不可写", d.ThumbCacheFolder)
 		}
 		_ = os.Remove(testFile) // 删除测试文件
 
@@ -119,10 +118,10 @@ func (d *Local) Init(ctx context.Context) error {
 	if d.ThumbConcurrency != "" {
 		v, err := strconv.Atoi(d.ThumbConcurrency)
 		if err != nil {
-			return pkgerrors.Wrapf(err, "无法解析缩略图并发数 '%s'，请使用有效的整数", d.ThumbConcurrency)
+			return errors.Wrapf(err, "无法解析缩略图并发数 '%s'，请使用有效的整数", d.ThumbConcurrency)
 		}
 		if v < 0 {
-			return pkgerrors.Errorf("缩略图并发数不能为负数: %d", v)
+			return errors.Errorf("缩略图并发数不能为负数: %d", v)
 		}
 		d.thumbConcurrency = v
 	}
@@ -152,10 +151,10 @@ func (d *Local) Init(ctx context.Context) error {
 		percentage := strings.TrimSuffix(d.VideoThumbPos, "%")
 		val, err := strconv.ParseFloat(percentage, 64)
 		if err != nil {
-			return pkgerrors.Errorf("无效的视频缩略图位置值: '%s'，错误: %v", d.VideoThumbPos, err)
+			return errors.Errorf("无效的视频缩略图位置值: '%s'，错误: %v", d.VideoThumbPos, err)
 		}
 		if val < 0 || val > 100 {
-			return pkgerrors.Errorf("无效的视频缩略图位置百分比: %.2f%%, 必须在0到100之间", val)
+			return errors.Errorf("无效的视频缩略图位置百分比: %.2f%%, 必须在0到100之间", val)
 		}
 		d.videoThumbPosIsPercentage = true
 		d.videoThumbPos = val / 100 // 转换为小数
@@ -163,10 +162,10 @@ func (d *Local) Init(ctx context.Context) error {
 		// 秒数表示
 		val, err := strconv.ParseFloat(d.VideoThumbPos, 64)
 		if err != nil {
-			return pkgerrors.Errorf("无效的视频缩略图位置值: '%s'，错误: %v", d.VideoThumbPos, err)
+			return errors.Errorf("无效的视频缩略图位置值: '%s'，错误: %v", d.VideoThumbPos, err)
 		}
 		if val < 0 {
-			return pkgerrors.Errorf("无效的视频缩略图位置时间: %.2f秒，必须为正数", val)
+			return errors.Errorf("无效的视频缩略图位置时间: %.2f秒，必须为正数", val)
 		}
 		d.videoThumbPosIsPercentage = false
 		d.videoThumbPos = val
@@ -177,7 +176,7 @@ func (d *Local) Init(ctx context.Context) error {
 		if !utils.Exists(d.RecycleBinPath) {
 			err := os.MkdirAll(d.RecycleBinPath, os.FileMode(d.mkdirPerm))
 			if err != nil {
-				return pkgerrors.Wrapf(err, "无法创建回收站目录 '%s'", d.RecycleBinPath)
+				return errors.Wrapf(err, "无法创建回收站目录 '%s'", d.RecycleBinPath)
 			}
 		}
 
@@ -185,7 +184,7 @@ func (d *Local) Init(ctx context.Context) error {
 		testFile := filepath.Join(d.RecycleBinPath, ".write_test")
 		err := os.WriteFile(testFile, []byte("test"), 0666)
 		if err != nil {
-			return pkgerrors.Wrapf(err, "回收站目录 '%s' 不可写", d.RecycleBinPath)
+			return errors.Wrapf(err, "回收站目录 '%s' 不可写", d.RecycleBinPath)
 		}
 		_ = os.Remove(testFile) // 删除测试文件
 	}
@@ -213,7 +212,7 @@ func (d *Local) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([
 	// 读取目录内容
 	fileInfos, err := readDir(dirPath)
 	if err != nil {
-		return nil, pkgerrors.Wrapf(err, "读取目录 '%s' 失败", dirPath)
+		return nil, errors.Wrapf(err, "读取目录 '%s' 失败", dirPath)
 	}
 
 	// 预分配足够的容量以避免多次扩容
@@ -299,7 +298,7 @@ func (d *Local) Get(ctx context.Context, path string) (model.Obj, error) {
 		if os.IsNotExist(err) {
 			return nil, errs.ObjectNotFound
 		}
-		return nil, pkgerrors.Wrapf(err, "获取文件 '%s' 信息失败", fullPath)
+		return nil, errors.Wrapf(err, "获取文件 '%s' 信息失败", fullPath)
 	}
 
 	// 判断是否为文件夹
@@ -349,7 +348,7 @@ func (d *Local) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 		})
 
 		if err != nil {
-			return nil, pkgerrors.Wrapf(err, "获取文件 '%s' 的缩略图失败", file.GetName())
+			return nil, errors.Wrapf(err, "获取文件 '%s' 的缩略图失败", file.GetName())
 		}
 
 		// 设置响应头
@@ -362,13 +361,13 @@ func (d *Local) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 			// 使用缓存的缩略图
 			fileHandle, err := os.Open(*thumbPath)
 			if err != nil {
-				return nil, pkgerrors.Wrapf(err, "打开缩略图文件 '%s' 失败", *thumbPath)
+				return nil, errors.Wrapf(err, "打开缩略图文件 '%s' 失败", *thumbPath)
 			}
 			// 获取缩略图文件大小用于Content-Length
 			stat, err := fileHandle.Stat()
 			if err != nil {
 				fileHandle.Close()
-				return nil, pkgerrors.Wrapf(err, "获取缩略图文件 '%s' 信息失败", *thumbPath)
+				return nil, errors.Wrapf(err, "获取缩略图文件 '%s' 信息失败", *thumbPath)
 			}
 			link.ContentLength = stat.Size()
 			link.MFile = fileHandle
@@ -383,7 +382,7 @@ func (d *Local) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 		// 普通文件，直接打开
 		fileHandle, err := os.Open(filePath)
 		if err != nil {
-			return nil, pkgerrors.Wrapf(err, "打开文件 '%s' 失败", filePath)
+			return nil, errors.Wrapf(err, "打开文件 '%s' 失败", filePath)
 		}
 		link.MFile = fileHandle
 	}
@@ -407,7 +406,7 @@ func (d *Local) MakeDir(ctx context.Context, parentDir model.Obj, dirName string
 	// 创建目录
 	err := os.MkdirAll(fullPath, os.FileMode(d.mkdirPerm))
 	if err != nil {
-		return pkgerrors.Wrapf(err, "创建目录 '%s' 失败", fullPath)
+		return errors.Wrapf(err, "创建目录 '%s' 失败", fullPath)
 	}
 
 	return nil
@@ -474,13 +473,13 @@ func (d *Local) Rename(ctx context.Context, srcObj model.Obj, newName string) er
 
 	// 检查目标是否已存在
 	if utils.Exists(dstPath) {
-		return pkgerrors.Errorf("目标路径 '%s' 已存在，无法重命名", dstPath)
+		return errors.Errorf("目标路径 '%s' 已存在，无法重命名", dstPath)
 	}
 
 	// 执行重命名
 	err := os.Rename(srcPath, dstPath)
 	if err != nil {
-		return pkgerrors.Wrapf(err, "重命名 '%s' 为 '%s' 失败", srcPath, newName)
+		return errors.Wrapf(err, "重命名 '%s' 为 '%s' 失败", srcPath, newName)
 	}
 
 	return nil
@@ -534,13 +533,13 @@ func (d *Local) Remove(ctx context.Context, obj model.Obj) error {
 			err = os.Remove(objPath)
 		}
 		if err != nil {
-			return pkgerrors.Wrapf(err, "删除 '%s' 失败", objPath)
+			return errors.Wrapf(err, "删除 '%s' 失败", objPath)
 		}
 	} else {
 		// 确保回收站目录存在
 		if !utils.Exists(d.RecycleBinPath) {
 			if err := os.MkdirAll(d.RecycleBinPath, os.FileMode(d.mkdirPerm)); err != nil {
-				return pkgerrors.Wrapf(err, "创建回收站目录 '%s' 失败", d.RecycleBinPath)
+				return errors.Wrapf(err, "创建回收站目录 '%s' 失败", d.RecycleBinPath)
 			}
 		}
 
@@ -557,7 +556,7 @@ func (d *Local) Remove(ctx context.Context, obj model.Obj) error {
 		// 执行移动
 		err := os.Rename(objPath, dstPath)
 		if err != nil {
-			return pkgerrors.Wrapf(err, "移动 '%s' 到回收站 '%s' 失败", objPath, dstPath)
+			return errors.Wrapf(err, "移动 '%s' 到回收站 '%s' 失败", objPath, dstPath)
 		}
 	}
 
@@ -575,21 +574,21 @@ func (d *Local) Put(ctx context.Context, dstDir model.Obj, stream model.FileStre
 	if utils.Exists(fullPath) && !d.Config().NoOverwriteUpload {
 		// 如果允许覆盖，先删除原文件
 		if err := os.Remove(fullPath); err != nil {
-			return pkgerrors.Wrapf(err, "删除已存在的文件 '%s' 失败", fullPath)
+			return errors.Wrapf(err, "删除已存在的文件 '%s' 失败", fullPath)
 		}
 	}
 
 	// 创建目标文件
 	outFile, err := os.Create(fullPath)
 	if err != nil {
-		return pkgerrors.Wrapf(err, "创建文件 '%s' 失败", fullPath)
+		return errors.Wrapf(err, "创建文件 '%s' 失败", fullPath)
 	}
 
 	// 确保文件关闭并处理错误
 	defer func() {
 		closeErr := outFile.Close()
 		if closeErr != nil && err == nil {
-			err = pkgerrors.Wrapf(closeErr, "关闭文件 '%s' 失败", fullPath)
+			err = errors.Wrapf(closeErr, "关闭文件 '%s' 失败", fullPath)
 		}
 
 		// 如果上下文取消，删除未完成的文件
@@ -602,7 +601,7 @@ func (d *Local) Put(ctx context.Context, dstDir model.Obj, stream model.FileStre
 	// 复制数据
 	err = utils.CopyWithCtx(ctx, outFile, stream, stream.GetSize(), up)
 	if err != nil {
-		return pkgerrors.Wrapf(err, "复制数据到文件 '%s' 失败", fullPath)
+		return errors.Wrapf(err, "复制数据到文件 '%s' 失败", fullPath)
 	}
 
 	// 设置文件修改时间
@@ -627,50 +626,50 @@ func (d *Local) ValidateDriver() error {
 	}
 
 	if !utils.Exists(rootPath) {
-		return pkgerrors.Errorf("根目录 '%s' 不存在", rootPath)
+		return errors.Errorf("根目录 '%s' 不存在", rootPath)
 	}
 
 	// 验证根目录权限
 	testFile := filepath.Join(rootPath, ".write_test")
 	err := os.WriteFile(testFile, []byte("test"), 0666)
 	if err != nil {
-		return pkgerrors.Wrapf(err, "根目录 '%s' 不可写", rootPath)
+		return errors.Wrapf(err, "根目录 '%s' 不可写", rootPath)
 	}
 	_ = os.Remove(testFile) // 删除测试文件
 
 	// 验证缩略图缓存目录
 	if d.ThumbCacheFolder != "" && !utils.Exists(d.ThumbCacheFolder) {
-		return pkgerrors.Errorf("缩略图缓存目录 '%s' 不存在", d.ThumbCacheFolder)
+		return errors.Errorf("缩略图缓存目录 '%s' 不存在", d.ThumbCacheFolder)
 	}
 
 	// 验证回收站目录
 	if d.RecycleBinPath != "" &&
 		d.RecycleBinPath != "delete permanently" &&
 		!utils.Exists(d.RecycleBinPath) {
-		return pkgerrors.Errorf("回收站目录 '%s' 不存在", d.RecycleBinPath)
+		return errors.Errorf("回收站目录 '%s' 不存在", d.RecycleBinPath)
 	}
 
 	// 验证缩略图质量
 	if d.ThumbQuality < 1 || d.ThumbQuality > 100 {
-		return pkgerrors.Errorf("缩略图质量必须在1-100之间，当前值: %d", d.ThumbQuality)
+		return errors.Errorf("缩略图质量必须在1-100之间，当前值: %d", d.ThumbQuality)
 	}
 
 	// 验证缩略图并发数
 	if d.ThumbConcurrency != "" {
 		v, err := strconv.Atoi(d.ThumbConcurrency)
 		if err != nil {
-			return pkgerrors.Wrapf(err, "无法解析缩略图并发数 '%s'", d.ThumbConcurrency)
+			return errors.Wrapf(err, "无法解析缩略图并发数 '%s'", d.ThumbConcurrency)
 		}
 		if v < 0 {
-			return pkgerrors.Errorf("缩略图并发数不能为负数: %d", v)
+			return errors.Errorf("缩略图并发数不能为负数: %d", v)
 		}
 	}
 
 	// 验证目录权限
 	if d.MkdirPerm != "" {
-		_, err := strconv.ParseUint(d.MkdirPerm, 8, 32)
+		_, err = strconv.ParseUint(d.MkdirPerm, 8, 32)
 		if err != nil {
-			return pkgerrors.Wrapf(err, "无法解析目录权限值 '%s'", d.MkdirPerm)
+			return errors.Wrapf(err, "无法解析目录权限值 '%s'", d.MkdirPerm)
 		}
 	}
 

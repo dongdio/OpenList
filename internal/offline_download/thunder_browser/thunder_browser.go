@@ -54,7 +54,7 @@ func (t *ThunderBrowser) IsReady() bool {
 	}
 }
 
-func (t *ThunderBrowser) AddURL(args *tool.AddUrlArgs) (string, error) {
+func (t *ThunderBrowser) AddURL(args *tool.AddURLLinkArgs) (string, error) {
 	// 添加新任务刷新缓存
 	t.refreshTaskCache = true
 	storage, actualPath, err := op.GetStorageAndActualPath(args.TempDir)
@@ -76,9 +76,9 @@ func (t *ThunderBrowser) AddURL(args *tool.AddUrlArgs) (string, error) {
 	var task *thunder_browser.OfflineTask
 	switch v := storage.(type) {
 	case *thunder_browser.ThunderBrowser:
-		task, err = v.OfflineDownload(ctx, args.Url, parentDir, "")
+		task, err = v.OfflineDownload(ctx, args.URL, parentDir, "")
 	case *thunder_browser.ThunderBrowserExpert:
-		task, err = v.OfflineDownload(ctx, args.Url, parentDir, "")
+		task, err = v.OfflineDownload(ctx, args.URL, parentDir, "")
 	default:
 		return "", errors.New("unsupported storage driver for offline download, only ThunderBrowser is supported")
 	}

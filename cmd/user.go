@@ -24,7 +24,7 @@ func DelAdminCacheOnline() {
 }
 
 func DelUserCacheOnline(username string) {
-	client := resty.New().SetTimeout(1 * time.Second).SetTLSClientConfig(&tls.Config{InsecureSkipVerify: conf.Conf.TlsInsecureSkipVerify})
+	client := resty.New().SetTimeout(1 * time.Second).SetTLSClientConfig(&tls.Config{InsecureSkipVerify: conf.Conf.TLSInsecureSkipVerify})
 	token := setting.GetStr(consts.Token)
 	port := conf.Conf.Scheme.HttpPort
 	u := fmt.Sprintf("http://localhost:%d/api/admin/user/del_cache", port)

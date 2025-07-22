@@ -27,6 +27,24 @@ const (
 	DefaultDirMode = 0o755
 )
 
+// PWD returns the program working directory
+func PWD() string {
+	if global.ForceBinDir {
+		ex, err := os.Executable()
+		if err != nil {
+			log.Fatal(err)
+
+		}
+		pwd := filepath.Dir(ex)
+		return pwd
+	}
+	d, err := os.Getwd()
+	if err != nil {
+		d = "."
+	}
+	return d
+}
+
 // LastLaunchedVersion stores the version from the last launch
 var LastLaunchedVersion string
 
@@ -35,13 +53,10 @@ var LastLaunchedVersion string
 // applies environment variables, and initializes related components
 func InitConfig() {
 	// Ensure data directory is absolute when force bin dir is enabled
-	if global.ForceBinDir && !filepath.IsAbs(global.DataDir) {
-		ex, err := os.Executable()
-		if err != nil {
-			log.Fatalf("failed to get executable path: %v", err)
-		}
-		exPath := filepath.Dir(ex)
-		global.DataDir = filepath.Join(exPath, global.DataDir)
+	pwd := PWD()
+	dataDir := global.DataDir
+	if !filepath.IsAbs(dataDir) {
+		global.DataDir = filepath.Join(pwd, global.DataDir)
 	}
 
 	// Construct config file path
@@ -60,7 +75,7 @@ func InitConfig() {
 	}
 
 	// Ensure temp directory is absolute and exists
-	ensureTempDirExists()
+	ensureTempDirExists(pwd)
 
 	log.Debugf("config: %+v", conf.Conf)
 
@@ -80,7 +95,7 @@ func createDefaultConfig(configPath string) {
 	}
 
 	// Initialize with default configuration
-	conf.Conf = conf.DefaultConfig()
+	conf.Conf = conf.DefaultConfig(global.DataDir)
 	LastLaunchedVersion = conf.Version
 	conf.Conf.LastLaunchedVersion = conf.Version
 
@@ -99,7 +114,7 @@ func loadExistingConfig(configPath string) {
 	}
 
 	// Parse the configuration
-	conf.Conf = conf.DefaultConfig()
+	conf.Conf = conf.DefaultConfig(global.DataDir)
 	err = utils.JSONTool.Unmarshal(configBytes, conf.Conf)
 	if err != nil {
 		log.Fatalf("failed to parse config file: %v", err)
@@ -129,14 +144,19 @@ func updateConfigFile(configPath string) {
 }
 
 // ensureTempDirExists ensures the temporary directory exists and is absolute
-func ensureTempDirExists() {
-	// Convert to absolute path if needed
-	if !filepath.IsAbs(conf.Conf.TempDir) {
-		absPath, err := filepath.Abs(conf.Conf.TempDir)
-		if err != nil {
-			log.Fatalf("failed to get absolute path for temp directory: %v", err)
+func ensureTempDirExists(pwd string) {
+	convertAbsPath := func(path *string) {
+		if !filepath.IsAbs(*path) {
+			*path = filepath.Join(pwd, *path)
+
 		}
-		conf.Conf.TempDir = absPath
+	}
+	convertAbsPath(&conf.Conf.TempDir)
+	convertAbsPath(&conf.Conf.BleveDir)
+	convertAbsPath(&conf.Conf.Log.Name)
+	convertAbsPath(&conf.Conf.Database.DBFile)
+	if conf.Conf.DistDir != "" {
+		convertAbsPath(&conf.Conf.DistDir)
 	}
 
 	// Create the directory if it doesn't exist

@@ -43,7 +43,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build
-        uses: OpenListTeam/cgo-actions@v1.1.2
+        uses: OpenListTeam/cgo-actions@v1.2.1
         with:
           targets: ${{ matrix.target }}
           musl-target-format: $os-$musl-$arch

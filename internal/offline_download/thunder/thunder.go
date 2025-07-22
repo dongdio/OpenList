@@ -51,7 +51,7 @@ func (t *Thunder) IsReady() bool {
 	return true
 }
 
-func (t *Thunder) AddURL(args *tool.AddUrlArgs) (string, error) {
+func (t *Thunder) AddURL(args *tool.AddURLLinkArgs) (string, error) {
 	// 添加新任务刷新缓存
 	t.refreshTaskCache = true
 	storage, actualPath, err := op.GetStorageAndActualPath(args.TempDir)
@@ -74,7 +74,7 @@ func (t *Thunder) AddURL(args *tool.AddUrlArgs) (string, error) {
 		return "", err
 	}
 
-	task, err := thunderDriver.OfflineDownload(ctx, args.Url, parentDir, "")
+	task, err := thunderDriver.OfflineDownload(ctx, args.URL, parentDir, "")
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to add offline download task")
 	}

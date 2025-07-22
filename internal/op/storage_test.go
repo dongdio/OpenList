@@ -24,7 +24,7 @@ func init() {
 	}
 
 	// Use default configuration for testing
-	conf.Conf = conf.DefaultConfig()
+	conf.Conf = conf.DefaultConfig("data")
 
 	// Initialize database
 	db.Init(dB)

@@ -135,8 +135,8 @@ func (r Range) MimeHeader(contentType string, size int64) textproto.MIMEHeader {
 	}
 }
 
-// ApplyRangeToHttpHeader for http request header
-func ApplyRangeToHttpHeader(p Range, headerRef http.Header) http.Header {
+// ApplyRangeToHTTPHeader for http request header
+func ApplyRangeToHTTPHeader(p Range, headerRef http.Header) http.Header {
 	header := headerRef
 	if header == nil {
 		header = http.Header{}

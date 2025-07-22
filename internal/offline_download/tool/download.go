@@ -19,7 +19,7 @@ import (
 
 type DownloadTask struct {
 	task.TaskExtension
-	Url               string       `json:"url"`
+	URL               string       `json:"url"`
 	DstDirPath        string       `json:"dst_dir_path"`
 	TempDir           string       `json:"temp_dir"`
 	DeletePolicy      DeletePolicy `json:"delete_policy"`
@@ -55,8 +55,8 @@ func (t *DownloadTask) Run() error {
 	defer func() {
 		t.Signal = nil
 	}()
-	gid, err := t.tool.AddURL(&AddUrlArgs{
-		Url:     t.Url,
+	gid, err := t.tool.AddURL(&AddURLLinkArgs{
+		URL:     t.URL,
 		UID:     t.ID,
 		TempDir: t.TempDir,
 		Signal:  t.Signal,
@@ -201,7 +201,7 @@ func (t *DownloadTask) Transfer() error {
 			DstStorage:   dstStorage,
 			DstStorageMp: dstStorage.GetStorage().MountPath,
 			DeletePolicy: t.DeletePolicy,
-			Url:          t.Url,
+			URL:          t.URL,
 		}
 		tmpTask.SetTotalBytes(t.GetTotalBytes())
 		TransferTaskManager.Add(tmpTask)
@@ -211,7 +211,7 @@ func (t *DownloadTask) Transfer() error {
 }
 
 func (t *DownloadTask) GetName() string {
-	return fmt.Sprintf("download %s to (%s)", t.Url, t.DstDirPath)
+	return fmt.Sprintf("download %s to (%s)", t.URL, t.DstDirPath)
 }
 
 func (t *DownloadTask) GetStatus() string {

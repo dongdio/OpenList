@@ -63,12 +63,12 @@ func TestDownloadOrder(t *testing.T) {
 	d := NewDownloader(func(d *Downloader) {
 		d.Concurrency = concurrency
 		d.PartSize = partSize
-		d.HttpClient = downloader.HttpRequest
+		d.HTTPClient = downloader.HttpRequest
 	})
 
 	// 执行下载
 	start, length := int64(2), int64(10)
-	req := &HttpRequestParams{
+	req := &HTTPRequestParams{
 		Range: http_range.Range{Start: start, Length: length},
 		Size:  int64(len(testData)),
 	}
@@ -107,12 +107,12 @@ func TestDownloadSingle(t *testing.T) {
 	d := NewDownloader(func(d *Downloader) {
 		d.Concurrency = concurrency
 		d.PartSize = partSize
-		d.HttpClient = downloader.HttpRequest
+		d.HTTPClient = downloader.HttpRequest
 	})
 
 	// 执行下载
 	start, length := int64(2), int64(10)
-	req := &HttpRequestParams{
+	req := &HTTPRequestParams{
 		Range: http_range.Range{Start: start, Length: length},
 		Size:  int64(len(testData)),
 	}
@@ -138,14 +138,14 @@ func TestDownloadSingle(t *testing.T) {
 
 // downloadCaptureClient 是一个捕获下载请求的模拟客户端
 type downloadCaptureClient struct {
-	mockedHttpRequest    func(params *HttpRequestParams) (*http.Response, error)
+	mockedHttpRequest    func(params *HTTPRequestParams) (*http.Response, error)
 	GetObjectInvocations int
 	RetrievedRanges      []string
 	lock                 sync.Mutex
 }
 
 // HttpRequest 实现 HttpRequestFunc 接口
-func (c *downloadCaptureClient) HttpRequest(ctx context.Context, params *HttpRequestParams) (*http.Response, error) {
+func (c *downloadCaptureClient) HttpRequest(ctx context.Context, params *HTTPRequestParams) (*http.Response, error) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
@@ -162,7 +162,7 @@ func (c *downloadCaptureClient) HttpRequest(ctx context.Context, params *HttpReq
 func newDownloadRangeClient(data []byte) (*downloadCaptureClient, *int, *[]string) {
 	capture := &downloadCaptureClient{}
 
-	capture.mockedHttpRequest = func(params *HttpRequestParams) (*http.Response, error) {
+	capture.mockedHttpRequest = func(params *HTTPRequestParams) (*http.Response, error) {
 		start, end := params.Range.Start, params.Range.Start+params.Range.Length
 		if params.Range.Length == -1 || end >= int64(len(data)) {
 			end = int64(len(data))

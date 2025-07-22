@@ -3,7 +3,6 @@ package conf
 import (
 	"path/filepath"
 
-	"github.com/dongdio/OpenList/v4/global"
 	"github.com/dongdio/OpenList/v4/utility/utils/random"
 )
 
@@ -110,7 +109,7 @@ type Config struct {
 	DelayedStart          int         `json:"delayed_start"`
 	MaxConnections        int         `json:"max_connections"`
 	MaxConcurrency        int         `json:"max_concurrency"`
-	TlsInsecureSkipVerify bool        `json:"tls_insecure_skip_verify"`
+	TLSInsecureSkipVerify bool        `json:"tls_insecure_skip_verify"`
 	Tasks                 TasksConfig `json:"tasks"`
 	Cors                  Cors        `json:"cors"`
 	S3                    S3          `json:"s3"`
@@ -119,11 +118,11 @@ type Config struct {
 	LastLaunchedVersion   string      `json:"last_launched_version"`
 }
 
-func DefaultConfig() *Config {
-	tempDir := filepath.Join(global.DataDir, "temp")
-	indexDir := filepath.Join(global.DataDir, "bleve")
-	logPath := filepath.Join(global.DataDir, "log/log.log")
-	dbPath := filepath.Join(global.DataDir, "data.db")
+func DefaultConfig(dataDir string) *Config {
+	tempDir := filepath.Join(dataDir, "temp")
+	indexDir := filepath.Join(dataDir, "bleve")
+	logPath := filepath.Join(dataDir, "log/log.log")
+	dbPath := filepath.Join(dataDir, "data.db")
 	return &Config{
 		Scheme: Scheme{
 			Address:    "0.0.0.0",
@@ -156,7 +155,7 @@ func DefaultConfig() *Config {
 		},
 		MaxConnections:        0,
 		MaxConcurrency:        64,
-		TlsInsecureSkipVerify: true,
+		TLSInsecureSkipVerify: true,
 		Tasks: TasksConfig{
 			Download: TaskConfig{
 				Workers:  5,

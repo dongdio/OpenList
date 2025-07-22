@@ -10,6 +10,7 @@ import (
 
 	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/internal/sign"
 	"github.com/dongdio/OpenList/v4/utility/net"
 	"github.com/dongdio/OpenList/v4/utility/stream"
 	"github.com/dongdio/OpenList/v4/utility/utils"
@@ -209,4 +210,28 @@ func (ww *WrittenResponseWriter) Write(p []byte) (int, error) {
 //   - bool: 如果已经写入内容返回true，否则返回false
 func (ww *WrittenResponseWriter) IsWritten() bool {
 	return ww.written
+}
+
+// GenerateDownProxyURL 生成下载代理URL
+// 如果存储配置了下载代理URL，则生成代理URL
+//
+// 参数:
+//   - storage: 存储对象
+//   - reqPath: 请求路径
+//
+// 返回:
+//   - string: 生成的代理URL
+func GenerateDownProxyURL(storage *model.Storage, reqPath string) string {
+	if storage.DownProxyURL == "" {
+		return ""
+	}
+	query := ""
+	if !storage.DisableProxySign {
+		query = "?sign=" + sign.Sign(reqPath)
+	}
+	return fmt.Sprintf("%s%s%s",
+		strings.Split(storage.DownProxyURL, "\n")[0],
+		utils.EncodePath(reqPath, true),
+		query,
+	)
 }

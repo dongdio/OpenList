@@ -25,7 +25,7 @@ func NewNoRedirectCLient() *http.Client {
 		Timeout: time.Hour * 48,
 		Transport: &http.Transport{
 			Proxy:           http.ProxyFromEnvironment,
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: conf.Conf.TlsInsecureSkipVerify},
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: conf.Conf.TLSInsecureSkipVerify},
 		},
 		// Prevent following redirects
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {

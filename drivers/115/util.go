@@ -42,7 +42,7 @@ func (p *Pan115) login() error {
 		driver115.UA(p.getUA()), // 设置用户代理
 		func(c *driver115.Pan115Client) {
 			// 设置TLS配置，根据全局配置决定是否跳过证书验证
-			c.Client.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: conf.Conf.TlsInsecureSkipVerify})
+			c.Client.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: conf.Conf.TLSInsecureSkipVerify})
 		},
 	}
 

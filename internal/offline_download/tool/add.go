@@ -128,7 +128,7 @@ func AddURL(ctx context.Context, args *AddURLArgs) (task.TaskExtensionInfo, erro
 		TaskExtension: task.TaskExtension{
 			Creator: taskCreator,
 		},
-		Url:          args.URL,
+		URL:          args.URL,
 		DstDirPath:   args.DstDirPath,
 		TempDir:      tempDir,
 		DeletePolicy: deletePolicy,

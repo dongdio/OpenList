@@ -63,7 +63,7 @@ func initIndexHTML() {
 	}
 
 	// 保存原始HTML内容
-	conf.RawIndexHtml = string(indexContent)
+	conf.RawIndexHTML = string(indexContent)
 
 	// 获取站点配置并替换相关配置
 	siteConfig := getSiteConfig()
@@ -74,7 +74,7 @@ func initIndexHTML() {
 
 	// 替换配置变量
 	for k, v := range replaceMap {
-		conf.RawIndexHtml = strings.Replace(conf.RawIndexHtml, k, v, 1)
+		conf.RawIndexHTML = strings.Replace(conf.RawIndexHTML, k, v, 1)
 	}
 
 	// 更新索引HTML
@@ -92,7 +92,7 @@ func UpdateIndexHTML() {
 	mainColor := setting.GetStr(consts.MainColor)
 
 	// 首先更新管理页面HTML
-	conf.ManageHtml = conf.RawIndexHtml
+	conf.ManageHTML = conf.RawIndexHTML
 
 	// 替换管理页面的基本配置
 	baseReplaceMap := map[string]string{
@@ -102,11 +102,11 @@ func UpdateIndexHTML() {
 	}
 
 	for k, v := range baseReplaceMap {
-		conf.ManageHtml = strings.Replace(conf.ManageHtml, k, v, 1)
+		conf.ManageHTML = strings.Replace(conf.ManageHTML, k, v, 1)
 	}
 
 	// 复制管理页面HTML作为基础
-	conf.IndexHtml = conf.ManageHtml
+	conf.IndexHTML = conf.ManageHTML
 
 	// 替换用户自定义的头部和正文内容
 	customReplaceMap := map[string]string{
@@ -115,7 +115,7 @@ func UpdateIndexHTML() {
 	}
 
 	for k, v := range customReplaceMap {
-		conf.IndexHtml = strings.Replace(conf.IndexHtml, k, v, 1)
+		conf.IndexHTML = strings.Replace(conf.IndexHTML, k, v, 1)
 	}
 }
 
@@ -169,12 +169,12 @@ func Static(r *gin.RouterGroup, noRoute func(handlers ...gin.HandlerFunc)) {
 		// 根据路径返回不同的HTML
 		if strings.HasPrefix(c.Request.URL.Path, "/@manage") {
 			// 管理页面
-			if _, err := c.Writer.WriteString(conf.ManageHtml); err != nil {
+			if _, err := c.Writer.WriteString(conf.ManageHTML); err != nil {
 				utils.Log.Errorf("写入管理页面HTML失败: %v", err)
 			}
 		} else {
 			// 普通页面
-			if _, err := c.Writer.WriteString(conf.IndexHtml); err != nil {
+			if _, err := c.Writer.WriteString(conf.IndexHTML); err != nil {
 				utils.Log.Errorf("写入索引页面HTML失败: %v", err)
 			}
 		}

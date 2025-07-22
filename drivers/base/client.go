@@ -30,11 +30,11 @@ func InitClient() {
 		SetRetryWaitTime(2 * time.Second).
 		SetRetryMaxWaitTime(3 * time.Second).
 		SetRedirectPolicy(resty.NoRedirectPolicy()).
-		SetTLSClientConfig(&tls.Config{InsecureSkipVerify: conf.Conf.TlsInsecureSkipVerify})
+		SetTLSClientConfig(&tls.Config{InsecureSkipVerify: conf.Conf.TLSInsecureSkipVerify})
 	NoRedirectClient.SetHeader("User-Agent", UserAgent)
 
 	RestyClient = NewRestyClient()
-	HttpClient = net.NewHttpClient()
+	HttpClient = net.NewHTTPClient()
 }
 
 func NewRestyClient() *resty.Client {
@@ -49,7 +49,7 @@ func NewRestyClient() *resty.Client {
 		AddContentDecompresser("zstd", decompressZSTD).
 		AddContentDecompresser("br", decompressBrotli).
 		SetTLSClientConfig(&tls.Config{
-			InsecureSkipVerify: conf.Conf.TlsInsecureSkipVerify,
+			InsecureSkipVerify: conf.Conf.TLSInsecureSkipVerify,
 		})
 	return client
 }

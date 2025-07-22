@@ -47,7 +47,7 @@ func (o *Open115) IsReady() bool {
 	return true
 }
 
-func (o *Open115) AddURL(args *tool.AddUrlArgs) (string, error) {
+func (o *Open115) AddURL(args *tool.AddURLLinkArgs) (string, error) {
 	storage, actualPath, err := op.GetStorageAndActualPath(args.TempDir)
 	if err != nil {
 		return "", err
@@ -68,7 +68,7 @@ func (o *Open115) AddURL(args *tool.AddUrlArgs) (string, error) {
 		return "", err
 	}
 
-	hashs, err := driver115Open.OfflineDownload(ctx, []string{args.Url}, parentDir)
+	hashs, err := driver115Open.OfflineDownload(ctx, []string{args.URL}, parentDir)
 	if err != nil || len(hashs) < 1 {
 		return "", errors.Wrapf(err, "failed to add offline download task")
 	}

@@ -46,8 +46,8 @@ func (a *QBittorrent) IsReady() bool {
 	return a.client != nil
 }
 
-func (a *QBittorrent) AddURL(args *tool.AddUrlArgs) (string, error) {
-	err := a.client.AddFromLink(args.Url, args.TempDir, args.UID)
+func (a *QBittorrent) AddURL(args *tool.AddURLLinkArgs) (string, error) {
+	err := a.client.AddFromLink(args.URL, args.TempDir, args.UID)
 	if err != nil {
 		return "", err
 	}

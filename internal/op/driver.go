@@ -175,6 +175,13 @@ func getMainItems(config driver.Config) []driver.Item {
 		Help: "Optional proxy URL for downloads",
 	})
 
+	items = append(items, driver.Item{
+		Name:    "disable_proxy_sign",
+		Type:    consts.TypeBool,
+		Default: "false",
+		Help:    "Disable sign for Download proxy URL",
+	})
+
 	// Add sorting options if supported
 	if config.LocalSort {
 		items = append(items, []driver.Item{

@@ -4,8 +4,8 @@ import (
 	"github.com/dongdio/OpenList/v4/internal/model"
 )
 
-type AddUrlArgs struct {
-	Url     string
+type AddURLLinkArgs struct {
+	URL     string
 	UID     string
 	TempDir string
 	Signal  chan int
@@ -27,7 +27,7 @@ type Tool interface {
 	Init() (string, error)
 	IsReady() bool
 	// AddURL add an uri to download, return the task id
-	AddURL(args *AddUrlArgs) (string, error)
+	AddURL(args *AddURLLinkArgs) (string, error)
 	// Remove the download if task been canceled
 	Remove(task *DownloadTask) error
 	// Status return the status of the download task, if an error occurred, return the error in Status.Err

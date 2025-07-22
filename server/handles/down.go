@@ -2,10 +2,8 @@ package handles
 
 import (
 	"bytes"
-	"fmt"
 	stdpath "path"
 	"strconv"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/microcosm-cc/bluemonday"
@@ -19,7 +17,6 @@ import (
 	"github.com/dongdio/OpenList/v4/internal/fs"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/setting"
-	"github.com/dongdio/OpenList/v4/internal/sign"
 	"github.com/dongdio/OpenList/v4/server/common"
 	"github.com/dongdio/OpenList/v4/utility/net"
 	"github.com/dongdio/OpenList/v4/utility/utils"
@@ -74,23 +71,12 @@ func Proxy(c *gin.Context) {
 
 	// 检查是否可以代理
 	if canProxy(storage, filename) {
-		// 检查是否配置了下载代理URL
-		downProxyURL := storage.GetStorage().DownProxyUrl
-		if downProxyURL != "" {
-			// 如果没有传递'd'参数，则重定向到代理URL
-			if _, hasDownloadParam := c.GetQuery("d"); !hasDownloadParam {
-				proxyUrls := strings.Split(downProxyURL, "\n")
-				if len(proxyUrls) > 0 {
-					URL := fmt.Sprintf("%s%s?sign=%s",
-						proxyUrls[0],
-						utils.EncodePath(rawPath, true),
-						sign.Sign(rawPath))
-					c.Redirect(302, URL)
-					return
-				}
+		if _, ok := c.GetQuery("d"); !ok {
+			if url := common.GenerateDownProxyURL(storage.GetStorage(), rawPath); url != "" {
+				c.Redirect(302, url)
+				return
 			}
 		}
-
 		// 获取文件链接
 		link, file, err := fs.Link(c.Request.Context(), rawPath, model.LinkArgs{
 			Header: c.Request.Header,
@@ -228,7 +214,7 @@ func canProxy(storage driver.Driver, filename string) bool {
 	// 检查存储配置
 	if storage.Config().MustProxy() ||
 		storage.GetStorage().WebProxy ||
-		storage.GetStorage().WebdavProxy() {
+		storage.GetStorage().WebdavProxyURL() {
 		return true
 	}
 

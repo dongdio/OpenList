@@ -46,14 +46,15 @@ func (b *Bleve) Search(ctx context.Context, req model.SearchReq) ([]model.Search
 		log.Errorf("search error: %+v", err)
 		return nil, 0, err
 	}
-	res, err := utils.SliceConvert(searchResults.Hits, func(src *search2.DocumentMatch) (model.SearchNode, error) {
+	f := func(src *search2.DocumentMatch) (model.SearchNode, error) {
 		return model.SearchNode{
 			Parent: src.Fields["parent"].(string),
 			Name:   src.Fields["name"].(string),
 			IsDir:  src.Fields["is_dir"].(bool),
 			Size:   int64(src.Fields["size"].(float64)),
 		}, nil
-	})
+	}
+	res, _ := utils.SliceConvert(searchResults.Hits, f)
 	return res, int64(searchResults.Total), nil
 }
 

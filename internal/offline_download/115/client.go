@@ -50,7 +50,7 @@ func (p *Cloud115) IsReady() bool {
 	return true
 }
 
-func (p *Cloud115) AddURL(args *tool.AddUrlArgs) (string, error) {
+func (p *Cloud115) AddURL(args *tool.AddURLLinkArgs) (string, error) {
 	// 添加新任务刷新缓存
 	p.refreshTaskCache = true
 	storage, actualPath, err := op.GetStorageAndActualPath(args.TempDir)
@@ -73,7 +73,7 @@ func (p *Cloud115) AddURL(args *tool.AddUrlArgs) (string, error) {
 		return "", err
 	}
 
-	hashs, err := driver115.OfflineDownload(ctx, []string{args.Url}, parentDir)
+	hashs, err := driver115.OfflineDownload(ctx, []string{args.URL}, parentDir)
 	if err != nil || len(hashs) < 1 {
 		return "", errors.Wrapf(err, "failed to add offline download task")
 	}

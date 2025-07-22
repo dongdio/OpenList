@@ -45,15 +45,15 @@ type Downloader struct {
 	// Concurrency为1时将按顺序下载分片
 	Concurrency int
 
-	// HttpClient 是执行HTTP请求的函数
-	HttpClient HttpRequestFunc
+	// HTTPClient 是执行HTTP请求的函数
+	HTTPClient HTTPRequestFunc
 
 	// ConcurrencyLimit 是并发限制器
 	*ConcurrencyLimit
 }
 
-// HttpRequestFunc 是执行HTTP请求的函数类型
-type HttpRequestFunc func(ctx context.Context, params *HttpRequestParams) (*http.Response, error)
+// HTTPRequestFunc 是执行HTTP请求的函数类型
+type HTTPRequestFunc func(ctx context.Context, params *HTTPRequestParams) (*http.Response, error)
 
 // NewDownloader 创建一个新的下载器实例
 func NewDownloader(options ...func(*Downloader)) *Downloader {
@@ -71,8 +71,8 @@ func NewDownloader(options ...func(*Downloader)) *Downloader {
 // 每个分块(除了最后一个)的大小为PartSize，缓存部分数据，然后返回包含组装数据的Reader
 // 支持范围请求，不支持未知文件大小，如果文件大小不正确将会失败
 // 内存使用量约为Concurrency*PartSize，请谨慎使用
-func (d Downloader) Download(ctx context.Context, p *HttpRequestParams) (io.ReadCloser, error) {
-	var finalP HttpRequestParams
+func (d Downloader) Download(ctx context.Context, p *HTTPRequestParams) (io.ReadCloser, error) {
+	var finalP HTTPRequestParams
 	awsutil.Copy(&finalP, p)
 	if finalP.Range.Length < 0 || finalP.Range.Start+finalP.Range.Length > finalP.Size {
 		finalP.Range.Length = finalP.Size - finalP.Range.Start
@@ -86,8 +86,8 @@ func (d Downloader) Download(ctx context.Context, p *HttpRequestParams) (io.Read
 	if impl.cfg.PartSize == 0 {
 		impl.cfg.PartSize = DefaultDownloadPartSize
 	}
-	if impl.cfg.HttpClient == nil {
-		impl.cfg.HttpClient = DefaultHttpRequestFunc
+	if impl.cfg.HTTPClient == nil {
+		impl.cfg.HTTPClient = DefaultHTTPRequestFunc
 	}
 
 	return impl.download()
@@ -99,7 +99,7 @@ type downloader struct {
 	cancel context.CancelCauseFunc
 	cfg    Downloader
 
-	params       *HttpRequestParams // HTTP请求参数
+	params       *HTTPRequestParams // HTTP请求参数
 	chunkChannel chan chunk         // 分块通道
 
 	m sync.Mutex
@@ -182,7 +182,7 @@ func (d *downloader) download() (io.ReadCloser, error) {
 
 	// 单分片情况直接下载
 	if maxPart == 1 {
-		resp, err := d.cfg.HttpClient(d.ctx, d.params)
+		resp, err := d.cfg.HTTPClient(d.ctx, d.params)
 		if err != nil {
 			d.concurrencyFinish()
 			return nil, err
@@ -408,8 +408,8 @@ var errCancelConcurrency = errors.New("cancel concurrency")
 var errInfiniteRetry = errors.New("infinite retry")
 
 // tryDownloadChunk 尝试下载分块
-func (d *downloader) tryDownloadChunk(params *HttpRequestParams, ch *chunk) (int64, error) {
-	resp, err := d.cfg.HttpClient(d.ctx, params)
+func (d *downloader) tryDownloadChunk(params *HTTPRequestParams, ch *chunk) (int64, error) {
+	resp, err := d.cfg.HTTPClient(d.ctx, params)
 	if err != nil {
 		statusCode, ok := errors.Unwrap(err).(ErrorHTTPStatusCode)
 		if !ok {
@@ -480,7 +480,7 @@ func (d *downloader) tryDownloadChunk(params *HttpRequestParams, ch *chunk) (int
 }
 
 // getParamsFromChunk 从分块获取HTTP请求参数
-func (d *downloader) getParamsFromChunk(ch *chunk) *HttpRequestParams {
+func (d *downloader) getParamsFromChunk(ch *chunk) *HTTPRequestParams {
 	params := *d.params
 	params.Range.Start = ch.start
 	params.Range.Length = ch.size
@@ -550,14 +550,14 @@ type chunk struct {
 	newConcurrency bool
 }
 
-// DefaultHttpRequestFunc 是默认的HTTP请求函数
-func DefaultHttpRequestFunc(ctx context.Context, params *HttpRequestParams) (*http.Response, error) {
-	header := http_range.ApplyRangeToHttpHeader(params.Range, params.HeaderRef)
+// DefaultHTTPRequestFunc 是默认的HTTP请求函数
+func DefaultHTTPRequestFunc(ctx context.Context, params *HTTPRequestParams) (*http.Response, error) {
+	header := http_range.ApplyRangeToHTTPHeader(params.Range, params.HeaderRef)
 	return RequestHTTP(ctx, "GET", header, params.URL)
 }
 
-func GetRangeReaderHttpRequestFunc(rangeReader model.RangeReaderIF) HttpRequestFunc {
-	return func(ctx context.Context, params *HttpRequestParams) (*http.Response, error) {
+func GetRangeReaderHTTPRequestFunc(rangeReader model.RangeReaderIF) HTTPRequestFunc {
+	return func(ctx context.Context, params *HTTPRequestParams) (*http.Response, error) {
 		rc, err := rangeReader.RangeRead(ctx, params.Range)
 		if err != nil {
 			return nil, err
@@ -576,8 +576,8 @@ func GetRangeReaderHttpRequestFunc(rangeReader model.RangeReaderIF) HttpRequestF
 
 }
 
-// HttpRequestParams 包含HTTP请求的参数
-type HttpRequestParams struct {
+// HTTPRequestParams 包含HTTP请求的参数
+type HTTPRequestParams struct {
 	URL       string
 	Range     http_range.Range // 只需要此范围内的数据
 	HeaderRef http.Header
