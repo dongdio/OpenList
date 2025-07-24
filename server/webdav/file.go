@@ -85,7 +85,7 @@ func moveFiles(ctx context.Context, src, dst string, overwrite bool) (status int
 		}
 	} else {
 		// 跨目录移动，先移动文件，如果文件名不同再重命名
-		err = fs.Move(ctx, src, dstDir)
+		_, err = fs.Move(context.WithValue(ctx, consts.NoTaskKey, struct{}{}), src, dstDir)
 		if err != nil {
 			return http.StatusInternalServerError, err
 		}

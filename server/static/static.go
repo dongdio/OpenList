@@ -12,6 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/dongdio/OpenList/v4/consts"
+	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/conf"
 	"github.com/dongdio/OpenList/v4/internal/setting"
 	"github.com/dongdio/OpenList/v4/public"
@@ -26,6 +27,7 @@ var staticFS fs.FS
 // 如果配置中指定了发布目录，则使用该目录
 // 否则使用嵌入在二进制文件中的发布文件
 func initStaticFS() {
+	utils.Log.Debug("Initializing static file system...")
 	if conf.Conf.DistDir == "" {
 		// 使用嵌入的发布文件
 		dist, err := fs.Sub(public.Public, "dist")
@@ -33,49 +35,64 @@ func initStaticFS() {
 			utils.Log.Fatalf("无法读取嵌入的dist目录: %v", err)
 		}
 		staticFS = dist
+		utils.Log.Debug("Using embedded dist directory")
 		return
 	}
 	// 使用物理文件系统中的发布目录
 	staticFS = os.DirFS(conf.Conf.DistDir)
+	utils.Log.Infof("Using custom dist directory: %s", conf.Conf.DistDir)
+}
+
+func replaceStrings(content string, replacements map[string]string) string {
+	for old, n := range replacements {
+		content = strings.Replace(content, old, n, 1)
+	}
+	return content
 }
 
 // initIndexHTML 初始化索引HTML文件
 // 读取index.html并进行基本替换
 func initIndexHTML() {
-	// 打开索引文件
-	indexFile, err := staticFS.Open("index.html")
-	if err != nil {
-		if errors.Is(err, fs.ErrNotExist) {
-			utils.Log.Fatalf("index.html文件不存在，您可能忘记将前端构建的dist目录放入public/dist")
-		}
-		utils.Log.Fatalf("无法读取index.html文件: %v", err)
-	}
-	defer func() {
-		if err := indexFile.Close(); err != nil {
-			utils.Log.Errorf("关闭index.html文件失败: %v", err)
-		}
-	}()
-
-	// 读取索引文件内容
-	indexContent, err := io.ReadAll(indexFile)
-	if err != nil {
-		utils.Log.Fatalf("无法读取dist/index.html内容: %v", err)
-	}
-
-	// 保存原始HTML内容
-	conf.RawIndexHTML = string(indexContent)
-
-	// 获取站点配置并替换相关配置
+	utils.Log.Debug("Initializing index.html...")
 	siteConfig := getSiteConfig()
+	if conf.Conf.DistDir != "" || (conf.Conf.Cdn != "" && (conf.WebVersion == "" || conf.WebVersion == "beta" || conf.WebVersion == "dev")) {
+		utils.Log.Infof("Fetching index.html from CDN: %s/index.html...", conf.Conf.Cdn)
+		resp, err := base.RestyClient.R().
+			SetHeader("Accept", "text/html").
+			Get(fmt.Sprintf("%s/index.html", siteConfig.Cdn))
+		if err != nil {
+			utils.Log.Fatalf("failed to fetch index.html from CDN: %v", err)
+		}
+		if resp.StatusCode() != http.StatusOK {
+			utils.Log.Fatalf("failed to fetch index.html from CDN, status code: %d", resp.StatusCode())
+		}
+		conf.RawIndexHTML = resp.String()
+		utils.Log.Info("Successfully fetched index.html from CDN")
+	} else {
+		utils.Log.Debug("Reading index.html from static files system...")
+		indexFile, err := staticFS.Open("index.html")
+		if err != nil {
+			if errors.Is(err, fs.ErrNotExist) {
+				utils.Log.Fatalf("index.html not exist, you may forget to put dist of frontend to public/dist")
+			}
+			utils.Log.Fatalf("failed to read index.html: %v", err)
+		}
+		defer func() {
+			_ = indexFile.Close()
+		}()
+		index, err := io.ReadAll(indexFile)
+		if err != nil {
+			utils.Log.Fatalf("failed to read dist/index.html")
+		}
+		conf.RawIndexHTML = string(index)
+		utils.Log.Debug("Successfully read index.html from static files system")
+	}
+	utils.Log.Debug("Replacing placeholders in index.html...")
 	replaceMap := map[string]string{
 		"cdn: undefined":       fmt.Sprintf("cdn: '%s'", siteConfig.Cdn),
 		"base_path: undefined": fmt.Sprintf("base_path: '%s'", siteConfig.BasePath),
 	}
-
-	// 替换配置变量
-	for k, v := range replaceMap {
-		conf.RawIndexHTML = strings.Replace(conf.RawIndexHTML, k, v, 1)
-	}
+	conf.RawIndexHTML = replaceStrings(conf.RawIndexHTML, replaceMap)
 
 	// 更新索引HTML
 	UpdateIndexHTML()
@@ -84,6 +101,7 @@ func initIndexHTML() {
 // UpdateIndexHTML 根据最新设置更新索引HTML
 // 将设置中的配置项应用到HTML模板中
 func UpdateIndexHTML() {
+	utils.Log.Debug("Updating index.html with settings...")
 	// 获取设置
 	favicon := setting.GetStr(consts.Favicon)
 	title := setting.GetStr(consts.SiteTitle)
@@ -91,6 +109,7 @@ func UpdateIndexHTML() {
 	customizeBody := setting.GetStr(consts.CustomizeBody)
 	mainColor := setting.GetStr(consts.MainColor)
 
+	utils.Log.Debug("Applying replacements for default pages...")
 	// 首先更新管理页面HTML
 	conf.ManageHTML = conf.RawIndexHTML
 
@@ -101,12 +120,8 @@ func UpdateIndexHTML() {
 		"main_color: undefined": fmt.Sprintf("main_color: '%s'", mainColor),
 	}
 
-	for k, v := range baseReplaceMap {
-		conf.ManageHTML = strings.Replace(conf.ManageHTML, k, v, 1)
-	}
-
-	// 复制管理页面HTML作为基础
-	conf.IndexHTML = conf.ManageHTML
+	conf.ManageHTML = replaceStrings(conf.ManageHTML, baseReplaceMap)
+	utils.Log.Debug("Applying replacements for manage pages...")
 
 	// 替换用户自定义的头部和正文内容
 	customReplaceMap := map[string]string{
@@ -114,9 +129,8 @@ func UpdateIndexHTML() {
 		"<!-- customize body -->": customizeBody,
 	}
 
-	for k, v := range customReplaceMap {
-		conf.IndexHTML = strings.Replace(conf.IndexHTML, k, v, 1)
-	}
+	conf.IndexHTML = replaceStrings(conf.ManageHTML, customReplaceMap)
+	utils.Log.Debug("Index.html update completed")
 }
 
 // Static 配置静态资源路由和处理无路由请求
@@ -126,6 +140,7 @@ func UpdateIndexHTML() {
 //   - r: Gin路由组
 //   - noRoute: 无路由处理函数
 func Static(r *gin.RouterGroup, noRoute func(handlers ...gin.HandlerFunc)) {
+	utils.Log.Debug("Setting up static routes...")
 	// 初始化静态文件系统和索引HTML
 	initStaticFS()
 	initIndexHTML()
@@ -133,26 +148,39 @@ func Static(r *gin.RouterGroup, noRoute func(handlers ...gin.HandlerFunc)) {
 	// 静态资源文件夹
 	staticFolders := []string{"assets", "images", "streamer", "static"}
 
-	// 设置静态资源缓存控制
-	r.Use(func(c *gin.Context) {
-		requestURI := c.Request.RequestURI
-		for _, folder := range staticFolders {
-			if strings.HasPrefix(requestURI, fmt.Sprintf("/%s/", folder)) {
-				// 为静态资源设置长期缓存（6个月）
-				c.Header("Cache-Control", "public, max-age=15552000")
-				break
+	if conf.Conf.Cdn == "" {
+		utils.Log.Debug("Setting up static file serving...")
+		// 设置静态资源缓存控制
+		r.Use(func(c *gin.Context) {
+			requestURI := c.Request.RequestURI
+			for _, folder := range staticFolders {
+				if strings.HasPrefix(requestURI, fmt.Sprintf("/%s/", folder)) {
+					// 为静态资源设置长期缓存（6个月）
+					c.Header("Cache-Control", "public, max-age=15552000")
+					break
+				}
 			}
+		})
+		// 配置静态文件服务
+		for _, folder := range staticFolders {
+			sub, err := fs.Sub(staticFS, folder)
+			if err != nil {
+				utils.Log.Fatalf("无法找到静态资源目录: %s, 错误: %v", folder, err)
+			}
+			utils.Log.Debugf("Setting up route for folder: %s", folder)
+			r.StaticFS(fmt.Sprintf("/%s/", folder), http.FS(sub))
 		}
-	})
-
-	// 配置静态文件服务
-	for _, folder := range staticFolders {
-		sub, err := fs.Sub(staticFS, folder)
-		if err != nil {
-			utils.Log.Fatalf("无法找到静态资源目录: %s, 错误: %v", folder, err)
+	} else {
+		// Ensure static file redirected to CDN
+		for _, folder := range staticFolders {
+			r.GET(fmt.Sprintf("/%s/*filepath", folder), func(c *gin.Context) {
+				filepath := c.Param("filepath")
+				c.Redirect(http.StatusFound, fmt.Sprintf("%s/%s%s", conf.Conf.Cdn, folder, filepath))
+			})
 		}
-		r.StaticFS(fmt.Sprintf("/%s/", folder), http.FS(sub))
 	}
+
+	utils.Log.Debug("Setting up catch-all route...")
 
 	// 配置无路由处理
 	noRoute(func(c *gin.Context) {

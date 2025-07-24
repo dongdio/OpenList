@@ -7,6 +7,8 @@ import (
 	"github.com/dongdio/OpenList/v4/internal/model"
 )
 
+var agentHeaser = "terabox;1.37.0.7;PC;PC-Windows;10.0.22631;WindowsTeraBox"
+
 type File struct {
 	// TkbindId     int    `json:"tkbind_id"`
 	// OwnerType    int    `json:"owner_type"`

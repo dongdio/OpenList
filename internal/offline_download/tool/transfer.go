@@ -14,9 +14,11 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/dongdio/OpenList/v4/consts"
-	"github.com/dongdio/OpenList/v4/internal/driver"
+	"github.com/dongdio/OpenList/v4/internal/fs"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
+	"github.com/dongdio/OpenList/v4/internal/task_group"
+	"github.com/dongdio/OpenList/v4/server/common"
 	"github.com/dongdio/OpenList/v4/utility/http_range"
 	"github.com/dongdio/OpenList/v4/utility/stream"
 	"github.com/dongdio/OpenList/v4/utility/task"
@@ -48,16 +50,10 @@ var bufferPool = sync.Pool{
 // TransferTask 表示一个文件传输任务
 // 支持从标准文件系统、对象存储和URL传输到目标存储
 type TransferTask struct {
-	task.TaskExtension
-	Status       string        `json:"-"`              // 不保存状态以节省空间
-	SrcObjPath   string        `json:"src_obj_path"`   // 源对象路径
-	DstDirPath   string        `json:"dst_dir_path"`   // 目标目录路径
-	SrcStorage   driver.Driver `json:"-"`              // 源存储驱动（可能为nil表示标准文件系统或URL）
-	DstStorage   driver.Driver `json:"-"`              // 目标存储驱动
-	SrcStorageMp string        `json:"src_storage_mp"` // 源存储挂载点
-	DstStorageMp string        `json:"dst_storage_mp"` // 目标存储挂载点
-	DeletePolicy DeletePolicy  `json:"delete_policy"`  // 删除策略
-	URL          string        `json:"-"`              // 源URL（用于直接从URL上传）
+	fs.TaskData
+	DeletePolicy DeletePolicy `json:"delete_policy"`
+	URL          string       `json:"url"`
+	groupID      string
 }
 
 // Run 执行传输任务
@@ -94,11 +90,6 @@ func (t *TransferTask) Run() error {
 func (t *TransferTask) transferFromURL() error {
 	t.Status = "从URL获取数据流"
 
-	// 检查URL是否有效
-	if t.URL == "" {
-		return errors.New("URL不能为空")
-	}
-
 	// 获取范围读取器
 	rr, err := stream.GetRangeReaderFromLink(t.GetTotalBytes(), &model.Link{URL: t.URL})
 	if err != nil {
@@ -112,7 +103,7 @@ func (t *TransferTask) transferFromURL() error {
 	}
 
 	// 准备文件流
-	name := t.SrcObjPath
+	name := t.SrcActualPath
 	mimetype := utils.GetMimeType(name)
 	s := &stream.FileStream{
 		Ctx: t.Ctx(),
@@ -129,15 +120,15 @@ func (t *TransferTask) transferFromURL() error {
 
 	// 上传到目标存储
 	t.Status = "上传数据到目标存储"
-	return op.Put(t.Ctx(), t.DstStorage, t.DstDirPath, s, t.SetProgress)
+	return op.Put(t.Ctx(), t.DstStorage, t.DstActualPath, s, t.SetProgress)
 }
 
 // GetName 返回任务的描述性名称
 func (t *TransferTask) GetName() string {
 	if t.DeletePolicy == UploadDownloadStream {
-		return fmt.Sprintf("上传 [%s](%s) 到 [%s](%s)", t.SrcObjPath, t.URL, t.DstStorageMp, t.DstDirPath)
+		return fmt.Sprintf("上传 [%s](%s) 到 [%s](%s)", t.SrcActualPath, t.URL, t.DstStorageMp, t.DstActualPath)
 	}
-	return fmt.Sprintf("传输 [%s](%s) 到 [%s](%s)", t.SrcStorageMp, t.SrcObjPath, t.DstStorageMp, t.DstDirPath)
+	return fmt.Sprintf("传输 [%s](%s) 到 [%s](%s)", t.SrcStorageMp, t.SrcActualPath, t.DstStorageMp, t.DstActualPath)
 }
 
 // GetStatus 返回任务的当前状态
@@ -150,6 +141,7 @@ func (t *TransferTask) OnSucceeded() {
 	if t.DeletePolicy == DeleteOnUploadSucceed || t.DeletePolicy == DeleteAlways {
 		t.cleanupSource()
 	}
+	task_group.TransferCoordinator.Done(t.groupID, false)
 }
 
 // OnFailed 在任务失败后执行清理操作
@@ -157,6 +149,7 @@ func (t *TransferTask) OnFailed() {
 	if t.DeletePolicy == DeleteOnUploadFailed || t.DeletePolicy == DeleteAlways {
 		t.cleanupSource()
 	}
+	task_group.TransferCoordinator.Done(t.groupID, false)
 }
 
 // cleanupSource 根据源类型清理源文件
@@ -166,6 +159,16 @@ func (t *TransferTask) cleanupSource() {
 	} else {
 		t.removeObjTemp()
 	}
+}
+
+func (t *TransferTask) SetRetry(retry int, maxRetry int) {
+	if retry == 0 &&
+		(len(t.groupID) == 0 || // 重启恢复
+			(t.GetErr() == nil && t.GetState() != tache.StatePending)) { // 手动重试
+		t.groupID = stdpath.Join(t.DstStorageMp, t.DstActualPath)
+		task_group.TransferCoordinator.AddTask(t.groupID, nil)
+	}
+	t.TaskExtension.SetRetry(retry, maxRetry)
 }
 
 // TransferTaskManager 管理所有传输任务
@@ -192,15 +195,20 @@ func TransferFromStd(ctx context.Context, tempDir, dstDirPath string, deletePoli
 	// 为每个文件创建传输任务
 	for _, entry := range entries {
 		t := &TransferTask{
-			TaskExtension: task.TaskExtension{
-				Creator: taskCreator,
+			TaskData: fs.TaskData{
+				TaskExtension: task.TaskExtension{
+					Creator: taskCreator,
+					ApiUrl:  common.GetApiURL(ctx),
+				},
+				SrcActualPath: stdpath.Join(tempDir, entry.Name()),
+				DstActualPath: dstDirActualPath,
+				DstStorage:    dstStorage,
+				DstStorageMp:  dstStorage.GetStorage().MountPath,
 			},
-			SrcObjPath:   stdpath.Join(tempDir, entry.Name()),
-			DstDirPath:   dstDirActualPath,
-			DstStorage:   dstStorage,
-			DstStorageMp: dstStorage.GetStorage().MountPath,
+			groupID:      dstDirPath,
 			DeletePolicy: deletePolicy,
 		}
+		task_group.TransferCoordinator.AddTask(dstDirPath, nil)
 		TransferTaskManager.Add(t)
 	}
 
@@ -212,7 +220,7 @@ func (t *TransferTask) transferFromStdPath() error {
 	t.Status = "获取源对象信息"
 
 	// 检查源文件或目录是否存在
-	info, err := os.Stat(t.SrcObjPath)
+	info, err := os.Stat(t.SrcActualPath)
 	if err != nil {
 		return errors.Wrap(err, "无法获取源文件信息")
 	}
@@ -220,33 +228,34 @@ func (t *TransferTask) transferFromStdPath() error {
 	// 如果是目录，为每个子项创建传输任务
 	if info.IsDir() {
 		t.Status = "源对象是目录，列出文件"
-		entries, err := os.ReadDir(t.SrcObjPath)
+		entries, err := os.ReadDir(t.SrcActualPath)
 		if err != nil {
 			return errors.Wrap(err, "无法读取源目录")
 		}
+		dstDirActualPath := stdpath.Join(t.DstActualPath, info.Name())
+		task_group.TransferCoordinator.AppendPayload(t.groupID, task_group.DstPathToRefresh(dstDirActualPath))
 
 		// 为每个子项创建传输任务
 		for _, entry := range entries {
-			// 检查是否取消
-			if utils.IsCanceled(t.Ctx()) {
-				return ErrTransferCanceled
-			}
-
-			srcRawPath := stdpath.Join(t.SrcObjPath, entry.Name())
-			dstObjPath := stdpath.Join(t.DstDirPath, info.Name())
-
-			taskTmp := &TransferTask{
-				TaskExtension: task.TaskExtension{
-					Creator: t.Creator,
+			srcRawPath := stdpath.Join(t.SrcActualPath, entry.Name())
+			tsk := &TransferTask{
+				TaskData: fs.TaskData{
+					TaskExtension: task.TaskExtension{
+						Creator: t.Creator,
+						ApiUrl:  t.ApiUrl,
+					},
+					SrcActualPath: srcRawPath,
+					DstActualPath: dstDirActualPath,
+					DstStorage:    t.DstStorage,
+					SrcStorageMp:  t.SrcStorageMp,
+					DstStorageMp:  t.DstStorageMp,
 				},
-				SrcObjPath:   srcRawPath,
-				DstDirPath:   dstObjPath,
-				DstStorage:   t.DstStorage,
-				SrcStorageMp: t.SrcStorageMp,
-				DstStorageMp: t.DstStorageMp,
+				groupID: t.groupID,
+
 				DeletePolicy: t.DeletePolicy,
 			}
-			TransferTaskManager.Add(taskTmp)
+			task_group.TransferCoordinator.AddTask(t.groupID, nil)
+			TransferTaskManager.Add(tsk)
 		}
 
 		t.Status = "源对象是目录，已添加所有文件的传输任务"
@@ -262,24 +271,24 @@ func (t *TransferTask) transferStdFile() error {
 	t.Status = "打开源文件"
 
 	// 打开源文件
-	rc, err := os.Open(t.SrcObjPath)
+	rc, err := os.Open(t.SrcActualPath)
 	if err != nil {
-		return errors.Wrapf(err, "无法打开文件 %s", t.SrcObjPath)
+		return errors.Wrapf(err, "无法打开文件 %s", t.SrcActualPath)
 	}
 	defer rc.Close()
 
 	// 获取文件信息
 	info, err := rc.Stat()
 	if err != nil {
-		return errors.Wrapf(err, "无法获取文件信息 %s", t.SrcObjPath)
+		return errors.Wrapf(err, "无法获取文件信息 %s", t.SrcActualPath)
 	}
 
 	// 准备文件流
-	mimetype := utils.GetMimeType(t.SrcObjPath)
+	mimetype := utils.GetMimeType(t.SrcActualPath)
 	s := &stream.FileStream{
 		Ctx: t.Ctx(),
 		Obj: &model.Object{
-			Name:     filepath.Base(t.SrcObjPath),
+			Name:     filepath.Base(t.SrcActualPath),
 			Size:     info.Size(),
 			Modified: info.ModTime(),
 			IsFolder: false,
@@ -292,25 +301,25 @@ func (t *TransferTask) transferStdFile() error {
 	// 设置总字节数并上传
 	t.SetTotalBytes(info.Size())
 	t.Status = "上传文件到目标存储"
-	return op.Put(t.Ctx(), t.DstStorage, t.DstDirPath, s, t.SetProgress)
+	return op.Put(t.Ctx(), t.DstStorage, t.DstActualPath, s, t.SetProgress)
 }
 
 // removeStdTemp 删除标准文件系统中的临时文件
 func (t *TransferTask) removeStdTemp() {
 	// 检查文件是否存在且不是目录
-	info, err := os.Stat(t.SrcObjPath)
+	info, err := os.Stat(t.SrcActualPath)
 	if err != nil || info.IsDir() {
 		return
 	}
 
 	// 删除文件
-	if err := os.Remove(t.SrcObjPath); err != nil {
+	if err := os.Remove(t.SrcActualPath); err != nil {
 		log.WithFields(log.Fields{
-			"path":  t.SrcObjPath,
+			"path":  t.SrcActualPath,
 			"error": err,
 		}).Error("无法删除临时文件")
 	} else {
-		log.WithField("path", t.SrcObjPath).Debug("已删除临时文件")
+		log.WithField("path", t.SrcActualPath).Debug("已删除临时文件")
 	}
 }
 
@@ -345,17 +354,22 @@ func TransferFromObj(ctx context.Context, tempDir, dstDirPath string, deletePoli
 		}
 
 		t := &TransferTask{
-			TaskExtension: task.TaskExtension{
-				Creator: taskCreator,
+			TaskData: fs.TaskData{
+				TaskExtension: task.TaskExtension{
+					Creator: taskCreator,
+					ApiUrl:  common.GetApiURL(ctx),
+				},
+				SrcActualPath: stdpath.Join(srcObjActualPath, obj.GetName()),
+				DstActualPath: dstDirActualPath,
+				SrcStorage:    srcStorage,
+				DstStorage:    dstStorage,
+				SrcStorageMp:  srcStorage.GetStorage().MountPath,
+				DstStorageMp:  dstStorage.GetStorage().MountPath,
 			},
-			SrcObjPath:   stdpath.Join(srcObjActualPath, obj.GetName()),
-			DstDirPath:   dstDirActualPath,
-			SrcStorage:   srcStorage,
-			DstStorage:   dstStorage,
-			SrcStorageMp: srcStorage.GetStorage().MountPath,
-			DstStorageMp: dstStorage.GetStorage().MountPath,
+			groupID:      dstDirPath,
 			DeletePolicy: deletePolicy,
 		}
+		task_group.TransferCoordinator.AddTask(dstDirPath, nil)
 		TransferTaskManager.Add(t)
 	}
 
@@ -367,18 +381,21 @@ func (t *TransferTask) transferFromObjPath() error {
 	t.Status = "获取源对象信息"
 
 	// 获取源对象
-	srcObj, err := op.Get(t.Ctx(), t.SrcStorage, t.SrcObjPath)
+	srcObj, err := op.Get(t.Ctx(), t.SrcStorage, t.SrcActualPath)
 	if err != nil {
-		return errors.Wrapf(err, "无法获取源对象 [%s]", t.SrcObjPath)
+		return errors.Wrapf(err, "无法获取源对象 [%s]", t.SrcActualPath)
 	}
 
 	// 如果是目录，为每个子对象创建传输任务
 	if srcObj.IsDir() {
 		t.Status = "源对象是目录，列出对象"
-		objs, err := op.List(t.Ctx(), t.SrcStorage, t.SrcObjPath, model.ListArgs{})
+		objs, err := op.List(t.Ctx(), t.SrcStorage, t.SrcActualPath, model.ListArgs{})
 		if err != nil {
-			return errors.Wrapf(err, "无法列出源目录 [%s] 中的对象", t.SrcObjPath)
+			return errors.Wrapf(err, "无法列出源目录 [%s] 中的对象", t.SrcActualPath)
 		}
+
+		dstDirActualPath := stdpath.Join(t.DstActualPath, srcObj.GetName())
+		task_group.TransferCoordinator.AppendPayload(t.groupID, task_group.DstPathToRefresh(dstDirActualPath))
 
 		// 为每个子对象创建传输任务
 		for _, obj := range objs {
@@ -387,19 +404,23 @@ func (t *TransferTask) transferFromObjPath() error {
 				return ErrTransferCanceled
 			}
 
-			srcObjPath := stdpath.Join(t.SrcObjPath, obj.GetName())
-			dstObjPath := stdpath.Join(t.DstDirPath, srcObj.GetName())
+			SrcActualPath := stdpath.Join(t.SrcActualPath, obj.GetName())
+			task_group.TransferCoordinator.AddTask(t.groupID, nil)
 
 			TransferTaskManager.Add(&TransferTask{
-				TaskExtension: task.TaskExtension{
-					Creator: t.Creator,
+				TaskData: fs.TaskData{
+					TaskExtension: task.TaskExtension{
+						Creator: t.Creator,
+						ApiUrl:  t.ApiUrl,
+					},
+					SrcActualPath: SrcActualPath,
+					DstActualPath: dstDirActualPath,
+					SrcStorage:    t.SrcStorage,
+					DstStorage:    t.DstStorage,
+					SrcStorageMp:  t.SrcStorageMp,
+					DstStorageMp:  t.DstStorageMp,
 				},
-				SrcObjPath:   srcObjPath,
-				DstDirPath:   dstObjPath,
-				SrcStorage:   t.SrcStorage,
-				DstStorage:   t.DstStorage,
-				SrcStorageMp: t.SrcStorageMp,
-				DstStorageMp: t.DstStorageMp,
+				groupID:      t.groupID,
 				DeletePolicy: t.DeletePolicy,
 			})
 		}
@@ -417,15 +438,15 @@ func (t *TransferTask) transferObjFile() error {
 	t.Status = "获取源文件信息"
 
 	// 获取源文件
-	srcFile, err := op.Get(t.Ctx(), t.SrcStorage, t.SrcObjPath)
+	srcFile, err := op.Get(t.Ctx(), t.SrcStorage, t.SrcActualPath)
 	if err != nil {
-		return errors.Wrapf(err, "无法获取源文件 [%s]", t.SrcObjPath)
+		return errors.Wrapf(err, "无法获取源文件 [%s]", t.SrcActualPath)
 	}
 
 	// 获取文件链接
-	link, _, err := op.Link(t.Ctx(), t.SrcStorage, t.SrcObjPath, model.LinkArgs{})
+	link, _, err := op.Link(t.Ctx(), t.SrcStorage, t.SrcActualPath, model.LinkArgs{})
 	if err != nil {
-		return errors.Wrapf(err, "无法获取源文件 [%s] 的链接", t.SrcObjPath)
+		return errors.Wrapf(err, "无法获取源文件 [%s] 的链接", t.SrcActualPath)
 	}
 	defer link.Close()
 
@@ -436,31 +457,31 @@ func (t *TransferTask) transferObjFile() error {
 		Ctx: t.Ctx(),
 	}, link)
 	if err != nil {
-		return errors.Wrapf(err, "无法为源文件 [%s] 创建流", t.SrcObjPath)
+		return errors.Wrapf(err, "无法为源文件 [%s] 创建流", t.SrcActualPath)
 	}
 
 	// 设置总字节数并上传
 	t.SetTotalBytes(ss.GetSize())
 	t.Status = "上传文件到目标存储"
-	return op.Put(t.Ctx(), t.DstStorage, t.DstDirPath, ss, t.SetProgress)
+	return op.Put(t.Ctx(), t.DstStorage, t.DstActualPath, ss, t.SetProgress)
 }
 
 // removeObjTemp 删除对象存储中的临时文件
 func (t *TransferTask) removeObjTemp() {
 	// 检查对象是否存在且不是目录
-	srcObj, err := op.Get(t.Ctx(), t.SrcStorage, t.SrcObjPath)
+	srcObj, err := op.Get(t.Ctx(), t.SrcStorage, t.SrcActualPath)
 	if err != nil || srcObj.IsDir() {
 		return
 	}
 
 	// 删除对象
-	if err = op.Remove(t.Ctx(), t.SrcStorage, t.SrcObjPath); err != nil {
+	if err = op.Remove(t.Ctx(), t.SrcStorage, t.SrcActualPath); err != nil {
 		log.WithFields(log.Fields{
-			"path":  t.SrcObjPath,
+			"path":  t.SrcActualPath,
 			"error": err,
 		}).Error("无法删除临时对象")
 	} else {
-		log.WithField("path", t.SrcObjPath).Debug("已删除临时对象")
+		log.WithField("path", t.SrcActualPath).Debug("已删除临时对象")
 	}
 }
 

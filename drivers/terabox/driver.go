@@ -5,11 +5,13 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/hex"
+	"fmt"
 	"io"
 	"math"
 	stdpath "path"
 	"strconv"
 
+	"github.com/avast/retry-go"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
@@ -131,7 +133,7 @@ func (d *Terabox) Remove(ctx context.Context, obj model.Obj) error {
 func (d *Terabox) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
 	resp, err := base.RestyClient.R().
 		SetContext(ctx).
-		Get("https://" + d.url_domain_prefix + "-data.terabox.com/rest/2.0/pcs/file?method=locateupload")
+		Get("https://d.terabox.com/rest/2.0/pcs/file?method=locateupload")
 	if err != nil {
 		return err
 	}
@@ -184,13 +186,9 @@ func (d *Terabox) Put(ctx context.Context, dstDir model.Obj, stream model.FileSt
 	}
 
 	params := map[string]string{
-		"method":     "upload",
-		"path":       path,
-		"uploadid":   precreateResp.Uploadid,
-		"app_id":     "250528",
-		"web":        "1",
-		"channel":    "dubox",
-		"clienttype": "0",
+		"method":   "upload",
+		"path":     path,
+		"uploadid": precreateResp.Uploadid,
 	}
 
 	streamSize := stream.GetSize()
@@ -220,21 +218,36 @@ func (d *Terabox) Put(ctx context.Context, dstDir model.Obj, stream model.FileSt
 
 		// calculate md5
 		h.Write(byteData)
-		uploadBlockList = append(uploadBlockList, hex.EncodeToString(h.Sum(nil)))
+		localMD5 := hex.EncodeToString(h.Sum(nil))
+		uploadBlockList = append(uploadBlockList, localMD5)
 		h.Reset()
 
 		u := "https://" + locateupload_resp.Host + "/rest/2.0/pcs/superfile2"
 		params["partseq"] = strconv.Itoa(partseq)
-		resp, err = base.RestyClient.R().
-			SetContext(ctx).
-			SetQueryParams(params).
-			SetFileReader("file", stream.GetName(), driver.NewLimitedUploadStream(ctx, bytes.NewReader(byteData))).
-			SetHeader("Cookie", d.Cookie).
-			Post(u)
+		log.Debugf("%+v", params)
+
+		err = retry.Do(
+			func() error {
+				fileReader := driver.NewLimitedUploadStream(ctx, bytes.NewReader(byteData))
+				res, err = d.post_multipart(u, params, "file", stream.GetName(), fileReader, nil)
+				log.Debugln(string(res))
+				if err != nil {
+					return err
+				}
+				rspmd5 := utils.GetBytes(res, "md5").String()
+				if localMD5 != rspmd5 {
+					log.Debugf("MD5 mismatch, our MD5: %s, server: %s", localMD5, rspmd5)
+					return fmt.Errorf("MD5 mismatch")
+				}
+				return nil
+			},
+			retry.Attempts(5),
+			retry.DelayType(retry.FixedDelay),
+			retry.Context(ctx),
+		)
 		if err != nil {
 			return err
 		}
-		log.Debugln(resp.String())
 		if count > 0 {
 			up(float64(partseq) * 100 / float64(count))
 		}

@@ -31,38 +31,26 @@ func get(ctx context.Context, path string) (model.Obj, error) {
 	path = utils.FixAndCleanPath(path)
 
 	// 处理根路径特殊情况
-	if path == "/" {
-		return &model.Object{
-			Name:     "root",
-			Size:     0,
-			Modified: time.Time{},
-			IsFolder: true,
-		}, nil
-	}
-
-	// 检查是否为虚拟文件
-	dirPath := stdpath.Dir(path)
-	fileName := stdpath.Base(path)
-	virtualFiles := op.GetStorageVirtualFilesByPath(dirPath)
-
-	// 使用索引优化查找虚拟文件
-	for i := range virtualFiles {
-		if virtualFiles[i].GetName() == fileName {
-			return virtualFiles[i], nil
+	if path != "/" {
+		virtualFiles := op.GetStorageVirtualFilesByPath(stdpath.Dir(path))
+		for _, f := range virtualFiles {
+			if f.GetName() == stdpath.Base(path) {
+				return f, nil
+			}
 		}
 	}
-
-	// 获取存储和实际路径
 	storage, actualPath, err := op.GetStorageAndActualPath(path)
 	if err != nil {
-		return nil, errors.Wrap(ErrStorageNotFound, err.Error())
+		// if there are no storage prefix with path, maybe root folder
+		if path == "/" {
+			return &model.Object{
+				Name:     "root",
+				Size:     0,
+				Modified: time.Time{},
+				IsFolder: true,
+			}, nil
+		}
+		return nil, errors.WithMessage(err, "failed get storage")
 	}
-
-	// 获取对象
-	obj, err := op.Get(ctx, storage, actualPath)
-	if err != nil {
-		return nil, errors.Wrap(ErrObjectNotFound, err.Error())
-	}
-
-	return obj, nil
+	return op.Get(ctx, storage, actualPath)
 }

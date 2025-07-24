@@ -1,4 +1,3 @@
-// Package fs provides filesystem operations for OpenList
 package fs
 
 import (
@@ -7,11 +6,9 @@ import (
 	"fmt"
 	"io"
 	"math/rand"
-	"mime"
 	"os"
 	stdpath "path"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
@@ -24,37 +21,24 @@ import (
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
+	"github.com/dongdio/OpenList/v4/internal/task_group"
+	"github.com/dongdio/OpenList/v4/server/common"
 	"github.com/dongdio/OpenList/v4/utility/errs"
-	streamPkg "github.com/dongdio/OpenList/v4/utility/stream"
+	"github.com/dongdio/OpenList/v4/utility/stream"
 	"github.com/dongdio/OpenList/v4/utility/task"
+	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
-// ArchiveDownloadTask represents a task for downloading and decompressing archive files
 type ArchiveDownloadTask struct {
-	task.TaskExtension
+	TaskData
 	model.ArchiveDecompressArgs
-	status       string        // Current status of the task
-	SrcObjPath   string        // Source object path
-	DstDirPath   string        // Destination directory path
-	srcStorage   driver.Driver // Source storage driver
-	dstStorage   driver.Driver // Destination storage driver
-	SrcStorageMp string        // Source storage mount path
-	DstStorageMp string        // Destination storage mount path
 }
 
-// GetName returns a human-readable name for the archive download task
 func (t *ArchiveDownloadTask) GetName() string {
-	return fmt.Sprintf("decompress [%s](%s)[%s] to [%s](%s) with password <%s>",
-		t.SrcStorageMp, t.SrcObjPath,
-		t.InnerPath, t.DstStorageMp, t.DstDirPath, t.Password)
+	return fmt.Sprintf("decompress [%s](%s)[%s] to [%s](%s) with password <%s>", t.SrcStorageMp, t.SrcActualPath,
+		t.InnerPath, t.DstStorageMp, t.DstActualPath, t.Password)
 }
 
-// GetStatus returns the current status of the archive download task
-func (t *ArchiveDownloadTask) GetStatus() string {
-	return t.status
-}
-
-// Run executes the archive download task
 func (t *ArchiveDownloadTask) Run() error {
 	if err := t.ReinitCtx(); err != nil {
 		return err
@@ -62,143 +46,109 @@ func (t *ArchiveDownloadTask) Run() error {
 	t.ClearEndTime()
 	t.SetStartTime(time.Now())
 	defer func() { t.SetEndTime(time.Now()) }()
-
 	uploadTask, err := t.RunWithoutPushUploadTask()
 	if err != nil {
 		return err
 	}
-
+	uploadTask.groupID = stdpath.Join(uploadTask.DstStorageMp, uploadTask.DstActualPath)
+	task_group.TransferCoordinator.AddTask(uploadTask.groupID, nil)
 	ArchiveContentUploadTaskManager.Add(uploadTask)
 	return nil
 }
 
-// RunWithoutPushUploadTask performs the decompression without adding the resulting upload task to the manager
-// Returns the upload task for the extracted content
 func (t *ArchiveDownloadTask) RunWithoutPushUploadTask() (*ArchiveContentUploadTask, error) {
 	var err error
-
-	// Initialize source storage if needed
-	if t.srcStorage == nil {
-		t.srcStorage, err = op.GetStorageByMountPath(t.SrcStorageMp)
+	if t.SrcStorage == nil {
+		t.SrcStorage, err = op.GetStorageByMountPath(t.SrcStorageMp)
 		if err != nil {
-			return nil, errors.WithMessage(err, "failed to get source storage")
+			return nil, err
 		}
 	}
-
-	// Get the archive tool and stream
-	srcObj, archiveTool, streams, err := op.GetArchiveToolAndStream(t.Ctx(), t.srcStorage, t.SrcObjPath, model.LinkArgs{})
+	srcObj, tool, ss, err := op.GetArchiveToolAndStream(t.Ctx(), t.SrcStorage, t.SrcActualPath, model.LinkArgs{})
 	if err != nil {
-		return nil, errors.WithMessage(err, "failed to get archive tool and stream")
+		return nil, err
 	}
-	// Ensure all streams are closed
 	defer func() {
-		for _, stream := range streams {
-			// Safely close each stream, ignoring nil errors
-			if closeErr := stream.Close(); closeErr != nil {
-				log.Errorf("failed to close file stream: %v", closeErr)
-			}
+		var e error
+		for _, s := range ss {
+			e = stderrors.Join(e, s.Close())
+		}
+		if e != nil {
+			log.Errorf("failed to close file streamer, %v", e)
 		}
 	}()
-
-	var decompressProgressUpdater model.UpdateProgress
-
-	// Handle full caching if enabled
+	var decompressUp model.UpdateProgress
 	if t.CacheFull {
-		var totalSize, currentSize int64 = 0, 0
-
-		// Calculate total size of all streams
-		for _, stream := range streams {
-			totalSize += stream.GetSize()
+		var total, cur int64 = 0, 0
+		for _, s := range ss {
+			total += s.GetSize()
 		}
-
-		t.SetTotalBytes(totalSize)
-		t.status = "caching source object"
-
-		// Cache each stream that doesn't already have a file
-		for _, stream := range streams {
-			if stream.GetFile() == nil {
-				_, err = streamPkg.CacheFullInTempFileAndWriter(stream, func(progress float64) {
-					// Calculate overall progress including already processed streams
-					currentProgress := (float64(currentSize) + float64(stream.GetSize())*progress/100.0) / float64(totalSize)
-					t.SetProgress(currentProgress)
+		t.SetTotalBytes(total)
+		t.Status = "getting src object"
+		for _, s := range ss {
+			if s.GetFile() == nil {
+				_, err = stream.CacheFullInTempFileAndWriter(s, func(p float64) {
+					t.SetProgress((float64(cur) + float64(s.GetSize())*p/100.0) / float64(total))
 				}, nil)
-
-				if err != nil {
-					return nil, errors.WithMessage(err, "failed to cache stream in temp file")
-				}
 			}
-			currentSize += stream.GetSize()
+			cur += s.GetSize()
+			if err != nil {
+				return nil, err
+			}
 		}
-
 		t.SetProgress(100.0)
-		// No need to update progress during decompression since we've already downloaded everything
-		decompressProgressUpdater = func(_ float64) {}
+		decompressUp = func(_ float64) {}
 	} else {
-		// Use the task's progress updater directly
-		decompressProgressUpdater = t.SetProgress
+		decompressUp = t.SetProgress
 	}
-
-	// Create temporary directory for decompression
-	t.status = "decompressing archive"
-	tempDir, err := os.MkdirTemp(conf.Conf.TempDir, "dir-*")
+	t.Status = "walking and decompressing"
+	dir, err := os.MkdirTemp(conf.Conf.TempDir, "dir-*")
 	if err != nil {
-		return nil, errors.WithMessage(err, "failed to create temporary directory")
+		return nil, err
 	}
-
-	// Perform decompression
-	err = archiveTool.Decompress(streams, tempDir, t.ArchiveInnerArgs, decompressProgressUpdater)
+	err = tool.Decompress(ss, dir, t.ArchiveInnerArgs, decompressUp)
 	if err != nil {
-		// Clean up the temporary directory on error
-		_ = os.RemoveAll(tempDir)
-		return nil, errors.WithMessage(err, "failed to decompress archive")
+		return nil, err
 	}
-
-	// Extract base name without extension for the output
 	baseName := strings.TrimSuffix(srcObj.GetName(), stdpath.Ext(srcObj.GetName()))
-
-	// Create upload task for the decompressed content
 	uploadTask := &ArchiveContentUploadTask{
 		TaskExtension: task.TaskExtension{
 			Creator: t.GetCreator(),
+			ApiUrl:  t.ApiUrl,
 		},
-		ObjName:      baseName,
-		InPlace:      !t.PutIntoNewDir,
-		FilePath:     tempDir,
-		DstDirPath:   t.DstDirPath,
-		dstStorage:   t.dstStorage,
-		DstStorageMp: t.DstStorageMp,
+		ObjName:       baseName,
+		InPlace:       !t.PutIntoNewDir,
+		FilePath:      dir,
+		DstActualPath: t.DstActualPath,
+		dstStorage:    t.DstStorage,
+		DstStorageMp:  t.DstStorageMp,
 	}
-
 	return uploadTask, nil
 }
 
-// ArchiveDownloadTaskManager manages asynchronous archive download tasks
 var ArchiveDownloadTaskManager *tache.Manager[*ArchiveDownloadTask]
 
-// ArchiveContentUploadTask represents a task for uploading decompressed archive content
 type ArchiveContentUploadTask struct {
 	task.TaskExtension
-	status       string        // Current status of the task
-	ObjName      string        // Object name
-	InPlace      bool          // Whether to upload in place or in a new directory
-	FilePath     string        // Path to the file or directory to upload
-	DstDirPath   string        // Destination directory path
-	dstStorage   driver.Driver // Destination storage driver
-	DstStorageMp string        // Destination storage mount path
-	finalized    bool          // Whether the task has been finalized (resources cleaned up)
+	status        string
+	ObjName       string
+	InPlace       bool
+	FilePath      string
+	DstActualPath string
+	dstStorage    driver.Driver
+	DstStorageMp  string
+	finalized     bool
+	groupID       string
 }
 
-// GetName returns a human-readable name for the archive content upload task
 func (t *ArchiveContentUploadTask) GetName() string {
-	return fmt.Sprintf("upload %s to [%s](%s)", t.ObjName, t.DstStorageMp, t.DstDirPath)
+	return fmt.Sprintf("upload %s to [%s](%s)", t.ObjName, t.DstStorageMp, t.DstActualPath)
 }
 
-// GetStatus returns the current status of the archive content upload task
 func (t *ArchiveContentUploadTask) GetStatus() string {
 	return t.status
 }
 
-// Run executes the archive content upload task
 func (t *ArchiveContentUploadTask) Run() error {
 	if err := t.ReinitCtx(); err != nil {
 		return err
@@ -206,149 +156,121 @@ func (t *ArchiveContentUploadTask) Run() error {
 	t.ClearEndTime()
 	t.SetStartTime(time.Now())
 	defer func() { t.SetEndTime(time.Now()) }()
-
-	// Run with a callback that adds new tasks to the manager
-	return t.RunWithNextTaskCallback(func(nextTask *ArchiveContentUploadTask) error {
-		ArchiveContentUploadTaskManager.Add(nextTask)
+	return t.RunWithNextTaskCallback(func(nextTsk *ArchiveContentUploadTask) error {
+		ArchiveContentUploadTaskManager.Add(nextTsk)
 		return nil
 	})
 }
 
-// RunWithNextTaskCallback executes the upload task with a custom callback for handling subtasks
-func (t *ArchiveContentUploadTask) RunWithNextTaskCallback(nextTaskCallback func(nextTask *ArchiveContentUploadTask) error) error {
-	var err error
+func (t *ArchiveContentUploadTask) OnSucceeded() {
+	task_group.TransferCoordinator.Done(t.groupID, true)
+}
 
-	// Initialize destination storage if needed
+func (t *ArchiveContentUploadTask) OnFailed() {
+	task_group.TransferCoordinator.Done(t.groupID, false)
+}
+
+func (t *ArchiveContentUploadTask) SetRetry(retry int, maxRetry int) {
+	t.TaskExtension.SetRetry(retry, maxRetry)
+	if retry == 0 &&
+		(len(t.groupID) == 0 || // 重启恢复
+			(t.GetErr() == nil && t.GetState() != tache.StatePending)) { // 手动重试
+		t.groupID = stdpath.Join(t.DstStorageMp, t.DstActualPath)
+		task_group.TransferCoordinator.AddTask(t.groupID, nil)
+	}
+}
+
+func (t *ArchiveContentUploadTask) RunWithNextTaskCallback(f func(nextTask *ArchiveContentUploadTask) error) error {
+	var err error
 	if t.dstStorage == nil {
 		t.dstStorage, err = op.GetStorageByMountPath(t.DstStorageMp)
 		if err != nil {
-			return errors.WithMessage(err, "failed to get destination storage")
+			return err
 		}
 	}
-
-	// Get file info
-	fileInfo, err := os.Stat(t.FilePath)
+	info, err := os.Stat(t.FilePath)
 	if err != nil {
-		return errors.WithMessage(err, "failed to get file info")
+		return err
 	}
-
-	// Handle directory upload
-	if fileInfo.IsDir() {
-		return t.processDirectory(nextTaskCallback)
-	}
-
-	// Handle file upload
-	return t.processFile(fileInfo)
-}
-
-// processDirectory handles uploading a directory and its contents
-func (t *ArchiveContentUploadTask) processDirectory(nextTaskCallback func(nextTask *ArchiveContentUploadTask) error) error {
-	t.status = "processing directory contents"
-
-	// Determine destination path
-	destinationPath := t.DstDirPath
-	if !t.InPlace {
-		// Create a new directory with the object name
-		destinationPath = stdpath.Join(destinationPath, t.ObjName)
-
-		// Create the directory in the destination storage
-		err := op.MakeDir(t.Ctx(), t.dstStorage, destinationPath)
+	if info.IsDir() {
+		t.status = "src object is dir, listing objs"
+		nextDstActualPath := t.DstActualPath
+		if !t.InPlace {
+			nextDstActualPath = stdpath.Join(nextDstActualPath, t.ObjName)
+			err = op.MakeDir(t.Ctx(), t.dstStorage, nextDstActualPath)
+			if err != nil {
+				return err
+			}
+		}
+		entries, err := os.ReadDir(t.FilePath)
 		if err != nil {
-			return errors.WithMessage(err, "failed to create destination directory")
+			return err
 		}
-	}
-
-	// Read directory entries
-	entries, err := os.ReadDir(t.FilePath)
-	if err != nil {
-		return errors.WithMessage(err, "failed to read directory contents")
-	}
-
-	// Process each entry
-	var es error
-	for _, entry := range entries {
-		// Check if operation has been canceled
-		select {
-		case <-t.Ctx().Done():
-			t.status = "operation canceled"
-			return nil
-		default:
+		if !t.InPlace && len(t.groupID) > 0 {
+			task_group.TransferCoordinator.AppendPayload(t.groupID, task_group.DstPathToRefresh(nextDstActualPath))
 		}
-
-		// Move the entry to a temporary path
-		var nextFilePath string
-		entryPath := stdpath.Join(t.FilePath, entry.Name())
-
-		if entry.IsDir() {
-			nextFilePath, err = moveToTempPath(entryPath, "dir-")
-		} else {
-			nextFilePath, err = moveToTempPath(entryPath, "file-")
+		var es error
+		for _, entry := range entries {
+			var nextFilePath string
+			if entry.IsDir() {
+				nextFilePath, err = moveToTempPath(stdpath.Join(t.FilePath, entry.Name()), "dir-")
+			} else {
+				nextFilePath, err = moveToTempPath(stdpath.Join(t.FilePath, entry.Name()), "file-")
+			}
+			if err != nil {
+				es = stderrors.Join(es, err)
+				continue
+			}
+			if len(t.groupID) > 0 {
+				task_group.TransferCoordinator.AddTask(t.groupID, nil)
+			}
+			err = f(&ArchiveContentUploadTask{
+				TaskExtension: task.TaskExtension{
+					Creator: t.GetCreator(),
+					ApiUrl:  t.ApiUrl,
+				},
+				ObjName:       entry.Name(),
+				InPlace:       false,
+				FilePath:      nextFilePath,
+				DstActualPath: nextDstActualPath,
+				dstStorage:    t.dstStorage,
+				DstStorageMp:  t.DstStorageMp,
+				groupID:       t.groupID,
+			})
+			if err != nil {
+				es = stderrors.Join(es, err)
+			}
 		}
-
+		if es != nil {
+			return es
+		}
+	} else {
+		t.SetTotalBytes(info.Size())
+		file, err := os.Open(t.FilePath)
 		if err != nil {
-			es = stderrors.Join(es, errors.WithMessagef(err, "failed to move %s to temp path", entry.Name()))
-			continue
+			return err
 		}
-
-		// Create subtask for the entry
-		subtask := &ArchiveContentUploadTask{
-			TaskExtension: task.TaskExtension{
-				Creator: t.GetCreator(),
+		fs := &stream.FileStream{
+			Obj: &model.Object{
+				Name:     t.ObjName,
+				Size:     info.Size(),
+				Modified: time.Now(),
 			},
-			ObjName:      entry.Name(),
-			InPlace:      false,
-			FilePath:     nextFilePath,
-			DstDirPath:   destinationPath,
-			dstStorage:   t.dstStorage,
-			DstStorageMp: t.DstStorageMp,
+			Mimetype:     utils.GetMimeType(stdpath.Ext(t.ObjName)),
+			WebPutAsTask: true,
+			Reader:       file,
 		}
-
-		// Schedule the subtask
-		if err = nextTaskCallback(subtask); err != nil {
-			es = stderrors.Join(es, errors.WithMessagef(err, "failed to schedule subtask for %s", entry.Name()))
+		fs.Closers.Add(file)
+		t.status = "uploading"
+		err = op.Put(t.Ctx(), t.dstStorage, t.DstActualPath, fs, t.SetProgress, true)
+		if err != nil {
+			return err
 		}
 	}
-
-	return es
-}
-
-// processFile handles uploading a single file
-func (t *ArchiveContentUploadTask) processFile(fileInfo os.FileInfo) error {
-	// Set total bytes for progress tracking
-	t.SetTotalBytes(fileInfo.Size())
-
-	// Open the file
-	file, err := os.Open(t.FilePath)
-	if err != nil {
-		return errors.WithMessage(err, "failed to open file")
-	}
-	defer file.Close()
-
-	// Create a file stream
-	fileStream := &streamPkg.FileStream{
-		Obj: &model.Object{
-			Name:     t.ObjName,
-			Size:     fileInfo.Size(),
-			Modified: time.Now(),
-		},
-		Mimetype:     mime.TypeByExtension(filepath.Ext(t.ObjName)),
-		WebPutAsTask: true,
-		Reader:       file,
-	}
-	fileStream.Closers.Add(file)
-
-	// Upload the file
-	t.status = "uploading file"
-	err = op.Put(t.Ctx(), t.dstStorage, t.DstDirPath, fileStream, t.SetProgress, true)
-	if err != nil {
-		return errors.WithMessage(err, "failed to upload file")
-	}
-
-	t.status = "completed"
+	t.deleteSrcFile()
 	return nil
 }
 
-// Cancel cancels the task and cleans up resources if allowed
 func (t *ArchiveContentUploadTask) Cancel() {
 	t.TaskExtension.Cancel()
 	if !conf.Conf.Tasks.AllowRetryCanceled {
@@ -356,7 +278,6 @@ func (t *ArchiveContentUploadTask) Cancel() {
 	}
 }
 
-// deleteSrcFile removes the source file or directory if it hasn't been finalized yet
 func (t *ArchiveContentUploadTask) deleteSrcFile() {
 	if !t.finalized {
 		_ = os.RemoveAll(t.FilePath)
@@ -364,196 +285,149 @@ func (t *ArchiveContentUploadTask) deleteSrcFile() {
 	}
 }
 
-// moveToTempPath moves a file or directory to a temporary path
 func moveToTempPath(path, prefix string) (string, error) {
 	newPath, err := genTempFileName(prefix)
 	if err != nil {
-		return "", errors.WithMessage(err, "failed to generate temporary file name")
+		return "", err
 	}
-
 	err = os.Rename(path, newPath)
 	if err != nil {
-		return "", errors.WithMessage(err, "failed to rename file")
+		return "", err
 	}
-
 	return newPath, nil
 }
 
-// genTempFileName generates a unique temporary file name with the given prefix
-// It uses a random number and ensures the path doesn't already exist
 func genTempFileName(prefix string) (string, error) {
-	// Create a new random source with current time seed
-	// (replaces deprecated rand.Seed in Go 1.20+)
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-
-	const maxRetries = 1000
-	for retry := 0; retry < maxRetries; retry++ {
-		// Generate random filename
-		randomNum := r.Uint32()
-		newPath := stdpath.Join(conf.Conf.TempDir, prefix+strconv.FormatUint(uint64(randomNum), 10))
-
-		// Check if the path already exists
-		_, err := os.Stat(newPath)
-		if err != nil {
+	retry := 0
+	t := time.Now().UnixMilli()
+	for retry < 10000 {
+		newPath := filepath.Join(conf.Conf.TempDir, prefix+fmt.Sprintf("%x-%x", t, rand.Uint32()))
+		if _, err := os.Stat(newPath); err != nil {
 			if os.IsNotExist(err) {
-				// Path doesn't exist, we can use it
 				return newPath, nil
+			} else {
+				return "", err
 			}
-			// Some other error occurred
-			return "", errors.WithMessage(err, "failed to check if path exists")
 		}
-		// Path exists, try again
+		retry++
 	}
-
-	return "", errors.New("failed to generate unique temporary file name after multiple attempts")
+	return "", errors.New("failed to generate temp-file name: too many retries")
 }
 
-// archiveContentUploadTaskManagerType extends the tache.Manager with additional functionality
 type archiveContentUploadTaskManagerType struct {
 	*tache.Manager[*ArchiveContentUploadTask]
 }
 
-// Remove removes a task by ID and ensures its resources are cleaned up
 func (m *archiveContentUploadTaskManagerType) Remove(id string) {
-	if uploadTask, exists := m.GetByID(id); exists {
-		uploadTask.deleteSrcFile()
+	if t, ok := m.GetByID(id); ok {
+		t.deleteSrcFile()
 		m.Manager.Remove(id)
 	}
 }
 
-// RemoveAll removes all tasks and ensures their resources are cleaned up
 func (m *archiveContentUploadTaskManagerType) RemoveAll() {
 	tasks := m.GetAll()
-	for _, v := range tasks {
-		m.Remove(v.GetID())
+	for _, t := range tasks {
+		m.Remove(t.GetID())
 	}
 }
 
-// RemoveByState removes tasks with the specified states and ensures their resources are cleaned up
-func (m *archiveContentUploadTaskManagerType) RemoveByState(states ...tache.State) {
-	tasks := m.GetByState(states...)
-	for _, v := range tasks {
-		m.Remove(v.GetID())
+func (m *archiveContentUploadTaskManagerType) RemoveByState(state ...tache.State) {
+	tasks := m.GetByState(state...)
+	for _, t := range tasks {
+		m.Remove(t.GetID())
 	}
 }
 
-// RemoveByCondition removes tasks that match the specified condition and ensures their resources are cleaned up
 func (m *archiveContentUploadTaskManagerType) RemoveByCondition(condition func(task *ArchiveContentUploadTask) bool) {
 	tasks := m.GetByCondition(condition)
-	for _, v := range tasks {
-		m.Remove(v.GetID())
+	for _, t := range tasks {
+		m.Remove(t.GetID())
 	}
 }
 
-// ArchiveContentUploadTaskManager manages archive content upload tasks
 var ArchiveContentUploadTaskManager = &archiveContentUploadTaskManagerType{
 	Manager: nil,
 }
 
-// archiveMeta retrieves metadata for an archive at the specified path
 func archiveMeta(ctx context.Context, path string, args model.ArchiveMetaArgs) (*model.ArchiveMetaProvider, error) {
 	storage, actualPath, err := op.GetStorageAndActualPath(path)
 	if err != nil {
-		return nil, errors.WithMessage(err, "failed to get storage")
+		return nil, errors.WithMessage(err, "failed get storage")
 	}
 	return op.GetArchiveMeta(ctx, storage, actualPath, args)
 }
 
-// archiveList lists the contents of an archive at the specified path
 func archiveList(ctx context.Context, path string, args model.ArchiveListArgs) ([]model.Obj, error) {
 	storage, actualPath, err := op.GetStorageAndActualPath(path)
 	if err != nil {
-		return nil, errors.WithMessage(err, "failed to get storage")
+		return nil, errors.WithMessage(err, "failed get storage")
 	}
 	return op.ListArchive(ctx, storage, actualPath, args)
 }
 
-// archiveDecompress decompresses an archive to a destination directory
-// It tries to use the storage's native decompression if available, otherwise creates a task
 func archiveDecompress(ctx context.Context, srcObjPath, dstDirPath string, args model.ArchiveDecompressArgs, lazyCache ...bool) (task.TaskExtensionInfo, error) {
-	// Get source storage and path
 	srcStorage, srcObjActualPath, err := op.GetStorageAndActualPath(srcObjPath)
 	if err != nil {
-		return nil, errors.WithMessage(err, "failed to get source storage")
+		return nil, errors.WithMessage(err, "failed get src storage")
 	}
-
-	// Get destination storage and path
 	dstStorage, dstDirActualPath, err := op.GetStorageAndActualPath(dstDirPath)
 	if err != nil {
-		return nil, errors.WithMessage(err, "failed to get destination storage")
+		return nil, errors.WithMessage(err, "failed get dst storage")
 	}
-
-	// If source and destination are on the same storage, try to use the storage's native decompression
 	if srcStorage.GetStorage() == dstStorage.GetStorage() {
 		err = op.ArchiveDecompress(ctx, srcStorage, srcObjActualPath, dstDirActualPath, args, lazyCache...)
 		if !errors.Is(err, errs.NotImplement) {
 			return nil, err
 		}
-		// If not implemented, fall back to task-based approach
 	}
-
-	// Get the task creator (user) from context
 	taskCreator, _ := ctx.Value(consts.UserKey).(*model.User)
-
-	// Create decompression task
-	downloadTask := &ArchiveDownloadTask{
-		TaskExtension: task.TaskExtension{
-			Creator: taskCreator,
+	tsk := &ArchiveDownloadTask{
+		TaskData: TaskData{
+			TaskExtension: task.TaskExtension{
+				Creator: taskCreator,
+				ApiUrl:  common.GetApiURL(ctx),
+			},
+			SrcStorage:    srcStorage,
+			DstStorage:    dstStorage,
+			SrcActualPath: srcObjActualPath,
+			DstActualPath: dstDirActualPath,
+			SrcStorageMp:  srcStorage.GetStorage().MountPath,
+			DstStorageMp:  dstStorage.GetStorage().MountPath,
 		},
 		ArchiveDecompressArgs: args,
-		srcStorage:            srcStorage,
-		dstStorage:            dstStorage,
-		SrcObjPath:            srcObjActualPath,
-		DstDirPath:            dstDirActualPath,
-		SrcStorageMp:          srcStorage.GetStorage().MountPath,
-		DstStorageMp:          dstStorage.GetStorage().MountPath,
 	}
-
-	// Handle synchronous execution if requested
 	if ctx.Value(consts.NoTaskKey) != nil {
-		return handleSynchronousDecompression(ctx, downloadTask, srcObjPath)
+		uploadTask, err := tsk.RunWithoutPushUploadTask()
+		if err != nil {
+			return nil, errors.WithMessagef(err, "failed download [%s]", srcObjPath)
+		}
+		defer uploadTask.deleteSrcFile()
+		var callback func(t *ArchiveContentUploadTask) error
+		callback = func(t *ArchiveContentUploadTask) error {
+			e := t.RunWithNextTaskCallback(callback)
+			t.deleteSrcFile()
+			return e
+		}
+		return nil, uploadTask.RunWithNextTaskCallback(callback)
+	} else {
+		ArchiveDownloadTaskManager.Add(tsk)
+		return tsk, nil
 	}
-
-	// Add task to manager for asynchronous execution
-	ArchiveDownloadTaskManager.Add(downloadTask)
-	return downloadTask, nil
 }
 
-// handleSynchronousDecompression performs decompression synchronously
-func handleSynchronousDecompression(ctx context.Context, task *ArchiveDownloadTask, srcObjPath string) (task.TaskExtensionInfo, error) {
-	// Run the download task
-	uploadTask, err := task.RunWithoutPushUploadTask()
-	if err != nil {
-		return nil, errors.WithMessagef(err, "failed to download archive [%s]", srcObjPath)
-	}
-	defer uploadTask.deleteSrcFile()
-
-	// Define recursive callback for handling nested content
-	var processCallback func(t *ArchiveContentUploadTask) error
-	processCallback = func(t *ArchiveContentUploadTask) error {
-		err = t.RunWithNextTaskCallback(processCallback)
-		t.deleteSrcFile()
-		return err
-	}
-
-	// Process the upload task
-	return nil, uploadTask.RunWithNextTaskCallback(processCallback)
-}
-
-// archiveDriverExtract extracts a file from an archive using the storage driver
 func archiveDriverExtract(ctx context.Context, path string, args model.ArchiveInnerArgs) (*model.Link, model.Obj, error) {
 	storage, actualPath, err := op.GetStorageAndActualPath(path)
 	if err != nil {
-		return nil, nil, errors.WithMessage(err, "failed to get storage")
+		return nil, nil, errors.WithMessage(err, "failed get storage")
 	}
 	return op.DriverExtract(ctx, storage, actualPath, args)
 }
 
-// archiveInternalExtract extracts a file from an archive using internal extraction
 func archiveInternalExtract(ctx context.Context, path string, args model.ArchiveInnerArgs) (io.ReadCloser, int64, error) {
 	storage, actualPath, err := op.GetStorageAndActualPath(path)
 	if err != nil {
-		return nil, 0, errors.WithMessage(err, "failed to get storage")
+		return nil, 0, errors.WithMessage(err, "failed get storage")
 	}
 	return op.InternalExtract(ctx, storage, actualPath, args)
 }

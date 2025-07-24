@@ -672,7 +672,7 @@ func ArchiveDecompress(ctx context.Context, storage driver.Driver, srcPath, dstD
 				}
 			} else if !utils.IsBool(lazyCache...) {
 				// Clear cache if no objects returned
-				ClearCache(storage, dstDirPath)
+				DeleteCache(storage, dstDirPath)
 			}
 		}
 
@@ -680,7 +680,7 @@ func ArchiveDecompress(ctx context.Context, storage driver.Driver, srcPath, dstD
 		// Driver that only performs decompression
 		err = s.ArchiveDecompress(ctx, srcObj, dstDir, args)
 		if err == nil && !utils.IsBool(lazyCache...) {
-			ClearCache(storage, dstDirPath)
+			DeleteCache(storage, dstDirPath)
 		}
 
 	default:

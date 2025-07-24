@@ -10,9 +10,11 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/dongdio/OpenList/v4/consts"
+	"github.com/dongdio/OpenList/v4/internal/fs"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
 	"github.com/dongdio/OpenList/v4/internal/setting"
+	"github.com/dongdio/OpenList/v4/internal/task_group"
 	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/task"
 )
@@ -192,19 +194,24 @@ func (t *DownloadTask) Transfer() error {
 			return errors.WithMessage(err, "failed get dst storage")
 		}
 		taskCreator, _ := t.Ctx().Value(consts.UserKey).(*model.User)
-		tmpTask := &TransferTask{
-			TaskExtension: task.TaskExtension{
-				Creator: taskCreator,
+		tsk := &TransferTask{
+			TaskData: fs.TaskData{
+				TaskExtension: task.TaskExtension{
+					Creator: taskCreator,
+					ApiUrl:  t.ApiUrl,
+				},
+				SrcActualPath: t.TempDir,
+				DstActualPath: dstDirActualPath,
+				DstStorage:    dstStorage,
+				DstStorageMp:  dstStorage.GetStorage().MountPath,
 			},
-			SrcObjPath:   t.TempDir,
-			DstDirPath:   dstDirActualPath,
-			DstStorage:   dstStorage,
-			DstStorageMp: dstStorage.GetStorage().MountPath,
+			groupID:      t.DstDirPath,
 			DeletePolicy: t.DeletePolicy,
 			URL:          t.URL,
 		}
-		tmpTask.SetTotalBytes(t.GetTotalBytes())
-		TransferTaskManager.Add(tmpTask)
+		tsk.SetTotalBytes(t.GetTotalBytes())
+		task_group.TransferCoordinator.AddTask(tsk.groupID, nil)
+		TransferTaskManager.Add(tsk)
 		return nil
 	}
 	return transferStd(t.Ctx(), t.TempDir, t.DstDirPath, t.DeletePolicy)

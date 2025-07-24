@@ -116,7 +116,7 @@ func Rename(ctx context.Context, oldPath, newPath string) error {
 		}
 
 		// 尝试移动文件/目录
-		if err = fs.Move(ctx, srcPath, dstDir); err != nil {
+		if _, err = fs.Move(ctx, srcPath, dstDir); err != nil {
 			// 如果文件名不同，移动失败就直接返回错误
 			if srcBase != dstBase {
 				return err

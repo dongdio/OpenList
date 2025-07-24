@@ -115,7 +115,7 @@ func FsMove(c *gin.Context) {
 	for i, name := range req.Names {
 		// 最后一个参数表示是否懒加载缓存（当有多个文件时）
 		isLazyCache := len(req.Names) > i+1
-		t, err := fs.MoveWithTaskAndValidation(ctx, stdpath.Join(srcDir, name), dstDir, !req.Overwrite, isLazyCache)
+		t, err := fs.Move(ctx, stdpath.Join(srcDir, name), dstDir, !req.Overwrite, isLazyCache)
 		if err != nil {
 			common.ErrorResp(c, err, 500)
 			return
@@ -231,11 +231,13 @@ func FsRename(c *gin.Context) {
 	}
 
 	reqPath, err := user.JoinPath(req.Path)
+	if err == nil {
+		req.Name, err = utils.CheckRelativePath(req.Name)
+	}
 	if err != nil {
 		common.ErrorResp(c, err, 403)
 		return
 	}
-
 	ctx := c.Request.Context()
 	// 检查是否存在同名文件（如果不允许覆盖）
 	if !req.Overwrite {

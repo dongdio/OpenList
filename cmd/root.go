@@ -22,7 +22,7 @@ const (
 	// LongDescription is the long description shown in help text
 	LongDescription = `A file list program that supports multiple storage,
 built with love by dongdio.
-Complete documentation is available at https://docs.openlist.team/`
+Complete documentation is available at https://doc.oplist.org/`
 )
 
 // RootCmd represents the base command when called without any subcommands

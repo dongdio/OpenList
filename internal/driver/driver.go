@@ -9,25 +9,24 @@ import (
 type Driver interface {
 	Meta
 	Reader
+	// Writer
+	// Other
 }
 
 type Meta interface {
 	Config() Config
-
 	// GetStorage just get raw storage, no need to implement, because model.Storage have implemented
 	GetStorage() *model.Storage
 	SetStorage(model.Storage)
-
 	// GetAddition Additional is used for unmarshal of JSON, so need return pointer
 	GetAddition() Additional
-
 	// Init If already initialized, drop first
 	Init(ctx context.Context) error
 	Drop(ctx context.Context) error
 }
 
 type Other interface {
-	Other(ctx context.Context, args model.OtherArgs) (any, error)
+	Other(ctx context.Context, args model.OtherArgs) (interface{}, error)
 }
 
 type Reader interface {
@@ -35,7 +34,6 @@ type Reader interface {
 	// if identify files by path, need to set ID with path,like path.Join(dir.GetID(), obj.GetName())
 	// if identify files by id, need to set ID with corresponding id
 	List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error)
-
 	// Link get url/filepath/reader of file
 	Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error)
 }
@@ -48,6 +46,15 @@ type Getter interface {
 	// Get file by path, the path haven't been joined with root path
 	Get(ctx context.Context, path string) (model.Obj, error)
 }
+
+// type Writer interface {
+//	Mkdir
+//	Move
+//	Rename
+//	Copy
+//	Remove
+//	Put
+// }
 
 type Mkdir interface {
 	MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error

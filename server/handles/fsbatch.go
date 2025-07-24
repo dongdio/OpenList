@@ -17,6 +17,7 @@ import (
 	"github.com/dongdio/OpenList/v4/server/common"
 	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/generic"
+	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 // RecursiveMoveReq 递归移动请求参数
@@ -167,7 +168,7 @@ func FsRecursiveMove(c *gin.Context) {
 		isLast := i >= totalFiles-1
 
 		// 移动文件
-		err = fs.Move(ctx, fileName, dstDir, !isLast)
+		_, err = fs.Move(ctx, fileName, dstDir, !isLast)
 		if err != nil {
 			common.ErrorResp(c, err, 500)
 			return
@@ -231,6 +232,12 @@ func FsBatchRename(c *gin.Context) {
 	for _, renameObject := range req.RenameObjects {
 		if renameObject.SrcName == "" || renameObject.NewName == "" {
 			continue
+		}
+
+		renameObject.NewName, err = utils.CheckRelativePath(renameObject.NewName)
+		if err != nil {
+			common.ErrorResp(c, err, 403)
+			return
 		}
 
 		// 构建文件路径
@@ -309,10 +316,13 @@ func FsRegexRename(c *gin.Context) {
 		if !srcRegexp.MatchString(file.GetName()) {
 			continue
 		}
+		newFileName, err := utils.CheckRelativePath(srcRegexp.ReplaceAllString(file.GetName(), req.NewNameRegex))
+		if err != nil {
+			common.ErrorResp(c, err, 403)
+			return
+		}
 		// 构建文件路径
 		filePath := stdpath.Join(reqPath, file.GetName())
-		// 生成新文件名
-		newFileName := srcRegexp.ReplaceAllString(file.GetName(), req.NewNameRegex)
 
 		// 如果新旧文件名相同，跳过
 		if newFileName == file.GetName() {

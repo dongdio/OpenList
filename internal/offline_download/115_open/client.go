@@ -3,6 +3,8 @@ package _115_open
 import (
 	"context"
 
+	"github.com/pkg/errors"
+
 	"github.com/dongdio/OpenList/v4/consts"
 	open "github.com/dongdio/OpenList/v4/drivers/115_open"
 	"github.com/dongdio/OpenList/v4/internal/model"
@@ -10,7 +12,6 @@ import (
 	"github.com/dongdio/OpenList/v4/internal/op"
 	"github.com/dongdio/OpenList/v4/internal/setting"
 	"github.com/dongdio/OpenList/v4/utility/errs"
-	"github.com/pkg/errors"
 )
 
 type Open115 struct {
