@@ -52,10 +52,10 @@ func replaceStrings(content string, replacements map[string]string) string {
 
 // initIndexHTML 初始化索引HTML文件
 // 读取index.html并进行基本替换
-func initIndexHTML() {
+func initIndexHTML(siteConfig SiteConfig) {
 	utils.Log.Debug("Initializing index.html...")
-	siteConfig := getSiteConfig()
-	if conf.Conf.DistDir != "" || (conf.Conf.Cdn != "" && (conf.WebVersion == "" || conf.WebVersion == "beta" || conf.WebVersion == "dev")) {
+	// dist_dir is empty and cdn is not empty add web_version is empty or beta or dev
+	if conf.Conf.DistDir == "" && conf.Conf.Cdn != "" && (conf.WebVersion == "" || conf.WebVersion == "beta" || conf.WebVersion == "dev") {
 		utils.Log.Infof("Fetching index.html from CDN: %s/index.html...", conf.Conf.Cdn)
 		resp, err := base.RestyClient.R().
 			SetHeader("Accept", "text/html").
@@ -104,6 +104,7 @@ func UpdateIndexHTML() {
 	utils.Log.Debug("Updating index.html with settings...")
 	// 获取设置
 	favicon := setting.GetStr(consts.Favicon)
+	logo := strings.Split(setting.GetStr(consts.Logo), "\n")[0]
 	title := setting.GetStr(consts.SiteTitle)
 	customizeHead := setting.GetStr(consts.CustomizeHead)
 	customizeBody := setting.GetStr(consts.CustomizeBody)
@@ -116,7 +117,8 @@ func UpdateIndexHTML() {
 	// 替换管理页面的基本配置
 	baseReplaceMap := map[string]string{
 		"https://cdn.oplist.org/gh/OpenListTeam/Logo@main/logo.svg": favicon,
-		"Loading...":            title,
+		"Loading...": title,
+		"https://cdn.oplist.org/gh/OpenListTeam/Logo@main/logo.png": logo,
 		"main_color: undefined": fmt.Sprintf("main_color: '%s'", mainColor),
 	}
 
@@ -143,7 +145,8 @@ func Static(r *gin.RouterGroup, noRoute func(handlers ...gin.HandlerFunc)) {
 	utils.Log.Debug("Setting up static routes...")
 	// 初始化静态文件系统和索引HTML
 	initStaticFS()
-	initIndexHTML()
+	siteConfig := getSiteConfig()
+	initIndexHTML(siteConfig)
 
 	// 静态资源文件夹
 	staticFolders := []string{"assets", "images", "streamer", "static"}
@@ -175,7 +178,7 @@ func Static(r *gin.RouterGroup, noRoute func(handlers ...gin.HandlerFunc)) {
 		for _, folder := range staticFolders {
 			r.GET(fmt.Sprintf("/%s/*filepath", folder), func(c *gin.Context) {
 				filepath := c.Param("filepath")
-				c.Redirect(http.StatusFound, fmt.Sprintf("%s/%s%s", conf.Conf.Cdn, folder, filepath))
+				c.Redirect(http.StatusFound, fmt.Sprintf("%s/%s%s", siteConfig.Cdn, folder, filepath))
 			})
 		}
 	}

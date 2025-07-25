@@ -3,10 +3,11 @@ package fs
 import (
 	"context"
 	"io"
-
-	log "github.com/sirupsen/logrus"
+	"sync"
+	"time"
 
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
@@ -14,6 +15,56 @@ import (
 	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/task"
 )
+
+// 存储驱动缓存，减少重复查询
+var (
+	storageCache     = make(map[string]driver.Driver)
+	storageCacheLock sync.RWMutex
+	cacheExpiry      = 5 * time.Minute
+	lastCacheClean   = time.Now()
+)
+
+// getStorageWithCache 通过路径获取存储驱动，使用缓存减少重复查询
+func getStorageWithCache(path string) (driver.Driver, string, error) {
+	// 定期清理缓存
+	if time.Since(lastCacheClean) > cacheExpiry {
+		cleanStorageCache()
+	}
+
+	// 尝试从缓存获取
+	storageCacheLock.RLock()
+	if storage, ok := storageCache[path]; ok {
+		storageCacheLock.RUnlock()
+		_, actualPath, err := op.GetStorageAndActualPath(path)
+		if err != nil {
+			return nil, "", errors.WithMessage(err, "failed get actual path")
+		}
+		return storage, actualPath, nil
+	}
+	storageCacheLock.RUnlock()
+
+	// 缓存未命中，获取存储并缓存
+	storage, actualPath, err := op.GetStorageAndActualPath(path)
+	if err != nil {
+		return nil, "", errors.WithMessage(err, "failed get storage")
+	}
+
+	// 添加到缓存
+	storageCacheLock.Lock()
+	storageCache[path] = storage
+	storageCacheLock.Unlock()
+
+	return storage, actualPath, nil
+}
+
+// cleanStorageCache 清理过期的存储驱动缓存
+func cleanStorageCache() {
+	storageCacheLock.Lock()
+	defer storageCacheLock.Unlock()
+
+	storageCache = make(map[string]driver.Driver)
+	lastCacheClean = time.Now()
+}
 
 // the param named path of functions in this package is a mount path
 // So, the purpose of this package is to convert mount path to actual path
@@ -25,6 +76,10 @@ type ListArgs struct {
 }
 
 func List(ctx context.Context, path string, args *ListArgs) ([]model.Obj, error) {
+	if args == nil {
+		args = &ListArgs{}
+	}
+
 	res, err := list(ctx, path, args)
 	if err != nil {
 		if !args.NoLog {
@@ -40,6 +95,10 @@ type GetArgs struct {
 }
 
 func Get(ctx context.Context, path string, args *GetArgs) (model.Obj, error) {
+	if args == nil {
+		args = &GetArgs{}
+	}
+
 	res, err := get(ctx, path)
 	if err != nil {
 		if !args.NoLog {
@@ -156,36 +215,52 @@ func ArchiveInternalExtract(ctx context.Context, path string, args model.Archive
 }
 
 type GetStoragesArgs struct {
+	SkipCache bool
 }
 
 func GetStorage(path string, args *GetStoragesArgs) (driver.Driver, error) {
-	storageDriver, _, err := op.GetStorageAndActualPath(path)
+	if args != nil && args.SkipCache {
+		storageDriver, _, err := op.GetStorageAndActualPath(path)
+		if err != nil {
+			return nil, errors.WithMessage(err, "failed get storage")
+		}
+		return storageDriver, nil
+	}
+
+	// 使用缓存获取存储驱动
+	storageDriver, _, err := getStorageWithCache(path)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithMessage(err, "failed get storage")
 	}
 	return storageDriver, nil
 }
 
-func Other(ctx context.Context, args model.FsOtherArgs) (interface{}, error) {
+func Other(ctx context.Context, args model.FsOtherArgs) (any, error) {
 	res, err := other(ctx, args)
 	if err != nil {
-		log.Errorf("failed remove %s: %+v", args.Path, err)
+		log.Errorf("failed execute operation %s: %+v", args.Path, err)
 	}
 	return res, err
 }
 
 func PutURL(ctx context.Context, path, dstName, urlStr string) error {
-	storage, dstDirActualPath, err := op.GetStorageAndActualPath(path)
+	storage, dstDirActualPath, err := getStorageWithCache(path)
 	if err != nil {
 		return errors.WithMessage(err, "failed get storage")
 	}
+
+	// 快速检查存储配置
 	if storage.Config().NoUpload {
 		return errors.WithStack(errs.UploadNotSupported)
 	}
-	_, ok := storage.(driver.PutURL)
-	_, okResult := storage.(driver.PutURLResult)
-	if !ok && !okResult {
+
+	// 类型检查优化
+	_, isPutURL := storage.(driver.PutURL)
+	_, isPutURLResult := storage.(driver.PutURLResult)
+
+	if !isPutURL && !isPutURLResult {
 		return errs.NotImplement
 	}
+
 	return op.PutURL(ctx, storage, dstDirActualPath, dstName, urlStr)
 }

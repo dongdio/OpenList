@@ -74,6 +74,10 @@ func InitConfig() {
 		net.DefaultConcurrencyLimit = &net.ConcurrencyLimit{Limit: conf.Conf.MaxConcurrency}
 	}
 
+	if len(conf.Conf.Log.Filter.Filters) == 0 {
+		conf.Conf.Log.Filter.Enable = false
+	}
+
 	// Ensure temp directory is absolute and exists
 	ensureTempDirExists(pwd)
 

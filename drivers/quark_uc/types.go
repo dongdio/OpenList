@@ -172,7 +172,7 @@ type TranscodingResp struct {
 			// SupportsFormat string `json:"supports_format"`
 			// VideoFuncType  string `json:"video_func_type,omitempty"`
 		} `json:"video_list"`
-		// AudioList []interface{} `json:"audio_list"`
+		// AudioList []any `json:"audio_list"`
 		FileName  string `json:"file_name"`
 		NameSpace int    `json:"name_space"`
 		Size      int64  `json:"size"`

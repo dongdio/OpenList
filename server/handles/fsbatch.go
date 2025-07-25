@@ -17,7 +17,6 @@ import (
 	"github.com/dongdio/OpenList/v4/server/common"
 	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/generic"
-	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 // RecursiveMoveReq 递归移动请求参数
@@ -234,7 +233,7 @@ func FsBatchRename(c *gin.Context) {
 			continue
 		}
 
-		renameObject.NewName, err = utils.CheckRelativePath(renameObject.NewName)
+		err = checkRelativePath(renameObject.NewName)
 		if err != nil {
 			common.ErrorResp(c, err, 403)
 			return
@@ -316,7 +315,8 @@ func FsRegexRename(c *gin.Context) {
 		if !srcRegexp.MatchString(file.GetName()) {
 			continue
 		}
-		newFileName, err := utils.CheckRelativePath(srcRegexp.ReplaceAllString(file.GetName(), req.NewNameRegex))
+		newFileName := srcRegexp.ReplaceAllString(file.GetName(), req.NewNameRegex)
+		err = checkRelativePath(newFileName)
 		if err != nil {
 			common.ErrorResp(c, err, 403)
 			return

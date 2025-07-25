@@ -118,7 +118,7 @@ func (d *Terabox) post_multipart(
 	fileFieldName string,
 	fileName string,
 	fileReader io.Reader,
-	resp interface{},
+	resp any,
 ) ([]byte, error) {
 	return d.request(pathname, http.MethodPost, func(req *resty.Request) {
 		if params != nil {

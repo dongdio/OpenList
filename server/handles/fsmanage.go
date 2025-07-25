@@ -3,6 +3,7 @@ package handles
 import (
 	"fmt"
 	stdpath "path"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
@@ -232,7 +233,7 @@ func FsRename(c *gin.Context) {
 
 	reqPath, err := user.JoinPath(req.Path)
 	if err == nil {
-		req.Name, err = utils.CheckRelativePath(req.Name)
+		err = checkRelativePath(req.Name)
 	}
 	if err != nil {
 		common.ErrorResp(c, err, 403)
@@ -256,6 +257,13 @@ func FsRename(c *gin.Context) {
 	}
 
 	common.SuccessResp(c)
+}
+
+func checkRelativePath(path string) error {
+	if strings.ContainsAny(path, "/\\") || path == "" || path == "." || path == ".." {
+		return errs.RelativePath
+	}
+	return nil
 }
 
 // RemoveReq 删除文件请求

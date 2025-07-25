@@ -62,7 +62,7 @@ func (y *Cloud189TV) AppKeySignatureHeader(url, method string) map[string]string
 	return header
 }
 
-func (y *Cloud189TV) request(url, method string, callback base.ReqCallback, params map[string]string, resp interface{}, isFamily ...bool) ([]byte, error) {
+func (y *Cloud189TV) request(url, method string, callback base.ReqCallback, params map[string]string, resp any, isFamily ...bool) ([]byte, error) {
 	req := y.client.R().SetQueryParams(clientSuffix())
 
 	if params != nil {
@@ -98,11 +98,11 @@ func (y *Cloud189TV) request(url, method string, callback base.ReqCallback, para
 	return res.Bytes(), nil
 }
 
-func (y *Cloud189TV) get(url string, callback base.ReqCallback, resp interface{}, isFamily ...bool) ([]byte, error) {
+func (y *Cloud189TV) get(url string, callback base.ReqCallback, resp any, isFamily ...bool) ([]byte, error) {
 	return y.request(url, http.MethodGet, callback, nil, resp, isFamily...)
 }
 
-func (y *Cloud189TV) post(url string, callback base.ReqCallback, resp interface{}, isFamily ...bool) ([]byte, error) {
+func (y *Cloud189TV) post(url string, callback base.ReqCallback, resp any, isFamily ...bool) ([]byte, error) {
 	return y.request(url, http.MethodPost, callback, nil, resp, isFamily...)
 }
 

@@ -312,7 +312,7 @@ func Link(ctx context.Context, storage driver.Driver, path string, args model.Li
 }
 
 // Other api
-func Other(ctx context.Context, storage driver.Driver, args model.FsOtherArgs) (interface{}, error) {
+func Other(ctx context.Context, storage driver.Driver, args model.FsOtherArgs) (any, error) {
 	obj, err := GetUnwrap(ctx, storage, args.Path)
 	if err != nil {
 		return nil, errors.WithMessagef(err, "failed to get obj")
@@ -328,7 +328,7 @@ func Other(ctx context.Context, storage driver.Driver, args model.FsOtherArgs) (
 	}
 }
 
-var mkdirG singleflight.Group[interface{}]
+var mkdirG singleflight.Group[any]
 
 func MakeDir(ctx context.Context, storage driver.Driver, path string, lazyCache ...bool) error {
 	if storage.Config().CheckStatus && storage.GetStorage().Status != WORK {
@@ -336,7 +336,7 @@ func MakeDir(ctx context.Context, storage driver.Driver, path string, lazyCache 
 	}
 	path = utils.FixAndCleanPath(path)
 	key := Key(storage, path)
-	_, err, _ := mkdirG.Do(key, func() (interface{}, error) {
+	_, err, _ := mkdirG.Do(key, func() (any, error) {
 		// check if dir exists
 		f, err := GetUnwrap(ctx, storage, path)
 		if err != nil {

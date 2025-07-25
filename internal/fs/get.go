@@ -16,6 +16,17 @@ import (
 var (
 	// ErrObjectNotFound 对象未找到错误
 	ErrObjectNotFound = errors.New("object not found")
+
+	// ErrInvalidPath 无效路径错误
+	ErrInvalidPath = errors.New("invalid path")
+
+	// rootObject 根目录对象，避免重复创建
+	rootObject = &model.Object{
+		Name:     "root",
+		Size:     0,
+		Modified: time.Time{},
+		IsFolder: true,
+	}
 )
 
 // get 获取指定路径的对象
@@ -27,30 +38,42 @@ var (
 //   - model.Obj: 对象信息
 //   - error: 错误信息
 func get(ctx context.Context, path string) (model.Obj, error) {
+	// 参数验证
+	if path == "" {
+		return nil, errors.WithStack(ErrInvalidPath)
+	}
+
 	// 修复并清理路径
 	path = utils.FixAndCleanPath(path)
 
 	// 处理根路径特殊情况
-	if path != "/" {
-		virtualFiles := op.GetStorageVirtualFilesByPath(stdpath.Dir(path))
-		for _, f := range virtualFiles {
-			if f.GetName() == stdpath.Base(path) {
-				return f, nil
-			}
+	if path == "/" {
+		return rootObject, nil
+	}
+
+	// 检查是否为虚拟文件
+	dirPath := stdpath.Dir(path)
+	baseName := stdpath.Base(path)
+
+	// 获取虚拟文件列表
+	virtualFiles := op.GetStorageVirtualFilesByPath(dirPath)
+	for _, f := range virtualFiles {
+		if f.GetName() == baseName {
+			return f, nil
 		}
 	}
-	storage, actualPath, err := op.GetStorageAndActualPath(path)
+
+	// 获取存储驱动和实际路径
+	storage, actualPath, err := getStorageWithCache(path)
 	if err != nil {
-		// if there are no storage prefix with path, maybe root folder
-		if path == "/" {
-			return &model.Object{
-				Name:     "root",
-				Size:     0,
-				Modified: time.Time{},
-				IsFolder: true,
-			}, nil
-		}
 		return nil, errors.WithMessage(err, "failed get storage")
 	}
-	return op.Get(ctx, storage, actualPath)
+
+	// 获取对象
+	obj, err := op.Get(ctx, storage, actualPath)
+	if err != nil {
+		return nil, errors.Wrap(ErrObjectNotFound, err.Error())
+	}
+
+	return obj, nil
 }

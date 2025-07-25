@@ -113,7 +113,7 @@ type StreamingFileLink struct {
 				Level   int `json:"level"`
 			} `json:"dolby_vision,omitempty"`
 		} `json:"video_info"`
-		AudioInfo []interface{} `json:"audio_info"`
+		AudioInfo []any `json:"audio_info"`
 	} `json:"data"`
 }
 

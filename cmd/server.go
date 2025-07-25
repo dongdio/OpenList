@@ -61,11 +61,15 @@ and S3-compatible APIs as configured in the configuration file.`,
 		// Create and configure Gin router
 		r := gin.New()
 
+		if conf.Conf.Log.Filter.Enable {
+			r.Use(middlewares.FilteredLogger())
+		} else {
+			r.Use(gin.LoggerWithWriter(log.StandardLogger().Out))
+		}
+
 		// Add middleware for error logging and recovery
 		r.Use(
-			middlewares.HTTPFilteredLogger(),
 			middlewares.ErrorLogging(),
-			gin.LoggerWithWriter(log.StandardLogger().Out),
 			gin.RecoveryWithWriter(log.StandardLogger().Out),
 		)
 
@@ -187,7 +191,6 @@ and S3-compatible APIs as configured in the configuration file.`,
 			// Create a new Gin router for S3 API
 			s3Router := gin.New()
 			s3Router.Use(
-				middlewares.S3FilteredLogger(),
 				middlewares.ErrorLogging(),
 				gin.LoggerWithWriter(log.StandardLogger().Out),
 				gin.RecoveryWithWriter(log.StandardLogger().Out),
