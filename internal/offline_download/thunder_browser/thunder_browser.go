@@ -146,19 +146,19 @@ func (t *ThunderBrowser) Status(task *tool.DownloadTask) (*tool.Status, error) {
 		Err:       nil,
 	}
 
-	for _, t := range tasks {
-		if t.ID != task.GID {
+	for _, tsk := range tasks {
+		if tsk.ID != task.GID {
 			continue
 		}
-		s.Progress = float64(t.Progress)
-		s.Status = t.Message
-		s.Completed = t.Phase == "PHASE_TYPE_COMPLETE"
-		s.TotalBytes, err = strconv.ParseInt(t.FileSize, 10, 64)
+		s.Progress = float64(tsk.Progress)
+		s.Status = tsk.Message
+		s.Completed = tsk.Phase == "PHASE_TYPE_COMPLETE"
+		s.TotalBytes, err = strconv.ParseInt(tsk.FileSize, 10, 64)
 		if err != nil {
 			s.TotalBytes = 0
 		}
-		if t.Phase == "PHASE_TYPE_ERROR" {
-			s.Err = errors.New(t.Message)
+		if tsk.Phase == "PHASE_TYPE_ERROR" {
+			s.Err = errors.New(tsk.Message)
 		}
 		return s, nil
 	}

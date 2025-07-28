@@ -72,8 +72,7 @@ outer:
 	for {
 		select {
 		case <-t.CtxDone():
-			err := t.tool.Remove(t)
-			return err
+			return t.tool.Remove(t)
 		case <-t.Signal:
 			ok, err = t.Update()
 			if ok {
@@ -161,8 +160,8 @@ func (t *DownloadTask) Update() (bool, error) {
 	}
 	// if download completed
 	if info.Completed {
-		err := t.Transfer()
-		return true, errors.WithMessage(err, "failed to transfer file")
+		err = t.Transfer()
+		return true, errors.Wrap(err, "failed to transfer file")
 	}
 	// if download failed
 	if info.Err != nil {

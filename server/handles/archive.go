@@ -138,7 +138,7 @@ func FsArchiveMeta(c *gin.Context) {
 	// 生成签名
 	signature := ""
 	if isEncrypt(meta, reqPath) || setting.GetBool(consts.SignAll) {
-		signature = sign.SignArchive(reqPath)
+		signature = sign.ArchiveSign(reqPath)
 	}
 
 	// 确定API路径

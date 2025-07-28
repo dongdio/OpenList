@@ -203,7 +203,7 @@ func (d *Alias) extract(ctx context.Context, dst, sub string, args model.Archive
 				utils.EncodePath(reqPath, true),
 				utils.EncodePath(args.InnerPath, true),
 				url.QueryEscape(args.Password),
-				sign.SignArchive(reqPath)),
+				sign.ArchiveSign(reqPath)),
 		}
 		return link, nil
 	}

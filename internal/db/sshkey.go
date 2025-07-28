@@ -9,10 +9,14 @@ import (
 func GetSSHPublicKeyByUserID(userID uint, pageIndex, pageSize int) (keys []model.SSHPublicKey, count int64, err error) {
 	keyDB := db.Model(&model.SSHPublicKey{})
 	query := model.SSHPublicKey{UserId: userID}
-	if err := keyDB.Where(query).Count(&count).Error; err != nil {
+	if err = keyDB.Where(query).Count(&count).Error; err != nil {
 		return nil, 0, errors.Wrapf(err, "failed get user's keys count")
 	}
-	if err := keyDB.Where(query).Order(columnName("id")).Offset((pageIndex - 1) * pageSize).Limit(pageSize).Find(&keys).Error; err != nil {
+	if err = keyDB.Where(query).
+		Order(columnName("id")).
+		Offset((pageIndex - 1) * pageSize).
+		Limit(pageSize).
+		Find(&keys).Error; err != nil {
 		return nil, 0, errors.Wrapf(err, "failed get find user's keys")
 	}
 	return keys, count, nil
@@ -44,10 +48,10 @@ func UpdateSSHPublicKey(k *model.SSHPublicKey) error {
 
 func GetSSHPublicKeys(pageIndex, pageSize int) (keys []model.SSHPublicKey, count int64, err error) {
 	keyDB := db.Model(&model.SSHPublicKey{})
-	if err := keyDB.Count(&count).Error; err != nil {
+	if err = keyDB.Count(&count).Error; err != nil {
 		return nil, 0, errors.Wrapf(err, "failed get keys count")
 	}
-	if err := keyDB.Order(columnName("id")).Offset((pageIndex - 1) * pageSize).Limit(pageSize).Find(&keys).Error; err != nil {
+	if err = keyDB.Order(columnName("id")).Offset((pageIndex - 1) * pageSize).Limit(pageSize).Find(&keys).Error; err != nil {
 		return nil, 0, errors.Wrapf(err, "failed get find keys")
 	}
 	return keys, count, nil

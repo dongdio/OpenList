@@ -64,7 +64,7 @@ func (p *Cloud115) AddURL(args *tool.AddURLLinkArgs) (string, error) {
 
 	ctx := context.Background()
 
-	if err := op.MakeDir(ctx, storage, actualPath); err != nil {
+	if err = op.MakeDir(ctx, storage, actualPath); err != nil {
 		return "", err
 	}
 
@@ -92,7 +92,7 @@ func (p *Cloud115) Remove(task *tool.DownloadTask) error {
 	}
 
 	ctx := context.Background()
-	if err := driver115.DeleteOfflineTasks(ctx, []string{task.GID}, false); err != nil {
+	if err = driver115.DeleteOfflineTasks(ctx, []string{task.GID}, false); err != nil {
 		return err
 	}
 	return nil

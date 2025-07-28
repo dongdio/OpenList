@@ -12,7 +12,7 @@ import (
 var onceArchive sync.Once
 var instanceArchive sign.Sign
 
-func SignArchive(data string) string {
+func ArchiveSign(data string) string {
 	expire := setting.GetInt(consts.LinkExpiration, 0)
 	if expire == 0 {
 		return NotExpiredArchive(data)

@@ -18,8 +18,8 @@ import (
 
 // 存储驱动缓存，减少重复查询
 var (
-	storageCache     = make(map[string]driver.Driver)
 	storageCacheLock sync.RWMutex
+	storageCache     = make(map[string]driver.Driver)
 	cacheExpiry      = 5 * time.Minute
 	lastCacheClean   = time.Now()
 )
@@ -37,7 +37,7 @@ func getStorageWithCache(path string) (driver.Driver, string, error) {
 		storageCacheLock.RUnlock()
 		_, actualPath, err := op.GetStorageAndActualPath(path)
 		if err != nil {
-			return nil, "", errors.WithMessage(err, "failed get actual path")
+			return nil, "", errors.Wrap(err, "failed get actual path")
 		}
 		return storage, actualPath, nil
 	}
@@ -46,7 +46,7 @@ func getStorageWithCache(path string) (driver.Driver, string, error) {
 	// 缓存未命中，获取存储并缓存
 	storage, actualPath, err := op.GetStorageAndActualPath(path)
 	if err != nil {
-		return nil, "", errors.WithMessage(err, "failed get storage")
+		return nil, "", errors.Wrap(err, "failed get storage")
 	}
 
 	// 添加到缓存

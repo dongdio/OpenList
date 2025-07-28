@@ -33,7 +33,7 @@ func link(ctx context.Context, path string, args model.LinkArgs) (*model.Link, m
 	// 获取存储驱动和实际路径
 	storage, actualPath, err := getStorageWithCache(path)
 	if err != nil {
-		return nil, nil, errors.WithMessage(err, "failed get storage")
+		return nil, nil, errors.Wrap(err, "failed get storage")
 	}
 
 	// 生成链接

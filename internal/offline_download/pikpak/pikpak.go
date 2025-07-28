@@ -65,7 +65,7 @@ func (p *PikPak) AddURL(args *tool.AddURLLinkArgs) (string, error) {
 
 	ctx := context.Background()
 
-	if err := op.MakeDir(ctx, storage, actualPath); err != nil {
+	if err = op.MakeDir(ctx, storage, actualPath); err != nil {
 		return "", err
 	}
 
@@ -125,7 +125,7 @@ func (p *PikPak) Status(task *tool.DownloadTask) (*tool.Status, error) {
 		}
 		s.Progress = float64(t.Progress)
 		s.Status = t.Message
-		s.Completed = (t.Phase == "PHASE_TYPE_COMPLETE")
+		s.Completed = t.Phase == "PHASE_TYPE_COMPLETE"
 		s.TotalBytes, err = strconv.ParseInt(t.FileSize, 10, 64)
 		if err != nil {
 			s.TotalBytes = 0

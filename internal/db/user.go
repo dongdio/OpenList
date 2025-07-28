@@ -52,10 +52,14 @@ func UpdateUser(u *model.User) error {
 
 func GetUsers(pageIndex, pageSize int) (users []model.User, count int64, err error) {
 	userDB := db.Model(&model.User{})
-	if err := userDB.Count(&count).Error; err != nil {
+	if err = userDB.Count(&count).Error; err != nil {
 		return nil, 0, errors.Wrapf(err, "failed get users count")
 	}
-	if err := userDB.Order(columnName("id")).Offset((pageIndex - 1) * pageSize).Limit(pageSize).Find(&users).Error; err != nil {
+	if err = userDB.Order(columnName("id")).
+		Offset((pageIndex - 1) * pageSize).
+		Limit(pageSize).
+		Find(&users).
+		Error; err != nil {
 		return nil, 0, errors.Wrapf(err, "failed get find users")
 	}
 	return users, count, nil

@@ -17,17 +17,19 @@ type SrcPathToRemove string
 
 type DstPathToRefresh string // ActualPath
 
-func refreshAndRemove(dstPath string, payloads []any) {
+func RefreshAndRemove(dstPath string, payloads ...any) {
 	dstStorage, dstActualPath, err := op.GetStorageAndActualPath(dstPath)
 	if err != nil {
 		log.Error(errors.WithMessage(err, "failed get dst storage"))
 		return
 	}
+
 	_, dstNeedRefresh := dstStorage.(driver.Put)
 	dstNeedRefresh = dstNeedRefresh && !dstStorage.Config().NoCache
 	if dstNeedRefresh {
 		op.DeleteCache(dstStorage, dstActualPath)
 	}
+
 	var ctx context.Context
 	for _, payload := range payloads {
 		switch p := payload.(type) {
@@ -84,7 +86,7 @@ func verifyAndRemove(ctx context.Context, srcStorage, dstStorage driver.Driver, 
 	hasErr := false
 	for _, obj := range srcObjs {
 		srcSubPath := path.Join(srcPath, obj.GetName())
-		err := verifyAndRemove(ctx, srcStorage, dstStorage, srcSubPath, dstObjPath, refresh)
+		err = verifyAndRemove(ctx, srcStorage, dstStorage, srcSubPath, dstObjPath, refresh)
 		if err != nil {
 			log.Error(err)
 			hasErr = true
@@ -100,4 +102,4 @@ func verifyAndRemove(ctx context.Context, srcStorage, dstStorage driver.Driver, 
 	return nil
 }
 
-var TransferCoordinator *TaskGroupCoordinator = NewTaskGroupCoordinator("RefreshAndRemove", refreshAndRemove)
+var TransferCoordinator *TaskGroupCoordinator = NewTaskGroupCoordinator("RefreshAndRemove", RefreshAndRemove)

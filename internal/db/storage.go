@@ -33,10 +33,15 @@ func GetStorages(pageIndex, pageSize int) ([]model.Storage, int64, error) {
 	storageDB := db.Model(&model.Storage{})
 	var count int64
 	if err := storageDB.Count(&count).Error; err != nil {
-		return nil, 0, errors.Wrapf(err, "failed get storages count")
+		return nil, 0, errors.Wrap(err, "failed get storages count")
 	}
 	var storages []model.Storage
-	if err := addStorageOrder(storageDB).Order(columnName("order")).Offset((pageIndex - 1) * pageSize).Limit(pageSize).Find(&storages).Error; err != nil {
+	if err := addStorageOrder(storageDB).
+		Order(columnName("order")).
+		Offset((pageIndex - 1) * pageSize).
+		Limit(pageSize).
+		Find(&storages).
+		Error; err != nil {
 		return nil, 0, errors.WithStack(err)
 	}
 	return storages, count, nil
@@ -63,7 +68,9 @@ func GetStorageByMountPath(mountPath string) (*model.Storage, error) {
 
 func GetEnabledStorages() ([]model.Storage, error) {
 	var storages []model.Storage
-	err := addStorageOrder(db).Where(fmt.Sprintf("%s = ?", columnName("disabled")), false).Find(&storages).Error
+	err := addStorageOrder(db).
+		Where(fmt.Sprintf("%s = ?", columnName("disabled")), false).
+		Find(&storages).Error
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

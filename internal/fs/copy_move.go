@@ -10,7 +10,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/dongdio/OpenList/v4/consts"
-	"github.com/dongdio/OpenList/v4/internal/driver"
+	"github.com/dongdio/OpenList/v4/internal/conf"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
 	"github.com/dongdio/OpenList/v4/internal/task_group"
@@ -21,97 +21,58 @@ import (
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
-// 自定义错误类型
-var (
-	ErrTransferFailed = errors.New("transfer failed")
-	ErrCopyFailed     = errors.New("copy failed")
-	ErrMoveFailed     = errors.New("move failed")
-)
-
-// taskType 任务类型
 type taskType uint8
 
-// String 获取任务类型字符串表示
-// 返回:
-//   - string: 任务类型字符串
 func (t taskType) String() string {
-	if t == copy {
+	if t == 0 {
 		return "copy"
 	} else {
 		return "move"
 	}
 }
 
-// 任务类型常量
 const (
 	copy taskType = iota
 	move
 )
 
-// FileTransferTask 文件传输任务结构
 type FileTransferTask struct {
 	TaskData
 	TaskType taskType
 	groupID  string
 }
 
-// GetName 获取任务名称
-// 返回:
-//   - string: 任务名称
 func (t *FileTransferTask) GetName() string {
 	return fmt.Sprintf("%s [%s](%s) to [%s](%s)", t.TaskType, t.SrcStorageMp, t.SrcActualPath, t.DstStorageMp, t.DstActualPath)
 }
 
-// Run 执行任务
-// 返回:
-//   - error: 错误信息
 func (t *FileTransferTask) Run() error {
-	// 重新初始化上下文
 	if err := t.ReinitCtx(); err != nil {
 		return err
 	}
-
-	// 初始化任务时间
 	t.ClearEndTime()
 	t.SetStartTime(time.Now())
 	defer func() { t.SetEndTime(time.Now()) }()
-
-	var err error
-
-	// 获取源存储驱动
-	if t.SrcStorage == nil {
-		t.SrcStorage, err = op.GetStorageByMountPath(t.SrcStorageMp)
-		if err != nil {
-			return errors.WithMessage(err, "failed get source storage")
+	return t.RunWithNextTaskCallback(func(nextTask *FileTransferTask) error {
+		nextTask.groupID = t.groupID
+		task_group.TransferCoordinator.AddTask(t.groupID, nil)
+		if t.TaskType == copy {
+			CopyTaskManager.Add(nextTask)
+		} else {
+			MoveTaskManager.Add(nextTask)
 		}
-	}
-
-	// 获取目标存储驱动
-	if t.DstStorage == nil {
-		t.DstStorage, err = op.GetStorageByMountPath(t.DstStorageMp)
-		if err != nil {
-			return errors.WithMessage(err, "failed get destination storage")
-		}
-	}
-
-	// 在两个存储之间传输文件
-	return putBetween2Storages(t, t.SrcStorage, t.DstStorage, t.SrcActualPath, t.DstActualPath)
+		return nil
+	})
 }
 
-// OnSucceeded 任务成功回调
 func (t *FileTransferTask) OnSucceeded() {
 	task_group.TransferCoordinator.Done(t.groupID, true)
 }
 
-// OnFailed 任务失败回调
 func (t *FileTransferTask) OnFailed() {
 	task_group.TransferCoordinator.Done(t.groupID, false)
 }
 
-// SetRetry 设置重试
-// 参数:
-//   - retry: 当前重试次数
-//   - maxRetry: 最大重试次数
 func (t *FileTransferTask) SetRetry(retry int, maxRetry int) {
 	t.TaskExtension.SetRetry(retry, maxRetry)
 	if retry == 0 &&
@@ -126,68 +87,33 @@ func (t *FileTransferTask) SetRetry(retry int, maxRetry int) {
 	}
 }
 
-// transfer 在两个路径之间传输文件
-// 参数:
-//   - ctx: 上下文
-//   - taskType: 任务类型（复制或移动）
-//   - srcObjPath: 源对象路径
-//   - dstDirPath: 目标目录路径
-//   - lazyCache: 是否延迟缓存
-//
-// 返回:
-//   - task.TaskExtensionInfo: 任务信息
-//   - error: 错误信息
 func transfer(ctx context.Context, taskType taskType, srcObjPath, dstDirPath string, lazyCache ...bool) (task.TaskExtensionInfo, error) {
-	// 参数验证
-	if srcObjPath == "" || dstDirPath == "" {
-		return nil, errors.WithStack(ErrInvalidPath)
-	}
-
-	// 获取源存储驱动和实际路径
-	srcStorage, srcObjActualPath, err := getStorageWithCache(srcObjPath)
+	srcStorage, srcObjActualPath, err := op.GetStorageAndActualPath(srcObjPath)
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed get src storage")
 	}
-
-	// 获取目标存储驱动和实际路径
-	dstStorage, dstDirActualPath, err := getStorageWithCache(dstDirPath)
+	dstStorage, dstDirActualPath, err := op.GetStorageAndActualPath(dstDirPath)
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed get dst storage")
 	}
 
-	// 如果源和目标在同一存储中，尝试使用存储的原生复制/移动功能
 	if srcStorage.GetStorage() == dstStorage.GetStorage() {
 		if taskType == copy {
 			err = op.Copy(ctx, srcStorage, srcObjActualPath, dstDirActualPath, lazyCache...)
 			if !errors.Is(err, errs.NotImplement) && !errors.Is(err, errs.NotSupport) {
-				if err != nil {
-					return nil, errors.Wrap(ErrCopyFailed, err.Error())
-				}
-				return nil, nil
+				return nil, err
 			}
 		} else {
 			err = op.Move(ctx, srcStorage, srcObjActualPath, dstDirActualPath, lazyCache...)
 			if !errors.Is(err, errs.NotImplement) && !errors.Is(err, errs.NotSupport) {
-				if err != nil {
-					return nil, errors.Wrap(ErrMoveFailed, err.Error())
-				}
-				return nil, nil
+				return nil, err
 			}
 		}
-	} else if ctx.Value(consts.NoTaskKey) != nil {
-		return nil, fmt.Errorf("can't %s files between two storages, please use the front-end ", taskType)
 	}
 
-	// 获取任务创建者
-	taskCreator, _ := ctx.Value(consts.UserKey).(*model.User)
-
-	// 创建文件传输任务
+	// not in the same storage
 	t := &FileTransferTask{
 		TaskData: TaskData{
-			TaskExtension: task.TaskExtension{
-				Creator: taskCreator,
-				ApiUrl:  common.GetApiURL(ctx),
-			},
 			SrcStorage:    srcStorage,
 			DstStorage:    dstStorage,
 			SrcActualPath: srcObjActualPath,
@@ -196,10 +122,34 @@ func transfer(ctx context.Context, taskType taskType, srcObjPath, dstDirPath str
 			DstStorageMp:  dstStorage.GetStorage().MountPath,
 		},
 		TaskType: taskType,
-		groupID:  dstDirPath,
 	}
 
-	// 添加任务
+	if ctx.Value(consts.NoTaskKey) != nil {
+		var callback func(nextTask *FileTransferTask) error
+		hasSuccess := false
+		callback = func(nextTask *FileTransferTask) error {
+			nextTask.Base.SetCtx(ctx)
+			err := nextTask.RunWithNextTaskCallback(callback)
+			if err == nil {
+				hasSuccess = true
+			}
+			return err
+		}
+		t.Base.SetCtx(ctx)
+		err = t.RunWithNextTaskCallback(callback)
+		if hasSuccess || err == nil {
+			if taskType == move {
+				task_group.RefreshAndRemove(dstDirPath, task_group.SrcPathToRemove(srcObjPath))
+			} else {
+				op.DeleteCache(t.DstStorage, dstDirActualPath)
+			}
+		}
+		return nil, err
+	}
+
+	t.Creator, _ = ctx.Value(consts.UserKey).(*model.User)
+	t.ApiUrl = common.GetApiURL(ctx)
+	t.groupID = dstDirPath
 	if taskType == copy {
 		task_group.TransferCoordinator.AddTask(dstDirPath, nil)
 		CopyTaskManager.Add(t)
@@ -207,137 +157,74 @@ func transfer(ctx context.Context, taskType taskType, srcObjPath, dstDirPath str
 		task_group.TransferCoordinator.AddTask(dstDirPath, task_group.SrcPathToRemove(srcObjPath))
 		MoveTaskManager.Add(t)
 	}
-
 	return t, nil
 }
 
-// putBetween2Storages 在两个存储之间传输文件
-// 参数:
-//   - t: 文件传输任务
-//   - srcStorage: 源存储驱动
-//   - dstStorage: 目标存储驱动
-//   - srcActualPath: 源实际路径
-//   - dstDirActualPath: 目标目录实际路径
-//
-// 返回:
-//   - error: 错误信息
-func putBetween2Storages(t *FileTransferTask, srcStorage, dstStorage driver.Driver, srcActualPath, dstDirActualPath string) error {
-	// 更新任务状态
+func (t *FileTransferTask) RunWithNextTaskCallback(f func(nextTask *FileTransferTask) error) error {
 	t.Status = "getting src object"
-
-	// 获取源对象
-	srcObj, err := op.Get(t.Ctx(), srcStorage, srcActualPath)
+	srcObj, err := op.Get(t.Ctx(), t.SrcStorage, t.SrcActualPath)
 	if err != nil {
-		return errors.WithMessagef(err, "failed get src [%s] file", srcActualPath)
+		return errors.WithMessagef(err, "failed get src [%s] file", t.SrcActualPath)
 	}
-
-	// 处理目录传输
 	if srcObj.IsDir() {
 		t.Status = "src object is dir, listing objs"
-
-		// 获取目录内容
-		objs, err := op.List(t.Ctx(), srcStorage, srcActualPath, model.ListArgs{})
+		objs, err := op.List(t.Ctx(), t.SrcStorage, t.SrcActualPath, model.ListArgs{})
 		if err != nil {
-			return errors.WithMessagef(err, "failed list src [%s] objs", srcActualPath)
+			return errors.WithMessagef(err, "failed list src [%s] objs", t.SrcActualPath)
 		}
-
-		// 构建目标路径
-		dstActualPath := stdpath.Join(dstDirActualPath, srcObj.GetName())
-
-		// 如果是复制操作，添加刷新路径
+		dstActualPath := stdpath.Join(t.DstActualPath, srcObj.GetName())
 		if t.TaskType == copy {
-			task_group.TransferCoordinator.AppendPayload(t.groupID, task_group.DstPathToRefresh(dstActualPath))
+			if t.Ctx().Value(consts.NoTaskKey) != nil {
+				defer op.DeleteCache(t.DstStorage, dstActualPath)
+			} else {
+				task_group.TransferCoordinator.AppendPayload(t.groupID, task_group.DstPathToRefresh(dstActualPath))
+			}
 		}
-
-		// 为目录中的每个对象创建传输任务
 		for _, obj := range objs {
-			// 检查是否取消
 			if utils.IsCanceled(t.Ctx()) {
 				return nil
 			}
-
-			// 创建子任务
-			task := &FileTransferTask{
+			err = f(&FileTransferTask{
 				TaskType: t.TaskType,
 				TaskData: TaskData{
 					TaskExtension: task.TaskExtension{
-						Creator: t.GetCreator(),
+						Creator: t.Creator,
 						ApiUrl:  t.ApiUrl,
 					},
-					SrcStorage:    srcStorage,
-					DstStorage:    dstStorage,
-					SrcActualPath: stdpath.Join(srcActualPath, obj.GetName()),
+					SrcStorage:    t.SrcStorage,
+					DstStorage:    t.DstStorage,
+					SrcActualPath: stdpath.Join(t.SrcActualPath, obj.GetName()),
 					DstActualPath: dstActualPath,
-					SrcStorageMp:  srcStorage.GetStorage().MountPath,
-					DstStorageMp:  dstStorage.GetStorage().MountPath,
+					SrcStorageMp:  t.SrcStorageMp,
+					DstStorageMp:  t.DstStorageMp,
 				},
-				groupID: t.groupID,
-			}
-
-			// 添加任务
-			task_group.TransferCoordinator.AddTask(t.groupID, nil)
-			if t.TaskType == copy {
-				CopyTaskManager.Add(task)
-			} else {
-				MoveTaskManager.Add(task)
+			})
+			if err != nil {
+				return err
 			}
 		}
-
-		// 更新任务状态
 		t.Status = fmt.Sprintf("src object is dir, added all %s tasks of objs", t.TaskType)
 		return nil
 	}
 
-	// 处理文件传输
-	return putFileBetween2Storages(t, srcStorage, dstStorage, srcActualPath, dstDirActualPath)
-}
-
-// putFileBetween2Storages 在两个存储之间传输单个文件
-// 参数:
-//   - tsk: 文件传输任务
-//   - srcStorage: 源存储驱动
-//   - dstStorage: 目标存储驱动
-//   - srcActualPath: 源实际路径
-//   - dstDirActualPath: 目标目录实际路径
-//
-// 返回:
-//   - error: 错误信息
-func putFileBetween2Storages(tsk *FileTransferTask, srcStorage, dstStorage driver.Driver, srcActualPath, dstDirActualPath string) error {
-	// 获取源文件
-	srcFile, err := op.Get(tsk.Ctx(), srcStorage, srcActualPath)
+	link, _, err := op.Link(t.Ctx(), t.SrcStorage, t.SrcActualPath, model.LinkArgs{})
 	if err != nil {
-		return errors.WithMessagef(err, "failed get src [%s] file", srcActualPath)
+		return errors.WithMessagef(err, "failed get [%s] link", t.SrcActualPath)
 	}
-
-	// 设置总字节数
-	tsk.SetTotalBytes(srcFile.GetSize())
-
-	// 获取文件链接
-	link, _, err := op.Link(tsk.Ctx(), srcStorage, srcActualPath, model.LinkArgs{})
-	if err != nil {
-		return errors.WithMessagef(err, "failed get [%s] link", srcActualPath)
-	}
-
-	// 创建可查找流
+	// any link provided is seekable
 	ss, err := stream.NewSeekableStream(&stream.FileStream{
-		Obj: srcFile,
-		Ctx: tsk.Ctx(),
+		Obj: srcObj,
+		Ctx: t.Ctx(),
 	}, link)
-
-	// 处理错误
 	if err != nil {
 		_ = link.Close()
-		return errors.WithMessagef(err, "failed get [%s] stream", srcActualPath)
+		return errors.WithMessagef(err, "failed get [%s] stream", t.SrcActualPath)
 	}
-
-	// 更新总字节数
-	tsk.SetTotalBytes(ss.GetSize())
-
-	// 执行上传操作
-	return op.Put(tsk.Ctx(), dstStorage, dstDirActualPath, ss, tsk.SetProgress, true)
+	t.SetTotalBytes(ss.GetSize())
+	t.Status = "uploading"
+	return op.Put(t.Ctx(), t.DstStorage, t.DstActualPath, ss, t.SetProgress, true)
 }
 
-// 任务管理器
 var (
 	CopyTaskManager *tache.Manager[*FileTransferTask]
 	MoveTaskManager *tache.Manager[*FileTransferTask]

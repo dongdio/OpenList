@@ -77,7 +77,7 @@ func GetArchiveToolAndStream(ctx context.Context, storage driver.Driver, path st
 	// Get file link
 	link, obj, err := Link(ctx, storage, path, args)
 	if err != nil {
-		return nil, nil, nil, errors.WithMessagef(err, "failed to get link for %s", path)
+		return nil, nil, nil, errors.Wrapf(err, "failed to get link for %s", path)
 	}
 
 	// Extract file extension

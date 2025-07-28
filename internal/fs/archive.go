@@ -85,15 +85,6 @@ func (t *ArchiveDownloadTask) Run() error {
 //   - *ArchiveContentUploadTask: 上传任务
 //   - error: 错误信息
 func (t *ArchiveDownloadTask) RunWithoutPushUploadTask() (*ArchiveContentUploadTask, error) {
-	var err error
-
-	// 获取源存储驱动
-	if t.SrcStorage == nil {
-		t.SrcStorage, err = op.GetStorageByMountPath(t.SrcStorageMp)
-		if err != nil {
-			return nil, errors.WithMessage(err, "failed get source storage")
-		}
-	}
 
 	// 获取归档工具和流
 	srcObj, tool, ss, err := op.GetArchiveToolAndStream(t.Ctx(), t.SrcStorage, t.SrcActualPath, model.LinkArgs{})
@@ -254,13 +245,6 @@ func (t *ArchiveContentUploadTask) SetRetry(retry int, maxRetry int) {
 // 返回:
 //   - error: 错误信息
 func (t *ArchiveContentUploadTask) RunWithNextTaskCallback(f func(nextTask *ArchiveContentUploadTask) error) error {
-	var err error
-	if t.dstStorage == nil {
-		t.dstStorage, err = op.GetStorageByMountPath(t.DstStorageMp)
-		if err != nil {
-			return err
-		}
-	}
 	info, err := os.Stat(t.FilePath)
 	if err != nil {
 		return err
@@ -318,7 +302,6 @@ func (t *ArchiveContentUploadTask) RunWithNextTaskCallback(f func(nextTask *Arch
 			return es
 		}
 	} else {
-		t.SetTotalBytes(info.Size())
 		file, err := os.Open(t.FilePath)
 		if err != nil {
 			return err
@@ -544,16 +527,9 @@ func archiveDecompress(ctx context.Context, srcObjPath, dstDirPath string, args 
 		}
 	}
 
-	// 获取任务创建者
-	taskCreator, _ := ctx.Value(consts.UserKey).(*model.User)
-
 	// 创建归档下载任务
 	tsk := &ArchiveDownloadTask{
 		TaskData: TaskData{
-			TaskExtension: task.TaskExtension{
-				Creator: taskCreator,
-				ApiUrl:  common.GetApiURL(ctx),
-			},
 			SrcStorage:    srcStorage,
 			DstStorage:    dstStorage,
 			SrcActualPath: srcObjActualPath,
@@ -566,6 +542,7 @@ func archiveDecompress(ctx context.Context, srcObjPath, dstDirPath string, args 
 
 	// 如果不需要异步任务，直接执行
 	if ctx.Value(consts.NoTaskKey) != nil {
+		tsk.Base.SetCtx(ctx)
 		uploadTask, err := tsk.RunWithoutPushUploadTask()
 		if err != nil {
 			return nil, errors.WithMessagef(err, "failed download [%s]", srcObjPath)
@@ -575,13 +552,16 @@ func archiveDecompress(ctx context.Context, srcObjPath, dstDirPath string, args 
 		// 定义递归回调函数
 		var callback func(t *ArchiveContentUploadTask) error
 		callback = func(t *ArchiveContentUploadTask) error {
+			tsk.Base.SetCtx(ctx)
 			e := t.RunWithNextTaskCallback(callback)
 			t.deleteSrcFile()
 			return e
 		}
-
+		uploadTask.Base.SetCtx(ctx)
 		return nil, uploadTask.RunWithNextTaskCallback(callback)
 	} else {
+		tsk.Creator, _ = ctx.Value(consts.UserKey).(*model.User)
+		tsk.ApiUrl = common.GetApiURL(ctx)
 		// 添加到任务管理器
 		ArchiveDownloadTaskManager.Add(tsk)
 		return tsk, nil

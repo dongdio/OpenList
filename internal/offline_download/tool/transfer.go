@@ -6,7 +6,6 @@ import (
 	"os"
 	stdpath "path"
 	"path/filepath"
-	"sync"
 	"time"
 
 	"github.com/OpenListTeam/tache"
@@ -33,19 +32,6 @@ var (
 	ErrInvalidDestination  = errors.New("无效的目标目录")
 	ErrTransferCanceled    = errors.New("传输任务被取消")
 )
-
-// 常量定义
-const (
-	bufferSize = 32 * 1024 // 32KB 缓冲区大小
-)
-
-// 缓冲区池，用于减少内存分配
-var bufferPool = sync.Pool{
-	New: func() any {
-		buffer := make([]byte, bufferSize)
-		return &buffer
-	},
-}
 
 // TransferTask 表示一个文件传输任务
 // 支持从标准文件系统、对象存储和URL传输到目标存储
@@ -226,44 +212,44 @@ func (t *TransferTask) transferFromStdPath() error {
 	}
 
 	// 如果是目录，为每个子项创建传输任务
-	if info.IsDir() {
-		t.Status = "源对象是目录，列出文件"
-		entries, err := os.ReadDir(t.SrcActualPath)
-		if err != nil {
-			return errors.Wrap(err, "无法读取源目录")
-		}
-		dstDirActualPath := stdpath.Join(t.DstActualPath, info.Name())
-		task_group.TransferCoordinator.AppendPayload(t.groupID, task_group.DstPathToRefresh(dstDirActualPath))
-
-		// 为每个子项创建传输任务
-		for _, entry := range entries {
-			srcRawPath := stdpath.Join(t.SrcActualPath, entry.Name())
-			tsk := &TransferTask{
-				TaskData: fs.TaskData{
-					TaskExtension: task.TaskExtension{
-						Creator: t.Creator,
-						ApiUrl:  t.ApiUrl,
-					},
-					SrcActualPath: srcRawPath,
-					DstActualPath: dstDirActualPath,
-					DstStorage:    t.DstStorage,
-					SrcStorageMp:  t.SrcStorageMp,
-					DstStorageMp:  t.DstStorageMp,
-				},
-				groupID: t.groupID,
-
-				DeletePolicy: t.DeletePolicy,
-			}
-			task_group.TransferCoordinator.AddTask(t.groupID, nil)
-			TransferTaskManager.Add(tsk)
-		}
-
-		t.Status = "源对象是目录，已添加所有文件的传输任务"
-		return nil
+	if !info.IsDir() {
+		// 如果是文件，直接传输
+		return t.transferStdFile()
 	}
 
-	// 如果是文件，直接传输
-	return t.transferStdFile()
+	t.Status = "源对象是目录，列出文件"
+	entries, err := os.ReadDir(t.SrcActualPath)
+	if err != nil {
+		return errors.Wrap(err, "无法读取源目录")
+	}
+	dstDirActualPath := stdpath.Join(t.DstActualPath, info.Name())
+	task_group.TransferCoordinator.AppendPayload(t.groupID, task_group.DstPathToRefresh(dstDirActualPath))
+
+	// 为每个子项创建传输任务
+	for _, entry := range entries {
+		srcRawPath := stdpath.Join(t.SrcActualPath, entry.Name())
+		tsk := &TransferTask{
+			TaskData: fs.TaskData{
+				TaskExtension: task.TaskExtension{
+					Creator: t.Creator,
+					ApiUrl:  t.ApiUrl,
+				},
+				SrcActualPath: srcRawPath,
+				DstActualPath: dstDirActualPath,
+				DstStorage:    t.DstStorage,
+				SrcStorageMp:  t.SrcStorageMp,
+				DstStorageMp:  t.DstStorageMp,
+			},
+			groupID: t.groupID,
+
+			DeletePolicy: t.DeletePolicy,
+		}
+		task_group.TransferCoordinator.AddTask(t.groupID, nil)
+		TransferTaskManager.Add(tsk)
+	}
+
+	t.Status = "源对象是目录，已添加所有文件的传输任务"
+	return nil
 }
 
 // transferStdFile 传输标准文件系统中的单个文件
@@ -313,7 +299,7 @@ func (t *TransferTask) removeStdTemp() {
 	}
 
 	// 删除文件
-	if err := os.Remove(t.SrcActualPath); err != nil {
+	if err = os.Remove(t.SrcActualPath); err != nil {
 		log.WithFields(log.Fields{
 			"path":  t.SrcActualPath,
 			"error": err,
@@ -387,50 +373,50 @@ func (t *TransferTask) transferFromObjPath() error {
 	}
 
 	// 如果是目录，为每个子对象创建传输任务
-	if srcObj.IsDir() {
-		t.Status = "源对象是目录，列出对象"
-		objs, err := op.List(t.Ctx(), t.SrcStorage, t.SrcActualPath, model.ListArgs{})
-		if err != nil {
-			return errors.Wrapf(err, "无法列出源目录 [%s] 中的对象", t.SrcActualPath)
-		}
-
-		dstDirActualPath := stdpath.Join(t.DstActualPath, srcObj.GetName())
-		task_group.TransferCoordinator.AppendPayload(t.groupID, task_group.DstPathToRefresh(dstDirActualPath))
-
-		// 为每个子对象创建传输任务
-		for _, obj := range objs {
-			// 检查是否取消
-			if utils.IsCanceled(t.Ctx()) {
-				return ErrTransferCanceled
-			}
-
-			SrcActualPath := stdpath.Join(t.SrcActualPath, obj.GetName())
-			task_group.TransferCoordinator.AddTask(t.groupID, nil)
-
-			TransferTaskManager.Add(&TransferTask{
-				TaskData: fs.TaskData{
-					TaskExtension: task.TaskExtension{
-						Creator: t.Creator,
-						ApiUrl:  t.ApiUrl,
-					},
-					SrcActualPath: SrcActualPath,
-					DstActualPath: dstDirActualPath,
-					SrcStorage:    t.SrcStorage,
-					DstStorage:    t.DstStorage,
-					SrcStorageMp:  t.SrcStorageMp,
-					DstStorageMp:  t.DstStorageMp,
-				},
-				groupID:      t.groupID,
-				DeletePolicy: t.DeletePolicy,
-			})
-		}
-
-		t.Status = "源对象是目录，已添加所有对象的传输任务"
-		return nil
+	if !srcObj.IsDir() {
+		// 如果是文件，直接传输
+		return t.transferObjFile()
 	}
 
-	// 如果是文件，直接传输
-	return t.transferObjFile()
+	t.Status = "源对象是目录，列出对象"
+	objs, err := op.List(t.Ctx(), t.SrcStorage, t.SrcActualPath, model.ListArgs{})
+	if err != nil {
+		return errors.Wrapf(err, "无法列出源目录 [%s] 中的对象", t.SrcActualPath)
+	}
+
+	dstDirActualPath := stdpath.Join(t.DstActualPath, srcObj.GetName())
+	task_group.TransferCoordinator.AppendPayload(t.groupID, task_group.DstPathToRefresh(dstDirActualPath))
+
+	// 为每个子对象创建传输任务
+	for _, obj := range objs {
+		// 检查是否取消
+		if utils.IsCanceled(t.Ctx()) {
+			return ErrTransferCanceled
+		}
+
+		SrcActualPath := stdpath.Join(t.SrcActualPath, obj.GetName())
+		task_group.TransferCoordinator.AddTask(t.groupID, nil)
+
+		TransferTaskManager.Add(&TransferTask{
+			TaskData: fs.TaskData{
+				TaskExtension: task.TaskExtension{
+					Creator: t.Creator,
+					ApiUrl:  t.ApiUrl,
+				},
+				SrcActualPath: SrcActualPath,
+				DstActualPath: dstDirActualPath,
+				SrcStorage:    t.SrcStorage,
+				DstStorage:    t.DstStorage,
+				SrcStorageMp:  t.SrcStorageMp,
+				DstStorageMp:  t.DstStorageMp,
+			},
+			groupID:      t.groupID,
+			DeletePolicy: t.DeletePolicy,
+		})
+	}
+
+	t.Status = "源对象是目录，已添加所有对象的传输任务"
+	return nil
 }
 
 // transferObjFile 传输对象存储中的单个文件

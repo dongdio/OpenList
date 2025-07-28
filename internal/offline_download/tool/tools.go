@@ -26,14 +26,14 @@ func (t ToolsManager) Add(tool Tool) {
 }
 
 func (t ToolsManager) Names() []string {
-	names := make([]string, 0, len(t))
+	ns := make([]string, 0, len(t))
 	for name := range t {
 		if tool, err := t.Get(name); err == nil && tool.IsReady() {
-			names = append(names, name)
+			ns = append(ns, name)
 		}
 	}
-	sort.Strings(names)
-	return names
+	sort.Strings(ns)
+	return ns
 }
 
 func (t ToolsManager) Items() []model.SettingItem {

@@ -73,6 +73,9 @@ func SearchNode(req model.SearchReq, useFullText bool) ([]model.SearchNode, int6
 				Where("to_tsvector(name) @@ to_tsquery(?)", strings.Join(strings.Fields(req.Keywords), " & "))
 		}
 	}
+	if searchDB == nil {
+		return nil, 0, errors.Errorf("unsupported database type: %s", conf.Conf.Database.Type)
+	}
 
 	if req.Scope != 0 {
 		isDir := req.Scope == 1
