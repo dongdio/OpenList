@@ -63,11 +63,11 @@ func (h *httpCaller) Close() (err error) {
 }
 
 // setNotifier establishes a WebSocket connection for notifications
-func (h *httpCaller) setNotifier(ctx context.Context, u url.URL, notifier Notifier) (err error) {
+func (h *httpCaller) setNotifier(ctx context.Context, u url.URL, notifier Notifier) error {
 	u.Scheme = "ws"
 	conn, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
-		return
+		return err
 	}
 	h.wg.Add(1)
 	go func() {
@@ -106,11 +106,11 @@ func (h *httpCaller) setNotifier(ctx context.Context, u url.URL, notifier Notifi
 			processNotification(request, notifier)
 		}
 	}()
-	return
+	return nil
 }
 
 // Call makes an RPC call using HTTP
-func (h httpCaller) Call(method string, params, reply any) (err error) {
+func (h *httpCaller) Call(method string, params, reply any) (err error) {
 	payload, err := EncodeClientRequest(method, params)
 	if err != nil {
 		return

@@ -2,7 +2,6 @@ package febbox
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"net/http"
 	"net/url"
@@ -11,6 +10,8 @@ import (
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
+
+	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 type customTokenSource struct {
@@ -27,10 +28,8 @@ func (c *customTokenSource) Token() (*oauth2.Token, error) {
 	} else {
 		v.Set("grant_type", "client_credentials")
 	}
-
 	v.Set("client_id", c.config.ClientID)
 	v.Set("client_secret", c.config.ClientSecret)
-
 	req, err := http.NewRequest("POST", c.config.TokenURL, strings.NewReader(v.Encode()))
 	if err != nil {
 		return nil, err
@@ -59,23 +58,21 @@ func (c *customTokenSource) Token() (*oauth2.Token, error) {
 		} `json:"data"`
 	}
 
-	if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil {
+	err = utils.JSONTool.NewDecoder(resp.Body).Decode(&tokenResp)
+	if err != nil {
 		return nil, err
 	}
-
 	if tokenResp.Code != 1 {
 		return nil, errors.New("oauth2: server response error")
 	}
 
 	c.refreshToken = tokenResp.Data.RefreshToken
-
 	token := &oauth2.Token{
 		AccessToken:  tokenResp.Data.AccessToken,
 		TokenType:    tokenResp.Data.TokenType,
 		RefreshToken: tokenResp.Data.RefreshToken,
 		Expiry:       time.Now().Add(time.Duration(tokenResp.Data.ExpiresIn) * time.Second),
 	}
-
 	return token, nil
 }
 

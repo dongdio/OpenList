@@ -10,15 +10,15 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
 
-	"google.golang.org/appengine/log"
+	"github.com/robfig/cron/v3"
+	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
 
+	"github.com/dongdio/OpenList/v4/global"
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
-	"github.com/dongdio/OpenList/v4/utility/cron"
 	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
@@ -26,9 +26,9 @@ import (
 type ChaoXing struct {
 	model.Storage
 	Addition
-	cron   *cron.Cron
-	config driver.Config
-	conf   Conf
+	cronEntryId cron.EntryID
+	config      driver.Config
+	conf        Conf
 }
 
 func (d *ChaoXing) Config() driver.Config {
@@ -54,21 +54,25 @@ func (d *ChaoXing) refreshCookie() error {
 func (d *ChaoXing) Init(ctx context.Context) error {
 	err := d.refreshCookie()
 	if err != nil {
-		log.Errorf(ctx, err.Error())
+		log.Errorf(err.Error())
 	}
-	d.cron = cron.NewCron(time.Hour * 12)
-	d.cron.Do(func() {
-		err = d.refreshCookie()
+
+	d.cronEntryId, err = global.CronConfig.AddFunc("0 */12 * * *", func() {
+		err := d.refreshCookie()
 		if err != nil {
-			log.Errorf(ctx, err.Error())
+			log.Errorf("chaoxing refresh cookie error: %+v", err)
 		}
 	})
+	if err != nil {
+		log.Errorf("chaoxing 设置定时任务失败: %+v\n", err)
+	}
 	return nil
 }
 
 func (d *ChaoXing) Drop(ctx context.Context) error {
-	if d.cron != nil {
-		d.cron.Stop()
+	if d.cronEntryId > 0 {
+		global.CronConfig.Remove(d.cronEntryId)
+		d.cronEntryId = 0
 	}
 	return nil
 }

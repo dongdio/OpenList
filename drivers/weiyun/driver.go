@@ -12,12 +12,13 @@ import (
 	"github.com/avast/retry-go"
 	weiyunsdkgo "github.com/foxxorcat/weiyun-sdk-go"
 	"github.com/pkg/errors"
+	"github.com/robfig/cron/v3"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
+	"github.com/dongdio/OpenList/v4/global"
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
-	"github.com/dongdio/OpenList/v4/utility/cron"
 	"github.com/dongdio/OpenList/v4/utility/errgroup"
 	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/utils"
@@ -27,9 +28,9 @@ type WeiYun struct {
 	model.Storage
 	Addition
 
-	client     *weiyunsdkgo.WeiYunClient
-	cron       *cron.Cron
-	rootFolder *Folder
+	client      *weiyunsdkgo.WeiYunClient
+	cronEntryId cron.EntryID
+	rootFolder  *Folder
 
 	uploadThread int
 }
@@ -70,10 +71,10 @@ func (d *WeiYun) Init(ctx context.Context) error {
 
 	// qqCookie保活
 	if d.client.LoginType() == 1 {
-		d.cron = cron.NewCron(time.Minute * 5)
-		d.cron.Do(func() {
+		d.cronEntryId, err = global.CronConfig.AddFunc("*/5 * * * *", func() {
 			_ = d.client.KeepAlive()
 		})
+
 	}
 
 	// 获取默认根目录dirKey
@@ -108,9 +109,9 @@ func (d *WeiYun) Init(ctx context.Context) error {
 
 func (d *WeiYun) Drop(ctx context.Context) error {
 	d.client = nil
-	if d.cron != nil {
-		d.cron.Stop()
-		d.cron = nil
+	if d.cronEntryId > 0 {
+		global.CronConfig.Remove(d.cronEntryId)
+		d.cronEntryId = 0
 	}
 	return nil
 }

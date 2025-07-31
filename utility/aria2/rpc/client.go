@@ -51,7 +51,7 @@ func New(ctx context.Context, uri string, token string, timeout time.Duration, n
 	return c, nil
 }
 
-// `aria2.addUri([secret, ]uris[, options[, position]])`
+// AddURI `aria2.addUri([secret, ]uris[, options[, position]])`
 // This method adds a new download. uris is an array of HTTP/FTP/SFTP/BitTorrent URIs (strings) pointing to the same resource.
 // If you mix URIs pointing to different resources, then the download may fail or be corrupted without aria2 complaining.
 // When adding BitTorrent Magnet URIs, uris must have only one element and it should be BitTorrent Magnet URI.
@@ -73,7 +73,7 @@ func (c *client) AddURI(uris []string, options ...any) (gid string, err error) {
 	return
 }
 
-// `aria2.addTorrent([secret, ]torrent[, uris[, options[, position]]])`
+// AddTorrent `aria2.addTorrent([secret, ]torrent[, uris[, options[, position]]])`
 // This method adds a BitTorrent download by uploading a ".torrent" file.
 // If you want to add a BitTorrent Magnet URI, use the aria2.addUri() method instead.
 // torrent must be a base64-encoded string containing the contents of the ".torrent" file.
@@ -107,7 +107,7 @@ func (c *client) AddTorrent(filename string, options ...any) (gid string, err er
 	return
 }
 
-// `aria2.addMetalink([secret, ]metalink[, options[, position]])`
+// AddMetalink `aria2.addMetalink([secret, ]metalink[, options[, position]])`
 // This method adds a Metalink download by uploading a ".metalink" file.
 // metalink is a base64-encoded string which contains the contents of the ".metalink" file.
 // options is a struct and its members are pairs of option name and value.
@@ -137,7 +137,7 @@ func (c *client) AddMetalink(filename string, options ...any) (gid []string, err
 	return
 }
 
-// `aria2.remove([secret, ]gid)`
+// Remove `aria2.remove([secret, ]gid)`
 // This method removes the download denoted by gid (string).
 // If the specified download is in progress, it is first stopped.
 // The status of the removed download becomes removed.
@@ -152,7 +152,7 @@ func (c *client) Remove(gid string) (result string, err error) {
 	return
 }
 
-// `aria2.forceRemove([secret, ]gid)`
+// ForceRemove `aria2.forceRemove([secret, ]gid)`
 // This method removes the download denoted by gid.
 // This method behaves just like aria2.remove() except that this method removes the download without performing any actions which take time, such as contacting BitTorrent trackers to unregister the download first.
 func (c *client) ForceRemove(gid string) (result string, err error) {
@@ -165,7 +165,7 @@ func (c *client) ForceRemove(gid string) (result string, err error) {
 	return
 }
 
-// `aria2.pause([secret, ]gid)`
+// Pause `aria2.pause([secret, ]gid)`
 // This method pauses the download denoted by gid (string).
 // The status of paused download becomes paused.
 // If the download was active, the download is placed in the front of waiting queue.
@@ -182,7 +182,7 @@ func (c *client) Pause(gid string) (result string, err error) {
 	return
 }
 
-// `aria2.pauseAll([secret])`
+// PauseAll `aria2.pauseAll([secret])`
 // This method is equal to calling aria2.pause() for every active/waiting download.
 // This methods returns OK.
 func (c *client) PauseAll() (ok string, err error) {
@@ -194,7 +194,7 @@ func (c *client) PauseAll() (ok string, err error) {
 	return
 }
 
-// `aria2.forcePause([secret, ]gid)`
+// ForcePause `aria2.forcePause([secret, ]gid)`
 // This method pauses the download denoted by gid.
 // This method behaves just like aria2.pause() except that this method pauses downloads without performing any actions which take time, such as contacting BitTorrent trackers to unregister the download first.
 func (c *client) ForcePause(gid string) (result string, err error) {
@@ -207,7 +207,7 @@ func (c *client) ForcePause(gid string) (result string, err error) {
 	return
 }
 
-// `aria2.forcePauseAll([secret])`
+// ForcePauseAll `aria2.forcePauseAll([secret])`
 // This method is equal to calling aria2.forcePause() for every active/waiting download.
 // This methods returns OK.
 func (c *client) ForcePauseAll() (ok string, err error) {
@@ -219,7 +219,7 @@ func (c *client) ForcePauseAll() (ok string, err error) {
 	return
 }
 
-// `aria2.unpause([secret, ]gid)`
+// Unpause `aria2.unpause([secret, ]gid)`
 // This method changes the status of the download denoted by gid (string) from paused to waiting, making the download eligible to be restarted.
 // This method returns the GID of the unpaused download.
 func (c *client) Unpause(gid string) (result string, err error) {
@@ -232,7 +232,7 @@ func (c *client) Unpause(gid string) (result string, err error) {
 	return
 }
 
-// `aria2.unpauseAll([secret])`
+// UnpauseAll `aria2.unpauseAll([secret])`
 // This method is equal to calling aria2.unpause() for every active/waiting download.
 // This methods returns OK.
 func (c *client) UnpauseAll() (ok string, err error) {
@@ -244,7 +244,7 @@ func (c *client) UnpauseAll() (ok string, err error) {
 	return
 }
 
-// `aria2.tellStatus([secret, ]gid[, keys])`
+// TellStatus `aria2.tellStatus([secret, ]gid[, keys])`
 // This method returns the progress of the download denoted by gid (string).
 // keys is an array of strings.
 // If specified, the response contains only keys in the keys array.
@@ -266,7 +266,7 @@ func (c *client) TellStatus(gid string, keys ...string) (info StatusInfo, err er
 	return
 }
 
-// `aria2.getUris([secret, ]gid)`
+// GetURIs `aria2.getUris([secret, ]gid)`
 // This method returns the URIs used in the download denoted by gid (string).
 // The response is an array of structs and it contains following keys. Values are string.
 //
@@ -282,7 +282,7 @@ func (c *client) GetURIs(gid string) (infos []URIInfo, err error) {
 	return
 }
 
-// `aria2.getFiles([secret, ]gid)`
+// GetFiles `aria2.getFiles([secret, ]gid)`
 // This method returns the file list of the download denoted by gid (string).
 // The response is an array of structs which contain following keys. Values are strings.
 // https://aria2.github.io/manual/en/html/aria2c.html#aria2.getFiles
@@ -296,7 +296,7 @@ func (c *client) GetFiles(gid string) (infos []FileInfo, err error) {
 	return
 }
 
-// `aria2.getPeers([secret, ]gid)`
+// GetPeers `aria2.getPeers([secret, ]gid)`
 // This method returns a list peers of the download denoted by gid (string).
 // This method is for BitTorrent only.
 // The response is an array of structs and contains the following keys. Values are strings.
@@ -311,7 +311,7 @@ func (c *client) GetPeers(gid string) (infos []PeerInfo, err error) {
 	return
 }
 
-// `aria2.getServers([secret, ]gid)`
+// GetServers `aria2.getServers([secret, ]gid)`
 // This method returns currently connected HTTP(S)/FTP/SFTP servers of the download denoted by gid (string).
 // The response is an array of structs and contains the following keys. Values are strings.
 // https://aria2.github.io/manual/en/html/aria2c.html#aria2.getServers
@@ -325,7 +325,7 @@ func (c *client) GetServers(gid string) (infos []ServerInfo, err error) {
 	return
 }
 
-// `aria2.tellActive([secret][, keys])`
+// TellActive `aria2.tellActive([secret][, keys])`
 // This method returns a list of active downloads.
 // The response is an array of the same structs as returned by the aria2.tellStatus() method.
 // For the keys parameter, please refer to the aria2.tellStatus() method.
@@ -341,7 +341,7 @@ func (c *client) TellActive(keys ...string) (infos []StatusInfo, err error) {
 	return
 }
 
-// `aria2.tellWaiting([secret, ]offset, num[, keys])`
+// TellWaiting `aria2.tellWaiting([secret, ]offset, num[, keys])`
 // This method returns a list of waiting downloads, including paused ones.
 // offset is an integer and specifies the offset from the download waiting at the front.
 // num is an integer and specifies the max. number of downloads to be returned.
@@ -368,7 +368,7 @@ func (c *client) TellWaiting(offset, num int, keys ...string) (infos []StatusInf
 	return
 }
 
-// `aria2.tellStopped([secret, ]offset, num[, keys])`
+// TellStopped `aria2.tellStopped([secret, ]offset, num[, keys])`
 // This method returns a list of stopped downloads.
 // offset is an integer and specifies the offset from the least recently stopped download.
 // num is an integer and specifies the max. number of downloads to be returned.
@@ -389,7 +389,7 @@ func (c *client) TellStopped(offset, num int, keys ...string) (infos []StatusInf
 	return
 }
 
-// `aria2.changePosition(gid, pos, how)`
+// ChangePosition `aria2.changePosition(gid, pos, how)`
 // This method changes the position of the download denoted by gid in the queue.
 // pos is an integer.
 // how is a string and it should be either POS_SET, POS_CUR or POS_END.
@@ -409,7 +409,7 @@ func (c *client) ChangePosition(gid string, pos int, how string) (position int, 
 	return
 }
 
-// `aria2.changeUri(gid, fileIndex, delUris, addUris[, position])`
+// ChangeURI `aria2.changeUri(gid, fileIndex, delUris, addUris[, position])`
 // This method removes the URIs in delUris from and appends the URIs in addUris to download denoted by gid.
 // delUris and addUris are arrays of strings.
 // position is used to specify where URIs are inserted in the existing waiting URI list. position is 0-based and the URIs are inserted before the URI at position in the waiting list.
@@ -436,7 +436,7 @@ func (c *client) ChangeURI(gid string, fileindex int, delUris []string, addUris 
 	return
 }
 
-// `aria2.getOption([secret, ]gid)`
+// GetOption `aria2.getOption([secret, ]gid)`
 // This method returns options of the download denoted by gid.
 // The response is a struct where keys are the names of options.
 // The values are strings.
@@ -451,7 +451,7 @@ func (c *client) GetOption(gid string) (m Option, err error) {
 	return
 }
 
-// `aria2.changeOption([secret, ]gid, options)`
+// ChangeOption `aria2.changeOption([secret, ]gid, options)`
 // This method changes options of the download denoted by gid (string) dynamically. options is a struct.
 // The following options are available for active downloads:
 //
@@ -477,7 +477,7 @@ func (c *client) ChangeOption(gid string, option Option) (ok string, err error) 
 	return
 }
 
-// `aria2.getGlobalOption([secret])`
+// GetGlobalOption `aria2.getGlobalOption([secret])`
 // This method returns the global options.
 // The response is a struct.
 // Its keys are the names of options.
@@ -492,7 +492,7 @@ func (c *client) GetGlobalOption() (m Option, err error) {
 	return
 }
 
-// `aria2.changeGlobalOption([secret, ]options)`
+// ChangeGlobalOption `aria2.changeGlobalOption([secret, ]options)`
 // This method changes global options dynamically.
 // options is a struct.
 // The following options are available:
@@ -524,7 +524,7 @@ func (c *client) ChangeGlobalOption(options Option) (ok string, err error) {
 	return
 }
 
-// `aria2.getGlobalStat([secret])`
+// GetGlobalStat `aria2.getGlobalStat([secret])`
 // This method returns global statistics such as the overall download and upload speeds.
 // The response is a struct and contains the following keys. Values are strings.
 //
@@ -544,7 +544,7 @@ func (c *client) GetGlobalStat() (info GlobalStatInfo, err error) {
 	return
 }
 
-// `aria2.purgeDownloadResult([secret])`
+// PurgeDownloadResult `aria2.purgeDownloadResult([secret])`
 // This method purges completed/error/removed downloads to free memory.
 // This method returns OK.
 func (c *client) PurgeDownloadResult() (ok string, err error) {
@@ -556,7 +556,7 @@ func (c *client) PurgeDownloadResult() (ok string, err error) {
 	return
 }
 
-// `aria2.removeDownloadResult([secret, ]gid)`
+// RemoveDownloadResult `aria2.removeDownloadResult([secret, ]gid)`
 // This method removes a completed/error/removed download denoted by gid from memory.
 // This method returns OK for success.
 func (c *client) RemoveDownloadResult(gid string) (ok string, err error) {
@@ -569,7 +569,7 @@ func (c *client) RemoveDownloadResult(gid string) (ok string, err error) {
 	return
 }
 
-// `aria2.getVersion([secret])`
+// GetVersion `aria2.getVersion([secret])`
 // This method returns the version of aria2 and the list of enabled features.
 // The response is a struct and contains following keys.
 //
@@ -584,7 +584,7 @@ func (c *client) GetVersion() (info VersionInfo, err error) {
 	return
 }
 
-// `aria2.getSessionInfo([secret])`
+// GetSessionInfo `aria2.getSessionInfo([secret])`
 // This method returns session information.
 // The response is a struct and contains following key.
 //
@@ -598,7 +598,7 @@ func (c *client) GetSessionInfo() (info SessionInfo, err error) {
 	return
 }
 
-// `aria2.shutdown([secret])`
+// Shutdown `aria2.shutdown([secret])`
 // This method shutdowns aria2.
 // This method returns OK.
 func (c *client) Shutdown() (ok string, err error) {
@@ -610,7 +610,7 @@ func (c *client) Shutdown() (ok string, err error) {
 	return
 }
 
-// `aria2.forceShutdown([secret])`
+// ForceShutdown `aria2.forceShutdown([secret])`
 // This method shuts down aria2().
 // This method behaves like :func:'aria2.shutdown` without performing any actions which take time, such as contacting BitTorrent trackers to unregister downloads first.
 // This method returns OK.
@@ -623,7 +623,7 @@ func (c *client) ForceShutdown() (ok string, err error) {
 	return
 }
 
-// `aria2.saveSession([secret])`
+// SaveSession `aria2.saveSession([secret])`
 // This method saves the current session to a file specified by the --save-session option.
 // This method returns OK if it succeeds.
 func (c *client) SaveSession() (ok string, err error) {
@@ -635,7 +635,7 @@ func (c *client) SaveSession() (ok string, err error) {
 	return
 }
 
-// `system.multicall(methods)`
+// Multicall `system.multicall(methods)`
 // This method encapsulates multiple method calls in a single request.
 // methods is an array of structs.
 // The structs contain two keys: methodName and params.
@@ -651,7 +651,7 @@ func (c *client) Multicall(methods []Method) (results []any, err error) {
 	return
 }
 
-// `system.listMethods()`
+// ListMethods `system.listMethods()`
 // This method returns the all available RPC methods in an array of string.
 // Unlike other methods, this method does not require secret token.
 // This is safe because this method just returns the available method names.

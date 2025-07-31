@@ -16,6 +16,3 @@ type State struct {
 
 // userStates 存储所有用户的状态信息，键为用户ID
 var userStates = generic.MapOf[string, *State]{}
-
-// 为了向后兼容，保留原变量名
-var global = userStates

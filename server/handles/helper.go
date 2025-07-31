@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/net/html"
 
 	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/setting"
@@ -73,11 +74,10 @@ func Plist(c *gin.Context) {
 
 	// Sanitize URL and name
 	downloadURL := link.String()
-	downloadURL = sanitizeForXML(downloadURL)
 
 	// Extract identifier from name if it contains separator
 	name := fullName
-	identifier := fmt.Sprintf("ci.nn.%s", url.PathEscape(fullName))
+	identifier := fmt.Sprintf("org.oplist.%s", url.PathEscape(fullName))
 
 	const identifierSeparator = "@"
 	if strings.Contains(fullName, identifierSeparator) {
@@ -86,7 +86,9 @@ func Plist(c *gin.Context) {
 		identifier = parts[len(parts)-1]
 	}
 
-	name = sanitizeForXML(name)
+	downloadURL = sanitizeForXML(downloadURL)
+	name = html.EscapeString(name)
+	identifier = html.EscapeString(identifier)
 
 	// Generate the plist XML content
 	plist := generatePlistXML(downloadURL, identifier, name)

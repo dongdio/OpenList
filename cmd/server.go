@@ -384,6 +384,8 @@ and S3-compatible APIs as configured in the configuration file.`,
 				}
 			}()
 		}
+		// Wait for cron to stop
+		<-global.CronConfig.Stop().Done()
 
 		// Wait for all servers to finish shutting down
 		wg.Wait()

@@ -9,5 +9,6 @@ import (
 	_ "github.com/dongdio/OpenList/v4/internal/offline_download/qbit"
 	_ "github.com/dongdio/OpenList/v4/internal/offline_download/thunder"
 	_ "github.com/dongdio/OpenList/v4/internal/offline_download/thunder_browser"
+	_ "github.com/dongdio/OpenList/v4/internal/offline_download/thunderx"
 	_ "github.com/dongdio/OpenList/v4/internal/offline_download/transmission"
 )

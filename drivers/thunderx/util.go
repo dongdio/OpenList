@@ -22,6 +22,7 @@ const (
 	API_URL        = "https://api-pan.xunleix.com/drive/v1"
 	FILE_API_URL   = API_URL + "/files"
 	XLUSER_API_URL = "https://xluser-ssl.xunleix.com/v1"
+	TASKS_API_URL  = API_URL + "/tasks"
 )
 
 var Algorithms = []string{

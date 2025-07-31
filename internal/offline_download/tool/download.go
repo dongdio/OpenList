@@ -97,6 +97,9 @@ outer:
 	if t.tool.Name() == "ThunderBrowser" {
 		return nil
 	}
+	if t.tool.Name() == "ThunderX" {
+		return nil
+	}
 	if t.tool.Name() == "115 Cloud" {
 		// hack for 115
 		<-time.After(time.Second * 1)
@@ -176,6 +179,7 @@ var names = []string{
 	"PikPak",
 	"Thunder",
 	"ThunderBrowser",
+	"ThunderX",
 }
 
 func (t *DownloadTask) Transfer() error {

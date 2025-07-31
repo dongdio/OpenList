@@ -10,12 +10,14 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/robfig/cron/v3"
 	log "github.com/sirupsen/logrus"
+	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
+	"github.com/dongdio/OpenList/v4/global"
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
-	"github.com/dongdio/OpenList/v4/utility/cron"
 	"github.com/dongdio/OpenList/v4/utility/errs"
 	streamPkg "github.com/dongdio/OpenList/v4/utility/stream"
 	"github.com/dongdio/OpenList/v4/utility/utils"
@@ -28,10 +30,10 @@ import (
 type Yun139 struct {
 	model.Storage
 	Addition
-	cron              *cron.Cron // 定时器，用于定时刷新 token
-	Account           string     // 账号，存储用户账号信息
-	ref               *Yun139    // 引用存储，用于多实例共享 token
-	PersonalCloudHost string     // 个人云主机地址，从路由策略中获取
+	cronEntryId       cron.EntryID // 定时器，用于定时刷新 token
+	Account           string       // 账号，存储用户账号信息
+	ref               *Yun139      // 引用存储，用于多实例共享 token
+	PersonalCloudHost string       // 个人云主机地址，从路由策略中获取
 }
 
 // Config 返回驱动的元配置信息
@@ -84,8 +86,7 @@ func (d *Yun139) Init(ctx context.Context) error {
 			return errors.Errorf("PersonalCloudHost is empty")
 		}
 
-		d.cron = cron.NewCron(time.Hour * 12)
-		d.cron.Do(func() {
+		d.cronEntryId, err = global.CronConfig.AddFunc("0 */12 * * *", func() {
 			err := d.refreshToken()
 			if err != nil {
 				log.Errorf("%+v", err)
@@ -130,8 +131,9 @@ func (d *Yun139) InitReference(storage driver.Driver) error {
 // 参数 ctx: 上下文，用于控制清理过程
 // 返回值: 清理成功返回 nil，否则返回错误
 func (d *Yun139) Drop(ctx context.Context) error {
-	if d.cron != nil {
-		d.cron.Stop()
+	if d.cronEntryId > 0 {
+		global.CronConfig.Remove(d.cronEntryId)
+		d.cronEntryId = 0
 	}
 	d.ref = nil
 	return nil
@@ -863,6 +865,7 @@ func (d *Yun139) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 			part = 1
 		}
 		rateLimited := driver.NewLimitedUploadStream(ctx, stream)
+		var response *resty.Response
 		for i := int64(0); i < part; i++ {
 			if utils.IsCanceled(ctx) {
 				return ctx.Err()
@@ -876,7 +879,7 @@ func (d *Yun139) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 			r := io.TeeReader(limitReader, p)
 
 			var result InterLayerUploadResult
-			resp, err := base.RestyClient.R().
+			response, err = base.RestyClient.R().
 				WithContext(ctx).
 				SetBody(r).
 				SetHeader("Content-Type", "text/plain;name="+unicode(stream.GetName())).
@@ -890,48 +893,14 @@ func (d *Yun139) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 			if err != nil {
 				return err
 			}
-			if resp.StatusCode() != http.StatusOK {
-				return errors.Errorf("unexpected status code: %d", resp.StatusCode())
+			if response.StatusCode() != http.StatusOK {
+				return errors.Errorf("unexpected status code: %d", response.StatusCode())
 			}
 			if result.ResultCode != 0 {
 				return errors.Errorf("upload failed with result code: %d, message: %s", result.ResultCode, result.Msg)
 			} else {
 				log.Debugf("[139] uploaded: %+v", result)
 			}
-
-			// req, err := http.NewRequest("POST", resp.Data.UploadResult.RedirectionURL, r)
-			// if err != nil {
-			// 	return err
-			// }
-
-			// req = req.WithContext(ctx)
-			// req.Header.Set("Content-Type", "text/plain;name="+unicode(stream.GetName()))
-			// req.Header.Set("contentSize", strconv.FormatInt(size, 10))
-			// req.Header.Set("range", fmt.Sprintf("bytes=%d-%d", start, start+byteSize-1))
-			// req.Header.Set("uploadtaskID", resp.Data.UploadResult.UploadTaskID)
-			// req.Header.Set("rangeType", "0")
-			// req.ContentLength = byteSize
-
-			// res, err := base.HttpClient.Do(req)
-			// if err != nil {
-			// 	return err
-			// }
-			// if res.StatusCode != http.StatusOK {
-			// 	res.Body.Close()
-			// 	return errors.Errorf("unexpected status code: %d", res.StatusCode)
-			// }
-			// bodyBytes, err := io.ReadAll(res.Body)
-			// if err != nil {
-			// 	return errors.Errorf("error reading response body: %v", err)
-			// }
-			// var result InterLayerUploadResult
-			// err = xml.Unmarshal(bodyBytes, &result)
-			// if err != nil {
-			// 	return errors.Errorf("error parsing XML: %v", err)
-			// }
-			// if result.ResultCode != 0 {
-			// 	return errors.Errorf("upload failed with result code: %d, message: %s", result.ResultCode, result.Msg)
-			// }
 		}
 		return nil
 	default:

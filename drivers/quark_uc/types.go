@@ -157,7 +157,7 @@ type TranscodingResp struct {
 					Codec    string  `json:"codec"`
 					Channels int     `json:"channels"`
 				} `json:"audio"`
-				UpdateTime int    `json:"update_time"`
+				UpdateTime int64  `json:"update_time"`
 				URL        string `json:"url"`
 				Resolution string `json:"resolution"`
 				HlsType    string `json:"hls_type"`

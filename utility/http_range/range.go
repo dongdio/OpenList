@@ -63,39 +63,39 @@ func ParseRange(s string, size int64) ([]Range, error) { // nolint:gocognit
 			if end == "" || end[0] == '-' {
 				return nil, ErrInvalid
 			}
-			i, err := strconv.ParseInt(end, 10, 64)
-			if i < 0 || err != nil {
+			j, err := strconv.ParseInt(end, 10, 64)
+			if j < 0 || err != nil {
 				return nil, ErrInvalid
 			}
-			if i > size {
-				i = size
+			if j > size {
+				j = size
 			}
-			r.Start = size - i
+			r.Start = size - j
 			r.Length = size - r.Start
 		} else {
-			i, err := strconv.ParseInt(start, 10, 64)
-			if err != nil || i < 0 {
+			j, err := strconv.ParseInt(start, 10, 64)
+			if err != nil || j < 0 {
 				return nil, ErrInvalid
 			}
-			if i >= size {
+			if j >= size {
 				// If the range begins after the size of the content,
 				// then it does not overlap.
 				noOverlap = true
 				continue
 			}
-			r.Start = i
+			r.Start = j
 			if end == "" {
 				// If no end is specified, range extends to end of the file.
 				r.Length = size - r.Start
 			} else {
-				i, err := strconv.ParseInt(end, 10, 64)
-				if err != nil || r.Start > i {
+				j, err = strconv.ParseInt(end, 10, 64)
+				if err != nil || r.Start > j {
 					return nil, ErrInvalid
 				}
-				if i >= size {
-					i = size - 1
+				if j >= size {
+					j = size - 1
 				}
-				r.Length = i - r.Start + 1
+				r.Length = j - r.Start + 1
 			}
 		}
 		ranges = append(ranges, r)

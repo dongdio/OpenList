@@ -5,18 +5,19 @@ import (
 	"strings"
 	"time"
 
+	"github.com/robfig/cron/v3"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/dongdio/OpenList/v4/global"
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
-	"github.com/dongdio/OpenList/v4/utility/cron"
 	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 type OnedriveSharelink struct {
 	model.Storage
-	cron *cron.Cron
+	cronEntryId cron.EntryID
 	Addition
 }
 
@@ -36,14 +37,16 @@ func (d *OnedriveSharelink) Init(ctx context.Context) error {
 	d.IsSharepoint = !strings.Contains(d.ShareLinkURL, "-my")
 
 	// Initialize cron job to run every hour
-	d.cron = cron.NewCron(time.Hour * 1)
-	d.cron.Do(func() {
+	d.cronEntryId, err = global.CronConfig.AddFunc("0 */1 * * *", func() {
 		var err error
 		d.Headers, err = d.getHeaders()
 		if err != nil {
 			log.Errorf("%+v", err)
 		}
 	})
+	if err != nil {
+		log.Errorf("onedrive sharelink 设置定时任务失败: %+v\n", err)
+	}
 
 	// Get initial headers
 	d.Headers, err = d.getHeaders()
@@ -55,6 +58,10 @@ func (d *OnedriveSharelink) Init(ctx context.Context) error {
 }
 
 func (d *OnedriveSharelink) Drop(ctx context.Context) error {
+	if d.cronEntryId > 0 {
+		global.CronConfig.Remove(d.cronEntryId)
+		d.cronEntryId = 0
+	}
 	return nil
 }
 

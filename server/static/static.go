@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"net/http"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -50,13 +51,20 @@ func replaceStrings(content string, replacements map[string]string) string {
 	return content
 }
 
+var versions = []string{
+	"",
+	"beta",
+	"dev",
+	"rolling",
+}
+
 // initIndexHTML 初始化索引HTML文件
 // 读取index.html并进行基本替换
 func initIndexHTML(siteConfig SiteConfig) {
 	utils.Log.Debug("Initializing index.html...")
 	// dist_dir is empty and cdn is not empty add web_version is empty or beta or dev
-	if conf.Conf.DistDir == "" && conf.Conf.Cdn != "" && (conf.WebVersion == "" || conf.WebVersion == "beta" || conf.WebVersion == "dev") {
-		utils.Log.Infof("Fetching index.html from CDN: %s/index.html...", conf.Conf.Cdn)
+	if conf.Conf.DistDir == "" && conf.Conf.Cdn != "" && slices.Contains(versions, conf.WebVersion) {
+		utils.Log.Infof("Fetching index.html from CDN: %s/index.html...", siteConfig.Cdn)
 		resp, err := base.RestyClient.R().
 			SetHeader("Accept", "text/html").
 			Get(fmt.Sprintf("%s/index.html", siteConfig.Cdn))

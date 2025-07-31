@@ -10,7 +10,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/dongdio/OpenList/v4/consts"
-	"github.com/dongdio/OpenList/v4/internal/conf"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
 	"github.com/dongdio/OpenList/v4/internal/task_group"

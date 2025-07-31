@@ -18,7 +18,7 @@ import (
 
 // createSession 创建设备会话
 func (d *AliDrive) createSession() error {
-	state, ok := global.Load(d.UserID)
+	state, ok := userStates.Load(d.UserID)
 	if !ok {
 		return errors.Errorf("无法加载用户状态，用户ID: %s", d.UserID)
 	}
@@ -57,7 +57,7 @@ func (d *AliDrive) createSession() error {
 
 // sign 生成签名
 func (d *AliDrive) sign() {
-	state, _ := global.Load(d.UserID)
+	state, _ := userStates.Load(d.UserID)
 	secpAppID := "5dde4e1bdf9e4966b387ba58f4b3fdc3"
 	signData := fmt.Sprintf("%s:%s:%s:%d", secpAppID, state.deviceID, d.UserID, 0)
 	hash := sha256.Sum256([]byte(signData))
@@ -101,7 +101,7 @@ func (d *AliDrive) refreshToken() error {
 // request 发送API请求
 func (d *AliDrive) request(url, method string, callback base.ReqCallback, resp any) ([]byte, error, RespErr) {
 	req := base.RestyClient.R()
-	state, ok := global.Load(d.UserID)
+	state, ok := userStates.Load(d.UserID)
 
 	if !ok {
 		if url == "https://api.alipan.com/v2/user/get" {

@@ -13,12 +13,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/pkg/errors"
+	"github.com/robfig/cron/v3"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/dongdio/OpenList/v4/global"
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/server/common"
-	"github.com/dongdio/OpenList/v4/utility/cron"
 	"github.com/dongdio/OpenList/v4/utility/stream"
 )
 
@@ -29,8 +30,8 @@ type S3 struct {
 	client     *s3.S3
 	linkClient *s3.S3
 
-	config driver.Config
-	cron   *cron.Cron
+	config      driver.Config
+	cronEntryId cron.EntryID
 }
 
 func (d *S3) Config() driver.Config {
@@ -46,9 +47,9 @@ func (d *S3) Init(ctx context.Context) error {
 		d.Region = "openlist"
 	}
 	if d.config.Name == "Doge" {
-		// 多吉云每次临时生成的秘钥有效期为 2h，所以这里设置为 118 分钟重新生成一次
-		d.cron = cron.NewCron(time.Minute * 118)
-		d.cron.Do(func() {
+		var e error
+		// 多吉云每次临时生成的秘钥有效期为 2h
+		d.cronEntryId, e = global.CronConfig.AddFunc("0 */2 * * *", func() {
 			err := d.initSession()
 			if err != nil {
 				log.Errorln("Doge init session error:", err)
@@ -56,6 +57,9 @@ func (d *S3) Init(ctx context.Context) error {
 			d.client = d.getClient(false)
 			d.linkClient = d.getClient(true)
 		})
+		if e != nil {
+			log.Errorln("add cron func to flush Doge session error:", e)
+		}
 	}
 	err := d.initSession()
 	if err != nil {
@@ -67,8 +71,9 @@ func (d *S3) Init(ctx context.Context) error {
 }
 
 func (d *S3) Drop(ctx context.Context) error {
-	if d.cron != nil {
-		d.cron.Stop()
+	if d.cronEntryId > 0 {
+		global.CronConfig.Remove(d.cronEntryId)
+		d.cronEntryId = 0
 	}
 	return nil
 }

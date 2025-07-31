@@ -29,6 +29,7 @@ func (t *TaskExtension) SetCtx(ctx context.Context) {
 	}
 	t.Base.SetCtx(ctx)
 }
+
 func (t *TaskExtension) SetCreator(creator *model.User) {
 	t.Creator = creator
 	t.Persist()

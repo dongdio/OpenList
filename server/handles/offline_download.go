@@ -9,6 +9,7 @@ import (
 	"github.com/dongdio/OpenList/v4/drivers/pikpak"
 	"github.com/dongdio/OpenList/v4/drivers/thunder"
 	"github.com/dongdio/OpenList/v4/drivers/thunder_browser"
+	"github.com/dongdio/OpenList/v4/drivers/thunderx"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/offline_download/tool"
 	"github.com/dongdio/OpenList/v4/internal/op"
@@ -287,6 +288,50 @@ func SetPikPak(c *gin.Context) {
 		return
 	}
 
+	common.SuccessResp(c, "ok")
+}
+
+type SetThunderXReq struct {
+	TempDir string `json:"temp_dir" form:"temp_dir"`
+}
+
+func SetThunderX(c *gin.Context) {
+	var req SetThunderXReq
+	if err := c.ShouldBind(&req); err != nil {
+		common.ErrorResp(c, err, 400)
+		return
+	}
+	if req.TempDir != "" {
+		storage, _, err := op.GetStorageAndActualPath(req.TempDir)
+		if err != nil {
+			common.ErrorStrResp(c, "storage does not exists", 400)
+			return
+		}
+		if storage.Config().CheckStatus && storage.GetStorage().Status != op.WORK {
+			common.ErrorStrResp(c, "storage not init: "+storage.GetStorage().Status, 400)
+			return
+		}
+		if _, ok := storage.(*thunderx.ThunderX); !ok {
+			common.ErrorStrResp(c, "unsupported storage driver for offline download, only ThunderX is supported", 400)
+			return
+		}
+	}
+	items := []model.SettingItem{
+		{Key: consts.ThunderXTempDir, Value: req.TempDir, Type: consts.TypeString, Group: model.OFFLINE_DOWNLOAD, Flag: model.PRIVATE},
+	}
+	if err := op.SaveSettingItems(items); err != nil {
+		common.ErrorResp(c, err, 500)
+		return
+	}
+	_tool, err := tool.Tools.Get("ThunderX")
+	if err != nil {
+		common.ErrorResp(c, err, 500)
+		return
+	}
+	if _, err = _tool.Init(); err != nil {
+		common.ErrorResp(c, err, 500)
+		return
+	}
 	common.SuccessResp(c, "ok")
 }
 

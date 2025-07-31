@@ -3,17 +3,17 @@ package aliyundrive_share
 import (
 	"context"
 	"net/http"
-	"time"
 
 	"github.com/OpenListTeam/rateg"
 	"github.com/pkg/errors"
+	"github.com/robfig/cron/v3"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
+	"github.com/dongdio/OpenList/v4/global"
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
-	"github.com/dongdio/OpenList/v4/utility/cron"
 	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
@@ -24,7 +24,7 @@ type AliyundriveShare struct {
 	AccessToken string
 	ShareToken  string
 	DriveId     string
-	cron        *cron.Cron
+	cronEntryId cron.EntryID
 
 	limitList func(ctx context.Context, dir model.Obj) ([]model.Obj, error)
 	limitLink func(ctx context.Context, file model.Obj) (*model.Link, error)
@@ -47,13 +47,15 @@ func (d *AliyundriveShare) Init(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	d.cron = cron.NewCron(time.Hour * 2)
-	d.cron.Do(func() {
+	d.cronEntryId, err = global.CronConfig.AddFunc("0 */2 * * *", func() {
 		err := d.refreshToken()
 		if err != nil {
 			log.Errorf("%+v", err)
 		}
 	})
+	if err != nil {
+		log.Errorf("aliyun drive share 设置定时任务失败: %+v\n", err)
+	}
 	d.limitList = rateg.LimitFnCtx(d.list, rateg.LimitFnOption{
 		Limit:  4,
 		Bucket: 1,
@@ -66,8 +68,9 @@ func (d *AliyundriveShare) Init(ctx context.Context) error {
 }
 
 func (d *AliyundriveShare) Drop(ctx context.Context) error {
-	if d.cron != nil {
-		d.cron.Stop()
+	if d.cronEntryId > 0 {
+		global.CronConfig.Remove(d.cronEntryId)
+		d.cronEntryId = 0
 	}
 	d.DriveId = ""
 	return nil
@@ -139,10 +142,7 @@ func (d *AliyundriveShare) Other(ctx context.Context, args model.OtherArgs) (any
 	_, err := d.request(url, http.MethodPost, func(req *resty.Request) {
 		req.SetBody(data).SetResult(&resp)
 	})
-	if err != nil {
-		return nil, err
-	}
-	return resp, nil
+	return resp, errors.Wrap(err, "处理其他操作失败")
 }
 
 var _ driver.Driver = (*AliyundriveShare)(nil)

@@ -1,7 +1,9 @@
 package initialize
 
 import (
+	"fmt"
 	"os"
+	"time"
 
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -40,6 +42,7 @@ func initUser() {
 				panic(err)
 			} else {
 				utils.Log.Infof("Successfully created the admin user and the initial password is: %s", adminPassword)
+				fmt.Printf("\033[36mINFO\033[39m[%s] Successfully created the admin user and the initial password is: %s\n", time.Now().Format("2006-01-02 15:04:05"), adminPassword)
 			}
 		} else {
 			utils.Log.Fatalf("[init user] Failed to get admin user: %v", err)

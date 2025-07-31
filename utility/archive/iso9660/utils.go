@@ -31,15 +31,19 @@ func getObj(img *iso9660.Image, path string) (*iso9660.File, error) {
 		return obj, nil
 	}
 	paths := strings.SplitSeq(strings.TrimPrefix(path, "/"), "/")
+	var (
+		exist    bool
+		children []*iso9660.File
+	)
 	for p := range paths {
 		if !obj.IsDir() {
 			return nil, errs.ObjectNotFound
 		}
-		children, err := obj.GetChildren()
+		children, err = obj.GetChildren()
 		if err != nil {
 			return nil, err
 		}
-		exist := false
+		exist = false
 		for _, child := range children {
 			if child.Name() == p {
 				obj = child
@@ -81,22 +85,24 @@ func decompress(f *iso9660.File, path string, up model.UpdateProgress) error {
 
 func decompressAll(children []*iso9660.File, path string) error {
 	for _, child := range children {
-		if child.IsDir() {
-			nextChildren, err := child.GetChildren()
-			if err != nil {
-				return err
-			}
-			nextPath := stdpath.Join(path, child.Name())
-			if err = os.MkdirAll(nextPath, 0700); err != nil {
-				return err
-			}
-			if err = decompressAll(nextChildren, nextPath); err != nil {
-				return err
-			}
-		} else {
+		if !child.IsDir() {
+			// 文件处理逻辑
 			if err := decompress(child, path, func(_ float64) {}); err != nil {
 				return err
 			}
+			continue
+		}
+		// 以下是文件夹处理逻辑
+		nextChildren, err := child.GetChildren()
+		if err != nil {
+			return err
+		}
+		nextPath := stdpath.Join(path, child.Name())
+		if err = os.MkdirAll(nextPath, 0700); err != nil {
+			return err
+		}
+		if err = decompressAll(nextChildren, nextPath); err != nil {
+			return err
 		}
 	}
 	return nil

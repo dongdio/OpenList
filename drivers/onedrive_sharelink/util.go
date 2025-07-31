@@ -2,7 +2,6 @@ package onedrive_sharelink
 
 import (
 	"crypto/tls"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -17,6 +16,7 @@ import (
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/conf"
+	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 // NewNoRedirectClient creates an HTTP client that doesn't follow redirects
@@ -308,7 +308,7 @@ func (d *OnedriveSharelink) getFiles(path string) ([]Item, error) {
 	}
 	defer resp.Body.Close()
 	var graphqlReq GraphQLRequest
-	json.NewDecoder(resp.Body).Decode(&graphqlReq)
+	utils.JSONTool.NewDecoder(resp.Body).Decode(&graphqlReq)
 	log.Debugln("graphqlReq:", graphqlReq)
 	filesData := graphqlReq.Data.Legacy.RenderListDataAsStream.ListData.Row
 	if graphqlReq.Data.Legacy.RenderListDataAsStream.ListData.NextHref != "" {
@@ -328,7 +328,7 @@ func (d *OnedriveSharelink) getFiles(path string) ([]Item, error) {
 		req, _ = http.NewRequest("POST", postUrl, strings.NewReader(renderListDataAsStreamVar))
 		req.Header = tempHeader
 
-		resp, err := client.Do(req)
+		resp, err = client.Do(req)
 		if err != nil {
 			d.Headers, err = d.getHeaders()
 			if err != nil {
@@ -337,7 +337,7 @@ func (d *OnedriveSharelink) getFiles(path string) ([]Item, error) {
 			return d.getFiles(path)
 		}
 		defer resp.Body.Close()
-		json.NewDecoder(resp.Body).Decode(&graphqlReqNEW)
+		utils.JSONTool.NewDecoder(resp.Body).Decode(&graphqlReqNEW)
 		for graphqlReqNEW.ListData.NextHref != "" {
 			graphqlReqNEW = GraphQLNEWRequest{}
 			postUrl = strings.Join(redirectSplitURL[:len(redirectSplitURL)-3], "/") + "/_api/web/GetListUsingPath(DecodedUrl=@a1)/RenderListDataAsStream" + nextHref
@@ -352,7 +352,7 @@ func (d *OnedriveSharelink) getFiles(path string) ([]Item, error) {
 				return d.getFiles(path)
 			}
 			defer resp.Body.Close()
-			json.NewDecoder(resp.Body).Decode(&graphqlReqNEW)
+			utils.JSONTool.NewDecoder(resp.Body).Decode(&graphqlReqNEW)
 			nextHref = graphqlReqNEW.ListData.NextHref + "&@a1=REPLACEME&TryNewExperienceSingle=TRUE"
 			nextHref = strings.Replace(nextHref, "REPLACEME", "%27"+relativeUrl+"%27", -1)
 			filesData = append(filesData, graphqlReqNEW.ListData.Row...)

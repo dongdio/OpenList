@@ -211,11 +211,11 @@ func (x *ThunderExpert) Init(ctx context.Context) (err error) {
 
 			// 刷新token方法
 			x.SetRefreshTokenFunc(func() error {
-				token, err := x.XunLeiCommon.RefreshToken(x.TokenResp.RefreshToken)
+				tokenTmp, err := x.XunLeiCommon.RefreshToken(x.TokenResp.RefreshToken)
 				if err != nil {
 					x.GetStorage().SetStatus(fmt.Sprintf("%+v", err.Error()))
 				}
-				x.SetTokenResp(token)
+				x.SetTokenResp(tokenTmp)
 				op.MustSaveDriverStorage(x)
 				return err
 			})
@@ -229,16 +229,16 @@ func (x *ThunderExpert) Init(ctx context.Context) (err error) {
 			x.ExpertAddition.CreditKey = ""
 			x.SetTokenResp(token)
 			x.SetRefreshTokenFunc(func() error {
-				token, err := x.XunLeiCommon.RefreshToken(x.TokenResp.RefreshToken)
+				tokenTmp, err := x.XunLeiCommon.RefreshToken(x.TokenResp.RefreshToken)
 				if err != nil {
-					token, err = x.Login(x.Username, x.Password)
+					tokenTmp, err = x.Login(x.Username, x.Password)
 					if err != nil {
 						x.GetStorage().SetStatus(fmt.Sprintf("%+v", err.Error()))
 					}
 					// 清空 信任密钥
 					x.ExpertAddition.CreditKey = ""
 				}
-				x.SetTokenResp(token)
+				x.SetTokenResp(tokenTmp)
 				op.MustSaveDriverStorage(x)
 				return err
 			})
@@ -428,10 +428,11 @@ func (xc *XunLeiCommon) Put(ctx context.Context, dstDir model.Obj, file model.Fi
 
 func (xc *XunLeiCommon) getFiles(ctx context.Context, folderId string) ([]model.Obj, error) {
 	files := make([]model.Obj, 0)
+	var err error
 	var pageToken string
 	for {
 		var fileList FileList
-		_, err := xc.Request(FILE_API_URL, http.MethodGet, func(r *resty.Request) {
+		_, err = xc.Request(FILE_API_URL, http.MethodGet, func(r *resty.Request) {
 			r.SetContext(ctx)
 			r.SetQueryParams(map[string]string{
 				"space":      "",
@@ -610,7 +611,7 @@ func (xc *XunLeiCommon) OfflineList(ctx context.Context, nextPageToken string) (
 	}, &resp)
 
 	if err != nil {
-		return nil, errors.Errorf("failed to get offline list: %w", err)
+		return nil, errors.Wrap(err, "failed to get offline list")
 	}
 	res = append(res, resp.Tasks...)
 	return res, nil
@@ -625,7 +626,7 @@ func (xc *XunLeiCommon) DeleteOfflineTasks(ctx context.Context, taskIDs []string
 			})
 	}, nil)
 	if err != nil {
-		return errors.Errorf("failed to delete tasks %v: %w", taskIDs, err)
+		return errors.Wrapf(err, "failed to delete tasks %v", taskIDs)
 	}
 	return nil
 }

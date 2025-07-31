@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/pkg/errors"
+
+	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 type BaseResp struct {
@@ -129,7 +131,7 @@ type BuiAuditInfo struct {
 	AuditInfo      AuditInfo `json:"audit_info"`
 	IsAuditing     bool      `json:"is_auditing"`
 	AuditStatus    int       `json:"audit_status"`
-	LastUpdateTime int       `json:"last_update_time"`
+	LastUpdateTime int64     `json:"last_update_time"`
 	UnpassReason   string    `json:"unpass_reason"`
 	Details        Details   `json:"details"`
 }
@@ -184,7 +186,7 @@ type UserInfo struct {
 	SecUserID             string                `json:"sec_user_id"`
 	SessionKey            string                `json:"session_key"`
 	UseHmRegion           bool                  `json:"use_hm_region"`
-	UserCreateTime        int                   `json:"user_create_time"`
+	UserCreateTime        int64                 `json:"user_create_time"`
 	UserID                int64                 `json:"user_id"`
 	UserIDStr             string                `json:"user_id_str"`
 	UserVerified          bool                  `json:"user_verified"`
@@ -411,5 +413,5 @@ func (r *CommonResp) UnmarshalData(v any) error {
 		return nil
 	}
 
-	return json.Unmarshal(r.Data, v)
+	return utils.JSONTool.Unmarshal(r.Data, v)
 }

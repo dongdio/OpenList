@@ -1,6 +1,7 @@
 package gowebdav
 
 import (
+	"errors"
 	"fmt"
 	"os"
 )
@@ -19,8 +20,10 @@ func (se StatusError) Error() string {
 // is an os.PathError wrapping a StatusError
 // with the given status code.
 func IsErrCode(err error, code int) bool {
-	if pe, ok := err.(*os.PathError); ok {
-		se, ok := pe.Err.(StatusError)
+	var pe *os.PathError
+	if errors.As(err, &pe) {
+		var se StatusError
+		ok := errors.As(pe.Err, &se)
 		return ok && se.Status == code
 	}
 	return false

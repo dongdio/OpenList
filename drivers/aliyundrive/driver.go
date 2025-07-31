@@ -11,17 +11,17 @@ import (
 	"math/big"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/pkg/errors"
+	"github.com/robfig/cron/v3"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
+	"github.com/dongdio/OpenList/v4/global"
 	"github.com/dongdio/OpenList/v4/internal/conf"
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
-	"github.com/dongdio/OpenList/v4/utility/cron"
 	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/stream"
 	"github.com/dongdio/OpenList/v4/utility/utils"
@@ -32,7 +32,7 @@ type AliDrive struct {
 	model.Storage
 	Addition
 	AccessToken string
-	cron        *cron.Cron
+	cronEntryId cron.EntryID
 	DriveID     string
 	UserID      string
 }
@@ -64,15 +64,17 @@ func (d *AliDrive) Init(ctx context.Context) error {
 	d.UserID = utils.GetBytes(res, "user_id").String()
 
 	// 设置定时刷新令牌
-	d.cron = cron.NewCron(time.Hour * 2)
-	d.cron.Do(func() {
+	d.cronEntryId, err = global.CronConfig.AddFunc("0 */2 * * *", func() {
 		err := d.refreshToken()
 		if err != nil {
 			log.Errorf("刷新令牌失败: %+v", err)
 		}
 	})
+	if err != nil {
+		log.Errorf("aliyun drive 设置定时任务失败: %+v\n", err)
+	}
 
-	if global.Has(d.UserID) {
+	if userStates.Has(d.UserID) {
 		return nil
 	}
 
@@ -85,7 +87,7 @@ func (d *AliDrive) Init(ctx context.Context) error {
 		deviceID:   deviceID,
 	}
 	// 存储状态
-	global.Store(d.UserID, &state)
+	userStates.Store(d.UserID, &state)
 	// 初始化签名
 	d.sign()
 	return nil
@@ -93,8 +95,9 @@ func (d *AliDrive) Init(ctx context.Context) error {
 
 // Drop 释放驱动资源
 func (d *AliDrive) Drop(ctx context.Context) error {
-	if d.cron != nil {
-		d.cron.Stop()
+	if d.cronEntryId > 0 {
+		global.CronConfig.Remove(d.cronEntryId)
+		d.cronEntryId = 0
 	}
 	return nil
 }

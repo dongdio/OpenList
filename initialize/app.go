@@ -21,6 +21,7 @@ func InitApp(server ...bool) {
 	initUpgradePatch()
 
 	if len(server) > 0 && server[0] {
+		initCron()
 		// 只有server启动时加载
 		initOfflineDownloadTools()
 		initLoadStorages()

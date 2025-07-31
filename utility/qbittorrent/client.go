@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 
@@ -49,10 +51,20 @@ func New(link string) (Client, error) {
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to create cookie jar")
 	}
+	transport := &http.Transport{
+		MaxIdleConns:        10,
+		MaxIdleConnsPerHost: 2,
+		IdleConnTimeout:     30 * time.Second,
+		DisableKeepAlives:   false, // Enable connection reuse
+	}
 
 	var c = &client{
-		url:    u,
-		client: http.Client{Jar: jar},
+		url: u,
+		client: http.Client{
+			Jar:       jar,
+			Transport: transport,
+			Timeout:   30 * time.Second, // Set overall timeout
+		},
 	}
 
 	err = c.checkAuthorization()
@@ -82,12 +94,11 @@ func (c *client) checkAuthorization() error {
 
 // authorized 判断当前客户端是否有权限访问qBittorrent
 func (c *client) authorized() bool {
-	resp, err := c.post("/api/v2/app/version", nil)
+	code, _, err := c.post("/api/v2/app/version", false, nil)
 	if err != nil {
 		return false
 	}
-	defer resp.Body.Close()
-	return resp.StatusCode == 200 // 状态码为403表示未授权
+	return code == 200 // 状态码为403表示未授权
 }
 
 // login 使用URL中的用户名和密码登录qBittorrent WebUI
@@ -95,27 +106,23 @@ func (c *client) login() error {
 	// 准备HTTP请求
 	v := url.Values{}
 	v.Set("username", c.url.User.Username())
+
 	passwd, _ := c.url.User.Password()
 	v.Set("password", passwd)
-	resp, err := c.post("/api/v2/auth/login", v)
+
+	_, body, err := c.post("/api/v2/auth/login", true, v)
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
-
 	// 检查结果
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return errors.Wrapf(err, "failed to read response")
-	}
-	if string(body) != "Ok" {
+	if !strings.EqualFold(string(body), "ok") {
 		return errors.Errorf("failed to login qBittorrent WebUI, URL: %s", c.url.String())
 	}
 	return nil
 }
 
 // post 发送POST请求到qBittorrent WebUI
-func (c *client) post(path string, data url.Values) (*http.Response, error) {
+func (c *client) post(path string, body bool, data url.Values) (int, []byte, error) {
 	u := c.url.JoinPath(path)
 	u.User = nil // 移除请求中的用户信息
 
@@ -126,7 +133,7 @@ func (c *client) post(path string, data url.Values) (*http.Response, error) {
 
 	req, err := http.NewRequest("POST", u.String(), reqBody)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to create request")
+		return 0, nil, errors.Wrapf(err, "failed to create request")
 	}
 	if data != nil {
 		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
@@ -134,13 +141,21 @@ func (c *client) post(path string, data url.Values) (*http.Response, error) {
 
 	resp, err := c.client.Do(req)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to send request")
+		return 0, nil, errors.Wrapf(err, "failed to send request")
 	}
-
+	defer resp.Body.Close()
 	if resp.Cookies() != nil {
 		c.client.Jar.SetCookies(u, resp.Cookies())
 	}
-	return resp, nil
+	var respBody []byte
+	if body {
+		// 检查结果
+		respBody, err = io.ReadAll(resp.Body)
+		if err != nil {
+			return 0, nil, errors.Wrapf(err, "failed to read response")
+		}
+	}
+	return resp.StatusCode, respBody, nil
 }
 
 // AddFromLink 通过链接添加种子任务
@@ -187,7 +202,7 @@ func (c *client) AddFromLink(link string, savePath string, id string) error {
 	if err != nil {
 		return errors.Wrapf(err, "failed to send request")
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// 检查结果
 	body, err := io.ReadAll(resp.Body)
@@ -304,19 +319,14 @@ func (c *client) GetInfo(id string) (TorrentInfo, error) {
 
 	v := url.Values{}
 	v.Set("tag", "openlist-"+id)
-	response, err := c.post("/api/v2/torrents/info", v)
+	_, body, err := c.post("/api/v2/torrents/info", true, v)
 	if err != nil {
-		return TorrentInfo{}, errors.Wrapf(err, "failed to get torrent info")
+		return TorrentInfo{}, errors.Wrap(err, "failed to get torrent info")
 	}
-	defer response.Body.Close()
 
-	body, err := io.ReadAll(response.Body)
-	if err != nil {
-		return TorrentInfo{}, errors.Wrapf(err, "failed to read response")
-	}
 	err = utils.JSONTool.Unmarshal(body, &infos)
 	if err != nil {
-		return TorrentInfo{}, errors.Wrapf(err, "failed to parse JSON")
+		return TorrentInfo{}, errors.Wrap(err, "failed to parse JSON")
 	}
 	if len(infos) != 1 {
 		return TorrentInfo{}, NewInfoNotFoundError(id)
@@ -352,21 +362,13 @@ func (c *client) GetFiles(id string) ([]FileInfo, error) {
 
 	v := url.Values{}
 	v.Set("hash", tInfo.Hash)
-	response, err := c.post("/api/v2/torrents/files", v)
+	_, body, err := c.post("/api/v2/torrents/files", true, v)
 	if err != nil {
-		return []FileInfo{}, errors.Wrapf(err, "failed to get file list")
+		return []FileInfo{}, errors.Wrap(err, "failed to get file list")
 	}
-	defer response.Body.Close()
 
-	body, err := io.ReadAll(response.Body)
-	if err != nil {
-		return []FileInfo{}, errors.Wrapf(err, "failed to read response")
-	}
 	err = utils.JSONTool.Unmarshal(body, &infos)
-	if err != nil {
-		return []FileInfo{}, errors.Wrapf(err, "failed to parse JSON")
-	}
-	return infos, nil
+	return infos, errors.Wrap(err, "failed to parse JSON")
 }
 
 // Delete 删除种子任务
@@ -385,25 +387,21 @@ func (c *client) Delete(id string, deleteFiles bool) error {
 	v.Set("hashes", info.Hash)
 	v.Set("deleteFiles", fmt.Sprintf("%t", deleteFiles))
 
-	response, err := c.post("/api/v2/torrents/delete", v)
+	deleteCode, _, err := c.post("/api/v2/torrents/delete", false, v)
 	if err != nil {
 		return errors.Wrapf(err, "failed to delete torrent")
 	}
-	defer response.Body.Close()
-
-	if response.StatusCode != 200 {
+	if deleteCode != 200 {
 		return errors.New("failed to delete qBittorrent task")
 	}
 
 	v = url.Values{}
 	v.Set("tags", "openlist-"+id)
-	response, err = c.post("/api/v2/torrents/deleteTags", v)
+	deleteTagsCode, _, err := c.post("/api/v2/torrents/deleteTags", false, v)
 	if err != nil {
 		return errors.Wrapf(err, "failed to delete tag")
 	}
-	defer response.Body.Close()
-
-	if response.StatusCode != 200 {
+	if deleteTagsCode != 200 {
 		return errors.New("failed to delete qBittorrent tag")
 	}
 	return nil

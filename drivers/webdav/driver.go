@@ -5,11 +5,13 @@ import (
 	"net/http"
 	"os"
 	"path"
-	"time"
 
+	"github.com/robfig/cron/v3"
+	log "github.com/sirupsen/logrus"
+
+	"github.com/dongdio/OpenList/v4/global"
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
-	"github.com/dongdio/OpenList/v4/utility/cron"
 	"github.com/dongdio/OpenList/v4/utility/gowebdav"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
@@ -17,8 +19,8 @@ import (
 type WebDav struct {
 	model.Storage
 	Addition
-	client *gowebdav.Client
-	cron   *cron.Cron
+	client      *gowebdav.Client
+	cronEntryId cron.EntryID
 }
 
 func (d *WebDav) Config() driver.Config {
@@ -32,17 +34,24 @@ func (d *WebDav) GetAddition() driver.Additional {
 func (d *WebDav) Init(ctx context.Context) error {
 	err := d.setClient()
 	if err == nil {
-		d.cron = cron.NewCron(time.Hour * 12)
-		d.cron.Do(func() {
-			_ = d.setClient()
+		// 每12小时刷新一次
+		d.cronEntryId, err = global.CronConfig.AddFunc("0 */12 * * *", func() {
+			err := d.setClient()
+			if err != nil {
+				log.Errorf("%+v", err)
+			}
 		})
+		if err != nil {
+			log.Errorf("webdav 设置定时任务失败: %+v\n", err)
+		}
 	}
 	return err
 }
 
 func (d *WebDav) Drop(ctx context.Context) error {
-	if d.cron != nil {
-		d.cron.Stop()
+	if d.cronEntryId > 0 {
+		global.CronConfig.Remove(d.cronEntryId)
+		d.cronEntryId = 0
 	}
 	return nil
 }

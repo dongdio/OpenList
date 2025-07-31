@@ -3,6 +3,7 @@ package _123
 import (
 	"context"
 	"encoding/base64"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -77,15 +78,6 @@ func (d *Pan123) List(ctx context.Context, dir model.Obj, args model.ListArgs) (
 func (d *Pan123) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	// 尝试将file转换为File类型
 	if f, ok := file.(File); ok {
-		// 准备请求头
-		var headers map[string]string
-		if !utils.IsLocalIPAddr(args.IP) {
-			headers = map[string]string{
-				// "X-Real-IP":       "1.1.1.1",
-				"X-Forwarded-For": args.IP,
-			}
-		}
-
 		// 准备请求数据
 		data := base.Json{
 			"driveId":   0,
@@ -99,7 +91,7 @@ func (d *Pan123) Link(ctx context.Context, file model.Obj, args model.LinkArgs) 
 
 		// 请求下载信息
 		resp, err := d.Request(DownloadInfo, http.MethodPost, func(req *resty.Request) {
-			req.SetBody(data).SetHeaders(headers)
+			req.SetContext(ctx).SetBody(data)
 		}, nil)
 		if err != nil {
 			return nil, err
@@ -107,25 +99,26 @@ func (d *Pan123) Link(ctx context.Context, file model.Obj, args model.LinkArgs) 
 
 		// 解析下载URL
 		downloadUrl := utils.GetBytes(resp, "data", "DownloadUrl").String()
-		u, err := url.Parse(downloadUrl)
+		ou, err := url.Parse(downloadUrl)
 		if err != nil {
 			return nil, err
 		}
-
+		urlString := ou.String()
 		// 处理可能的base64编码参数
-		nu := u.Query().Get("params")
+		nu := ou.Query().Get("params")
+
 		if nu != "" {
 			du, err := base64.StdEncoding.DecodeString(nu)
 			if err != nil {
 				return nil, err
 			}
-			u, err = url.Parse(string(du))
+			u, err := url.Parse(string(du))
 			if err != nil {
 				return nil, err
 			}
+			urlString = u.String()
 		}
 
-		urlString := u.String()
 		log.Debug("download url: ", urlString)
 
 		// 发送请求获取最终下载链接
@@ -150,7 +143,7 @@ func (d *Pan123) Link(ctx context.Context, file model.Obj, args model.LinkArgs) 
 
 		// 设置请求头
 		link.Header = http.Header{
-			"Referer": []string{"https://www.123pan.com/"},
+			"Referer": []string{fmt.Sprintf("%s://%s/", ou.Scheme, ou.Host)},
 		}
 		return &link, nil
 	} else {
