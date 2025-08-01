@@ -32,7 +32,7 @@ var Cancel2FACmd = &cobra.Command{
 		}
 
 		// Success - log and clear cache
-		utils.Log.Info("Two-factor authentication has been successfully disabled")
+		utils.Log.Info("2FA authentication has been successfully disabled")
 		DelAdminCacheOnline()
 	},
 }

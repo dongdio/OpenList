@@ -7,9 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/meilisearch/meilisearch-go"
-	"github.com/pkg/errors"
 
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/utility/search/searcher"
@@ -17,7 +15,17 @@ import (
 )
 
 type searchDocument struct {
+	// Document id, hash of the file path,
+	// can be used for filtering a file exactly(case-sensitively).
 	ID string `json:"id"`
+	// Hash of parent, can be used for filtering direct children.
+	ParentHash string `json:"parent_hash"`
+	// One-by-one hash of parent paths (path hierarchy).
+	// eg: A file's parent is '/home/a/b',
+	// its parent paths are '/home/a/b', '/home/a', '/home', '/'.
+	// Can be used for filtering all descendants exactly.
+	// Storing path hashes instead of plaintext paths benefits disk usage and case-sensitive filter.
+	ParentPathHashes []string `json:"parent_path_hashes"`
 	model.SearchNode
 }
 
@@ -38,9 +46,19 @@ func (m *Meilisearch) Search(ctx context.Context, req model.SearchReq) ([]model.
 		Page:                 int64(req.Page),
 		HitsPerPage:          int64(req.PerPage),
 	}
+	var filters []string
 	if req.Scope != 0 {
-		mReq.Filter = fmt.Sprintf("is_dir = %v", req.Scope == 1)
+		filters = append(filters, fmt.Sprintf("is_dir = %v", req.Scope == 1))
 	}
+	if req.Parent != "" && req.Parent != "/" {
+		// use parent_path_hashes to filter descendants
+		parentHash := hashPath(req.Parent)
+		filters = append(filters, fmt.Sprintf("parent_path_hashes = '%s'", parentHash))
+	}
+	if len(filters) > 0 {
+		mReq.Filter = strings.Join(filters, " AND ")
+	}
+
 	search, err := m.Client.Index(m.IndexUid).SearchWithContext(ctx, req.Keywords, mReq)
 	if err != nil {
 		return nil, 0, err
@@ -66,18 +84,28 @@ func (m *Meilisearch) Index(ctx context.Context, node model.SearchNode) error {
 
 func (m *Meilisearch) BatchIndex(ctx context.Context, nodes []model.SearchNode) error {
 	documents, _ := utils.SliceConvert(nodes, func(src model.SearchNode) (*searchDocument, error) {
-
+		parentHash := hashPath(src.Parent)
+		nodePath := path.Join(src.Parent, src.Name)
+		nodePathHash := hashPath(nodePath)
+		parentPaths := utils.GetPathHierarchy(src.Parent)
+		parentPathHashes, _ := utils.SliceConvert(parentPaths, func(parentPath string) (string, error) {
+			return hashPath(parentPath), nil
+		})
 		return &searchDocument{
-			ID:         uuid.NewString(),
-			SearchNode: src,
+			ID:               nodePathHash,
+			ParentHash:       parentHash,
+			ParentPathHashes: parentPathHashes,
+			SearchNode:       src,
 		}, nil
 	})
 
-	_, err := m.Client.Index(m.IndexUid).AddDocumentsWithContext(ctx, documents)
+	// max up to 10,000 documents per batch to reduce error rate while uploading over the Internet
+	_, err := m.Client.Index(m.IndexUid).AddDocumentsInBatchesWithContext(ctx, documents, 10000)
 	if err != nil {
 		return err
 	}
 
+	// documents were uploaded and enqueued for indexing, just return early
 	// // Wait for the task to complete and check
 	// forTask, err := m.Client.WaitForTask(task.TaskUID, meilisearch.WaitParams{
 	//	Context:  ctx,
@@ -94,23 +122,20 @@ func (m *Meilisearch) BatchIndex(ctx context.Context, nodes []model.SearchNode) 
 
 func (m *Meilisearch) getDocumentsByParent(ctx context.Context, parent string) ([]*searchDocument, error) {
 	var result meilisearch.DocumentsResult
-	err := m.Client.Index(m.IndexUid).GetDocumentsWithContext(ctx, &meilisearch.DocumentsQuery{
-		Filter: fmt.Sprintf("parent = '%s'", strings.ReplaceAll(parent, "'", "\\'")),
-		Limit:  int64(model.MaxInt),
-	}, &result)
+	query := &meilisearch.DocumentsQuery{
+		Limit: int64(model.MaxInt),
+	}
+	if parent != "" && parent != "/" {
+		// use parent_hash to filter direct children
+		parentHash := hashPath(parent)
+		query.Filter = fmt.Sprintf("parent_hash = '%s'", parentHash)
+	}
+	err := m.Client.Index(m.IndexUid).GetDocumentsWithContext(ctx, query, &result)
 	if err != nil {
 		return nil, err
 	}
 	return utils.SliceConvert(result.Results, func(src map[string]any) (*searchDocument, error) {
-		return &searchDocument{
-			ID: src["id"].(string),
-			SearchNode: model.SearchNode{
-				Parent: src["parent"].(string),
-				Name:   src["name"].(string),
-				IsDir:  src["is_dir"].(bool),
-				Size:   int64(src["size"].(float64)),
-			},
-		}, nil
+		return buildSearchDocumentFromResults(src), nil
 	})
 }
 
@@ -125,88 +150,57 @@ func (m *Meilisearch) Get(ctx context.Context, parent string) ([]model.SearchNod
 
 }
 
-func (m *Meilisearch) getParentsByPrefix(ctx context.Context, parent string) ([]string, error) {
-	select {
-	case <-ctx.Done():
-		return nil, ctx.Err()
-	default:
-		parents := []string{parent}
-		get, err := m.getDocumentsByParent(ctx, parent)
-		if err != nil {
-			return nil, err
+func (m *Meilisearch) getDocumentInPath(ctx context.Context, parent string, name string) (*searchDocument, error) {
+	var result searchDocument
+	// join them and calculate the hash to exactly identify the node
+	nodePath := path.Join(parent, name)
+	nodePathHash := hashPath(nodePath)
+	err := m.Client.Index(m.IndexUid).GetDocumentWithContext(ctx, nodePathHash, nil, &result)
+	if err != nil {
+		// return nil for documents that no exists
+		if err.(*meilisearch.Error).StatusCode == 404 {
+			return nil, nil
 		}
-		for _, node := range get {
-			if node.IsDir {
-				arr, err := m.getParentsByPrefix(ctx, path.Join(node.Parent, node.Name))
-				if err != nil {
-					return nil, err
-				}
-				parents = append(parents, arr...)
-			}
-		}
-		return parents, nil
+		return nil, err
 	}
+	return &result, nil
 }
 
-func (m *Meilisearch) DelDirChild(ctx context.Context, prefix string) error {
-	dfs, err := m.getParentsByPrefix(ctx, utils.FixAndCleanPath(prefix))
-	if err != nil {
-		return err
-	}
-	utils.SliceReplace(dfs, func(src string) string {
-		return "'" + strings.ReplaceAll(src, "'", "\\'") + "'"
-	})
-	s := fmt.Sprintf("parent IN [%s]", strings.Join(dfs, ","))
-	task, err := m.Client.Index(m.IndexUid).DeleteDocumentsByFilterWithContext(ctx, s)
-	if err != nil {
-		return err
-	}
-	taskStatus, err := m.getTaskStatus(ctx, task.TaskUID)
-	if err != nil {
-		return err
-	}
-	if taskStatus != meilisearch.TaskStatusSucceeded {
-		return errors.Errorf("DelDir failed, task status is %s", taskStatus)
-	}
-	return nil
+func (m *Meilisearch) delDirChild(ctx context.Context, prefix string) error {
+	prefix = hashPath(prefix)
+	// use parent_path_hashes to filter descendants,
+	// so no longer need to walk through the directories to get their IDs,
+	// speeding up the deletion process with easy maintained codebase
+	filter := fmt.Sprintf("parent_path_hashes = '%s'", prefix)
+	_, err := m.Client.Index(m.IndexUid).DeleteDocumentsByFilterWithContext(ctx, filter)
+	// task was enqueued (if succeed), no need to wait
+	return err
 }
 
 func (m *Meilisearch) Del(ctx context.Context, prefix string) error {
 	prefix = utils.FixAndCleanPath(prefix)
 	dir, name := path.Split(prefix)
-	get, err := m.getDocumentsByParent(ctx, dir[:len(dir)-1])
+	if dir != "/" {
+		dir = dir[:len(dir)-1]
+	}
+
+	document, err := m.getDocumentInPath(ctx, dir, name)
 	if err != nil {
 		return err
 	}
-	var document *searchDocument
-	for _, v := range get {
-		if v.Name == name {
-			document = v
-			break
-		}
-	}
 	if document == nil {
 		// Defensive programming. Document may be the folder, try deleting Child
-		return m.DelDirChild(ctx, prefix)
+		return m.delDirChild(ctx, prefix)
 	}
 	if document.IsDir {
-		err = m.DelDirChild(ctx, prefix)
+		err = m.delDirChild(ctx, prefix)
 		if err != nil {
 			return err
 		}
 	}
-	task, err := m.Client.Index(m.IndexUid).DeleteDocumentWithContext(ctx, document.ID)
-	if err != nil {
-		return err
-	}
-	taskStatus, err := m.getTaskStatus(ctx, task.TaskUID)
-	if err != nil {
-		return err
-	}
-	if taskStatus != meilisearch.TaskStatusSucceeded {
-		return errors.Errorf("DelDir failed, task status is %s", taskStatus)
-	}
-	return nil
+	_, err = m.Client.Index(m.IndexUid).DeleteDocumentWithContext(ctx, document.ID)
+	// task was enqueued (if succeed), no need to wait
+	return err
 }
 
 func (m *Meilisearch) Release(ctx context.Context) error {
@@ -215,6 +209,7 @@ func (m *Meilisearch) Release(ctx context.Context) error {
 
 func (m *Meilisearch) Clear(ctx context.Context) error {
 	_, err := m.Client.Index(m.IndexUid).DeleteAllDocumentsWithContext(ctx)
+	// task was enqueued (if succeed), no need to wait
 	return err
 }
 

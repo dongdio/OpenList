@@ -126,17 +126,26 @@ func (d *Strm) list(ctx context.Context, dst, sub string, args *fs.ListArgs) ([]
 }
 
 func (d *Strm) getLink(ctx context.Context, path string) string {
+	var encodePath string
+	if d.EncodePath {
+		encodePath = utils.EncodePath(path, true)
+	}
+	if d.EnableSign {
+		signPath := sign.Sign(path)
+		if len(encodePath) > 0 {
+			path = fmt.Sprintf("%s?sign=%s", encodePath, signPath)
+		} else {
+			path = fmt.Sprintf("%s?sign=%s", path, signPath)
+		}
+	}
+	if d.LocalModel {
+		return path
+	}
 	apiUrl := d.SiteUrl
 	if len(apiUrl) > 0 {
 		apiUrl = strings.TrimSuffix(apiUrl, "/")
 	} else {
 		apiUrl = common.GetApiURL(ctx)
 	}
-	if d.EncodePath {
-		path = utils.EncodePath(path, true)
-	}
-	if !d.EnableSign {
-		return fmt.Sprintf("%s/d%s", apiUrl, path)
-	}
-	return fmt.Sprintf("%s/d%s?sign=%s", apiUrl, path, sign.Sign(path))
+	return fmt.Sprintf("%s/d%s", apiUrl, path)
 }

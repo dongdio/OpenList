@@ -2,6 +2,9 @@
 package cmd
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/dongdio/OpenList/v4/consts"
@@ -19,9 +22,9 @@ const (
 	// AdminInfoMessage is displayed when showing admin information
 	AdminInfoMessage = `Admin Information:
 - Username: %s
-- Password is stored as a hash value and cannot be reversed
-- Reset password with: openlist admin random
-- Set new password with: openlist admin set NEW_PASSWORD
+- The password can only be output at the first startup, and then stored as a hash value, which cannot be reversed
+- Reset password with: [openlist admin random]
+- Set new password with: [openlist admin set NEW_PASSWORD]
 `
 )
 
@@ -37,11 +40,11 @@ var AdminCmd = &cobra.Command{
 
 		admin, err := op.GetAdmin()
 		if err != nil {
-			utils.Log.Errorf("Failed to get admin user: %+v", err)
+			utils.Log.Errorf("failed to get admin user: %+v", err)
 			return
 		}
-
-		utils.Log.Infof(AdminInfoMessage, admin.Username)
+		utils.Log.Infof("get admin user from CLI")
+		fmt.Printf(AdminInfoMessage, admin.Username)
 	},
 }
 
@@ -51,6 +54,7 @@ var RandomPasswordCmd = &cobra.Command{
 	Short: "Reset admin user's password to a random string",
 	Long:  "Generate a secure random password and set it for the admin user",
 	Run: func(cmd *cobra.Command, args []string) {
+		utils.Log.Infof("reset admin user's password to a random string from CLI")
 		// Generate a random password with improved length for better security
 		newPassword := random.String(DefaultRandomPasswordLength)
 		setAdminPassword(newPassword)
@@ -63,8 +67,12 @@ var SetPasswordCmd = &cobra.Command{
 	Short: "Set admin user's password",
 	Long:  "Set a specific password for the admin user",
 	Args:  cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if len(args) == 0 {
+			return errors.New("please enter the new password")
+		}
 		setAdminPassword(args[0])
+		return nil
 	},
 }
 
@@ -78,7 +86,8 @@ var ShowTokenCmd = &cobra.Command{
 		defer Release()
 
 		token := setting.GetStr(consts.Token)
-		utils.Log.Infof("Admin token: %s", token)
+		utils.Log.Infof("show admin token from CLI")
+		fmt.Println("Admin token:", token)
 	},
 }
 
@@ -105,9 +114,9 @@ func setAdminPassword(password string) {
 	}
 
 	// Log success information
-	utils.Log.Infof("Admin user has been updated successfully:")
-	utils.Log.Infof("Username: %s", admin.Username)
-	utils.Log.Infof("Password: %s", password)
+	utils.Log.Infof("Admin user has been updated successfully from CLI:")
+	fmt.Println("Username:", admin.Username)
+	fmt.Println("Password:", password)
 
 	// Clear the admin cache to ensure the new password takes effect immediately
 	DelAdminCacheOnline()

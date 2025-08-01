@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -14,6 +15,7 @@ import (
 	"time"
 
 	"github.com/disintegration/imaging"
+	"github.com/pkg/errors"
 	ffmpeg "github.com/u2takey/ffmpeg-go"
 
 	"github.com/dongdio/OpenList/v4/consts"
@@ -49,7 +51,8 @@ type videoProbeResult struct {
 //   - bool: 如果是指向目录的符号链接则返回true，否则返回false
 func isSymlinkDir(f fs.FileInfo, path string) bool {
 	// 检查是否为符号链接
-	if f.Mode()&os.ModeSymlink != os.ModeSymlink {
+	if f.Mode()&os.ModeSymlink == os.ModeSymlink ||
+		(runtime.GOOS == "windows" && f.Mode()&os.ModeIrregular == os.ModeIrregular) { // os.ModeIrregular is Junction bit in Windows
 		return false
 	}
 	// 读取符号链接的目标路径
@@ -169,11 +172,8 @@ func (d *Local) GetSnapshot(ctx context.Context, videoPath string) (imgData *byt
 		Silent(true).                     // 静默模式
 		WithOutput(outputBuffer, os.Stdout)
 
-	if err = stream.Run(); err != nil {
-		return nil, fmt.Errorf("ffmpeg执行失败: %w", err)
-	}
-
-	return outputBuffer, nil
+	err = stream.Run()
+	return outputBuffer, errors.Wrap(err, "ffmpeg执行失败")
 }
 
 // readDir 读取目录内容并按名称排序
@@ -310,13 +310,7 @@ func (d *Local) ClearThumbCache(filePath string) (bool, error) {
 	if !utils.Exists(thumbPath) {
 		return false, nil // 缓存不存在
 	}
-
-	err := os.Remove(thumbPath)
-	if err != nil {
-		return false, fmt.Errorf("删除缩略图缓存失败: %w", err)
-	}
-
-	return true, nil
+	return true, errors.Wrap(os.Remove(thumbPath), "删除缩略图缓存失败")
 }
 
 // CleanThumbCache 清理所有过期的缩略图缓存
@@ -338,31 +332,22 @@ func (d *Local) CleanThumbCache(maxAge int64) (int, error) {
 		if err != nil {
 			return err
 		}
-
 		// 跳过目录
 		if info.IsDir() {
 			return nil
 		}
-
 		// 只处理缩略图文件
 		if !strings.HasPrefix(info.Name(), thumbPrefix) {
 			return nil
 		}
-
 		// 检查文件修改时间
 		if now.Sub(info.ModTime()).Seconds() > float64(maxAge) {
-			if err := os.Remove(path); err != nil {
+			if err = os.Remove(path); err != nil {
 				return err
 			}
 			count++
 		}
-
 		return nil
 	})
-
-	if err != nil {
-		return count, fmt.Errorf("清理缩略图缓存失败: %w", err)
-	}
-
-	return count, nil
+	return count, errors.Wrap(err, "清理缩略图缓存失败")
 }

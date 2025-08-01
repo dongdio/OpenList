@@ -89,6 +89,7 @@ and S3-compatible APIs as configured in the configuration file.`,
 		if conf.Conf.Scheme.HttpPort != -1 {
 			httpAddr := fmt.Sprintf("%s:%d", conf.Conf.Scheme.Address, conf.Conf.Scheme.HttpPort)
 			utils.Log.Infof("Starting HTTP server on %s", httpAddr)
+			fmt.Printf("start HTTP server @ %s\n", httpAddr)
 
 			// Configure HTTP server
 			httpSrv = &http.Server{
@@ -111,6 +112,7 @@ and S3-compatible APIs as configured in the configuration file.`,
 		if conf.Conf.Scheme.HttpsPort != -1 {
 			httpsAddr := fmt.Sprintf("%s:%d", conf.Conf.Scheme.Address, conf.Conf.Scheme.HttpsPort)
 			utils.Log.Infof("Starting HTTPS server on %s", httpsAddr)
+			fmt.Printf("start HTTPS server @ %s\n", httpsAddr)
 
 			// Check if certificate and key files exist
 			if !utils.Exists(conf.Conf.Scheme.CertFile) || !utils.Exists(conf.Conf.Scheme.KeyFile) {
@@ -142,6 +144,7 @@ and S3-compatible APIs as configured in the configuration file.`,
 		if conf.Conf.Scheme.UnixFile != "" {
 			unixSocketPath := conf.Conf.Scheme.UnixFile
 			utils.Log.Infof("Starting Unix socket server on %s", unixSocketPath)
+			fmt.Printf("start unix server @ %s\n", conf.Conf.Scheme.UnixFile)
 
 			// Remove existing socket file if it exists
 			if utils.Exists(unixSocketPath) {
@@ -202,6 +205,8 @@ and S3-compatible APIs as configured in the configuration file.`,
 			// Configure S3 server address
 			s3Addr := fmt.Sprintf("%s:%d", conf.Conf.Scheme.Address, conf.Conf.S3.Port)
 			utils.Log.Infof("Starting S3-compatible API server on %s (SSL: %v)",
+				s3Addr, conf.Conf.S3.SSL)
+			fmt.Printf("Starting S3-compatible API server on %s (SSL: %v)",
 				s3Addr, conf.Conf.S3.SSL)
 
 			// Start S3 server in a goroutine

@@ -1,6 +1,8 @@
 package meilisearch
 
 import (
+	"time"
+
 	"github.com/meilisearch/meilisearch-go"
 	"github.com/pkg/errors"
 
@@ -17,10 +19,18 @@ var config = searcher2.Config{
 
 func init() {
 	searcher2.RegisterSearcher(config, func() (searcher2.Searcher, error) {
+		indexUid := conf.Conf.Meilisearch.Index
+		if len(indexUid) == 0 {
+			return nil, errors.New("index is blank")
+		}
 		m := Meilisearch{
-			Client:               meilisearch.New(conf.Conf.Meilisearch.Host, meilisearch.WithAPIKey(conf.Conf.Meilisearch.APIKey)),
-			IndexUid:             conf.Conf.Meilisearch.IndexPrefix + "openlist",
-			FilterableAttributes: []string{"parent", "is_dir", "name"},
+			Client: meilisearch.New(
+				conf.Conf.Meilisearch.Host,
+				meilisearch.WithAPIKey(conf.Conf.Meilisearch.APIKey),
+			),
+			IndexUid: indexUid,
+			FilterableAttributes: []string{"parent", "is_dir", "name",
+				"parent_hash", "parent_path_hashes"},
 			SearchableAttributes: []string{"name"},
 		}
 
@@ -36,7 +46,7 @@ func init() {
 				if err != nil {
 					return nil, err
 				}
-				forTask, err := m.Client.WaitForTask(task.TaskUID, 0)
+				forTask, err := m.Client.WaitForTask(task.TaskUID, time.Second)
 				if err != nil {
 					return nil, err
 				}

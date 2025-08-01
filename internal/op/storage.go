@@ -3,6 +3,7 @@ package op
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"runtime"
 	"slices"
 	"sort"
@@ -244,7 +245,12 @@ func initStorage(ctx context.Context, storage model.Storage, storageDriver drive
 
 	// 根据初始化结果更新状态
 	if err != nil {
-		driverStorage.SetStatus(err.Error())
+		if IsUseOnlineAPI(storageDriver) {
+			driverStorage.SetStatus(utils.SanitizeHTML(err.Error()))
+		} else {
+			driverStorage.SetStatus(err.Error())
+		}
+		err = errors.Wrap(err, "failed init storage")
 	} else {
 		driverStorage.SetStatus(STATUS_WORK)
 	}
@@ -252,6 +258,24 @@ func initStorage(ctx context.Context, storage model.Storage, storageDriver drive
 	// 将更新的状态保存到数据库
 	MustSaveDriverStorage(storageDriver)
 	return err
+}
+
+func IsUseOnlineAPI(storageDriver driver.Driver) bool {
+	v := reflect.ValueOf(storageDriver.GetAddition())
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+	if !v.IsValid() || v.Kind() != reflect.Struct {
+		return false
+	}
+	field := v.FieldByName("UseOnlineAPI")
+	if !field.IsValid() {
+		return false
+	}
+	if field.Kind() != reflect.Bool {
+		return false
+	}
+	return field.Bool()
 }
 
 // EnableStorage 启用之前禁用的存储
