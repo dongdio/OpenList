@@ -355,6 +355,7 @@ func (d *Cloud189) uploadRequest(uri string, form map[string]string, resp any) (
 
 	// 创建请求
 	req := base.RestyClient.R().
+		SetQueryParam("params", hexData).
 		SetHeaders(d.header).
 		SetHeaders(map[string]string{
 			"accept":         "application/json;charset=UTF-8",
@@ -370,9 +371,10 @@ func (d *Cloud189) uploadRequest(uri string, form map[string]string, resp any) (
 	if resp != nil {
 		req.SetResult(resp)
 	}
+	u := "https://upload.cloud.189.cn" + uri
 
 	// 执行请求
-	res, err := req.Get("https://upload.cloud.189.cn" + uri + "?params=" + hexData)
+	res, err := req.Get(u)
 	if err != nil {
 		return nil, errors.Wrap(err, "执行上传请求失败")
 	}
@@ -386,6 +388,8 @@ func (d *Cloud189) uploadRequest(uri string, form map[string]string, resp any) (
 
 	return responseData, nil
 }
+
+const _sliceFileSize int64 = 10 * 1024 * 1024 // 定义分片大小（10MB）
 
 // newUpload 实现分片上传
 // 参数:
@@ -404,18 +408,15 @@ func (d *Cloud189) newUpload(ctx context.Context, dstDir model.Obj, file model.F
 	}
 	d.sessionKey = sessionKey
 
-	// 定义分片大小（10MB）
-	const SLICE_SIZE int64 = 10 * 1024 * 1024
-
 	// 计算分片数量
-	totalSlices := int64(math.Ceil(float64(file.GetSize()) / float64(SLICE_SIZE)))
+	totalSlices := int64(math.Ceil(float64(file.GetSize()) / float64(_sliceFileSize)))
 
 	// 初始化上传
 	res, err := d.uploadRequest("/person/initMultiUpload", map[string]string{
 		"parentFolderId": dstDir.GetID(),
 		"fileName":       encode(file.GetName()),
 		"fileSize":       strconv.FormatInt(file.GetSize(), 10),
-		"sliceSize":      strconv.FormatInt(SLICE_SIZE, 10),
+		"sliceSize":      strconv.FormatInt(_sliceFileSize, 10),
 		"lazyCheck":      "1", // 懒校验模式
 	}, nil)
 
@@ -436,6 +437,7 @@ func (d *Cloud189) newUpload(ctx context.Context, dstDir model.Obj, file model.F
 
 	// 上传分片
 	var uploadedBytes int64 = 0
+	var numBytes int
 	md5List := make([]string, 0, totalSlices)
 	md5Sum := md5.New() // 计算整个文件的MD5
 
@@ -446,19 +448,16 @@ func (d *Cloud189) newUpload(ctx context.Context, dstDir model.Obj, file model.F
 		}
 
 		// 计算当前分片大小
-		sliceSize := file.GetSize() - uploadedBytes
-		if SLICE_SIZE < sliceSize {
-			sliceSize = SLICE_SIZE
-		}
+		sliceSize := min(file.GetSize()-uploadedBytes, _sliceFileSize)
 
 		// 读取分片数据
 		sliceData := make([]byte, sliceSize)
-		n, err := io.ReadFull(file, sliceData)
+		numBytes, err = io.ReadFull(file, sliceData)
 		if err != nil {
 			return errors.Wrap(err, "读取文件分片失败")
 		}
 
-		uploadedBytes += int64(n)
+		uploadedBytes += int64(numBytes)
 
 		// 计算分片MD5
 		sliceMD5Bytes := getMd5(sliceData)
@@ -488,34 +487,26 @@ func (d *Cloud189) newUpload(ctx context.Context, dstDir model.Obj, file model.F
 		uploadHeaders := strings.Split(decodeURIComponent(uploadData.RequestHeader), "&")
 
 		// 创建上传请求
-		req, err := http.NewRequest(http.MethodPut, requestURL,
-			driver.NewLimitedUploadStream(ctx, bytes.NewReader(sliceData)))
-		if err != nil {
-			return errors.Wrap(err, "创建分片上传请求失败")
-		}
-
-		// 设置上下文和请求头
-		req = req.WithContext(ctx)
+		cli := base.RestyClient.R().
+			SetContext(ctx).
+			SetBody(driver.NewLimitedUploadStream(ctx, bytes.NewReader(sliceData)))
 		for _, headerItem := range uploadHeaders {
-			i := strings.Index(headerItem, "=")
-			if i > 0 {
-				req.Header.Set(headerItem[0:i], headerItem[i+1:])
+			j := strings.Index(headerItem, "=")
+			if j > 0 {
+				cli.SetHeader(headerItem[0:j], headerItem[j+1:])
 			}
 		}
-
-		// 执行上传请求
-		resp, err := base.HttpClient.Do(req)
+		resp, err := cli.Put(requestURL)
 		if err != nil {
 			return errors.Wrap(err, "执行分片上传请求失败")
 		}
-
 		// 检查响应状态
-		if resp.StatusCode != http.StatusOK {
+		if resp.StatusCode() != http.StatusOK {
 			_ = resp.Body.Close()
-			return errors.Errorf("分片上传失败，状态码: %d", resp.StatusCode)
+			return errors.Errorf("分片上传失败，状态码: %d", resp.StatusCode())
 		}
 
-		log.Debugf("分片上传响应: %+v", resp.Status)
+		log.Debugf("189 分片上传响应: %+v\n", resp.String())
 		_ = resp.Body.Close()
 
 		// 更新进度
@@ -527,7 +518,7 @@ func (d *Cloud189) newUpload(ctx context.Context, dstDir model.Obj, file model.F
 	sliceMD5 := fileMD5
 
 	// 如果文件大于一个分片，计算分片MD5列表的MD5
-	if file.GetSize() > SLICE_SIZE {
+	if file.GetSize() > _sliceFileSize {
 		sliceMD5 = utils.GetMD5EncodeStr(strings.Join(md5List, "\n"))
 	}
 
@@ -539,10 +530,5 @@ func (d *Cloud189) newUpload(ctx context.Context, dstDir model.Obj, file model.F
 		"lazyCheck":    "1",
 		"opertype":     "3", // 操作类型：上传完成
 	}, nil)
-
-	if err != nil {
-		return errors.Wrap(err, "提交上传失败")
-	}
-
-	return nil
+	return errors.Wrap(err, "提交上传失败")
 }

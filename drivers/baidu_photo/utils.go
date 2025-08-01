@@ -12,6 +12,7 @@ import (
 	"github.com/pkg/errors"
 	"resty.dev/v3"
 
+	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/utility/utils"
@@ -334,7 +335,7 @@ func (d *BaiduPhoto) GetAlbumDetail(ctx context.Context, albumID string) (*Album
 
 func (d *BaiduPhoto) linkAlbum(ctx context.Context, file *AlbumFile, args model.LinkArgs) (*model.Link, error) {
 	headers := map[string]string{
-		"User-Agent": base.UserAgent,
+		"User-Agent": consts.ChromeUserAgent,
 	}
 	if args.Header.Get("User-Agent") != "" {
 		headers["User-Agent"] = args.Header.Get("User-Agent")
@@ -376,7 +377,7 @@ func (d *BaiduPhoto) linkAlbum(ctx context.Context, file *AlbumFile, args model.
 
 func (d *BaiduPhoto) linkFile(ctx context.Context, file *File, args model.LinkArgs) (*model.Link, error) {
 	headers := map[string]string{
-		"User-Agent": base.UserAgent,
+		"User-Agent": consts.ChromeUserAgent,
 	}
 	if args.Header.Get("User-Agent") != "" {
 		headers["User-Agent"] = args.Header.Get("User-Agent")

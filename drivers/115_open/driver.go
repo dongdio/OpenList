@@ -11,7 +11,7 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/time/rate"
 
-	"github.com/dongdio/OpenList/v4/drivers/base"
+	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/global"
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
@@ -151,7 +151,7 @@ func (d *Open115) Link(ctx context.Context, file model.Obj, args model.LinkArgs)
 		userAgent = args.Header.Get("User-Agent")
 	}
 	if userAgent == "" {
-		userAgent = base.UserAgent
+		userAgent = consts.ChromeUserAgent
 	}
 
 	// 类型断言为115对象

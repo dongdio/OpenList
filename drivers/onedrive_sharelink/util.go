@@ -14,7 +14,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/html"
 
-	"github.com/dongdio/OpenList/v4/drivers/base"
+	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/conf"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
@@ -135,7 +135,7 @@ func getAttrValue(n *html.Node, key string) string {
 // getHeaders constructs and returns the necessary HTTP headers for accessing the OneDrive share link
 func (d *OnedriveSharelink) getHeaders() (http.Header, error) {
 	header := http.Header{}
-	header.Set("User-Agent", base.UserAgent)
+	header.Set("User-Agent", consts.ChromeUserAgent)
 	header.Set("accept-language", "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6")
 
 	// Save current timestamp to d.HeaderTime
@@ -191,7 +191,8 @@ func (d *OnedriveSharelink) getFiles(path string) ([]Item, error) {
 	header := req.Header
 	redirectUrl := ""
 	if d.ShareLinkPassword == "" {
-		header.Set("User-Agent", base.UserAgent)
+		header.Set("User-Agent",
+			consts.ChromeUserAgent)
 		header.Set("accept-language", "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6")
 		req.Header = header
 		answerNoRedirect, err := clientNoDirect.Do(req)
@@ -306,11 +307,13 @@ func (d *OnedriveSharelink) getFiles(path string) ([]Item, error) {
 		}
 		return d.getFiles(path)
 	}
-	defer resp.Body.Close()
+	resp.Body.Close()
 	var graphqlReq GraphQLRequest
 	utils.JSONTool.NewDecoder(resp.Body).Decode(&graphqlReq)
+
 	log.Debugln("graphqlReq:", graphqlReq)
 	filesData := graphqlReq.Data.Legacy.RenderListDataAsStream.ListData.Row
+
 	if graphqlReq.Data.Legacy.RenderListDataAsStream.ListData.NextHref != "" {
 		nextHref := graphqlReq.Data.Legacy.RenderListDataAsStream.ListData.NextHref + "&@a1=REPLACEME&TryNewExperienceSingle=TRUE"
 		nextHref = strings.Replace(nextHref, "REPLACEME", "%27"+relativeUrl+"%27", -1)
@@ -336,22 +339,25 @@ func (d *OnedriveSharelink) getFiles(path string) ([]Item, error) {
 			}
 			return d.getFiles(path)
 		}
-		defer resp.Body.Close()
+		resp.Body.Close()
 		utils.JSONTool.NewDecoder(resp.Body).Decode(&graphqlReqNEW)
+
 		for graphqlReqNEW.ListData.NextHref != "" {
 			graphqlReqNEW = GraphQLNEWRequest{}
 			postUrl = strings.Join(redirectSplitURL[:len(redirectSplitURL)-3], "/") + "/_api/web/GetListUsingPath(DecodedUrl=@a1)/RenderListDataAsStream" + nextHref
 			req, _ = http.NewRequest("POST", postUrl, strings.NewReader(renderListDataAsStreamVar))
 			req.Header = tempHeader
-			resp, err := client.Do(req)
-			if err != nil {
-				d.Headers, err = d.getHeaders()
+			{
+				resp, err = client.Do(req)
 				if err != nil {
-					return nil, err
+					d.Headers, err = d.getHeaders()
+					if err != nil {
+						return nil, err
+					}
+					return d.getFiles(path)
 				}
-				return d.getFiles(path)
+				resp.Body.Close()
 			}
-			defer resp.Body.Close()
 			utils.JSONTool.NewDecoder(resp.Body).Decode(&graphqlReqNEW)
 			nextHref = graphqlReqNEW.ListData.NextHref + "&@a1=REPLACEME&TryNewExperienceSingle=TRUE"
 			nextHref = strings.Replace(nextHref, "REPLACEME", "%27"+relativeUrl+"%27", -1)

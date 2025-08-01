@@ -9,6 +9,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
 
+	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
@@ -78,7 +79,7 @@ func (d *Cloud189) Link(ctx context.Context, file model.Obj, args model.LinkArgs
 	// 创建不自动重定向的客户端
 	client := base.NoRedirectClient.R().
 		SetHeaders(d.header).
-		SetHeader("User-Agent", base.UserAgent)
+		SetHeader("User-Agent", consts.ChromeUserAgent)
 
 	// 请求下载链接
 	res, err := client.Get("https:" + resp.FileDownloadURL)

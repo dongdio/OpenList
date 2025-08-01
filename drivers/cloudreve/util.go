@@ -31,7 +31,7 @@ func (d *Cloudreve) getUA() string {
 	if d.CustomUA != "" {
 		return d.CustomUA
 	}
-	return base.UserAgent
+	return consts.ChromeUserAgent
 }
 
 func (d *Cloudreve) request(method string, path string, callback base.ReqCallback, out any) error {

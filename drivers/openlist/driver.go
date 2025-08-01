@@ -113,11 +113,13 @@ func (d *OpenList) List(ctx context.Context, dir model.Obj, args model.ListArgs)
 func (d *OpenList) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	var resp common.Resp[FsGetResp]
 	// if PassUAToUpsteam is true, then pass the user-agent to the upstream
-	userAgent := base.UserAgent
+	userAgent :=
+	consts.ChromeUserAgent
 	if d.PassUAToUpsteam {
 		userAgent = args.Header.Get("user-agent")
 		if userAgent == "" {
-			userAgent = base.UserAgent
+			userAgent =
+			consts.ChromeUserAgent
 		}
 	}
 	_, _, err := d.request("/fs/get", http.MethodPost, func(req *resty.Request) {

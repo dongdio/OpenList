@@ -1,9 +1,10 @@
 package _189
 
 import (
+	"resty.dev/v3"
+
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/op"
-	"resty.dev/v3"
 )
 
 // Addition 定义189云盘驱动的额外配置选项
@@ -33,12 +34,21 @@ func init() {
 }
 
 const (
+	_origin      = "https://open.e.189.cn"
+	_loginSubmit = "https://open.e.189.cn/api/logbox/oauth2/loginSubmit.do"
+	_encryptConf = "https://open.e.189.cn/api/logbox/config/encryptConf.do"
+	_appConf     = "https://open.e.189.cn/api/logbox/oauth2/appConf.do"
+)
+
+const (
 	_refer           = "https://cloud.189.cn/"
+	_mainConf        = "https://cloud.189.cn/web/main"
 	_fileInfoURL     = "https://cloud.189.cn/api/portal/getFileInfo.action"
 	_createFolder    = "https://cloud.189.cn/api/open/file/createFolder.action"
 	_createBatchTask = "https://cloud.189.cn/api/open/batch/createBatchTask.action"
 	_renameFile      = "https://cloud.189.cn/api/open/file/renameFile.action"
 	_renameFolder    = "https://cloud.189.cn/api/open/file/renameFolder.action"
+	_loginUrl        = "https://cloud.189.cn/api/portal/loginUrl.action?redirectURL=https%3A%2F%2Fcloud.189.cn%2Fmain.action"
 
 	_listFiles        = "https://cloud.189.cn/api/open/file/listFiles.action"
 	_getUserBriefInfo = "https://cloud.189.cn/v2/getUserBriefInfo.action"

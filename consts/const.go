@@ -167,3 +167,7 @@ const (
 	UserAgentKey
 	PathKey
 )
+
+const (
+	ChromeUserAgent = "Mozilla/5.0 (Macintosh; Apple macOS 15_5) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36 Chrome/138.0.0.0"
+)

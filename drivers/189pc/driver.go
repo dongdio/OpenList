@@ -12,6 +12,7 @@ import (
 	"github.com/pkg/errors"
 	"resty.dev/v3"
 
+	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
@@ -220,7 +221,7 @@ func (y *Cloud189PC) Link(ctx context.Context, file model.Obj, args model.LinkAr
 	link := &model.Link{
 		URL: downloadURL.URL,
 		Header: http.Header{
-			"User-Agent": []string{base.UserAgent},
+			"User-Agent": []string{consts.ChromeUserAgent},
 		},
 	}
 	/*

@@ -50,15 +50,14 @@ type EncryptConf struct {
 // 返回错误信息，nil表示登录成功
 func (d *Cloud189) newLogin() error {
 	// 访问登录URL，检查是否已登录
-	loginURL := "https://cloud.189.cn/api/portal/loginUrl.action?redirectURL=https%3A%2F%2Fcloud.189.cn%2Fmain.action"
-	res, err := base.RestyClient.R().SetHeaders(d.header).Get(loginURL)
+	res, err := base.RestyClient.R().SetHeaders(d.header).Get(_loginUrl)
 	if err != nil {
 		return errors.Wrap(err, "访问登录页面失败")
 	}
 
 	// 检查是否已登录
 	redirectURL := res.RawResponse.Request.URL
-	if redirectURL.String() == "https://cloud.189.cn/web/main" {
+	if redirectURL.String() == _mainConf {
 		return nil // 已登录，直接返回
 	}
 
@@ -72,7 +71,7 @@ func (d *Cloud189) newLogin() error {
 		"lt":      lt,
 		"reqid":   reqId,
 		"referer": redirectURL.String(),
-		"origin":  "https://open.e.189.cn",
+		"origin":  _origin,
 	}
 
 	// 获取应用配置
@@ -84,7 +83,7 @@ func (d *Cloud189) newLogin() error {
 			"appKey":  appId,
 		}).
 		SetResult(&appConf).
-		Post("https://open.e.189.cn/api/logbox/oauth2/appConf.do")
+		Post(_appConf)
 
 	if err != nil {
 		return errors.Wrap(err, "获取应用配置失败")
@@ -102,7 +101,7 @@ func (d *Cloud189) newLogin() error {
 		SetFormData(map[string]string{
 			"appId": appId,
 		}).
-		Post("https://open.e.189.cn/api/logbox/config/encryptConf.do")
+		Post(_encryptConf)
 
 	if err != nil {
 		return errors.Wrap(err, "获取加密配置失败")
@@ -149,8 +148,7 @@ func (d *Cloud189) newLogin() error {
 	res, err = base.RestyClient.R().
 		SetHeaders(headers).
 		SetFormData(loginData).
-		Post("https://open.e.189.cn/api/logbox/oauth2/loginSubmit.do")
-
+		Post(_loginSubmit)
 	if err != nil {
 		return errors.Wrap(err, "提交登录请求失败")
 	}
@@ -162,6 +160,5 @@ func (d *Cloud189) newLogin() error {
 	if loginResult != 0 {
 		return errors.Errorf("登录失败: %s", utils.GetBytes(res.Bytes(), "msg").String())
 	}
-
 	return nil
 }

@@ -32,14 +32,14 @@ func random() string {
 // RsaEncode 使用RSA公钥加密数据
 // 参数:
 //   - origData: 原始数据
-//   - j_rsakey: RSA公钥字符串
+//   - jRsakey: RSA公钥字符串
 //   - hex: 是否转换为十六进制格式
 //
 // 返回:
 //   - 加密后的字符串
-func RsaEncode(origData []byte, j_rsakey string, hex bool) string {
+func RsaEncode(origData []byte, jRsakey string, hex bool) string {
 	// 构造PEM格式的公钥
-	publicKey := []byte("-----BEGIN PUBLIC KEY-----\n" + j_rsakey + "\n-----END PUBLIC KEY-----")
+	publicKey := []byte("-----BEGIN PUBLIC KEY-----\n" + jRsakey + "\n-----END PUBLIC KEY-----")
 
 	// 解析公钥
 	block, _ := pem.Decode(publicKey)
@@ -80,7 +80,7 @@ func RsaEncode(origData []byte, j_rsakey string, hex bool) string {
 // Base64字符映射表
 var b64map = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 
-// 十六进制字符映射表
+// BI_RM 十六进制字符映射表
 var BI_RM = "0123456789abcdefghijklmnopqrstuvwxyz"
 
 // int2char 将整数转换为字符

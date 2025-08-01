@@ -1,6 +1,8 @@
 package handles
 
 import (
+	"strings"
+
 	"github.com/gin-gonic/gin"
 
 	"github.com/dongdio/OpenList/v4/consts"
@@ -317,7 +319,13 @@ func SetThunderX(c *gin.Context) {
 		}
 	}
 	items := []model.SettingItem{
-		{Key: consts.ThunderXTempDir, Value: req.TempDir, Type: consts.TypeString, Group: model.OFFLINE_DOWNLOAD, Flag: model.PRIVATE},
+		{
+			Key:   consts.ThunderXTempDir,
+			Value: req.TempDir,
+			Type:  consts.TypeString,
+			Group: model.OFFLINE_DOWNLOAD,
+			Flag:  model.PRIVATE,
+		},
 	}
 	if err := op.SaveSettingItems(items); err != nil {
 		common.ErrorResp(c, err, 500)
@@ -442,12 +450,10 @@ func SetThunderBrowser(c *gin.Context) {
 		common.ErrorResp(c, err, 500)
 		return
 	}
-
 	if _, err = browserTool.Init(); err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}
-
 	common.SuccessResp(c, "ok")
 }
 
@@ -489,8 +495,13 @@ func AddOfflineDownload(c *gin.Context) {
 	// 为每个URL创建下载任务
 	tasks := make([]task.TaskExtensionInfo, 0, len(req.Urls))
 	for _, url := range req.Urls {
+		// Filter out empty lines and whitespace-only strings
+		trimmedUrl := strings.TrimSpace(url)
+		if trimmedUrl == "" {
+			continue
+		}
 		t, err := tool.AddURL(c, &tool.AddURLArgs{
-			URL:          url,
+			URL:          trimmedUrl,
 			DstDirPath:   reqPath,
 			Tool:         req.Tool,
 			DeletePolicy: tool.DeletePolicy(req.DeletePolicy),
@@ -499,7 +510,6 @@ func AddOfflineDownload(c *gin.Context) {
 			common.ErrorResp(c, err, 500)
 			return
 		}
-
 		if t != nil {
 			tasks = append(tasks, t)
 		}

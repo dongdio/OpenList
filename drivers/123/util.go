@@ -203,7 +203,7 @@ func (d *Pan123) login() error {
 			"user-agent":  "Dart/2.19(dart:io)-openlist",
 			"platform":    "web",
 			"app-version": "3",
-			// "user-agent":  base.UserAgent,
+			// "user-agent":  consts.ChromeUserAgent,
 		}).
 		SetBody(body).Post(SignIn)
 	if err != nil {
@@ -255,7 +255,7 @@ do:
 		"user-agent":    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) openlist-client",
 		"platform":      "web",
 		"app-version":   "3",
-		// "user-agent":    base.UserAgent,
+		// "user-agent":    consts.ChromeUserAgent,
 	})
 
 	// 应用回调函数

@@ -6,7 +6,7 @@ import (
 
 	"resty.dev/v3"
 
-	"github.com/dongdio/OpenList/v4/drivers/base"
+	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/utility/errs"
@@ -118,7 +118,7 @@ func (d *LanZou) Link(ctx context.Context, file model.Obj, args model.LinkArgs) 
 	return &model.Link{
 		URL: dfile.Url,
 		Header: http.Header{
-			"User-Agent": []string{base.UserAgent},
+			"User-Agent": []string{consts.ChromeUserAgent},
 		},
 		Expiration: &exp,
 	}, nil

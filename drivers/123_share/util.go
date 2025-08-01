@@ -64,7 +64,7 @@ func (d *Pan123Share) request(url string, method string, callback base.ReqCallba
 		"user-agent":    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) openlist-client",
 		"platform":      "web",
 		"app-version":   "3",
-		// "user-agent":    base.UserAgent,
+		// "user-agent":    consts.ChromeUserAgent,
 	})
 	if callback != nil {
 		callback(req)

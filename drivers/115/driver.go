@@ -261,11 +261,7 @@ func (p *Pan115) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 	}
 
 	// 计算文件预哈希（前128KB）
-	const PreHashSize int64 = 128 * utils.KB
-	hashSize := PreHashSize
-	if stream.GetSize() < PreHashSize {
-		hashSize = stream.GetSize()
-	}
+	hashSize := min(128*utils.KB, stream.GetSize())
 
 	// 读取文件前部分用于计算预哈希
 	reader, err := stream.RangeRead(http_range.Range{Start: 0, Length: hashSize})

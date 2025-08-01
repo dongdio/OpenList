@@ -186,7 +186,7 @@ require (
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/klauspost/pgzip v1.2.6 // indirect
 	github.com/kr/fs v0.1.0 // indirect
-	github.com/lanrat/extsort v1.3.0 // indirect
+	github.com/lanrat/extsort v1.0.2 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/libp2p/go-buffer-pool v0.1.0 // indirect
 	github.com/libp2p/go-flow-metrics v0.3.0 // indirect
