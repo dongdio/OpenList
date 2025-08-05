@@ -24,8 +24,8 @@ var storageCmd = &cobra.Command{
 }
 
 var disableStorageCmd = &cobra.Command{
-	Use:   "disable",
-	Short: "Disable a storage",
+	Use:   "disable [mount path]",
+	Short: "Disable a storage by mount path",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) < 1 {
 			return errors.New("mount path is required")
@@ -36,15 +36,48 @@ var disableStorageCmd = &cobra.Command{
 		storage, err := db.GetStorageByMountPath(mountPath)
 		if err != nil {
 			return errors.WithMessage(err, "failed to query storage")
-		} else {
-			storage.Disabled = true
-			err = db.UpdateStorage(storage)
-			if err != nil {
-				return errors.WithMessage(err, "failed to update storage")
-			} else {
-				utils.Log.Infof("Storage with mount path [%s] have been disabled", mountPath)
+		}
+		storage.Disabled = true
+		err = db.UpdateStorage(storage)
+		if err != nil {
+			return errors.WithMessage(err, "failed to update storage")
+		}
+		utils.Log.Infof("Storage with mount path [%s] has been disabled from CLI", mountPath)
+		fmt.Printf("Storage with mount path [%s] has been disabled\n", mountPath)
+		return nil
+	},
+}
+
+var deleteStorageCmd = &cobra.Command{
+	Use:   "delete [id]",
+	Short: "Delete a storage by id",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if len(args) < 1 {
+			return errors.New("id is required")
+		}
+		id, err := strconv.Atoi(args[0])
+		if err != nil {
+			return errors.New("id must be a number")
+		}
+
+		if force, _ := cmd.Flags().GetBool("force"); force {
+			fmt.Printf("Are you sure you want to delete storage with id [%d]? [y/N]: ", id)
+			var confirm string
+			fmt.Scanln(&confirm)
+			if confirm != "y" && confirm != "Y" {
+				fmt.Println("Delete operation cancelled.")
+				return nil
 			}
 		}
+
+		Init()
+		defer Release()
+		err = db.DeleteStorageByID(uint(id))
+		if err != nil {
+			return errors.WithMessage(err, "failed to delete storage by id")
+		}
+		utils.Log.Infof("Storage with id [%d] have been deleted from CLI", id)
+		fmt.Printf("Storage with id [%d] have been deleted\n", id)
 		return nil
 	},
 }
@@ -153,6 +186,9 @@ func init() {
 	storageCmd.AddCommand(disableStorageCmd)
 	storageCmd.AddCommand(listStorageCmd)
 	storageCmd.PersistentFlags().IntVarP(&storageTableHeight, "height", "H", 10, "Table height")
+
+	storageCmd.AddCommand(deleteStorageCmd)
+	deleteStorageCmd.Flags().BoolP("force", "f", false, "Force delete without confirmation")
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command

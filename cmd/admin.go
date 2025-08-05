@@ -119,7 +119,7 @@ func setAdminPassword(password string) {
 	fmt.Println("Password:", password)
 
 	// Clear the admin cache to ensure the new password takes effect immediately
-	DelAdminCacheOnline()
+	delAdminCacheOnline()
 }
 
 // init registers the admin commands with the root command

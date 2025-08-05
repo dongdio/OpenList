@@ -105,9 +105,10 @@ func (g *Group[T]) Do(key string, fn func() (T, error)) (v T, err error, shared 
 		g.mu.Unlock()
 		c.wg.Wait()
 
-		if e, ok := c.err.(*panicError); ok {
+		var e *panicError
+		if errors.As(c.err, &e) {
 			panic(e)
-		} else if c.err == errGoexit {
+		} else if errors.Is(c.err, errGoexit) {
 			runtime.Goexit()
 		}
 		return c.val, c.err, true
@@ -163,11 +164,12 @@ func (g *Group[T]) doCall(c *call[T], key string, fn func() (T, error)) {
 		g.mu.Lock()
 		defer g.mu.Unlock()
 		c.wg.Done()
-		if !g.Remember && g.m[key] == c {
+		if (!g.Remember || c.err != nil) && g.m[key] == c {
 			delete(g.m, key)
 		}
 
-		if e, ok := c.err.(*panicError); ok {
+		var e *panicError
+		if errors.As(c.err, &e) {
 			// In order to prevent the waiting channels from being blocked forever,
 			// needs to ensure that this panic cannot be recovered.
 			if len(c.chans) > 0 {
@@ -176,7 +178,7 @@ func (g *Group[T]) doCall(c *call[T], key string, fn func() (T, error)) {
 			} else {
 				panic(e)
 			}
-		} else if c.err == errGoexit {
+		} else if errors.Is(c.err, errGoexit) {
 			// Already in the process of goexit, no need to call again
 		} else {
 			// Normal return

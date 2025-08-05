@@ -14,16 +14,16 @@ import (
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
-func DelAdminCacheOnline() {
+func delAdminCacheOnline() {
 	admin, err := op.GetAdmin()
 	if err != nil {
 		utils.Log.Errorf("[del_admin_cache] get admin error: %+v", err)
 		return
 	}
-	DelUserCacheOnline(admin.Username)
+	delUserCacheOnline(admin.Username)
 }
 
-func DelUserCacheOnline(username string) {
+func delUserCacheOnline(username string) {
 	client := resty.New().SetTimeout(1 * time.Second).SetTLSClientConfig(&tls.Config{InsecureSkipVerify: conf.Conf.TLSInsecureSkipVerify})
 	token := setting.GetStr(consts.Token)
 	port := conf.Conf.Scheme.HttpPort
