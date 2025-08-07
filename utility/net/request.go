@@ -15,13 +15,14 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/dongdio/OpenList/v4/internal/conf"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/utility/http_range"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 // DefaultDownloadPartSize 是使用 Download() 时默认的字节范围大小
-const DefaultDownloadPartSize = utils.MB * 10
+const DefaultDownloadPartSize = utils.MB * 8
 
 // DefaultDownloadConcurrency 是使用 Download() 时默认的并发数
 const DefaultDownloadConcurrency = 2
@@ -85,6 +86,9 @@ func (d Downloader) Download(ctx context.Context, p *HTTPRequestParams) (io.Read
 	}
 	if impl.cfg.PartSize == 0 {
 		impl.cfg.PartSize = DefaultDownloadPartSize
+	}
+	if conf.MaxBufferLimit > 0 && impl.cfg.PartSize > conf.MaxBufferLimit {
+		impl.cfg.PartSize = conf.MaxBufferLimit
 	}
 	if impl.cfg.HTTPClient == nil {
 		impl.cfg.HTTPClient = DefaultHTTPRequestFunc
@@ -166,17 +170,14 @@ func (d *downloader) download() (io.ReadCloser, error) {
 	}
 
 	// 计算分片数量
-	maxPart := int(d.params.Range.Length / int64(d.cfg.PartSize))
-	if d.params.Range.Length%int64(d.cfg.PartSize) > 0 {
-		maxPart++
+	maxPart := 1
+	if d.params.Range.Length > int64(d.cfg.PartSize) {
+		maxPart = int((d.params.Range.Length + int64(d.cfg.PartSize) - 1) / int64(d.cfg.PartSize))
 	}
 
 	// 调整并发数
 	if maxPart < d.cfg.Concurrency {
 		d.cfg.Concurrency = maxPart
-	}
-	if d.params.Range.Length == 0 {
-		d.cfg.Concurrency = 1
 	}
 	log.Debugf("download cfgConcurrency:%d", d.cfg.Concurrency)
 

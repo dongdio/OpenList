@@ -20,16 +20,14 @@ var ( // 不同情况下获取的AccessTokenQPS限制不同 如下模块化易�
 	AccessToken    = InitApiInfo(Api+"/api/v1/access_token", 1)
 	RefreshToken   = InitApiInfo(Api+"/api/v1/oauth2/access_token", 1)
 	UserInfo       = InitApiInfo(Api+"/api/v1/user/info", 1)
-	FileList       = InitApiInfo(Api+"/api/v2/file/list", 4)
+	FileList       = InitApiInfo(Api+"/api/v2/file/list", 3)
 	DownloadInfo   = InitApiInfo(Api+"/api/v1/file/download_info", 0)
 	Mkdir          = InitApiInfo(Api+"/upload/v1/file/mkdir", 2)
 	Move           = InitApiInfo(Api+"/api/v1/file/move", 1)
 	Rename         = InitApiInfo(Api+"/api/v1/file/name", 1)
 	Trash          = InitApiInfo(Api+"/api/v1/file/trash", 2)
-	UploadCreate   = InitApiInfo(Api+"/upload/v1/file/create", 2)
-	UploadUrl      = InitApiInfo(Api+"/upload/v1/file/get_upload_url", 0)
-	UploadComplete = InitApiInfo(Api+"/upload/v1/file/upload_complete", 0)
-	UploadAsync    = InitApiInfo(Api+"/upload/v1/file/upload_async_result", 1)
+	UploadCreate   = InitApiInfo(Api+"/upload/v2/file/create", 2)
+	UploadComplete = InitApiInfo(Api+"/upload/v2/file/upload_complete", 0)
 )
 
 func (d *Open123) Request(apiInfo *ApiInfo, method string, callback base.ReqCallback, resp any) ([]byte, error) {
@@ -52,11 +50,11 @@ func (d *Open123) Request(apiInfo *ApiInfo, method string, callback base.ReqCall
 		log.Debugf("API: %s, QPS: %d, NowLen: %d", apiInfo.url, apiInfo.qps, apiInfo.NowLen())
 
 		apiInfo.Require()
-		defer apiInfo.Release()
 		res, err := req.Execute(method, apiInfo.url)
 		if err != nil {
 			return nil, err
 		}
+		apiInfo.Release()
 		body := res.Bytes()
 
 		// 解析为通用响应
@@ -79,7 +77,6 @@ func (d *Open123) Request(apiInfo *ApiInfo, method string, callback base.ReqCall
 			return nil, errors.New(baseResp.Message)
 		}
 	}
-
 }
 
 func (d *Open123) flushAccessToken() error {

@@ -128,7 +128,7 @@ func (d *QuarkOpen) upPre(ctx context.Context, file model.FileStreamer, parentID
 	// 生成proof相关字段，传入 x-pan-token
 	proofVersion, proofSeed1, proofSeed2, proofCode1, proofCode2, err := d.generateProof(file, xPanToken)
 	if err != nil {
-		return UpPreResp{}, errors.Errorf("failed to generate proof: %w", err)
+		return UpPreResp{}, errors.Wrap(err, "failed to generate proof")
 	}
 	now := time.Now()
 	data := base.Json{
@@ -175,12 +175,12 @@ func (d *QuarkOpen) generateProof(file model.FileStreamer, xPanToken string) (pr
 	// 生成proof_code1和proof_code2
 	proofCode1, err = d.generateProofCode(file, proofSeed1, fileSize)
 	if err != nil {
-		return "", "", "", "", "", errors.Errorf("failed to generate proof_code1: %w", err)
+		return "", "", "", "", "", errors.Wrap(err, "failed to generate proof_code1")
 	}
 
 	proofCode2, err = d.generateProofCode(file, proofSeed2, fileSize)
 	if err != nil {
-		return "", "", "", "", "", errors.Errorf("failed to generate proof_code2: %w", err)
+		return "", "", "", "", "", errors.Wrap(err, "failed to generate proof_code2")
 	}
 
 	return proofVersion, proofSeed1, proofSeed2, proofCode1, proofCode2, nil
@@ -209,7 +209,7 @@ func (d *QuarkOpen) generateProofCode(file model.FileStreamer, proofSeed string,
 	// 获取读取范围
 	proofRange, err := d.getProofRange(proofSeed, fileSize)
 	if err != nil {
-		return "", errors.Errorf("failed to get proof range: %w", err)
+		return "", errors.Wrap(err, "failed to get proof range")
 	}
 
 	// 计算需要读取的长度
@@ -224,7 +224,7 @@ func (d *QuarkOpen) generateProofCode(file model.FileStreamer, proofSeed string,
 		Length: length,
 	})
 	if err != nil {
-		return "", errors.Errorf("failed to range read: %w", err)
+		return "", errors.Wrap(err, "failed to range read")
 	}
 	defer func() {
 		if closer, ok := reader.(io.Closer); ok {
@@ -235,13 +235,9 @@ func (d *QuarkOpen) generateProofCode(file model.FileStreamer, proofSeed string,
 	// 读取数据
 	buf := make([]byte, length)
 	n, err := io.ReadFull(reader, buf)
-	if errors.Is(err, io.ErrUnexpectedEOF) {
-		return "", errors.Errorf("can't read data, expected=%d, got=%d", length, n)
+	if n != int(length) {
+		return "", errors.Wrapf(err, "failed to read all data: (expect =%d, actual =%d)", length, n)
 	}
-	if err != nil {
-		return "", errors.Errorf("failed to read data: %w", err)
-	}
-
 	// Base64编码
 	return base64.StdEncoding.EncodeToString(buf), nil
 }
@@ -257,7 +253,7 @@ func (d *QuarkOpen) getProofRange(proofSeed string, fileSize int64) (*ProofRange
 	// 转为 uint64
 	tmpInt, err := strconv.ParseUint(tmpStr, 16, 64)
 	if err != nil {
-		return nil, errors.Errorf("failed to parse hex string: %w", err)
+		return nil, errors.Wrap(err, "failed to parse hex string")
 	}
 	// 计算索引位置
 	index := tmpInt % uint64(fileSize)
@@ -440,13 +436,13 @@ func (d *QuarkOpen) _refreshToken() (string, string, error) {
 			if resp.ErrorMessage != "" {
 				return "", "", errors.Errorf("failed to refresh token: %s", resp.ErrorMessage)
 			}
-			return "", "", errors.Errorf("empty token returned from official API, a wrong refresh token may have been used")
+			return "", "", errors.New("empty token returned from official API, a wrong refresh token may have been used")
 		}
 		return resp.RefreshToken, resp.AccessToken, nil
 	}
 
 	// TODO 本地刷新逻辑
-	return "", "", errors.Errorf("local refresh token logic is not implemented yet, please use online API or contact the developer")
+	return "", "", errors.New("local refresh token logic is not implemented yet, please use online API or contact the developer")
 }
 
 // 生成认证 Cookie

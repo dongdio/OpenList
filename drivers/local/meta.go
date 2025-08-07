@@ -42,17 +42,6 @@ type Addition struct {
 	// 如果为空或保持'delete permanently'，则永久删除文件
 	// 否则将删除的文件移动到指定的回收站目录
 	RecycleBinPath string `json:"recycle_bin_path" default:"delete permanently" help:"回收站路径，留空或保持'delete permanently'则永久删除文件，否则移动到指定目录"`
-
-	// ThumbCacheMaxAge 缩略图缓存最大保留时间（秒）
-	// 超过此时间的缩略图缓存将在清理时被删除
-	// 默认为30天（2592000秒）
-	// 设置为0表示不自动清理
-	ThumbCacheMaxAge int64 `json:"thumb_cache_max_age" default:"2592000" help:"缩略图缓存最大保留时间（秒），默认30天，0表示不自动清理"`
-
-	// ThumbQuality 缩略图质量
-	// 取值范围：1-100，值越高质量越好，文件越大
-	// 默认为85，通常提供较好的质量和文件大小平衡
-	ThumbQuality int `json:"thumb_quality" default:"85" help:"缩略图质量（1-100），值越高质量越好但文件越大，默认85"`
 }
 
 // 驱动配置
@@ -69,17 +58,6 @@ var config = driver.Config{
 // init 初始化函数，注册本地存储驱动
 func init() {
 	op.RegisterDriver(func() driver.Driver {
-		return &Local{
-			// 初始化默认值
-			Addition: Addition{
-				ShowHidden:       false,
-				ThumbConcurrency: "16",
-				VideoThumbPos:    "20%",
-				MkdirPerm:        "777",
-				RecycleBinPath:   "delete permanently",
-				ThumbCacheMaxAge: 2592000, // 30天
-				ThumbQuality:     85,
-			},
-		}
+		return &Local{}
 	})
 }

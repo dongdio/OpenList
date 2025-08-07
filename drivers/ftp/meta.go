@@ -34,7 +34,7 @@ type Addition struct {
 var config = driver.Config{
 	Name:          "FTP",
 	LocalSort:     true,
-	OnlyLinkMFile: true,
+	OnlyLinkMFile: false,
 	DefaultRoot:   "/",
 	NoLinkURL:     true,
 }

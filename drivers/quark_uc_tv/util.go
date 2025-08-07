@@ -95,7 +95,7 @@ func (d *QuarkUCTV) getLoginCode(ctx context.Context) (string, error) {
 		QrData     string `json:"qr_data"`
 		QueryToken string `json:"query_token"`
 	}
-	_, err := d.request(ctx, pathname, "GET", func(req *resty.Request) {
+	_, err := d.request(ctx, pathname, http.MethodGet, func(req *resty.Request) {
 		req.SetQueryParams(map[string]string{
 			"auth_type": "code",
 			"client_id": d.conf.clientID,
@@ -123,7 +123,7 @@ func (d *QuarkUCTV) getCode(ctx context.Context) (string, error) {
 		CommonRsp
 		Code string `json:"code"`
 	}
-	_, err := d.request(ctx, pathname, "GET", func(req *resty.Request) {
+	_, err := d.request(ctx, pathname, http.MethodGet, func(req *resty.Request) {
 		req.SetQueryParams(map[string]string{
 			"client_id":   d.conf.clientID,
 			"scope":       "netdisk",
@@ -138,7 +138,7 @@ func (d *QuarkUCTV) getCode(ctx context.Context) (string, error) {
 
 func (d *QuarkUCTV) getRefreshTokenByTV(ctx context.Context, code string, isRefresh bool) error {
 	pathname := "/token"
-	_, _, reqID := d.generateReqSign("POST", pathname, d.conf.signKey)
+	_, _, reqID := d.generateReqSign(http.MethodPost, pathname, d.conf.signKey)
 	u := d.conf.codeApi + pathname
 	var resp RefreshTokenAuthResp
 	body := map[string]string{
@@ -215,7 +215,7 @@ func (d *QuarkUCTV) generateReqSign(method string, pathname string, key string) 
 
 func (d *QuarkUCTV) getTranscodingLink(ctx context.Context, file model.Obj) (*model.Link, error) {
 	var fileLink StreamingFileLink
-	_, err := d.request(ctx, "/file", "GET", func(req *resty.Request) {
+	_, err := d.request(ctx, "/file", http.MethodGet, func(req *resty.Request) {
 		req.SetQueryParams(map[string]string{
 			"method":     "streaming",
 			"group_by":   "source",
@@ -238,7 +238,7 @@ func (d *QuarkUCTV) getTranscodingLink(ctx context.Context, file model.Obj) (*mo
 
 func (d *QuarkUCTV) getDownloadLink(ctx context.Context, file model.Obj) (*model.Link, error) {
 	var fileLink DownloadFileLink
-	_, err := d.request(ctx, "/file", "GET", func(req *resty.Request) {
+	_, err := d.request(ctx, "/file", http.MethodGet, func(req *resty.Request) {
 		req.SetQueryParams(map[string]string{
 			"method":     "download",
 			"group_by":   "source",

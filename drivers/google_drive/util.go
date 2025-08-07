@@ -5,12 +5,14 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"regexp"
 	"strconv"
 	"time"
 
+	"github.com/avast/retry-go"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -20,7 +22,7 @@ import (
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
-	"github.com/dongdio/OpenList/v4/utility/http_range"
+	"github.com/dongdio/OpenList/v4/utility/stream"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
@@ -253,28 +255,58 @@ func (d *GoogleDrive) getFiles(id string) ([]File, error) {
 	return res, nil
 }
 
-func (d *GoogleDrive) chunkUpload(ctx context.Context, stream model.FileStreamer, url string) error {
+func (d *GoogleDrive) chunkUpload(ctx context.Context, file model.FileStreamer, url string) error {
 	var defaultChunkSize = d.ChunkSize * 1024 * 1024
 	var offset int64 = 0
-	for offset < stream.GetSize() {
+	ss, err := stream.NewStreamSectionReader(file, int(defaultChunkSize))
+	if err != nil {
+		return err
+	}
+	url += "?includeItemsFromAllDrives=true&supportsAllDrives=true"
+	for offset < file.GetSize() {
 		if utils.IsCanceled(ctx) {
 			return ctx.Err()
 		}
-		chunkSize := stream.GetSize() - offset
-		if chunkSize > defaultChunkSize {
-			chunkSize = defaultChunkSize
-		}
-		reader, err := stream.RangeRead(http_range.Range{Start: offset, Length: chunkSize})
+		chunkSize := min(file.GetSize()-offset, defaultChunkSize)
+		reader, err := ss.GetSectionReader(offset, chunkSize)
 		if err != nil {
 			return err
 		}
-		reader = driver.NewLimitedUploadStream(ctx, reader)
-		_, err = d.request(url, http.MethodPut, func(req *resty.Request) {
-			req.SetHeaders(map[string]string{
-				"Content-Length": strconv.FormatInt(chunkSize, 10),
-				"Content-Range":  fmt.Sprintf("bytes %d-%d/%d", offset, offset+chunkSize-1, stream.GetSize()),
-			}).SetBody(reader).SetContext(ctx)
-		}, nil)
+		limitedReader := driver.NewLimitedUploadStream(ctx, reader)
+		err = retry.Do(func() error {
+			reader.Seek(0, io.SeekStart)
+			req, err := http.NewRequestWithContext(ctx, http.MethodPut, url, limitedReader)
+			if err != nil {
+				return err
+			}
+			req.Header = map[string][]string{
+				"Authorization":  {"Bearer " + d.AccessToken},
+				"Content-Length": {strconv.FormatInt(chunkSize, 10)},
+				"Content-Range":  {fmt.Sprintf("bytes %d-%d/%d", offset, offset+chunkSize-1, file.GetSize())},
+			}
+			res, err := base.HttpClient.Do(req)
+			if err != nil {
+				return err
+			}
+			defer res.Body.Close()
+			bytes, _ := io.ReadAll(res.Body)
+			var e Error
+			utils.JSONTool.Unmarshal(bytes, &e)
+			if e.Error.Code != 0 {
+				if e.Error.Code == 401 {
+					err = d.refreshToken()
+					if err != nil {
+						return err
+					}
+				}
+				return fmt.Errorf("%s: %v", e.Error.Message, e.Error.Errors)
+			}
+			return nil
+		},
+			retry.Attempts(3),
+			retry.DelayType(retry.BackOffDelay),
+			retry.Delay(time.Second))
+		ss.RecycleSectionReader(reader)
 		if err != nil {
 			return err
 		}

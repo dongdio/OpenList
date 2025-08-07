@@ -345,7 +345,7 @@ func (oo *openObject) Close() (err error) {
 	}
 	// 校验Sha1
 	if string(oo.shaTemp.Sum(nil)) != oo.sha {
-		return errors.Errorf("failed to finish download: %w", err)
+		return errors.Wrap(err, "failed to finish download")
 	}
 
 	oo.closed = true

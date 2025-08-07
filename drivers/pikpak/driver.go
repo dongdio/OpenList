@@ -317,7 +317,7 @@ func (d *PikPak) OfflineList(ctx context.Context, nextPageToken string, phase []
 		}
 		filtersJSON, err := utils.JSONTool.Marshal(filters)
 		if err != nil {
-			return nil, errors.Errorf("failed to marshal filters: %w", err)
+			return nil, errors.Wrap(err, "failed to marshal filters")
 		}
 		params["filters"] = string(filtersJSON)
 	}
@@ -328,7 +328,7 @@ func (d *PikPak) OfflineList(ctx context.Context, nextPageToken string, phase []
 	}, &resp)
 
 	if err != nil {
-		return nil, errors.Errorf("failed to get offline list: %w", err)
+		return nil, errors.Wrap(err, "failed to get offline list")
 	}
 	res = append(res, resp.Tasks...)
 	return res, nil

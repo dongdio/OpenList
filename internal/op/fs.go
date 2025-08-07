@@ -24,6 +24,7 @@ import (
 
 var listCache = cache.NewMemCache(cache.WithShards[[]model.Obj](64))
 var listG singleflight.Group[[]model.Obj]
+var errLinkMFileCache = errors.New("ErrLinkMFileCache")
 
 func updateCacheObj(storage driver.Driver, path string, oldObj model.Obj, newObj model.Obj) {
 	key := Key(storage, path)
@@ -139,7 +140,7 @@ func List(ctx context.Context, storage driver.Driver, path string, args model.Li
 	objs, err, _ := listG.Do(key, func() ([]model.Obj, error) {
 		files, err := storage.List(ctx, dir, args)
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to list objs")
+			return nil, errors.Wrap(err, "failed to list objs")
 		}
 		// set path
 		for _, f := range files {
@@ -215,11 +216,11 @@ func Get(ctx context.Context, storage driver.Driver, path string) (model.Obj, er
 					IsFolder: true,
 				}
 			default:
-				return nil, errors.Errorf("please implement IRootPath or IRootId or GetRooter method")
+				return nil, errors.New("please implement IRootPath or IRootId or GetRooter method")
 			}
 		}
 		if rootObj == nil {
-			return nil, errors.Errorf("please implement IRootPath or IRootId or GetRooter method")
+			return nil, errors.New("please implement IRootPath or IRootId or GetRooter method")
 		}
 		return &model.ObjWrapName{
 			Name: RootName,
@@ -294,10 +295,15 @@ func Link(ctx context.Context, storage driver.Driver, path string, args model.Li
 	}
 
 	var forget any
+	var linkM *model.Link
 	fn := func() (*model.Link, error) {
 		link, err := storage.Link(ctx, file, args)
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed get link")
+			return nil, errors.Wrap(err, "failed get link")
+		}
+		if link.MFile != nil && forget != nil {
+			linkM = link
+			return nil, errLinkMFileCache
 		}
 		if link.Expiration != nil {
 			linkCache.Set(key, link, cache.WithEx[*model.Link](*link.Expiration))
@@ -328,10 +334,16 @@ func Link(ctx context.Context, storage driver.Driver, path string, args model.Li
 			link.AcquireReference()
 		}
 	}
+	if errors.Is(err, errLinkMFileCache) {
+		if linkM != nil {
+			return linkM, file, nil
+		}
+		forget = nil
+		link, err = fn()
+	}
 	if err != nil {
 		return nil, nil, err
 	}
-
 	return link, file, err
 }
 
@@ -339,7 +351,7 @@ func Link(ctx context.Context, storage driver.Driver, path string, args model.Li
 func Other(ctx context.Context, storage driver.Driver, args model.FsOtherArgs) (any, error) {
 	obj, err := GetUnwrap(ctx, storage, args.Path)
 	if err != nil {
-		return nil, errors.WithMessagef(err, "failed to get obj")
+		return nil, errors.WithMessage(err, "failed to get obj")
 	}
 	if o, ok := storage.(driver.Other); ok {
 		return o.Other(ctx, model.OtherArgs{
@@ -587,7 +599,7 @@ func Put(ctx context.Context, storage driver.Driver, dstDirPath string, file mod
 		if fi.GetSize() == 0 {
 			err = Remove(ctx, storage, dstPath)
 			if err != nil {
-				return errors.WithMessagef(err, "while uploading, failed remove existing file which size = 0")
+				return errors.WithMessage(err, "while uploading, failed remove existing file which size = 0")
 			}
 		} else if storage.Config().NoOverwriteUpload {
 			// try to rename old obj
@@ -664,11 +676,11 @@ func PutURL(ctx context.Context, storage driver.Driver, dstDirPath, dstName, url
 	}
 	err = MakeDir(ctx, storage, dstDirPath)
 	if err != nil {
-		return errors.WithMessagef(err, "failed to put url")
+		return errors.WithMessage(err, "failed to put url")
 	}
 	dstDir, err := GetUnwrap(ctx, storage, dstDirPath)
 	if err != nil {
-		return errors.WithMessagef(err, "failed to put url")
+		return errors.WithMessage(err, "failed to put url")
 	}
 	switch s := storage.(type) {
 	case driver.PutURLResult:

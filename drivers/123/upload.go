@@ -2,28 +2,24 @@ package _123
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
+	"time"
 
-	"github.com/pkg/errors"
+	"github.com/avast/retry-go"
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/utility/errgroup"
+	"github.com/dongdio/OpenList/v4/utility/singleflight"
+	"github.com/dongdio/OpenList/v4/utility/stream"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
-// getS3PreSignedUrls 获取S3预签名URL，用于分片上传
-// 参数：
-//   - ctx: 上下文
-//   - upReq: 上传请求响应
-//   - start: 起始分片编号
-//   - end: 结束分片编号
-//
-// 返回：
-//   - 预签名URL响应和可能的错误
 func (d *Pan123) getS3PreSignedUrls(ctx context.Context, upReq *UploadResp, start, end int) (*S3PreSignedURLs, error) {
 	data := base.Json{
 		"bucket":          upReq.Data.Bucket,
@@ -43,15 +39,6 @@ func (d *Pan123) getS3PreSignedUrls(ctx context.Context, upReq *UploadResp, star
 	return &s3PreSignedUrls, nil
 }
 
-// getS3Auth 获取S3认证信息，用于单个文件上传
-// 参数：
-//   - ctx: 上下文
-//   - upReq: 上传请求响应
-//   - start: 起始分片编号
-//   - end: 结束分片编号
-//
-// 返回：
-//   - S3认证响应和可能的错误
 func (d *Pan123) getS3Auth(ctx context.Context, upReq *UploadResp, start, end int) (*S3PreSignedURLs, error) {
 	data := base.Json{
 		"StorageNode":     upReq.Data.StorageNode,
@@ -71,15 +58,6 @@ func (d *Pan123) getS3Auth(ctx context.Context, upReq *UploadResp, start, end in
 	return &s3PreSignedUrls, nil
 }
 
-// completeS3 完成S3上传
-// 参数：
-//   - ctx: 上下文
-//   - upReq: 上传请求响应
-//   - file: 文件流
-//   - isMultipart: 是否为分片上传
-//
-// 返回：
-//   - 可能的错误
 func (d *Pan123) completeS3(ctx context.Context, upReq *UploadResp, file model.FileStreamer, isMultipart bool) error {
 	data := base.Json{
 		"StorageNode": upReq.Data.StorageNode,
@@ -96,156 +74,123 @@ func (d *Pan123) completeS3(ctx context.Context, upReq *UploadResp, file model.F
 	return err
 }
 
-// newUpload 实现自定义上传逻辑
-// 参数：
-//   - ctx: 上下文
-//   - upReq: 上传请求响应
-//   - file: 文件流
-//   - up: 上传进度回调函数
-//
-// 返回：
-//   - 可能的错误
 func (d *Pan123) newUpload(ctx context.Context, upReq *UploadResp, file model.FileStreamer, up driver.UpdateProgress) error {
-	// 将文件缓存到临时文件中
-	tmpF, err := file.CacheFullInTempFile()
-	if err != nil {
-		return err
-	}
-
-	// 计算分片大小和数量
+	// fetch s3 pre signed urls
 	size := file.GetSize()
-	chunkSize := min(size, 16*utils.MB)
-	chunkCount := int(size / chunkSize)
+	chunkSize := int64(16 * utils.MB)
+	chunkCount := 1
+	if size > chunkSize {
+		chunkCount = int((size + chunkSize - 1) / chunkSize)
+	}
 	lastChunkSize := size % chunkSize
-	if lastChunkSize > 0 {
-		chunkCount++
-	} else {
+	if lastChunkSize == 0 {
 		lastChunkSize = chunkSize
 	}
-
-	// 确定批量获取预签名URL的策略
+	// only 1 batch is allowed
 	batchSize := 1
 	getS3UploadUrl := d.getS3Auth
 	if chunkCount > 1 {
 		batchSize = 10
 		getS3UploadUrl = d.getS3PreSignedUrls
 	}
+	ss, err := stream.NewStreamSectionReader(file, int(chunkSize))
+	if err != nil {
+		return err
+	}
 
-	// 分批上传文件分片
+	thread := min(chunkCount, d.UploadThread)
+	threadG, uploadCtx := errgroup.NewOrderedGroupWithContext(ctx, thread,
+		retry.Attempts(3),
+		retry.Delay(time.Second),
+		retry.DelayType(retry.BackOffDelay))
+
 	for i := 1; i <= chunkCount; i += batchSize {
-		// 检查上下文是否已取消
-		if utils.IsCanceled(ctx) {
-			return ctx.Err()
+		if utils.IsCanceled(uploadCtx) {
+			break
 		}
-
-		// 计算当前批次的起止分片编号
 		start := i
 		end := min(i+batchSize, chunkCount+1)
-
-		// 获取预签名URL
-		s3PreSignedUrls, err := getS3UploadUrl(ctx, upReq, start, end)
+		s3PreSignedUrls, err := getS3UploadUrl(uploadCtx, upReq, start, end)
 		if err != nil {
 			return err
 		}
-
-		// 上传每个分片
-		for j := start; j < end; j++ {
-			// 检查上下文是否已取消
-			if utils.IsCanceled(ctx) {
-				return ctx.Err()
+		// upload each chunk
+		for cur := start; cur < end; cur++ {
+			if utils.IsCanceled(uploadCtx) {
+				break
 			}
-
-			// 确定当前分片大小
+			offset := int64(cur-1) * chunkSize
 			curSize := chunkSize
-			if j == chunkCount {
+			if cur == chunkCount {
 				curSize = lastChunkSize
 			}
-
-			// 上传分片
-			err = d.uploadS3Chunk(ctx, upReq, s3PreSignedUrls, j, end,
-				io.NewSectionReader(tmpF, chunkSize*int64(j-1), curSize), curSize, false, getS3UploadUrl)
-			if err != nil {
-				return err
-			}
-
-			// 更新上传进度
-			up(float64(j) * 100 / float64(chunkCount))
+			var reader *stream.SectionReader
+			var rateLimitedRd io.Reader
+			threadG.GoWithLifecycle(errgroup.Lifecycle{
+				Before: func(ctx context.Context) error {
+					if reader == nil {
+						var err error
+						reader, err = ss.GetSectionReader(offset, curSize)
+						if err != nil {
+							return err
+						}
+						rateLimitedRd = driver.NewLimitedUploadStream(ctx, reader)
+					}
+					return nil
+				},
+				Do: func(ctx context.Context) error {
+					reader.Seek(0, io.SeekStart)
+					uploadUrl := s3PreSignedUrls.Data.PreSignedUrls[strconv.Itoa(cur)]
+					if uploadUrl == "" {
+						return fmt.Errorf("upload url is empty, s3PreSignedUrls: %+v", s3PreSignedUrls)
+					}
+					reader.Seek(0, io.SeekStart)
+					req, err := http.NewRequestWithContext(ctx, http.MethodPut, uploadUrl, rateLimitedRd)
+					if err != nil {
+						return err
+					}
+					req.ContentLength = curSize
+					// req.Header.Set("Content-Length", strconv.FormatInt(curSize, 10))
+					res, err := base.HttpClient.Do(req)
+					if err != nil {
+						return err
+					}
+					defer res.Body.Close()
+					if res.StatusCode == http.StatusForbidden {
+						singleflight.AnyGroup.Do(fmt.Sprintf("Pan123.newUpload_%p", threadG), func() (any, error) {
+							newS3PreSignedUrls, err := getS3UploadUrl(ctx, upReq, cur, end)
+							if err != nil {
+								return nil, err
+							}
+							s3PreSignedUrls.Data.PreSignedUrls = newS3PreSignedUrls.Data.PreSignedUrls
+							return nil, nil
+						})
+						if err != nil {
+							return err
+						}
+						return fmt.Errorf("upload s3 chunk %d failed, status code: %d", cur, res.StatusCode)
+					}
+					if res.StatusCode != http.StatusOK {
+						body, err := io.ReadAll(res.Body)
+						if err != nil {
+							return err
+						}
+						return fmt.Errorf("upload s3 chunk %d failed, status code: %d, body: %s", cur, res.StatusCode, body)
+					}
+					progress := 10.0 + 85.0*float64(threadG.Success())/float64(chunkCount)
+					up(progress)
+					return nil
+				},
+				After: func(err error) {
+					ss.RecycleSectionReader(reader)
+				},
+			})
 		}
 	}
-
-	// 完成上传
+	if err = threadG.Wait(); err != nil {
+		return err
+	}
+	defer up(100)
+	// complete s3 upload
 	return d.completeS3(ctx, upReq, file, chunkCount > 1)
-}
-
-// uploadS3Chunk 上传单个S3分片
-// 参数：
-//   - ctx: 上下文
-//   - upReq: 上传请求响应
-//   - s3PreSignedUrls: 预签名URL响应
-//   - cur: 当前分片编号
-//   - end: 结束分片编号
-//   - reader: 分片数据读取器
-//   - curSize: 当前分片大小
-//   - retry: 是否为重试操作
-//   - getS3UploadUrl: 获取上传URL的函数
-//
-// 返回：
-//   - 可能的错误
-func (d *Pan123) uploadS3Chunk(ctx context.Context, upReq *UploadResp, s3PreSignedUrls *S3PreSignedURLs,
-	cur, end int, reader *io.SectionReader, curSize int64, retry bool,
-	getS3UploadUrl func(ctx context.Context, upReq *UploadResp, start int, end int) (*S3PreSignedURLs, error)) error {
-
-	// 获取当前分片的上传URL
-	uploadUrl := s3PreSignedUrls.Data.PreSignedUrls[strconv.Itoa(cur)]
-	if uploadUrl == "" {
-		return errors.Errorf("上传URL为空，s3PreSignedUrls: %+v", s3PreSignedUrls)
-	}
-
-	// 创建HTTP请求
-	req, err := http.NewRequest("PUT", uploadUrl, driver.NewLimitedUploadStream(ctx, reader))
-	if err != nil {
-		return err
-	}
-	req = req.WithContext(ctx)
-	req.ContentLength = curSize
-	// req.Header.Set("Content-Length", strconv.FormatInt(curSize, 10))
-
-	// 发送请求
-	res, err := base.HttpClient.Do(req)
-	if err != nil {
-		return err
-	}
-	defer res.Body.Close()
-
-	// 处理响应
-	if res.StatusCode == http.StatusForbidden {
-		if retry {
-			return errors.Errorf("上传S3分片 %d 失败，状态码: %d", cur, res.StatusCode)
-		}
-
-		// 刷新预签名URL并重试
-		newS3PreSignedUrls, err := getS3UploadUrl(ctx, upReq, cur, end)
-		if err != nil {
-			return err
-		}
-		s3PreSignedUrls.Data.PreSignedUrls = newS3PreSignedUrls.Data.PreSignedUrls
-
-		// 重置读取位置并重试
-		_, err = reader.Seek(0, io.SeekStart)
-		if err != nil {
-			return errors.Wrap(err, "重置文件读取位置失败")
-		}
-		return d.uploadS3Chunk(ctx, upReq, s3PreSignedUrls, cur, end, reader, curSize, true, getS3UploadUrl)
-	}
-
-	// 处理其他错误状态码
-	if res.StatusCode != http.StatusOK {
-		body, err := io.ReadAll(res.Body)
-		if err != nil {
-			return errors.Wrapf(err, "读取错误响应失败，状态码: %d", res.StatusCode)
-		}
-		return errors.Errorf("上传S3分片 %d 失败，状态码: %d，响应: %s", cur, res.StatusCode, body)
-	}
-
-	return nil
 }

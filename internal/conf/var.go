@@ -27,6 +27,7 @@ var (
 var (
 	// StoragesLoaded loaded success if empty
 	StoragesLoaded = false
+	MaxBufferLimit int
 )
 
 var (

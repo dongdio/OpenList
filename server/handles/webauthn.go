@@ -58,7 +58,7 @@ func BeginAuthnLogin(c *gin.Context) {
 	// 创建 WebAuthn 实例
 	authnInstance, err := authn.NewAuthnInstance(c)
 	if err != nil {
-		common.ErrorResp(c, errors.Errorf("创建 WebAuthn 实例失败: %w", err), 400)
+		common.ErrorResp(c, errors.Wrap(err, "创建 WebAuthn 实例失败"), 400)
 		return
 	}
 

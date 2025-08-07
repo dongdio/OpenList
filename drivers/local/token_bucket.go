@@ -57,7 +57,7 @@ func NewStaticTokenBucketWithMigration(oldBucket TokenBucket, size int) StaticTo
 
 	// 创建新桶并预填充部分令牌
 	bucket := make(chan struct{}, size)
-	for i := 0; i < size-migrateSize; i++ {
+	for range size - migrateSize {
 		bucket <- struct{}{}
 	}
 
@@ -65,19 +65,13 @@ func NewStaticTokenBucketWithMigration(oldBucket TokenBucket, size int) StaticTo
 	if migrateSize > 0 {
 		go func() {
 			for range migrateSize {
-				// 从旧桶取出令牌放入新桶
-				_, ok := <-oldStaticBucket.bucket
-				if !ok {
-					// 旧桶已关闭，提前结束迁移
-					break
-				}
+				<-oldStaticBucket.bucket
 				bucket <- struct{}{}
 			}
-			// 关闭旧桶
 			close(oldStaticBucket.bucket)
 		}()
 	}
-	return StaticTokenBucket{bucket: bucket}
+	return NewStaticTokenBucket(size)
 }
 
 // Take 获取一个令牌
@@ -89,12 +83,7 @@ func (b StaticTokenBucket) Take() <-chan struct{} {
 
 // Put 归还一个令牌到桶中
 func (b StaticTokenBucket) Put() {
-	select {
-	case b.bucket <- struct{}{}:
-		// 成功归还令牌
-	default:
-		// 桶已满或已关闭，忽略
-	}
+	b.bucket <- struct{}{}
 }
 
 // Do 使用令牌执行函数

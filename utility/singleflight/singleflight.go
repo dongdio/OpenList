@@ -15,6 +15,7 @@ import (
 	"sync"
 )
 
+var AnyGroup Group[any]
 var ErrorGroup Group[error]
 
 // errGoexit indicates the runtime.Goexit was called in

@@ -154,13 +154,15 @@ type DownloadInfoResp struct {
 	} `json:"data"`
 }
 
+// UploadCreateResp 创建文件V2返回
 type UploadCreateResp struct {
 	BaseResp
 	Data struct {
-		FileID      int64  `json:"fileID"`
-		PreuploadID string `json:"preuploadID"`
-		Reuse       bool   `json:"reuse"`
-		SliceSize   int64  `json:"sliceSize"`
+		FileID      int64    `json:"fileID"`
+		PreuploadID string   `json:"preuploadID"`
+		Reuse       bool     `json:"reuse"`
+		SliceSize   int64    `json:"sliceSize"`
+		Servers     []string `json:"servers"`
 	} `json:"data"`
 }
 
@@ -171,35 +173,11 @@ type UploadUrlResp struct {
 	}
 }
 
+// UploadCompleteResp 上传完毕V2返回
 type UploadCompleteResp struct {
 	BaseResp
 	Data struct {
-		Async     bool  `json:"async"`
 		Completed bool  `json:"completed"`
 		FileID    int64 `json:"fileID"`
-	} `json:"data"`
-}
-
-type UploadAsyncResp struct {
-	BaseResp
-	Data struct {
-		Completed bool  `json:"completed"`
-		FileID    int64 `json:"fileID"`
-	} `json:"data"`
-}
-
-type UploadResp struct {
-	BaseResp
-	Data struct {
-		AccessKeyId     string `json:"AccessKeyId"`
-		Bucket          string `json:"Bucket"`
-		Key             string `json:"Key"`
-		SecretAccessKey string `json:"SecretAccessKey"`
-		SessionToken    string `json:"SessionToken"`
-		FileId          int64  `json:"FileId"`
-		Reuse           bool   `json:"Reuse"`
-		EndPoint        string `json:"EndPoint"`
-		StorageNode     string `json:"StorageNode"`
-		UploadId        string `json:"UploadId"`
 	} `json:"data"`
 }

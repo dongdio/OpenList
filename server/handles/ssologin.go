@@ -181,7 +181,7 @@ func GetOIDCClient(c *gin.Context, useCompatibility bool, redirectUri, method st
 	// 创建OIDC提供者
 	provider, err := oidc.NewProvider(c, endpoint)
 	if err != nil {
-		return nil, errors.Errorf("failed to create OIDC provider: %w", err)
+		return nil, errors.Wrap(err, "failed to create OIDC provider")
 	}
 
 	// 获取客户端配置
@@ -538,7 +538,7 @@ func SSOLoginCallback(c *gin.Context) {
 	}
 
 	if err != nil {
-		common.ErrorResp(c, errors.Errorf("failed to exchange token: %w", err), 400)
+		common.ErrorResp(c, errors.Wrap(err, "failed to exchange token"), 400)
 		return
 	}
 
@@ -570,7 +570,7 @@ func SSOLoginCallback(c *gin.Context) {
 	}
 
 	if err != nil {
-		common.ErrorResp(c, errors.Errorf("failed to get user info: %w", err), 400)
+		common.ErrorResp(c, errors.Wrap(err, "failed to get user info"), 400)
 		return
 	}
 

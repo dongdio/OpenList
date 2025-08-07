@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/xml"
 	"fmt"
+	"hash"
 	"io"
 	"net/http"
 	"net/http/cookiejar"
@@ -17,6 +18,12 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/avast/retry-go"
+	"github.com/google/uuid"
+	"github.com/pkg/errors"
+	"github.com/spf13/cast"
+	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/drivers/base"
@@ -29,18 +36,24 @@ import (
 	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/stream"
 	"github.com/dongdio/OpenList/v4/utility/utils"
-
-	"github.com/avast/retry-go"
-	"github.com/google/uuid"
-	"github.com/pkg/errors"
-	"resty.dev/v3"
 )
 
-// SignatureHeader 生成请求签名头，用于189云盘API的身份验证。
-// url: 请求的目标URL
-// method: HTTP请求方法（如GET、POST）
-// params: 请求参数的加密字符串
-// isFamily: 是否为家庭账户请求
+const (
+	ACCOUNT_TYPE = "02"
+	APP_ID       = "8025431004"
+	CLIENT_TYPE  = "10020"
+	VERSION      = "6.2"
+
+	WEB_URL    = "https://cloud.189.cn"
+	AUTH_URL   = "https://open.e.189.cn"
+	API_URL    = "https://api.cloud.189.cn"
+	UPLOAD_URL = "https://upload.cloud.189.cn"
+
+	RETURN_URL = "https://m.cloud.189.cn/zhuanti/2020/loginErrorPc/index.html"
+
+	CHANNEL_ID = "web_cloud.189.cn"
+)
+
 func (y *Cloud189PC) SignatureHeader(url, method, params string, isFamily bool) map[string]string {
 	dateOfGmt := getHttpDateStr()
 	sessionKey := y.getTokenInfo().SessionKey
@@ -59,9 +72,6 @@ func (y *Cloud189PC) SignatureHeader(url, method, params string, isFamily bool) 
 	return header
 }
 
-// EncryptParams 加密请求参数，使用AES-ECB算法。
-// params: 待加密的参数
-// isFamily: 是否为家庭账户请求，决定使用哪个密钥
 func (y *Cloud189PC) EncryptParams(params Params, isFamily bool) string {
 	sessionSecret := y.getTokenInfo().SessionSecret
 	if isFamily {
@@ -73,28 +83,20 @@ func (y *Cloud189PC) EncryptParams(params Params, isFamily bool) string {
 	return ""
 }
 
-// request 发送HTTP请求到189云盘API，支持自动处理会话失效重试。
-// url: 请求的目标URL
-// method: HTTP请求方法
-// callback: 请求回调，用于设置额外参数或头
-// params: 请求参数，将被加密后附加到URL
-// resp: 响应结构体，用于解析返回数据
-// isFamily: 是否为家庭账户请求
-func (y *Cloud189PC) request(url, method string, callback base.ReqCallback, params Params, resp any, isFamily ...bool) ([]byte, error) {
+func (y *Cloud189PC) request(url, method string, callback base.ReqCallback, params Params, resp interface{}, isFamily ...bool) ([]byte, error) {
 	req := y.getClient().R().SetQueryParams(clientSuffix())
 
-	// 设置加密后的参数
-	encryptedParams := y.EncryptParams(params, isBool(isFamily...))
-	if encryptedParams != "" {
-		req.SetQueryParam("params", encryptedParams)
+	// 设置params
+	paramsData := y.EncryptParams(params, isBool(isFamily...))
+	if paramsData != "" {
+		req.SetQueryParam("params", paramsData)
 	}
 
-	// 设置签名头
-	req.SetHeaders(y.SignatureHeader(url, method, encryptedParams, isBool(isFamily...)))
+	// Signature
+	req.SetHeaders(y.SignatureHeader(url, method, paramsData, isBool(isFamily...)))
 
-	// 设置错误响应结构体
-	var errResp RespErr
-	req.SetError(&errResp)
+	var erron RespErr
+	req.SetError(&erron)
 
 	if callback != nil {
 		callback(req)
@@ -104,61 +106,43 @@ func (y *Cloud189PC) request(url, method string, callback base.ReqCallback, para
 	}
 	res, err := req.Execute(method, url)
 	if err != nil {
-		return nil, errors.Wrap(err, "执行HTTP请求失败")
+		return nil, err
 	}
 
-	// 检查会话失效并重试
 	if strings.Contains(res.String(), "userSessionBO is null") {
 		if err = y.refreshSession(); err != nil {
-			return nil, errors.Wrap(err, "刷新会话失败")
+			return nil, err
 		}
 		return y.request(url, method, callback, params, resp, isFamily...)
 	}
 
-	// 检查无效会话密钥并重试
+	// if erron.ErrorCode == "InvalidSessionKey" || erron.Code == "InvalidSessionKey" {
 	if strings.Contains(res.String(), "InvalidSessionKey") {
 		if err = y.refreshSession(); err != nil {
-			return nil, errors.Wrap(err, "刷新会话失败")
+			return nil, err
 		}
 		return y.request(url, method, callback, params, resp, isFamily...)
 	}
 
-	// 处理API返回的错误
-	if errResp.HasError() {
-		return nil, &errResp
+	// 处理错误
+	if erron.HasError() {
+		return nil, &erron
 	}
 	return res.Bytes(), nil
 }
 
-// get 发送GET请求到189云盘API。
-// url: 请求的目标URL
-// callback: 请求回调，用于设置额外参数或头
-// resp: 响应结构体，用于解析返回数据
-// isFamily: 是否为家庭账户请求
-func (y *Cloud189PC) get(url string, callback base.ReqCallback, resp any, isFamily ...bool) ([]byte, error) {
+func (y *Cloud189PC) get(url string, callback base.ReqCallback, resp interface{}, isFamily ...bool) ([]byte, error) {
 	return y.request(url, http.MethodGet, callback, nil, resp, isFamily...)
 }
 
-// post 发送POST请求到189云盘API。
-// url: 请求的目标URL
-// callback: 请求回调，用于设置额外参数或头
-// resp: 响应结构体，用于解析返回数据
-// isFamily: 是否为家庭账户请求
-func (y *Cloud189PC) post(url string, callback base.ReqCallback, resp any, isFamily ...bool) ([]byte, error) {
+func (y *Cloud189PC) post(url string, callback base.ReqCallback, resp interface{}, isFamily ...bool) ([]byte, error) {
 	return y.request(url, http.MethodPost, callback, nil, resp, isFamily...)
 }
 
-// put 发送PUT请求到189云盘API，通常用于文件上传。
-// ctx: 请求上下文
-// url: 请求的目标URL
-// headers: 额外的请求头
-// sign: 是否需要签名
-// file: 文件数据读取器
-// isFamily: 是否为家庭账户请求
 func (y *Cloud189PC) put(ctx context.Context, url string, headers map[string]string, sign bool, file io.Reader, isFamily bool) ([]byte, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodPut, url, file)
 	if err != nil {
-		return nil, errors.Wrap(err, "创建PUT请求失败")
+		return nil, err
 	}
 
 	query := req.URL.Query()
@@ -179,37 +163,32 @@ func (y *Cloud189PC) put(ctx context.Context, url string, headers map[string]str
 
 	resp, err := base.HttpClient.Do(req)
 	if err != nil {
-		return nil, errors.Wrap(err, "执行PUT请求失败")
+		return nil, err
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, errors.Wrap(err, "读取PUT响应失败")
+		return nil, err
 	}
 
-	var errResp RespErr
-	_ = utils.JSONTool.Unmarshal(body, &errResp)
-	_ = xml.Unmarshal(body, &errResp)
-	if errResp.HasError() {
-		return nil, &errResp
+	var erron RespErr
+	_ = utils.JSONTool.Unmarshal(body, &erron)
+	_ = xml.Unmarshal(body, &erron)
+	if erron.HasError() {
+		return nil, &erron
 	}
 	if resp.StatusCode != http.StatusOK {
-		return nil, errors.Errorf("PUT请求失败，错误信息：%s", string(body))
+		return nil, errors.Errorf("put fail,err:%s", string(body))
 	}
 	return body, nil
 }
-
-// getFiles 获取指定文件夹下的所有文件和子文件夹列表。
-// ctx: 请求上下文
-// fileId: 文件夹ID
-// isFamily: 是否为家庭账户请求
-func (y *Cloud189PC) getFiles(ctx context.Context, fileID string, isFamily bool) ([]model.Obj, error) {
+func (y *Cloud189PC) getFiles(ctx context.Context, fileId string, isFamily bool) ([]model.Obj, error) {
 	res := make([]model.Obj, 0, 100)
 	for pageNum := 1; ; pageNum++ {
-		resp, err := y.getFilesWithPage(ctx, fileID, isFamily, pageNum, 1000, y.OrderBy, y.OrderDirection)
+		resp, err := y.getFilesWithPage(ctx, fileId, isFamily, pageNum, 1000, y.OrderBy, y.OrderDirection)
 		if err != nil {
-			return nil, errors.Wrap(err, "获取文件列表失败")
+			return nil, err
 		}
 		// 获取完毕跳出
 		if resp.FileListAO.Count == 0 {
@@ -226,26 +205,18 @@ func (y *Cloud189PC) getFiles(ctx context.Context, fileID string, isFamily bool)
 	return res, nil
 }
 
-// getFilesWithPage 获取指定文件夹下某一页的文件和子文件夹列表。
-// ctx: 请求上下文
-// fileId: 文件夹ID
-// isFamily: 是否为家庭账户请求
-// pageNum: 页码
-// pageSize: 每页记录数
-// orderBy: 排序字段
-// orderDirection: 排序方向
-func (y *Cloud189PC) getFilesWithPage(ctx context.Context, fileID string, isFamily bool, pageNum int, pageSize int, orderBy string, orderDirection string) (*Cloud189FilesResp, error) {
-	fullURL := _apiURL
+func (y *Cloud189PC) getFilesWithPage(ctx context.Context, fileId string, isFamily bool, pageNum int, pageSize int, orderBy string, orderDirection string) (*Cloud189FilesResp, error) {
+	fullUrl := API_URL
 	if isFamily {
-		fullURL += "/family/file"
+		fullUrl += "/family/file"
 	}
-	fullURL += "/listFiles.action"
+	fullUrl += "/listFiles.action"
 
 	var resp Cloud189FilesResp
-	_, err := y.get(fullURL, func(r *resty.Request) {
+	_, err := y.get(fullUrl, func(r *resty.Request) {
 		r.SetContext(ctx)
 		r.SetQueryParams(map[string]string{
-			"folderId":   fileID,
+			"folderId":   fileId,
 			"fileType":   "0",
 			"mediaAttr":  "0",
 			"iconOption": "5",
@@ -267,19 +238,14 @@ func (y *Cloud189PC) getFilesWithPage(ctx context.Context, fileID string, isFami
 		}
 	}, &resp, isFamily)
 	if err != nil {
-		return nil, errors.Wrap(err, "获取分页文件列表失败")
+		return nil, err
 	}
 	return &resp, nil
 }
 
-// findFileByName 在指定文件夹中按名称查找文件。
-// ctx: 请求上下文
-// searchName: 搜索的文件名
-// folderId: 文件夹ID
-// isFamily: 是否为家庭账户请求
-func (y *Cloud189PC) findFileByName(ctx context.Context, searchName string, folderID string, isFamily bool) (*Cloud189File, error) {
+func (y *Cloud189PC) findFileByName(ctx context.Context, searchName string, folderId string, isFamily bool) (*Cloud189File, error) {
 	for pageNum := 1; ; pageNum++ {
-		resp, err := y.getFilesWithPage(ctx, folderID, isFamily, pageNum, 10, "filename", "asc")
+		resp, err := y.getFilesWithPage(ctx, folderId, isFamily, pageNum, 10, "filename", "asc")
 		if err != nil {
 			return nil, err
 		}
@@ -312,7 +278,7 @@ func (y *Cloud189PC) login() (err error) {
 		// 遇到错误，重新加载登陆参数(刷新验证码)
 		if err != nil && y.NoUseOcr {
 			if err1 := y.initLoginParam(); err1 != nil {
-				err = errors.Errorf("err1: %s \nerr2: %s", err, err1)
+				err = fmt.Errorf("err1: %s \nerr2: %s", err, err1)
 			}
 		}
 	}()
@@ -327,27 +293,27 @@ func (y *Cloud189PC) login() (err error) {
 			"lt":    param.Lt,
 		}).
 		SetFormData(map[string]string{
-			"appKey":       _appID,
-			"accountType":  _accountType,
+			"appKey":       APP_ID,
+			"accountType":  ACCOUNT_TYPE,
 			"userName":     param.RsaUsername,
 			"password":     param.RsaPassword,
 			"validateCode": y.ValidateCode,
 			"captchaToken": param.CaptchaToken,
-			"returnUrl":    _returnURL,
+			"returnUrl":    RETURN_URL,
 			// "mailSuffix":   "@189.cn",
 			"dynamicCheck": "FALSE",
-			"clientType":   _clientType,
+			"clientType":   CLIENT_TYPE,
 			"cb_SaveName":  "1",
 			"isOauth2":     "false",
 			"state":        "",
 			"paramId":      param.ParamID,
 		}).
-		Post(_authURL + "/api/logbox/oauth2/loginSubmit.do")
+		Post(AUTH_URL + "/api/logbox/oauth2/loginSubmit.do")
 	if err != nil {
 		return err
 	}
 	if loginresp.ToUrl == "" {
-		return errors.Errorf("login failed,No toUrl obtained, msg: %s", loginresp.Msg)
+		return fmt.Errorf("login failed,No toUrl obtained, msg: %s", loginresp.Msg)
 	}
 
 	// 获取Session
@@ -357,7 +323,7 @@ func (y *Cloud189PC) login() (err error) {
 		SetResult(&tokenInfo).SetError(&erron).
 		SetQueryParams(clientSuffix()).
 		SetQueryParam("redirectURL", loginresp.ToUrl).
-		Post(_apiURL + "/getSessionForPC.action")
+		Post(API_URL + "/getSessionForPC.action")
 	if err != nil {
 		return
 	}
@@ -366,7 +332,7 @@ func (y *Cloud189PC) login() (err error) {
 		return &erron
 	}
 	if tokenInfo.ResCode != 0 {
-		err = errors.New(tokenInfo.ResMessage)
+		err = fmt.Errorf(tokenInfo.ResMessage)
 		return
 	}
 	y.tokenInfo = &tokenInfo
@@ -383,12 +349,12 @@ func (y *Cloud189PC) initLoginParam() error {
 
 	res, err := y.client.R().
 		SetQueryParams(map[string]string{
-			"appId":      _appID,
-			"clientType": _clientType,
-			"returnURL":  _returnURL,
+			"appId":      APP_ID,
+			"clientType": CLIENT_TYPE,
+			"returnURL":  RETURN_URL,
 			"timeStamp":  fmt.Sprint(timestamp()),
 		}).
-		Get(_webURL + "/api/portal/unifyLoginForPC.action")
+		Get(WEB_URL + "/api/portal/unifyLoginForPC.action")
 	if err != nil {
 		return err
 	}
@@ -406,8 +372,8 @@ func (y *Cloud189PC) initLoginParam() error {
 	_, err = y.client.R().
 		SetForceResponseContentType("application/json;charset=UTF-8").
 		SetResult(&encryptConf).
-		SetFormData(map[string]string{"appId": _appID}).
-		Post(_authURL + "/api/logbox/config/encryptConf.do")
+		SetFormData(map[string]string{"appId": APP_ID}).
+		Post(AUTH_URL + "/api/logbox/config/encryptConf.do")
 	if err != nil {
 		return err
 	}
@@ -421,10 +387,10 @@ func (y *Cloud189PC) initLoginParam() error {
 	resp, err := y.client.R().
 		SetHeader("REQID", param.ReqID).
 		SetFormData(map[string]string{
-			"appKey":      _appID,
-			"accountType": _accountType,
+			"appKey":      APP_ID,
+			"accountType": ACCOUNT_TYPE,
 			"userName":    param.RsaUsername,
-		}).Post(_authURL + "/api/logbox/oauth2/needcaptcha.do")
+		}).Post(AUTH_URL + "/api/logbox/oauth2/needcaptcha.do")
 	if err != nil {
 		return err
 	}
@@ -439,28 +405,28 @@ func (y *Cloud189PC) initLoginParam() error {
 			"REQID": param.ReqID,
 			"rnd":   fmt.Sprint(timestamp()),
 		}).
-		Get(_authURL + "/api/logbox/oauth2/picCaptcha.do")
+		Get(AUTH_URL + "/api/logbox/oauth2/picCaptcha.do")
 	if err != nil {
-		return errors.Errorf("failed to obtain verification code")
+		return fmt.Errorf("failed to obtain verification code")
 	}
-	if imgRes.Size() > 20 {
-		if setting.GetStr(consts.OcrApi) != "" && !y.NoUseOcr {
-			vRes, err := base.RestyClient.R().
-				SetMultipartField("image", "validateCode.png", "image/png", bytes.NewReader(imgRes.Bytes())).
-				Post(setting.GetStr(consts.OcrApi))
-			if err != nil {
-				return err
-			}
-			if utils.GetBytes(vRes.Bytes(), "status").Int() == 200 {
-				y.ValidateCode = utils.GetBytes(vRes.Bytes(), "result").String()
-				return nil
-			}
+	if imgRes.Size() <= 20 {
+		return nil
+	}
+	if setting.GetStr(consts.OcrApi) != "" && !y.NoUseOcr {
+		vRes, err := base.RestyClient.R().
+			SetMultipartField("image", "validateCode.png", "image/png", bytes.NewReader(imgRes.Bytes())).
+			Post(setting.GetStr(consts.OcrApi))
+		if err != nil {
+			return err
 		}
-
-		// 返回验证码图片给前端
-		return errors.Errorf(`need img validate code: <img src="data:image/png;base64,%s"/>`, base64.StdEncoding.EncodeToString(imgRes.Bytes()))
+		if utils.GetBytes(vRes.Bytes(), "status").Int() == 200 {
+			y.ValidateCode = utils.GetBytes(vRes.Bytes(), "result").String()
+			return nil
+		}
 	}
-	return nil
+
+	// 返回验证码图片给前端
+	return fmt.Errorf(`need img validate code: <img src="data:image/png;base64,%s"/>`, base64.StdEncoding.EncodeToString(imgRes.Bytes()))
 }
 
 // 刷新会话
@@ -474,11 +440,11 @@ func (y *Cloud189PC) refreshSession() (err error) {
 		SetResult(&userSessionResp).SetError(&erron).
 		SetQueryParams(clientSuffix()).
 		SetQueryParams(map[string]string{
-			"appId":       _appID,
+			"appId":       APP_ID,
 			"accessToken": y.tokenInfo.AccessToken,
 		}).
 		SetHeader("X-Request-ID", uuid.NewString()).
-		Get(_apiURL + "/getSessionForPC.action")
+		Get(API_URL + "/getSessionForPC.action")
 	if err != nil {
 		return err
 	}
@@ -503,11 +469,11 @@ func (y *Cloud189PC) refreshSession() (err error) {
 	return
 }
 
-// StreamUpload 普通上传
+// 普通上传
 // 无法上传大小为0的文件
 func (y *Cloud189PC) StreamUpload(ctx context.Context, dstDir model.Obj, file model.FileStreamer, up driver.UpdateProgress, isFamily bool, overwrite bool) (model.Obj, error) {
 	size := file.GetSize()
-	sliceSize := partSize(size)
+	sliceSize := min(size, partSize(size))
 
 	params := Params{
 		"parentFolderId": dstDir.GetID(),
@@ -517,82 +483,116 @@ func (y *Cloud189PC) StreamUpload(ctx context.Context, dstDir model.Obj, file mo
 		"lazyCheck":      "1",
 	}
 
-	fullURL := _uploadURL
+	fullUrl := UPLOAD_URL
 	if isFamily {
 		params.Set("familyId", y.FamilyID)
-		fullURL += "/family"
+		fullUrl += "/family"
 	} else {
 		// params.Set("extend", `{"opScene":"1","relativepath":"","rootfolderid":""}`)
-		fullURL += "/person"
+		fullUrl += "/person"
 	}
 
 	// 初始化上传
 	var initMultiUpload InitMultiUploadResp
-	_, err := y.request(fullURL+"/initMultiUpload", http.MethodGet, func(req *resty.Request) {
+	_, err := y.request(fullUrl+"/initMultiUpload", http.MethodGet, func(req *resty.Request) {
 		req.SetContext(ctx)
 	}, params, &initMultiUpload, isFamily)
 	if err != nil {
 		return nil, err
 	}
+	ss, err := stream.NewStreamSectionReader(file, int(sliceSize))
+	if err != nil {
+		return nil, err
+	}
 
-	threadG, upCtx := errgroup.NewGroupWithContext(ctx, y.uploadThread,
+	threadG, upCtx := errgroup.NewOrderedGroupWithContext(ctx, y.uploadThread,
 		retry.Attempts(3),
 		retry.Delay(time.Second),
 		retry.DelayType(retry.BackOffDelay))
 
-	count := int(size / sliceSize)
+	count := 1
+	if size > sliceSize {
+		count = int((size + sliceSize - 1) / sliceSize)
+	}
 	lastPartSize := size % sliceSize
-	if lastPartSize > 0 {
-		count++
-	} else {
+	if lastPartSize == 0 {
 		lastPartSize = sliceSize
 	}
-	fileMd5 := utils.MD5.NewFunc()
-	silceMd5 := utils.MD5.NewFunc()
+
 	silceMd5Hexs := make([]string, 0, count)
-	teeReader := io.TeeReader(file, io.MultiWriter(fileMd5, silceMd5))
-	byteSize := sliceSize
+	silceMd5 := utils.MD5.NewFunc()
+	var writers io.Writer = silceMd5
+
+	fileMd5Hex := file.GetHash().GetHash(utils.MD5)
+	var fileMd5 hash.Hash
+	if len(fileMd5Hex) != utils.MD5.Width {
+		fileMd5 = utils.MD5.NewFunc()
+		writers = io.MultiWriter(silceMd5, fileMd5)
+	}
 	for i := 1; i <= count; i++ {
 		if utils.IsCanceled(upCtx) {
 			break
 		}
+		offset := int64((i)-1) * sliceSize
+		sizeTmp := sliceSize
 		if i == count {
-			byteSize = lastPartSize
+			sizeTmp = lastPartSize
 		}
-		byteData := make([]byte, byteSize)
-		// 读取块
-		silceMd5.Reset()
-		if _, err = io.ReadFull(teeReader, byteData); err != io.EOF && err != nil {
-			return nil, err
-		}
+		partInfo := ""
+		var reader *stream.SectionReader
+		var rateLimitedRd io.Reader
+		threadG.GoWithLifecycle(errgroup.Lifecycle{
+			Before: func(ctx context.Context) error {
+				if reader == nil {
+					var err error
+					reader, err = ss.GetSectionReader(offset, sizeTmp)
+					if err != nil {
+						return err
+					}
+					silceMd5.Reset()
+					w, err := utils.CopyWithBuffer(writers, reader)
+					if w != sizeTmp {
+						return errors.Wrapf(err, "failed to read all data: (expect =%d, actual =%d)", sizeTmp, w)
+					}
+					// 计算块md5并进行hex和base64编码
+					md5Bytes := silceMd5.Sum(nil)
+					silceMd5Hexs = append(silceMd5Hexs, strings.ToUpper(hex.EncodeToString(md5Bytes)))
+					partInfo = fmt.Sprintf("%d-%s", i, base64.StdEncoding.EncodeToString(md5Bytes))
 
-		// 计算块md5并进行hex和base64编码
-		md5Bytes := silceMd5.Sum(nil)
-		silceMd5Hexs = append(silceMd5Hexs, strings.ToUpper(hex.EncodeToString(md5Bytes)))
-		partInfo := fmt.Sprintf("%d-%s", i, base64.StdEncoding.EncodeToString(md5Bytes))
+					rateLimitedRd = driver.NewLimitedUploadStream(ctx, reader)
+				}
+				return nil
+			},
+			Do: func(ctx context.Context) error {
+				reader.Seek(0, io.SeekStart)
+				uploadUrls, err := y.GetMultiUploadUrls(ctx, isFamily, initMultiUpload.Data.UploadFileID, partInfo)
+				if err != nil {
+					return err
+				}
 
-		threadG.Go(func(ctx context.Context) error {
-			uploadUrls, err := y.GetMultiUploadUrls(ctx, isFamily, initMultiUpload.Data.UploadFileID, partInfo)
-			if err != nil {
-				return err
-			}
-
-			// step.4 上传切片
-			uploadURL := uploadUrls[0]
-			_, err = y.put(ctx, uploadURL.RequestURL, uploadURL.Headers, false,
-				driver.NewLimitedUploadStream(ctx, bytes.NewReader(byteData)), isFamily)
-			if err != nil {
-				return err
-			}
-			up(float64(threadG.Success()) * 100 / float64(count))
-			return nil
-		})
+				// step.4 上传切片
+				uploadUrl := uploadUrls[0]
+				_, err = y.put(ctx, uploadUrl.RequestURL, uploadUrl.Headers, false,
+					driver.NewLimitedUploadStream(ctx, rateLimitedRd), isFamily)
+				if err != nil {
+					return err
+				}
+				up(float64(threadG.Success()) * 100 / float64(count))
+				return nil
+			},
+			After: func(err error) {
+				ss.RecycleSectionReader(reader)
+			},
+		},
+		)
 	}
 	if err = threadG.Wait(); err != nil {
 		return nil, err
 	}
 
-	fileMd5Hex := strings.ToUpper(hex.EncodeToString(fileMd5.Sum(nil)))
+	if fileMd5 != nil {
+		fileMd5Hex = strings.ToUpper(hex.EncodeToString(fileMd5.Sum(nil)))
+	}
 	sliceMd5Hex := fileMd5Hex
 	if file.GetSize() > sliceSize {
 		sliceMd5Hex = strings.ToUpper(utils.GetMD5EncodeStr(strings.Join(silceMd5Hexs, "\n")))
@@ -600,7 +600,7 @@ func (y *Cloud189PC) StreamUpload(ctx context.Context, dstDir model.Obj, file mo
 
 	// 提交上传
 	var resp CommitMultiUploadFileResp
-	_, err = y.request(fullURL+"/commitMultiUploadFile", http.MethodGet,
+	_, err = y.request(fullUrl+"/commitMultiUploadFile", http.MethodGet,
 		func(req *resty.Request) {
 			req.SetContext(ctx)
 		}, Params{
@@ -635,7 +635,7 @@ func (y *Cloud189PC) RapidUpload(ctx context.Context, dstDir model.Obj, stream m
 	return y.OldUploadCommit(ctx, uploadInfo.FileCommitURL, uploadInfo.UploadFileID, isFamily, overwrite)
 }
 
-// FastUpload 快传
+// 快传
 func (y *Cloud189PC) FastUpload(ctx context.Context, dstDir model.Obj, file model.FileStreamer, up driver.UpdateProgress, isFamily bool, overwrite bool) (model.Obj, error) {
 	var (
 		cache = file.GetFile()
@@ -655,11 +655,12 @@ func (y *Cloud189PC) FastUpload(ctx context.Context, dstDir model.Obj, file mode
 		cache = tmpF
 	}
 	sliceSize := partSize(size)
-	count := int(size / sliceSize)
+	count := 1
+	if size > sliceSize {
+		count = int((size + sliceSize - 1) / sliceSize)
+	}
 	lastSliceSize := size % sliceSize
-	if lastSliceSize > 0 {
-		count++
-	} else {
+	if lastSliceSize == 0 {
 		lastSliceSize = sliceSize
 	}
 
@@ -696,11 +697,11 @@ func (y *Cloud189PC) FastUpload(ctx context.Context, dstDir model.Obj, file mode
 
 	if tmpF != nil {
 		if size > 0 && written != size {
-			return nil, errs.NewErr(err, "CreateTempFile failed, incoming stream actual size= %d, expect = %d ", written, size)
+			return nil, errors.Wrapf(err, "CreateTempFile failed, incoming stream actual size= %d, expect = %d ", written, size)
 		}
 		_, err = tmpF.Seek(0, io.SeekStart)
 		if err != nil {
-			return nil, errs.NewErr(err, "CreateTempFile failed, can't seek to 0 ")
+			return nil, errors.Wrap(err, "CreateTempFile failed, can't seek to 0 ")
 		}
 	}
 
@@ -710,12 +711,12 @@ func (y *Cloud189PC) FastUpload(ctx context.Context, dstDir model.Obj, file mode
 		sliceMd5Hex = strings.ToUpper(utils.GetMD5EncodeStr(strings.Join(sliceMd5Hexs, "\n")))
 	}
 
-	fullURL := _uploadURL
+	fullUrl := UPLOAD_URL
 	if isFamily {
-		fullURL += "/family"
+		fullUrl += "/family"
 	} else {
 		// params.Set("extend", `{"opScene":"1","relativepath":"","rootfolderid":""}`)
-		fullURL += "/person"
+		fullUrl += "/person"
 	}
 
 	// 尝试恢复进度
@@ -734,7 +735,7 @@ func (y *Cloud189PC) FastUpload(ctx context.Context, dstDir model.Obj, file mode
 			params.Set("familyId", y.FamilyID)
 		}
 		var uploadInfo InitMultiUploadResp
-		_, err = y.request(fullURL+"/initMultiUpload", http.MethodGet, func(req *resty.Request) {
+		_, err = y.request(fullUrl+"/initMultiUpload", http.MethodGet, func(req *resty.Request) {
 			req.SetContext(ctx)
 		}, params, &uploadInfo, isFamily)
 		if err != nil {
@@ -761,24 +762,25 @@ func (y *Cloud189PC) FastUpload(ctx context.Context, dstDir model.Obj, file mode
 			i, uploadPart := i, uploadPart
 			threadG.Go(func(ctx context.Context) error {
 				// step.3 获取上传链接
-				uploadURLs, err := y.GetMultiUploadUrls(ctx, isFamily, uploadInfo.UploadFileID, uploadPart)
+				uploadUrls, err := y.GetMultiUploadUrls(ctx, isFamily, uploadInfo.UploadFileID, uploadPart)
 				if err != nil {
 					return err
 				}
-				uploadURL := uploadURLs[0]
+				uploadUrl := uploadUrls[0]
 
-				byteSize, offset := sliceSize, int64(uploadURL.PartNumber-1)*sliceSize
-				if uploadURL.PartNumber == count {
+				byteSize, offset := sliceSize, int64(uploadUrl.PartNumber-1)*sliceSize
+				if uploadUrl.PartNumber == count {
 					byteSize = lastSliceSize
 				}
 
 				// step.4 上传切片
-				_, err = y.put(ctx, uploadURL.RequestURL, uploadURL.Headers, false, io.NewSectionReader(cache, offset, byteSize), isFamily)
+				rateLimitedRd := driver.NewLimitedUploadStream(ctx, io.NewSectionReader(cache, offset, byteSize))
+				_, err = y.put(ctx, uploadUrl.RequestURL, uploadUrl.Headers, false, rateLimitedRd, isFamily)
 				if err != nil {
 					return err
 				}
 
-				up(float64(threadG.Success()) * 100 / float64(len(uploadURLs)))
+				up(float64(threadG.Success()) * 100 / float64(len(uploadUrls)))
 				uploadProgress.UploadParts[i] = ""
 				return nil
 			})
@@ -794,7 +796,7 @@ func (y *Cloud189PC) FastUpload(ctx context.Context, dstDir model.Obj, file mode
 
 	// step.5 提交
 	var resp CommitMultiUploadFileResp
-	_, err = y.request(fullURL+"/commitMultiUploadFile", http.MethodGet,
+	_, err = y.request(fullUrl+"/commitMultiUploadFile", http.MethodGet,
 		func(req *resty.Request) {
 			req.SetContext(ctx)
 		}, Params{
@@ -808,18 +810,18 @@ func (y *Cloud189PC) FastUpload(ctx context.Context, dstDir model.Obj, file mode
 	return resp.toFile(), nil
 }
 
-// GetMultiUploadUrls 获取上传切片信息
+// 获取上传切片信息
 // 对http body有大小限制，分片信息太多会出错
 func (y *Cloud189PC) GetMultiUploadUrls(ctx context.Context, isFamily bool, uploadFileId string, partInfo ...string) ([]UploadUrlInfo, error) {
-	fullURL := _uploadURL
+	fullUrl := UPLOAD_URL
 	if isFamily {
-		fullURL += "/family"
+		fullUrl += "/family"
 	} else {
-		fullURL += "/person"
+		fullUrl += "/person"
 	}
 
 	var uploadUrlsResp UploadUrlsResp
-	_, err := y.request(fullURL+"/getMultiUploadUrls", http.MethodGet,
+	_, err := y.request(fullUrl+"/getMultiUploadUrls", http.MethodGet,
 		func(req *resty.Request) {
 			req.SetContext(ctx)
 		}, Params{
@@ -835,30 +837,29 @@ func (y *Cloud189PC) GetMultiUploadUrls(ctx context.Context, isFamily bool, uplo
 		return nil, errors.Errorf("uploadUrls get error, due to get length %d, real length %d", len(partInfo), len(uploadUrls))
 	}
 
-	uploadURLInfos := make([]UploadUrlInfo, 0, len(uploadUrls))
-	for k, v := range uploadUrls {
+	uploadUrlInfos := make([]UploadUrlInfo, 0, len(uploadUrls))
+	for k, uploadUrl := range uploadUrls {
 		partNumber, err := strconv.Atoi(strings.TrimPrefix(k, "partNumber_"))
 		if err != nil {
 			return nil, err
 		}
-		uploadURLInfos = append(uploadURLInfos, UploadUrlInfo{
+		uploadUrlInfos = append(uploadUrlInfos, UploadUrlInfo{
 			PartNumber:     partNumber,
-			Headers:        ParseHttpHeader(v.RequestHeader),
-			UploadUrlsData: v,
+			Headers:        ParseHttpHeader(uploadUrl.RequestHeader),
+			UploadUrlsData: uploadUrl,
 		})
 	}
-	sort.Slice(uploadURLInfos, func(i, j int) bool {
-		return uploadURLInfos[i].PartNumber < uploadURLInfos[j].PartNumber
+	sort.Slice(uploadUrlInfos, func(i, j int) bool {
+		return uploadUrlInfos[i].PartNumber < uploadUrlInfos[j].PartNumber
 	})
-	return uploadURLInfos, nil
+	return uploadUrlInfos, nil
 }
 
-// OldUpload 旧版本上传，家庭云不支持覆盖
+// 旧版本上传，家庭云不支持覆盖
 func (y *Cloud189PC) OldUpload(ctx context.Context, dstDir model.Obj, file model.FileStreamer, up driver.UpdateProgress, isFamily bool, overwrite bool) (model.Obj, error) {
 	cacheFileProgress := model.UpdateProgressWithRange(up, 0, 50)
 	up = model.UpdateProgressWithRange(up, 50, 100)
 	tempFile, fileMd5, err := stream.CacheFullInTempFileAndHash(file, cacheFileProgress, utils.MD5)
-
 	if err != nil {
 		return nil, err
 	}
@@ -889,17 +890,18 @@ func (y *Cloud189PC) OldUpload(ctx context.Context, dstDir model.Obj, file model
 			header["Edrive-UploadFileId"] = fmt.Sprint(status.UploadFileID)
 		}
 
-		_, err := y.put(ctx, status.FileUploadURL, header, true, rateLimited, isFamily)
-		if err, ok := err.(*RespErr); ok && err.Code != "InputStreamReadError" {
+		_, err = y.put(ctx, status.FileUploadURL, header, true, rateLimited, isFamily)
+		var e *RespErr
+		if errors.As(err, &e) && e.Code != "InputStreamReadError" {
 			return nil, err
 		}
 
 		// 获取断点状态
-		fullURL := _apiURL + "/getUploadFileStatus.action"
+		fullUrl := API_URL + "/getUploadFileStatus.action"
 		if y.isFamily() {
-			fullURL = _apiURL + "/family/file/getFamilyFileStatus.action"
+			fullUrl = API_URL + "/family/file/getFamilyFileStatus.action"
 		}
-		_, err = y.get(fullURL, func(req *resty.Request) {
+		_, err = y.get(fullUrl, func(req *resty.Request) {
 			req.SetContext(ctx).SetQueryParams(map[string]string{
 				"uploadFileId": fmt.Sprint(status.UploadFileID),
 				"resumePolicy": "1",
@@ -911,7 +913,7 @@ func (y *Cloud189PC) OldUpload(ctx context.Context, dstDir model.Obj, file model
 		if err != nil {
 			return nil, err
 		}
-		if _, err := tempFile.Seek(status.GetSize(), io.SeekStart); err != nil {
+		if _, err = tempFile.Seek(status.GetSize(), io.SeekStart); err != nil {
 			return nil, err
 		}
 		up(float64(status.GetSize()) / float64(file.GetSize()) * 100)
@@ -920,15 +922,15 @@ func (y *Cloud189PC) OldUpload(ctx context.Context, dstDir model.Obj, file model
 	return y.OldUploadCommit(ctx, status.FileCommitURL, status.UploadFileID, isFamily, overwrite)
 }
 
-// OldUploadCreate 创建上传会话
+// 创建上传会话
 func (y *Cloud189PC) OldUploadCreate(ctx context.Context, parentID string, fileMd5, fileName, fileSize string, isFamily bool) (*CreateUploadFileResp, error) {
 	var uploadInfo CreateUploadFileResp
 
-	fullURL := _apiURL + "/createUploadFile.action"
+	fullUrl := API_URL + "/createUploadFile.action"
 	if isFamily {
-		fullURL = _apiURL + "/family/file/createFamilyFile.action"
+		fullUrl = API_URL + "/family/file/createFamilyFile.action"
 	}
-	_, err := y.post(fullURL, func(req *resty.Request) {
+	_, err := y.post(fullUrl, func(req *resty.Request) {
 		req.SetContext(ctx)
 		if isFamily {
 			req.SetQueryParams(map[string]string{
@@ -959,10 +961,10 @@ func (y *Cloud189PC) OldUploadCreate(ctx context.Context, parentID string, fileM
 	return &uploadInfo, nil
 }
 
-// OldUploadCommit 提交上传文件
-func (y *Cloud189PC) OldUploadCommit(ctx context.Context, fileCommitURL string, uploadFileID int64, isFamily bool, overwrite bool) (model.Obj, error) {
+// 提交上传文件
+func (y *Cloud189PC) OldUploadCommit(ctx context.Context, fileCommitUrl string, uploadFileID int64, isFamily bool, overwrite bool) (model.Obj, error) {
 	var resp OldCommitUploadFileResp
-	_, err := y.post(fileCommitURL, func(req *resty.Request) {
+	_, err := y.post(fileCommitUrl, func(req *resty.Request) {
 		req.SetContext(ctx)
 		if isFamily {
 			req.SetHeaders(map[string]string{
@@ -993,14 +995,14 @@ func (y *Cloud189PC) isLogin() bool {
 	if y.tokenInfo == nil {
 		return false
 	}
-	_, err := y.get(_apiURL+"/getUserInfo.action", nil, nil)
+	_, err := y.get(API_URL+"/getUserInfo.action", nil, nil)
 	return err == nil
 }
 
 // 创建家庭云中转文件夹
 func (y *Cloud189PC) createFamilyTransferFolder() error {
 	var rootFolder Cloud189Folder
-	_, err := y.post(_apiURL+"/family/file/createFolder.action", func(req *resty.Request) {
+	_, err := y.post(API_URL+"/family/file/createFolder.action", func(req *resty.Request) {
 		req.SetQueryParams(map[string]string{
 			"folderName": "FamilyTransferFolder",
 			"familyId":   y.FamilyID,
@@ -1015,9 +1017,9 @@ func (y *Cloud189PC) createFamilyTransferFolder() error {
 
 // 清理中转文件夹
 func (y *Cloud189PC) cleanFamilyTransfer(ctx context.Context) error {
-	transferFolderID := y.familyTransferFolder.GetID()
+	transferFolderId := y.familyTransferFolder.GetID()
 	for pageNum := 1; ; pageNum++ {
-		resp, err := y.getFilesWithPage(ctx, transferFolderID, true, pageNum, 100, "lastOpTime", "asc")
+		resp, err := y.getFilesWithPage(ctx, transferFolderId, true, pageNum, 100, "lastOpTime", "asc")
 		if err != nil {
 			return err
 		}
@@ -1045,21 +1047,22 @@ func (y *Cloud189PC) cleanFamilyTransfer(ctx context.Context) error {
 		}
 
 		if len(tasks) > 0 {
+			var taskResp *CreateBatchTaskResp
 			// 删除
-			result, err := y.CreateBatchTask("DELETE", y.FamilyID, "", nil, tasks...)
+			taskResp, err = y.CreateBatchTask("DELETE", y.FamilyID, "", nil, tasks...)
 			if err != nil {
 				return err
 			}
-			err = y.WaitBatchTask("DELETE", result.TaskID, time.Second)
+			err = y.WaitBatchTask("DELETE", taskResp.TaskID, time.Second)
 			if err != nil {
 				return err
 			}
 			// 永久删除
-			result, err = y.CreateBatchTask("CLEAR_RECYCLE", y.FamilyID, "", nil, tasks...)
+			taskResp, err = y.CreateBatchTask("CLEAR_RECYCLE", y.FamilyID, "", nil, tasks...)
 			if err != nil {
 				return err
 			}
-			err = y.WaitBatchTask("CLEAR_RECYCLE", result.TaskID, time.Second)
+			err = y.WaitBatchTask("CLEAR_RECYCLE", taskResp.TaskID, time.Second)
 			return err
 		}
 	}
@@ -1069,7 +1072,7 @@ func (y *Cloud189PC) cleanFamilyTransfer(ctx context.Context) error {
 // 获取家庭云所有用户信息
 func (y *Cloud189PC) getFamilyInfoList() ([]FamilyInfoResp, error) {
 	var resp FamilyInfoListResp
-	_, err := y.get(_apiURL+"/family/manage/getFamilyList.action", nil, &resp, true)
+	_, err := y.get(API_URL+"/family/manage/getFamilyList.action", nil, &resp, true)
 	if err != nil {
 		return nil, err
 	}
@@ -1083,22 +1086,22 @@ func (y *Cloud189PC) getFamilyID() (string, error) {
 		return "", err
 	}
 	if len(infos) == 0 {
-		return "", errors.Errorf("cannot get automatically,please input family_id")
+		return "", errors.New("cannot get automatically,please input family_id")
 	}
 	for _, info := range infos {
 		if strings.Contains(y.getTokenInfo().LoginName, info.RemarkName) {
-			return fmt.Sprint(info.FamilyID), nil
+			return cast.ToString(info.FamilyID), nil
 		}
 	}
-	return fmt.Sprint(infos[0].FamilyID), nil
+	return cast.ToString(infos[0].FamilyID), nil
 }
 
-// SaveFamilyFileToPersonCloud 保存家庭云中的文件到个人云
-func (y *Cloud189PC) SaveFamilyFileToPersonCloud(ctx context.Context, familyID string, srcObj, dstDir model.Obj, overwrite bool) error {
-	// _, err := y.post(_apiURL+"/family/file/saveFileToMember.action", func(req *resty.Request) {
+// 保存家庭云中的文件到个人云
+func (y *Cloud189PC) SaveFamilyFileToPersonCloud(ctx context.Context, familyId string, srcObj, dstDir model.Obj, overwrite bool) error {
+	// _, err := y.post(API_URL+"/family/file/saveFileToMember.action", func(req *resty.Request) {
 	// 	req.SetQueryParams(map[string]string{
 	// 		"channelId":    "home",
-	// 		"familyId":     familyID,
+	// 		"familyId":     familyId,
 	// 		"destParentId": destParentId,
 	// 		"fileIdList":   familyFileId,
 	// 	})
@@ -1110,7 +1113,7 @@ func (y *Cloud189PC) SaveFamilyFileToPersonCloud(ctx context.Context, familyID s
 		FileName: srcObj.GetName(),
 		IsFolder: BoolToNumber(srcObj.IsDir()),
 	}
-	resp, err := y.CreateBatchTask("COPY", familyID, dstDir.GetID(), map[string]string{
+	resp, err := y.CreateBatchTask("COPY", familyId, dstDir.GetID(), map[string]string{
 		"groupId":  "null",
 		"copyType": "2",
 		"shareId":  "null",
@@ -1138,15 +1141,15 @@ func (y *Cloud189PC) SaveFamilyFileToPersonCloud(ctx context.Context, familyID s
 	}
 }
 
-// Delete 永久删除文件
-func (y *Cloud189PC) Delete(ctx context.Context, familyID string, srcObj model.Obj) error {
+// 永久删除文件
+func (y *Cloud189PC) Delete(ctx context.Context, familyId string, srcObj model.Obj) error {
 	task := BatchTaskInfo{
 		FileID:   srcObj.GetID(),
 		FileName: srcObj.GetName(),
 		IsFolder: BoolToNumber(srcObj.IsDir()),
 	}
 	// 删除源文件
-	resp, err := y.CreateBatchTask("DELETE", familyID, "", nil, task)
+	resp, err := y.CreateBatchTask("DELETE", familyId, "", nil, task)
 	if err != nil {
 		return err
 	}
@@ -1155,7 +1158,7 @@ func (y *Cloud189PC) Delete(ctx context.Context, familyID string, srcObj model.O
 		return err
 	}
 	// 清除回收站
-	resp, err = y.CreateBatchTask("CLEAR_RECYCLE", familyID, "", nil, task)
+	resp, err = y.CreateBatchTask("CLEAR_RECYCLE", familyId, "", nil, task)
 	if err != nil {
 		return err
 	}
@@ -1166,15 +1169,15 @@ func (y *Cloud189PC) Delete(ctx context.Context, familyID string, srcObj model.O
 	return nil
 }
 
-func (y *Cloud189PC) CreateBatchTask(aType string, familyID string, targetFolderID string, other map[string]string, taskInfos ...BatchTaskInfo) (*CreateBatchTaskResp, error) {
+func (y *Cloud189PC) CreateBatchTask(aType string, familyID string, targetFolderId string, other map[string]string, taskInfos ...BatchTaskInfo) (*CreateBatchTaskResp, error) {
 	var resp CreateBatchTaskResp
-	_, err := y.post(_apiURL+"/batch/createBatchTask.action", func(req *resty.Request) {
+	_, err := y.post(API_URL+"/batch/createBatchTask.action", func(req *resty.Request) {
 		req.SetFormData(map[string]string{
 			"type":      aType,
 			"taskInfos": MustString(utils.JSONTool.MarshalToString(taskInfos)),
 		})
-		if targetFolderID != "" {
-			req.SetFormData(map[string]string{"targetFolderId": targetFolderID})
+		if targetFolderId != "" {
+			req.SetFormData(map[string]string{"targetFolderId": targetFolderId})
 		}
 		if familyID != "" {
 			req.SetFormData(map[string]string{"familyId": familyID})
@@ -1187,10 +1190,10 @@ func (y *Cloud189PC) CreateBatchTask(aType string, familyID string, targetFolder
 	return &resp, nil
 }
 
-// CheckBatchTask 检测任务状态
+// 检测任务状态
 func (y *Cloud189PC) CheckBatchTask(aType string, taskID string) (*BatchTaskStateResp, error) {
 	var resp BatchTaskStateResp
-	_, err := y.post(_apiURL+"/batch/checkBatchTask.action", func(req *resty.Request) {
+	_, err := y.post(API_URL+"/batch/checkBatchTask.action", func(req *resty.Request) {
 		req.SetFormData(map[string]string{
 			"type":   aType,
 			"taskId": taskID,
@@ -1202,10 +1205,10 @@ func (y *Cloud189PC) CheckBatchTask(aType string, taskID string) (*BatchTaskStat
 	return &resp, nil
 }
 
-// GetConflictTaskInfo 获取冲突的任务信息
+// 获取冲突的任务信息
 func (y *Cloud189PC) GetConflictTaskInfo(aType string, taskID string) (*BatchTaskConflictTaskInfoResp, error) {
 	var resp BatchTaskConflictTaskInfoResp
-	_, err := y.post(_apiURL+"/batch/getConflictTaskInfo.action", func(req *resty.Request) {
+	_, err := y.post(API_URL+"/batch/getConflictTaskInfo.action", func(req *resty.Request) {
 		req.SetFormData(map[string]string{
 			"type":   aType,
 			"taskId": taskID,
@@ -1217,11 +1220,11 @@ func (y *Cloud189PC) GetConflictTaskInfo(aType string, taskID string) (*BatchTas
 	return &resp, nil
 }
 
-// ManageBatchTask 处理冲突
-func (y *Cloud189PC) ManageBatchTask(aType string, taskID string, targetFolderID string, taskInfos ...BatchTaskInfo) error {
-	_, err := y.post(_apiURL+"/batch/manageBatchTask.action", func(req *resty.Request) {
+// 处理冲突
+func (y *Cloud189PC) ManageBatchTask(aType string, taskID string, targetFolderId string, taskInfos ...BatchTaskInfo) error {
+	_, err := y.post(API_URL+"/batch/manageBatchTask.action", func(req *resty.Request) {
 		req.SetFormData(map[string]string{
-			"targetFolderId": targetFolderID,
+			"targetFolderId": targetFolderId,
 			"type":           aType,
 			"taskId":         taskID,
 			"taskInfos":      MustString(utils.JSONTool.MarshalToString(taskInfos)),
@@ -1232,7 +1235,7 @@ func (y *Cloud189PC) ManageBatchTask(aType string, taskID string, targetFolderID
 
 var ErrIsConflict = errors.New("there is a conflict with the target object")
 
-// WaitBatchTask 等待任务完成
+// 等待任务完成
 func (y *Cloud189PC) WaitBatchTask(aType string, taskID string, t time.Duration) error {
 	for {
 		state, err := y.CheckBatchTask(aType, taskID)

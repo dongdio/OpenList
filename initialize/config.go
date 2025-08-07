@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/shirou/gopsutil/v4/mem"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
@@ -73,6 +74,19 @@ func InitConfig() {
 	if conf.Conf.MaxConcurrency > 0 {
 		net.DefaultConcurrencyLimit = &net.ConcurrencyLimit{Limit: conf.Conf.MaxConcurrency}
 	}
+
+	if conf.Conf.MaxBufferLimit < 0 {
+		m, _ := mem.VirtualMemory()
+		if m != nil {
+			conf.MaxBufferLimit = max(int(float64(m.Total)*0.05), 4*utils.MB)
+			conf.MaxBufferLimit -= conf.MaxBufferLimit % utils.MB
+		} else {
+			conf.MaxBufferLimit = 16 * utils.MB
+		}
+	} else {
+		conf.MaxBufferLimit = conf.Conf.MaxBufferLimit * utils.MB
+	}
+	log.Infof("max buffer limit: %d", conf.MaxBufferLimit)
 
 	if len(conf.Conf.Log.Filter.Filters) == 0 {
 		conf.Conf.Log.Filter.Enable = false

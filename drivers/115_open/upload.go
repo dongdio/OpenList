@@ -13,6 +13,7 @@ import (
 
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
+	streamPkg "github.com/dongdio/OpenList/v4/utility/stream"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
@@ -115,12 +116,6 @@ func (d *Open115) singleUpload(ctx context.Context, tempF model.File, tokenResp 
 // 返回:
 //   - error: 错误信息
 func (d *Open115) multpartUpload(ctx context.Context, stream model.FileStreamer, up driver.UpdateProgress, tokenResp *sdk.UploadGetTokenResp, initResp *sdk.UploadInitResp) error {
-	// 获取文件大小
-	fileSize := stream.GetSize()
-
-	// 计算分片大小
-	chunkSize := calPartSize(fileSize)
-
 	// 创建OSS客户端
 	ossClient, err := oss.New(
 		tokenResp.Endpoint,
@@ -144,6 +139,10 @@ func (d *Open115) multpartUpload(ctx context.Context, stream model.FileStreamer,
 		return errors.Wrap(err, "初始化分片上传失败")
 	}
 
+	// 获取文件大小
+	fileSize := stream.GetSize()
+	// 计算分片大小
+	chunkSize := calPartSize(fileSize)
 	// 计算分片数量
 	partNum := (stream.GetSize() + chunkSize - 1) / chunkSize
 
@@ -153,32 +152,32 @@ func (d *Open115) multpartUpload(ctx context.Context, stream model.FileStreamer,
 	// 上传偏移量
 	offset := int64(0)
 
+	ss, err := streamPkg.NewStreamSectionReader(stream, int(chunkSize))
+	if err != nil {
+		return err
+	}
+
 	// 逐个上传分片
 	for i := int64(1); i <= partNum; i++ {
 		// 检查上下文是否已取消
 		if utils.IsCanceled(ctx) {
 			return ctx.Err()
 		}
-
 		// 计算当前分片大小
 		partSize := chunkSize
 		if i == partNum {
 			// 最后一个分片可能不足chunkSize
 			partSize = fileSize - (i-1)*chunkSize
 		}
-
-		// 创建可重置的读取器
-		rd := utils.NewMultiReadable(io.LimitReader(stream, partSize))
-
+		rd, err := ss.GetSectionReader(offset, partSize)
+		if err != nil {
+			return err
+		}
+		rateLimitedRd := driver.NewLimitedUploadStream(ctx, rd)
 		// 使用重试机制上传分片
 		err = retry.Do(
 			func() error {
-				// 重置读取器
-				_ = rd.Reset()
-
-				// 创建限速上传流
-				rateLimitedRd := driver.NewLimitedUploadStream(ctx, rd)
-
+				rd.Seek(0, io.SeekStart)
 				// 上传分片
 				part, err := bucket.UploadPart(imur, rateLimitedRd, partSize, int(i))
 				if err != nil {
@@ -193,11 +192,10 @@ func (d *Open115) multpartUpload(ctx context.Context, stream model.FileStreamer,
 			retry.DelayType(retry.BackOffDelay), // 使用退避延迟
 			retry.Delay(time.Second),            // 初始延迟1秒
 		)
-
+		ss.RecycleSectionReader(rd)
 		if err != nil {
 			return errors.Wrapf(err, "上传第%d个分片失败", i)
 		}
-
 		// 更新偏移量和进度
 		if i == partNum {
 			offset = fileSize

@@ -2,9 +2,9 @@ package thunderx
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"strconv"
+
+	"github.com/pkg/errors"
 
 	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/drivers/thunderx"
@@ -56,25 +56,21 @@ func (t *ThunderX) AddURL(args *tool.AddURLLinkArgs) (string, error) {
 	}
 	thunderXDriver, ok := storage.(*thunderx.ThunderX)
 	if !ok {
-		return "", fmt.Errorf("unsupported storage driver for offline download, only ThunderX is supported")
+		return "", errors.New("unsupported storage driver for offline download, only ThunderX is supported")
 	}
 
 	ctx := context.Background()
-
 	if err := op.MakeDir(ctx, storage, actualPath); err != nil {
 		return "", err
 	}
-
 	parentDir, err := op.GetUnwrap(ctx, storage, actualPath)
 	if err != nil {
 		return "", err
 	}
-
 	task, err := thunderXDriver.OfflineDownload(ctx, args.URL, parentDir, "")
 	if err != nil {
-		return "", fmt.Errorf("failed to add offline download task: %w", err)
+		return "", errors.Wrap(err, "failed to add offline download task")
 	}
-
 	return task.ID, nil
 }
 
@@ -85,14 +81,11 @@ func (t *ThunderX) Remove(task *tool.DownloadTask) error {
 	}
 	thunderXDriver, ok := storage.(*thunderx.ThunderX)
 	if !ok {
-		return fmt.Errorf("unsupported storage driver for offline download, only ThunderX is supported")
+		return errors.New("unsupported storage driver for offline download, only ThunderX is supported")
 	}
 	ctx := context.Background()
 	err = thunderXDriver.DeleteOfflineTasks(ctx, []string{task.GID}, false)
-	if err != nil {
-		return err
-	}
-	return nil
+	return errors.Wrap(err, "failed to remove storage")
 }
 
 func (t *ThunderX) Status(task *tool.DownloadTask) (*tool.Status, error) {
@@ -102,7 +95,7 @@ func (t *ThunderX) Status(task *tool.DownloadTask) (*tool.Status, error) {
 	}
 	thunderXDriver, ok := storage.(*thunderx.ThunderX)
 	if !ok {
-		return nil, fmt.Errorf("unsupported storage driver for offline download, only ThunderX is supported")
+		return nil, errors.New("unsupported storage driver for offline download, only ThunderX is supported")
 	}
 	tasks, err := t.GetTasks(thunderXDriver)
 	if err != nil {
@@ -130,7 +123,7 @@ func (t *ThunderX) Status(task *tool.DownloadTask) (*tool.Status, error) {
 			return s, nil
 		}
 	}
-	s.Err = fmt.Errorf("the task has been deleted")
+	s.Err = errors.New("the task has been deleted")
 	return s, nil
 }
 

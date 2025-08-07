@@ -173,7 +173,7 @@ func (d *Dropbox) getFiles(ctx context.Context, path string) ([]File, error) {
 
 func (d *Dropbox) finishUploadSession(ctx context.Context, toPath string, offset int64, sessionId string) error {
 	url := d.contentBase + "/2/files/upload_session/finish"
-	req, err := http.NewRequest(http.MethodPost, url, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, nil)
 	if err != nil {
 		return err
 	}
@@ -218,7 +218,7 @@ func (d *Dropbox) finishUploadSession(ctx context.Context, toPath string, offset
 
 func (d *Dropbox) startUploadSession(ctx context.Context) (string, error) {
 	url := d.contentBase + "/2/files/upload_session/start"
-	req, err := http.NewRequest(http.MethodPost, url, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, nil)
 	if err != nil {
 		return "", err
 	}

@@ -272,7 +272,7 @@ package cmd
 // 	}
 //
 // 	if err := os.Chmod(socketPath, os.FileMode(mode)); err != nil {
-// 		return errors.Errorf("failed to set Unix socket file permissions: %w", err)
+// 		return errors.Wrap(err, "failed to set Unix socket file permissions")
 // 	}
 //
 // 	utils.Log.Debugf("Set Unix socket file permissions to %s", conf.Conf.Scheme.UnixFilePerm)

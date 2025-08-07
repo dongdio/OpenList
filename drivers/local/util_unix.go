@@ -4,7 +4,6 @@ package local
 
 import (
 	"io/fs"
-	"os"
 	"path/filepath"
 	"strings"
 	"syscall"
@@ -36,32 +35,4 @@ func isHidden(f fs.FileInfo, dirPath string) bool {
 	// 检查隐藏标志（某些系统可能支持）
 	// 这里仅作为扩展，大多数Unix系统仅依赖文件名判断
 	return false
-}
-
-// GetFileOwnership 获取文件的所有者和组信息
-// 参数:
-//   - path: 文件路径
-//
-// 返回:
-//   - uid: 用户ID
-//   - gid: 组ID
-//   - error: 错误信息
-func GetFileOwnership(path string) (uid, gid int, err error) {
-	var stat syscall.Stat_t
-	if err := syscall.Stat(path, &stat); err != nil {
-		return 0, 0, err
-	}
-	return int(stat.Uid), int(stat.Gid), nil
-}
-
-// SetFileOwnership 设置文件的所有者和组
-// 参数:
-//   - path: 文件路径
-//   - uid: 用户ID
-//   - gid: 组ID
-//
-// 返回:
-//   - error: 错误信息
-func SetFileOwnership(path string, uid, gid int) error {
-	return os.Chown(path, uid, gid)
 }

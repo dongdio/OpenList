@@ -833,7 +833,7 @@ func (xc *XunLeiBrowserCommon) OfflineList(ctx context.Context, nextPageToken st
 	}, &resp)
 
 	if err != nil {
-		return nil, errors.Errorf("failed to get offline list: %w", err)
+		return nil, errors.Wrap(err, "failed to get offline list")
 	}
 	res = append(res, resp.Tasks...)
 

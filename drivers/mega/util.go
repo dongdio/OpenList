@@ -87,7 +87,7 @@ func (oo *openObject) Close() (err error) {
 		return oo.d.Finish()
 	})
 	if err != nil {
-		return errors.Errorf("failed to finish download: %w", err)
+		return errors.Wrap(err, "failed to finish download")
 	}
 	oo.closed = true
 	return nil

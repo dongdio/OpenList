@@ -597,12 +597,10 @@ func (d *Yun139) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 		}
 
 		size := stream.GetSize()
-		var partSize = d.getPartSize(size)
-		part := size / partSize
-		if size%partSize > 0 {
-			part++
-		} else if part == 0 {
-			part = 1
+		partSize := d.getPartSize(size)
+		part := int64(1)
+		if size > partSize {
+			part = (size + partSize - 1) / partSize
 		}
 		partInfos := make([]PartInfo, 0, part)
 		for i := int64(0); i < part; i++ {
@@ -681,9 +679,8 @@ func (d *Yun139) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 						"accountType": 1,
 					},
 				}
-				pathname := "/file/getUploadUrl"
 				var moreResp PersonalUploadURLResp
-				_, err = d.personalPost(pathname, moreData, &moreResp)
+				_, err = d.personalPost("/file/getUploadUrl", moreData, &moreResp)
 				if err != nil {
 					return err
 				}
@@ -696,35 +693,33 @@ func (d *Yun139) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 			// 创建限速上传流
 			rateLimited := driver.NewLimitedUploadStream(ctx, stream)
 
+			var response *resty.Response
 			// 上传所有分片
 			for _, uploadPartInfo := range uploadPartInfos {
 				index := uploadPartInfo.PartNumber - 1
-				partSize := partInfos[index].PartSize
+				partSizeTmp := partInfos[index].PartSize
 				log.Debugf("[139] uploading part %+v/%+v", index, len(uploadPartInfos))
-				limitReader := io.LimitReader(rateLimited, partSize)
+				limitReader := io.LimitReader(rateLimited, partSizeTmp)
 
 				// 更新进度
 				r := io.TeeReader(limitReader, p)
-
-				req, err := http.NewRequest("PUT", uploadPartInfo.UploadURL, r)
+				var result InterLayerUploadResult
+				response, err = base.RestyClient.R().
+					WithContext(ctx).
+					SetBody(r).
+					SetHeader("Content-Type", "application/octet-stream").
+					SetContentLength(true).
+					SetHeader("contentSize", strconv.FormatInt(size, 10)).
+					SetHeader("Origin", "https://yun.139.com").
+					SetHeader("Referer", "https://yun.139.com/").
+					SetResult(&result).
+					Post(uploadPartInfo.UploadURL)
 				if err != nil {
 					return err
 				}
-				req = req.WithContext(ctx)
-				req.Header.Set("Content-Type", "application/octet-stream")
-				req.Header.Set("Content-Length", fmt.Sprint(partSize))
-				req.Header.Set("Origin", "https://yun.139.com")
-				req.Header.Set("Referer", "https://yun.139.com/")
-				req.ContentLength = partSize
-
-				res, err := base.HttpClient.Do(req)
-				if err != nil {
-					return err
-				}
-				_ = res.Body.Close()
-				log.Debugf("[139] uploaded: %+v", res)
-				if res.StatusCode != http.StatusOK {
-					return errors.Errorf("unexpected status code: %d", res.StatusCode)
+				log.Debugf("[139] uploaded: %s", response.String())
+				if response.StatusCode() != http.StatusOK {
+					return errors.Errorf("unexpected status code: %d", response.StatusCode())
 				}
 			}
 
@@ -753,19 +748,20 @@ func (d *Yun139) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 			}
 			// 删除旧文件
 			for _, file := range files {
-				if file.GetName() == stream.GetName() {
-					log.Debugf("[139] conflict: removing old: %s", file.GetName())
-					// 删除前重命名旧文件，避免仍旧冲突
-					err = d.Rename(ctx, file, stream.GetName()+random.String(4))
-					if err != nil {
-						return err
-					}
-					err = d.Remove(ctx, file)
-					if err != nil {
-						return err
-					}
-					break
+				if file.GetName() != stream.GetName() {
+					continue
 				}
+				log.Debugf("[139] conflict: removing old: %s", file.GetName())
+				// 删除前重命名旧文件，避免仍旧冲突
+				err = d.Rename(ctx, file, stream.GetName()+random.String(4))
+				if err != nil {
+					return err
+				}
+				err = d.Remove(ctx, file)
+				if err != nil {
+					return err
+				}
+				break
 			}
 			// 重命名新文件
 			for _, file := range files {
@@ -857,12 +853,10 @@ func (d *Yun139) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 		size := stream.GetSize()
 		// Progress
 		p := driver.NewProgress(size, up)
-		var partSize = d.getPartSize(size)
-		part := size / partSize
-		if size%partSize > 0 {
-			part++
-		} else if part == 0 {
-			part = 1
+		partSize := d.getPartSize(size)
+		part := int64(1)
+		if size > partSize {
+			part = (size + partSize - 1) / partSize
 		}
 		rateLimited := driver.NewLimitedUploadStream(ctx, stream)
 		var response *resty.Response

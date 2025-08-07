@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -12,7 +14,6 @@ import (
 	"time"
 
 	"github.com/avast/retry-go"
-	"github.com/pkg/errors"
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/v4/consts"
@@ -21,6 +22,7 @@ import (
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
 	"github.com/dongdio/OpenList/v4/internal/setting"
+	"github.com/dongdio/OpenList/v4/utility/stream"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
@@ -30,7 +32,7 @@ func (d *CloudreveV4) getUA() string {
 	if d.CustomUA != "" {
 		return d.CustomUA
 	}
-	return consts.ChromeUserAgent
+	return base.UserAgent
 }
 
 func (d *CloudreveV4) request(method string, path string, callback base.ReqCallback, out any) error {
@@ -76,11 +78,11 @@ func (d *CloudreveV4) request(method string, path string, callback base.ReqCallb
 
 	if out != nil && r.Data != nil {
 		var marshal []byte
-		marshal, err = utils.JSONTool.Marshal(r.Data)
+		marshal, err = json.Marshal(r.Data)
 		if err != nil {
 			return err
 		}
-		err = utils.JSONTool.Unmarshal(marshal, out)
+		err = json.Unmarshal(marshal, out)
 		if err != nil {
 			return err
 		}
@@ -125,13 +127,13 @@ func (d *CloudreveV4) doLogin(needCaptcha bool) error {
 		"password": d.Password,
 	}
 	if needCaptcha {
-		var config BasicConfigResp
+		var configResp BasicConfigResp
 		err = d.request(http.MethodGet, "/site/config/basic", nil, &config)
 		if err != nil {
 			return err
 		}
-		if config.CaptchaType != "normal" {
-			return errors.Errorf("captcha type %s not support", config.CaptchaType)
+		if configResp.CaptchaType != "normal" {
+			return fmt.Errorf("captcha type %s not support", configResp.CaptchaType)
 		}
 		var captcha CaptchaResp
 		err = d.request(http.MethodGet, "/site/captcha", nil, &captcha)
@@ -176,7 +178,7 @@ func (d *CloudreveV4) refreshToken() error {
 		if d.Username != "" {
 			err := d.login()
 			if err != nil {
-				return errors.Errorf("cannot login to get refresh token, error: %s", err)
+				return fmt.Errorf("cannot login to get refresh token, error: %s", err)
 			}
 		}
 		return nil
@@ -198,7 +200,7 @@ func (d *CloudreveV4) refreshToken() error {
 func (d *CloudreveV4) upLocal(ctx context.Context, file model.FileStreamer, u FileUploadResp, up driver.UpdateProgress) error {
 	var finish int64 = 0
 	var chunk = 0
-	DEFAULT := int64(u.ChunkSize)
+	DEFAULT := u.ChunkSize
 	if DEFAULT == 0 {
 		// support relay
 		DEFAULT = file.GetSize()
@@ -253,25 +255,28 @@ func (d *CloudreveV4) upRemote(ctx context.Context, file model.FileStreamer, u F
 	uploadUrl := u.UploadUrls[0]
 	credential := u.Credential
 	var finish int64 = 0
-	var chunk int = 0
-	DEFAULT := int64(u.ChunkSize)
+	var chunk = 0
+	DEFAULT := u.ChunkSize
+	ss, err := stream.NewStreamSectionReader(file, int(DEFAULT))
+	if err != nil {
+		return err
+	}
 	for finish < file.GetSize() {
 		if utils.IsCanceled(ctx) {
 			return ctx.Err()
 		}
 		left := file.GetSize() - finish
 		byteSize := min(left, DEFAULT)
-		err := retry.Do(
+		utils.Log.Debugf("[CloudreveV4-Remote] upload range: %d-%d/%d", finish, finish+byteSize-1, file.GetSize())
+		rd, err := ss.GetSectionReader(finish, byteSize)
+		if err != nil {
+			return err
+		}
+		err = retry.Do(
 			func() error {
-				utils.Log.Debugf("[CloudreveV4-Remote] upload range: %d-%d/%d", finish, finish+byteSize-1, file.GetSize())
-				byteData := make([]byte, byteSize)
-				n, err := io.ReadFull(file, byteData)
-				utils.Log.Debug(err, n)
-				if err != nil {
-					return err
-				}
+				rd.Seek(0, io.SeekStart)
 				req, err := http.NewRequestWithContext(ctx, http.MethodPost, uploadUrl+"?chunk="+strconv.Itoa(chunk),
-					driver.NewLimitedUploadStream(ctx, bytes.NewReader(byteData)))
+					driver.NewLimitedUploadStream(ctx, rd))
 				if err != nil {
 					return err
 				}
@@ -292,7 +297,7 @@ func (d *CloudreveV4) upRemote(ctx context.Context, file model.FileStreamer, u F
 					return err
 				}
 				var up Resp
-				err = utils.JSONTool.Unmarshal(body, &up)
+				err = json.Unmarshal(body, &up)
 				if err != nil {
 					return err
 				}
@@ -304,6 +309,7 @@ func (d *CloudreveV4) upRemote(ctx context.Context, file model.FileStreamer, u F
 			retry.DelayType(retry.BackOffDelay),
 			retry.Delay(time.Second),
 		)
+		ss.RecycleSectionReader(rd)
 		if err != nil {
 			return err
 		}
@@ -317,24 +323,26 @@ func (d *CloudreveV4) upRemote(ctx context.Context, file model.FileStreamer, u F
 func (d *CloudreveV4) upOneDrive(ctx context.Context, file model.FileStreamer, u FileUploadResp, up driver.UpdateProgress) error {
 	uploadUrl := u.UploadUrls[0]
 	var finish int64 = 0
-	DEFAULT := int64(u.ChunkSize)
+	DEFAULT := u.ChunkSize
+	ss, err := stream.NewStreamSectionReader(file, int(DEFAULT))
+	if err != nil {
+		return err
+	}
 	for finish < file.GetSize() {
 		if utils.IsCanceled(ctx) {
 			return ctx.Err()
 		}
 		left := file.GetSize() - finish
 		byteSize := min(left, DEFAULT)
-		err := retry.Do(
+		utils.Log.Debugf("[CloudreveV4-OneDrive] upload range: %d-%d/%d", finish, finish+byteSize-1, file.GetSize())
+		rd, err := ss.GetSectionReader(finish, byteSize)
+		if err != nil {
+			return err
+		}
+		err = retry.Do(
 			func() error {
-				utils.Log.Debugf("[CloudreveV4-OneDrive] upload range: %d-%d/%d", finish, finish+byteSize-1, file.GetSize())
-				byteData := make([]byte, byteSize)
-				n, err := io.ReadFull(file, byteData)
-				utils.Log.Debug(err, n)
-				if err != nil {
-					return err
-				}
-				req, err := http.NewRequestWithContext(ctx, http.MethodPut, uploadUrl,
-					driver.NewLimitedUploadStream(ctx, bytes.NewReader(byteData)))
+				rd.Seek(0, io.SeekStart)
+				req, err := http.NewRequestWithContext(ctx, http.MethodPut, uploadUrl, driver.NewLimitedUploadStream(ctx, rd))
 				if err != nil {
 					return err
 				}
@@ -361,6 +369,7 @@ func (d *CloudreveV4) upOneDrive(ctx context.Context, file model.FileStreamer, u
 			retry.DelayType(retry.BackOffDelay),
 			retry.Delay(time.Second),
 		)
+		ss.RecycleSectionReader(rd)
 		if err != nil {
 			return err
 		}
@@ -375,26 +384,29 @@ func (d *CloudreveV4) upOneDrive(ctx context.Context, file model.FileStreamer, u
 
 func (d *CloudreveV4) upS3(ctx context.Context, file model.FileStreamer, u FileUploadResp, up driver.UpdateProgress) error {
 	var finish int64 = 0
-	var chunk int = 0
+	var chunk = 0
 	var etags []string
-	DEFAULT := int64(u.ChunkSize)
+	DEFAULT := u.ChunkSize
+	ss, err := stream.NewStreamSectionReader(file, int(DEFAULT))
+	if err != nil {
+		return err
+	}
 	for finish < file.GetSize() {
 		if utils.IsCanceled(ctx) {
 			return ctx.Err()
 		}
 		left := file.GetSize() - finish
 		byteSize := min(left, DEFAULT)
-		err := retry.Do(
+		utils.Log.Debugf("[CloudreveV4-S3] upload range: %d-%d/%d", finish, finish+byteSize-1, file.GetSize())
+		rd, err := ss.GetSectionReader(finish, byteSize)
+		if err != nil {
+			return err
+		}
+		err = retry.Do(
 			func() error {
-				utils.Log.Debugf("[CloudreveV4-S3] upload range: %d-%d/%d", finish, finish+byteSize-1, file.GetSize())
-				byteData := make([]byte, byteSize)
-				n, err := io.ReadFull(file, byteData)
-				utils.Log.Debug(err, n)
-				if err != nil {
-					return err
-				}
+				rd.Seek(0, io.SeekStart)
 				req, err := http.NewRequestWithContext(ctx, http.MethodPut, u.UploadUrls[chunk],
-					driver.NewLimitedUploadStream(ctx, bytes.NewBuffer(byteData)))
+					driver.NewLimitedUploadStream(ctx, rd))
 				if err != nil {
 					return err
 				}
@@ -420,6 +432,7 @@ func (d *CloudreveV4) upS3(ctx context.Context, file model.FileStreamer, u FileU
 			retry.DelayType(retry.BackOffDelay),
 			retry.Delay(time.Second),
 		)
+		ss.RecycleSectionReader(rd)
 		if err != nil {
 			return err
 		}

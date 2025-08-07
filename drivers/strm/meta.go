@@ -6,12 +6,12 @@ import (
 )
 
 type Addition struct {
-	Paths           string `json:"paths" required:"true" type:"text"`
-	ProtectSameName bool   `json:"protect_same_name" default:"true" required:"false" help:"Protects same-name files from Delete or Rename"`
-	SiteUrl         string `json:"siteUrl" type:"text" required:"false" help:"The prefix URL of the strm file"`
-	FilterFileTypes string `json:"filterFileTypes" type:"text" default:"strm" required:"false" help:"Supports suffix name of strm file"`
-	EncodePath      bool   `json:"encodePath" default:"true" required:"true" help:"encode the path in the strm file"`
-	LocalModel      bool   `json:"localModel" default:"false" help:"enable local mode"`
+	Paths             string `json:"paths" required:"true" type:"text"`
+	SiteUrl           string `json:"siteUrl" type:"text" required:"false" help:"The prefix URL of the strm file"`
+	FilterFileTypes   string `json:"filterFileTypes" type:"text" default:"strm" required:"false" help:"Supports suffix name of strm file"`
+	DownloadFileTypes string `json:"downloadFileTypes" type:"text" default:"ass" required:"false" help:"Files need to download with strm (usally subtitles)"`
+	EncodePath        bool   `json:"encodePath" default:"true" required:"true" help:"encode the path in the strm file"`
+	LocalModel        bool   `json:"localModel" default:"false" help:"enable local mode"`
 }
 
 var config = driver.Config{

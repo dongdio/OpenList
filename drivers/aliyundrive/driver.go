@@ -299,7 +299,7 @@ func (d *AliDrive) Put(ctx context.Context, dstDir model.Obj, streamer model.Fil
 		n, _ := io.NewSectionReader(localFile, o.Int64(), 8).Read(buf[:8])
 		reqBody["proof_code"] = base64.StdEncoding.EncodeToString(buf[:n])
 
-		_, err, e := d.request("https://api.alipan.com/adrive/v2/file/createWithFolders", http.MethodPost, func(req *resty.Request) {
+		_, err, e = d.request("https://api.alipan.com/adrive/v2/file/createWithFolders", http.MethodPost, func(req *resty.Request) {
 			req.SetBody(reqBody)
 		}, &resp)
 		if err != nil && e.Code != "PreHashMatched" {
@@ -325,7 +325,7 @@ func (d *AliDrive) Put(ctx context.Context, dstDir model.Obj, streamer model.Fil
 		if d.InternalUpload {
 			url = partInfo.InternalUploadURL
 		}
-		req, err := http.NewRequest("PUT", url, io.LimitReader(rateLimited, DEFAULT))
+		req, err := http.NewRequestWithContext(ctx, http.MethodPut, url, io.LimitReader(rateLimited, DEFAULT))
 		if err != nil {
 			return errors.Wrap(err, "创建上传请求失败")
 		}

@@ -153,7 +153,7 @@ func signCommit(m *map[string]any, entity *openpgp.Entity) (string, error) {
 	var sigBuffer bytes.Buffer
 	err := openpgp.DetachSign(&sigBuffer, entity, strings.NewReader(data), nil)
 	if err != nil {
-		return "", errors.Errorf("signing failed: %v", err)
+		return "", errors.Wrap(err, "signing failed")
 	}
 	var armoredSig bytes.Buffer
 	armorWriter, err := armor.Encode(&armoredSig, "PGP SIGNATURE", nil)

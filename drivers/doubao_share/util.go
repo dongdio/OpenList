@@ -587,7 +587,7 @@ func (d *DoubaoShare) getFilesInPath(ctx context.Context, shareId, nodeId, relat
 	if nodeId == "" {
 		files, err = d.getShareOverview(shareId, "")
 		if err != nil {
-			return nil, errors.Errorf("failed to get share link information: %w", err)
+			return nil, errors.Wrap(err, "failed to get share link information")
 		}
 
 		result := make([]model.Obj, 0, len(files))
@@ -600,7 +600,7 @@ func (d *DoubaoShare) getFilesInPath(ctx context.Context, shareId, nodeId, relat
 	} else {
 		files, err = d.getFiles(shareId, nodeId, "")
 		if err != nil {
-			return nil, errors.Errorf("failed to get share file: %w", err)
+			return nil, errors.Wrap(err, "failed to get share file")
 		}
 
 		result := make([]model.Obj, 0, len(files))

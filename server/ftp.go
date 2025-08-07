@@ -53,7 +53,7 @@ func NewMainDriver() (*FtpMainDriver, error) {
 	}
 	tlsConf, err := getTlsConf(setting.GetStr(consts.FTPTLSPrivateKeyPath), setting.GetStr(consts.FTPTLSPublicCertPath))
 	if err != nil && tlsRequired != ftpserver.ClearOrEncrypted {
-		return nil, errors.Errorf("FTP mandatory TLS has been enabled, but the certificate failed to load: %w", err)
+		return nil, errors.Wrap(err, "FTP mandatory TLS has been enabled, but the certificate failed to load")
 	}
 	return &FtpMainDriver{
 		settings: &ftpserver.Settings{

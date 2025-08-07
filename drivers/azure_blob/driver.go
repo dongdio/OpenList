@@ -50,7 +50,7 @@ func (d *AzureBlob) Init(ctx context.Context) error {
 
 	credential, err := azblob.NewSharedKeyCredential(accountName, d.Addition.AccessKey)
 	if err != nil {
-		return errors.Errorf("failed to create credential: %w", err)
+		return errors.Wrap(err, "failed to create credential")
 	}
 
 	// Check if Endpoint is just account name
@@ -67,7 +67,7 @@ func (d *AzureBlob) Init(ctx context.Context) error {
 			},
 		}})
 	if err != nil {
-		return errors.Errorf("failed to create client: %w", err)
+		return errors.Wrap(err, "failed to create client")
 	}
 	d.client = client
 
@@ -97,7 +97,7 @@ func (d *AzureBlob) List(ctx context.Context, dir model.Obj, args model.ListArgs
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			return nil, errors.Errorf("failed to list blobs: %w", err)
+			return nil, errors.Wrap(err, "failed to list blobs")
 		}
 
 		// Process directories
@@ -136,7 +136,7 @@ func (d *AzureBlob) Link(ctx context.Context, file model.Obj, args model.LinkArg
 
 	sasURL, err := blobClient.GetSASURL(sas.BlobPermissions{Read: true}, time.Now().Add(expireDuration), nil)
 	if err != nil {
-		return nil, errors.Errorf("failed to generate SAS URL: %w", err)
+		return nil, errors.Wrap(err, "failed to generate SAS URL")
 	}
 	return &model.Link{URL: sasURL}, nil
 }
@@ -145,7 +145,7 @@ func (d *AzureBlob) Link(ctx context.Context, file model.Obj, args model.LinkArg
 func (d *AzureBlob) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) (model.Obj, error) {
 	dirPath := path.Join(parentDir.GetPath(), dirName)
 	if err := d.mkDir(ctx, dirPath); err != nil {
-		return nil, errors.Errorf("failed to create directory marker: %w", err)
+		return nil, errors.Wrap(err, "failed to create directory marker")
 	}
 
 	return &model.Object{
@@ -161,7 +161,7 @@ func (d *AzureBlob) Move(ctx context.Context, srcObj, dstDir model.Obj) (model.O
 	dstPath := path.Join(dstDir.GetPath(), srcObj.GetName())
 
 	if err := d.moveOrRename(ctx, srcPath, dstPath, srcObj.IsDir(), srcObj.GetSize()); err != nil {
-		return nil, errors.Errorf("move operation failed: %w", err)
+		return nil, errors.Wrap(err, "move operation failed")
 	}
 
 	return &model.Object{
@@ -179,7 +179,7 @@ func (d *AzureBlob) Rename(ctx context.Context, srcObj model.Obj, newName string
 	dstPath := path.Join(path.Dir(srcPath), newName)
 
 	if err := d.moveOrRename(ctx, srcPath, dstPath, srcObj.IsDir(), srcObj.GetSize()); err != nil {
-		return nil, errors.Errorf("rename operation failed: %w", err)
+		return nil, errors.Wrap(err, "rename operation failed")
 	}
 
 	return &model.Object{
@@ -203,7 +203,7 @@ func (d *AzureBlob) Copy(ctx context.Context, srcObj, dstDir model.Obj) (model.O
 		// Get all blobs under the source directory
 		blobs, err := d.flattenListBlobs(ctx, srcPrefix)
 		if err != nil {
-			return nil, errors.Errorf("failed to list source directory contents: %w", err)
+			return nil, errors.Wrap(err, "failed to list source directory contents")
 		}
 
 		// Process each blob - copy to destination
@@ -250,7 +250,7 @@ func (d *AzureBlob) Copy(ctx context.Context, srcObj, dstDir model.Obj) (model.O
 
 	// Copy a single file
 	if err := d.copyFile(ctx, srcObj.GetPath(), dstPath); err != nil {
-		return nil, errors.Errorf("failed to copy blob: %w", err)
+		return nil, errors.Wrap(err, "failed to copy blob")
 	}
 	return &model.Object{
 		Path:     dstPath,
@@ -294,7 +294,7 @@ func (d *AzureBlob) Put(ctx context.Context, dstDir model.Obj, stream model.File
 	// Upload the stream to Azure Blob Storage
 	_, err := blobClient.UploadStream(ctx, limitedStream, options)
 	if err != nil {
-		return nil, errors.Errorf("failed to upload file: %w", err)
+		return nil, errors.Wrap(err, "failed to upload file")
 	}
 
 	return &model.Object{

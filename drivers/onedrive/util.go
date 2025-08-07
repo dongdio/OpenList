@@ -1,7 +1,6 @@
 package onedrive
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -18,6 +17,7 @@ import (
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
 	"github.com/dongdio/OpenList/v4/utility/errs"
+	streamPkg "github.com/dongdio/OpenList/v4/utility/stream"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
@@ -244,23 +244,25 @@ func (d *Onedrive) upBig(ctx context.Context, dstDir model.Obj, stream model.Fil
 	uploadUrl := utils.GetBytes(res, "uploadUrl").String()
 	var finish int64 = 0
 	DEFAULT := d.ChunkSize * 1024 * 1024
+	ss, err := streamPkg.NewStreamSectionReader(stream, int(DEFAULT))
+	if err != nil {
+		return err
+	}
 	for finish < stream.GetSize() {
 		if utils.IsCanceled(ctx) {
 			return ctx.Err()
 		}
 		left := stream.GetSize() - finish
 		byteSize := min(left, DEFAULT)
+		utils.Log.Debugf("[Onedrive] upload range: %d-%d/%d", finish, finish+byteSize-1, stream.GetSize())
+		rd, err := ss.GetSectionReader(finish, byteSize)
+		if err != nil {
+			return err
+		}
 		err = retry.Do(
 			func() error {
-				utils.Log.Debugf("[Onedrive] upload range: %d-%d/%d", finish, finish+byteSize-1, stream.GetSize())
-				byteData := make([]byte, byteSize)
-				n, err := io.ReadFull(stream, byteData)
-				utils.Log.Debug(err, n)
-				if err != nil {
-					return err
-				}
-				req, err := http.NewRequestWithContext(ctx, http.MethodPut, uploadUrl,
-					driver.NewLimitedUploadStream(ctx, bytes.NewReader(byteData)))
+				rd.Seek(0, io.SeekStart)
+				req, err := http.NewRequestWithContext(ctx, http.MethodPut, uploadUrl, driver.NewLimitedUploadStream(ctx, rd))
 				if err != nil {
 					return err
 				}
@@ -286,6 +288,7 @@ func (d *Onedrive) upBig(ctx context.Context, dstDir model.Obj, stream model.Fil
 			retry.DelayType(retry.BackOffDelay),
 			retry.Delay(time.Second),
 		)
+		ss.RecycleSectionReader(rd)
 		if err != nil {
 			return err
 		}

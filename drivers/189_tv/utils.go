@@ -238,7 +238,7 @@ func (y *Cloud189TV) login() (err error) {
 			// Generate QR code
 			qrCode, err := qrcode.Encode(uuidInfo.Uuid, qrcode.Medium, 256)
 			if err != nil {
-				return errors.Errorf("failed to generate QR code: %v", err)
+				return errors.Wrap(err, "failed to generate QR code")
 			}
 
 			// Encode QR code to base64

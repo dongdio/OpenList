@@ -70,7 +70,7 @@ func (d *AzureBlob) flattenListBlobs(ctx context.Context, prefix string) ([]cont
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			return nil, errors.Errorf("failed to list blobs: %w", err)
+			return nil, errors.Wrap(err, "failed to list blobs")
 		}
 
 		for _, blob := range page.Segment.BlobItems {
@@ -95,7 +95,7 @@ func (d *AzureBlob) batchDeleteBlobs(ctx context.Context, blobPaths []string) er
 		// Create batch builder
 		batchBuilder, err := d.containerClient.NewBatchBuilder()
 		if err != nil {
-			return errors.Errorf("failed to create batch builder: %w", err)
+			return errors.Wrap(err, "failed to create batch builder")
 		}
 
 		// Add delete operations
@@ -108,7 +108,7 @@ func (d *AzureBlob) batchDeleteBlobs(ctx context.Context, blobPaths []string) er
 		// Submit batch
 		responses, err := d.containerClient.SubmitBatch(ctx, batchBuilder, nil)
 		if err != nil {
-			return errors.Errorf("batch delete request failed: %w", err)
+			return errors.Wrap(err, "batch delete request failed")
 		}
 
 		// Check responses
@@ -135,7 +135,7 @@ func (d *AzureBlob) deleteFolder(ctx context.Context, prefix string) error {
 	// Get all blobs under the directory using flattenListBlobs
 	globs, err := d.flattenListBlobs(ctx, prefix)
 	if err != nil {
-		return errors.Errorf("failed to list blobs for deletion: %w", err)
+		return errors.Wrap(err, "failed to list blobs for deletion")
 	}
 
 	// If there are blobs in the directory, delete them
@@ -208,7 +208,7 @@ func (d *AzureBlob) copyFile(ctx context.Context, srcPath, dstPath string) error
 	expireDuration := time.Hour * time.Duration(d.SignURLExpire)
 	srcURL, err := srcBlob.GetSASURL(sas.BlobPermissions{Read: true}, time.Now().Add(expireDuration), nil)
 	if err != nil {
-		return errors.Errorf("failed to generate source SAS URL: %w", err)
+		return errors.Wrap(err, "failed to generate source SAS URL")
 	}
 
 	_, err = dstBlob.StartCopyFromURL(ctx, srcURL, nil)
@@ -273,7 +273,7 @@ func (d *AzureBlob) moveOrRename(ctx context.Context, srcPath, dstPath string, i
 		// List all blobs under the source directory
 		blobs, err := d.flattenListBlobs(ctx, srcPath)
 		if err != nil {
-			return errors.Errorf("failed to list blobs: %w", err)
+			return errors.Wrap(err, "failed to list blobs")
 		}
 
 		// Iterate and copy each blob to the destination
@@ -316,7 +316,7 @@ func (d *AzureBlob) moveOrRename(ctx context.Context, srcPath, dstPath string, i
 
 	// Single file move or rename operation
 	if err := d.copyFile(ctx, srcPath, dstPath); err != nil {
-		return errors.Errorf("failed to copy file: %w", err)
+		return errors.Wrap(err, "failed to copy file")
 	}
 
 	// Delete source file after successful copy

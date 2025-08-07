@@ -18,7 +18,8 @@ type Addition struct {
 	// 排序方向（已注释掉，可能为未来功能预留）
 	// OrderDirection string `json:"order_direction" type:"select" options:"asc,desc" default:"asc"`
 	// 访问令牌，由登录过程获取
-	AccessToken string
+	AccessToken  string
+	UploadThread int `json:"UploadThread" type:"number" default:"3" help:"the threads of upload"`
 }
 
 // 驱动配置信息
@@ -34,6 +35,11 @@ var config = driver.Config{
 // init 初始化函数，在包被导入时自动注册驱动
 func init() {
 	op.RegisterDriver(func() driver.Driver {
-		return new(Pan123)
+		// 新增默认选项 要在RegisterDriver初始化设置 才会对正在使用的用户生效
+		return &Pan123{
+			Addition: Addition{
+				UploadThread: 3,
+			},
+		}
 	})
 }

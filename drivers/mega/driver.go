@@ -39,7 +39,7 @@ func (d *Mega) Init(ctx context.Context) error {
 	if d.TwoFASecret != "" {
 		code, err := totp.GenerateCode(d.TwoFASecret, time.Now())
 		if err != nil {
-			return errors.Errorf("generate totp code failed: %w", err)
+			return errors.Wrap(err, "generate totp code failed")
 		}
 		twoFACode = code
 	}
@@ -98,7 +98,7 @@ func (d *Mega) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*
 				return err
 			})
 			if err != nil {
-				return nil, errors.Errorf("open download file failed: %w", err)
+				return nil, errors.Wrap(err, "open download file failed")
 			}
 			oo := &openObject{
 				ctx:  ctx,
