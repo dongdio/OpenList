@@ -2,7 +2,6 @@ package url_tree
 
 import (
 	"context"
-	"errors"
 	stdpath "path"
 	"strings"
 	"sync"
@@ -111,7 +110,7 @@ func (d *Urls) Move(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj, e
 		return nil, errs.PermissionDenied
 	}
 	if strings.HasPrefix(dstDir.GetPath(), srcObj.GetPath()) {
-		return nil, errors.New("cannot move parent dir to child")
+		return nil, errs.New("cannot move parent dir to child")
 	}
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
@@ -164,7 +163,7 @@ func (d *Urls) Copy(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj, e
 		return nil, errs.PermissionDenied
 	}
 	if strings.HasPrefix(dstDir.GetPath(), srcObj.GetPath()) {
-		return nil, errors.New("cannot copy parent dir to child")
+		return nil, errs.New("cannot copy parent dir to child")
 	}
 	d.mutex.Lock()
 	defer d.mutex.Unlock()

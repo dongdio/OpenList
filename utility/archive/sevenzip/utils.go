@@ -1,7 +1,6 @@
 package sevenzip
 
 import (
-	"errors"
 	"io"
 	"io/fs"
 
@@ -56,7 +55,7 @@ func getReader(ss []*stream.SeekableStream, password string) (*sevenzip.Reader, 
 func filterPassword(err error) error {
 	if err != nil {
 		var e *sevenzip.ReadError
-		if errors.As(err, &e) && e.Encrypted {
+		if errs.As(err, &e) && e.Encrypted {
 			return errs.WrongArchivePassword
 		}
 	}

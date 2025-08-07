@@ -5,7 +5,7 @@ import (
 	stdpath "path"
 	"time"
 
-	"github.com/pkg/errors"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
@@ -15,10 +15,10 @@ import (
 // 自定义错误类型
 var (
 	// ErrObjectNotFound 对象未找到错误
-	ErrObjectNotFound = errors.New("object not found")
+	ErrObjectNotFound = errs.New("object not found")
 
 	// ErrInvalidPath 无效路径错误
-	ErrInvalidPath = errors.New("invalid path")
+	ErrInvalidPath = errs.New("invalid path")
 
 	// rootObject 根目录对象，避免重复创建
 	rootObject = &model.Object{
@@ -40,7 +40,7 @@ var (
 func get(ctx context.Context, path string) (model.Obj, error) {
 	// 参数验证
 	if path == "" {
-		return nil, errors.WithStack(ErrInvalidPath)
+		return nil, errs.WithStack(ErrInvalidPath)
 	}
 
 	// 修复并清理路径
@@ -66,13 +66,13 @@ func get(ctx context.Context, path string) (model.Obj, error) {
 	// 获取存储驱动和实际路径
 	storage, actualPath, err := getStorageWithCache(path)
 	if err != nil {
-		return nil, errors.WithMessage(err, "failed get storage")
+		return nil, errs.WithMessage(err, "failed get storage")
 	}
 
 	// 获取对象
 	obj, err := op.Get(ctx, storage, actualPath)
 	if err != nil {
-		return nil, errors.Wrap(ErrObjectNotFound, err.Error())
+		return nil, errs.Wrap(ErrObjectNotFound, err.Error())
 	}
 
 	return obj, nil

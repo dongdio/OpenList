@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -22,6 +21,7 @@ import (
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
 	"github.com/dongdio/OpenList/v4/internal/setting"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/stream"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
@@ -61,7 +61,7 @@ func (d *CloudreveV4) request(method string, path string, callback base.ReqCallb
 		return err
 	}
 	if !resp.IsSuccess() {
-		return errors.New(resp.String())
+		return errs.New(resp.String())
 	}
 
 	if r.Code != 0 {
@@ -73,7 +73,7 @@ func (d *CloudreveV4) request(method string, path string, callback base.ReqCallb
 			}
 			return d.request(method, path, callback, out)
 		}
-		return errors.New(r.Msg)
+		return errs.New(r.Msg)
 	}
 
 	if out != nil && r.Data != nil {
@@ -103,10 +103,10 @@ func (d *CloudreveV4) login() error {
 		return err
 	}
 	if !prepareLogin.PasswordEnabled {
-		return errors.New("password not enabled")
+		return errs.New("password not enabled")
 	}
 	if prepareLogin.WebauthnEnabled {
-		return errors.New("webauthn not support")
+		return errs.New("webauthn not support")
 	}
 	for range 5 {
 		err = d.doLogin(siteConfig.LoginCaptcha)
@@ -141,7 +141,7 @@ func (d *CloudreveV4) doLogin(needCaptcha bool) error {
 			return err
 		}
 		if !strings.HasPrefix(captcha.Image, "data:image/png;base64,") {
-			return errors.New("can not get captcha")
+			return errs.New("can not get captcha")
 		}
 		loginBody["ticket"] = captcha.Ticket
 		i := strings.Index(captcha.Image, ",")
@@ -153,11 +153,11 @@ func (d *CloudreveV4) doLogin(needCaptcha bool) error {
 			return err
 		}
 		if utils.GetBytes(vRes.Bytes(), "status").Int() != 200 {
-			return errors.New("ocr error:" + utils.GetBytes(vRes.Bytes(), "msg").String())
+			return errs.New("ocr error:" + utils.GetBytes(vRes.Bytes(), "msg").String())
 		}
 		captchaCode := utils.GetBytes(vRes.Bytes(), "result").String()
 		if captchaCode == "" {
-			return errors.New("ocr error: empty result")
+			return errs.New("ocr error: empty result")
 		}
 		loginBody["captcha"] = captchaCode
 	}
@@ -302,7 +302,7 @@ func (d *CloudreveV4) upRemote(ctx context.Context, file model.FileStreamer, u F
 					return err
 				}
 				if up.Code != 0 {
-					return errors.New(up.Msg)
+					return errs.New(up.Msg)
 				}
 				return nil
 			}, retry.Attempts(3),
@@ -361,7 +361,7 @@ func (d *CloudreveV4) upOneDrive(ctx context.Context, file model.FileStreamer, u
 					return fmt.Errorf("server error: %d", res.StatusCode)
 				case res.StatusCode != 201 && res.StatusCode != 202 && res.StatusCode != 200:
 					data, _ := io.ReadAll(res.Body)
-					return errors.New(string(data))
+					return errs.New(string(data))
 				default:
 					return nil
 				}
@@ -422,7 +422,7 @@ func (d *CloudreveV4) upS3(ctx context.Context, file model.FileStreamer, u FileU
 				case res.StatusCode != 200:
 					return fmt.Errorf("server error: %d", res.StatusCode)
 				case etag == "":
-					return errors.New("failed to get ETag from header")
+					return errs.New("failed to get ETag from header")
 				default:
 					etags = append(etags, etag)
 					return nil

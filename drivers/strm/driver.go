@@ -2,7 +2,6 @@ package strm
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	stdpath "path"
 	"strings"
@@ -37,7 +36,7 @@ func (d *Strm) GetAddition() driver.Additional {
 
 func (d *Strm) Init(ctx context.Context) error {
 	if d.Paths == "" {
-		return errors.New("paths is required")
+		return errs.New("paths is required")
 	}
 	d.pathMap = make(map[string][]string)
 	for _, path := range strings.Split(d.Paths, "\n") {

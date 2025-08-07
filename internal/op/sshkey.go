@@ -3,8 +3,9 @@ package op
 import (
 	"time"
 
-	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/internal/db"
 	"github.com/dongdio/OpenList/v4/internal/model"
@@ -16,7 +17,7 @@ func CreateSSHPublicKey(key *model.SSHPublicKey) (error, bool) {
 	// Check if a key with the same title already exists for this user
 	_, err := db.GetSSHPublicKeyByUserTitle(key.UserId, key.Title)
 	if err == nil {
-		return errors.New("key with the same title already exists"), true
+		return errs.New("key with the same title already exists"), true
 	}
 
 	// Parse and validate the SSH public key
@@ -48,7 +49,7 @@ func GetSSHPublicKeyByIDAndUserID(id uint, userID uint) (*model.SSHPublicKey, er
 
 	// Verify the key belongs to the specified user
 	if key.UserId != userID {
-		return nil, errors.Errorf("SSH key %d does not belong to user %d", id, userID)
+		return nil, errs.Errorf("SSH key %d does not belong to user %d", id, userID)
 	}
 
 	return key, nil

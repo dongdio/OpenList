@@ -3,7 +3,7 @@ package _115_open
 import (
 	"context"
 
-	"github.com/pkg/errors"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/consts"
 	open "github.com/dongdio/OpenList/v4/drivers/115_open"
@@ -11,7 +11,6 @@ import (
 	"github.com/dongdio/OpenList/v4/internal/offline_download/tool"
 	"github.com/dongdio/OpenList/v4/internal/op"
 	"github.com/dongdio/OpenList/v4/internal/setting"
-	"github.com/dongdio/OpenList/v4/utility/errs"
 )
 
 type Open115 struct {
@@ -55,7 +54,7 @@ func (o *Open115) AddURL(args *tool.AddURLLinkArgs) (string, error) {
 	}
 	driver115Open, ok := storage.(*open.Open115)
 	if !ok {
-		return "", errors.New("unsupported storage driver for offline download, only 115 Cloud is supported")
+		return "", errs.New("unsupported storage driver for offline download, only 115 Cloud is supported")
 	}
 
 	ctx := context.Background()
@@ -71,7 +70,7 @@ func (o *Open115) AddURL(args *tool.AddURLLinkArgs) (string, error) {
 
 	hashs, err := driver115Open.OfflineDownload(ctx, []string{args.URL}, parentDir)
 	if err != nil || len(hashs) < 1 {
-		return "", errors.Wrapf(err, "failed to add offline download task")
+		return "", errs.Wrapf(err, "failed to add offline download task")
 	}
 
 	return hashs[0], nil
@@ -84,7 +83,7 @@ func (o *Open115) Remove(task *tool.DownloadTask) error {
 	}
 	driver115Open, ok := storage.(*open.Open115)
 	if !ok {
-		return errors.New("unsupported storage driver for offline download, only 115 Open is supported")
+		return errs.New("unsupported storage driver for offline download, only 115 Open is supported")
 	}
 
 	ctx := context.Background()
@@ -101,7 +100,7 @@ func (o *Open115) Status(task *tool.DownloadTask) (*tool.Status, error) {
 	}
 	driver115Open, ok := storage.(*open.Open115)
 	if !ok {
-		return nil, errors.New("unsupported storage driver for offline download, only 115 Open is supported")
+		return nil, errs.New("unsupported storage driver for offline download, only 115 Open is supported")
 	}
 
 	tasks, err := driver115Open.OfflineList(context.Background())
@@ -126,11 +125,11 @@ func (o *Open115) Status(task *tool.DownloadTask) (*tool.Status, error) {
 		s.Completed = t.IsDone()
 		s.TotalBytes = t.Size
 		if t.IsFailed() {
-			s.Err = errors.New(t.GetStatus())
+			s.Err = errs.New(t.GetStatus())
 		}
 		return s, nil
 	}
-	s.Err = errors.New("the task has been deleted")
+	s.Err = errs.New("the task has been deleted")
 	return s, nil
 }
 

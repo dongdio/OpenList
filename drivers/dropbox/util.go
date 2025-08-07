@@ -6,9 +6,10 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/op"
@@ -37,9 +38,9 @@ func (d *Dropbox) refreshToken() error {
 		}
 		if resp.RefreshToken == "" || resp.AccessToken == "" {
 			if resp.ErrorMessage != "" {
-				return errors.Errorf("failed to refresh token: %s", resp.ErrorMessage)
+				return errs.Errorf("failed to refresh token: %s", resp.ErrorMessage)
 			}
-			return errors.Errorf("empty token returned from official API, a wrong refresh token may have been used")
+			return errs.Errorf("empty token returned from official API, a wrong refresh token may have been used")
 		}
 		d.AccessToken = resp.AccessToken
 		d.RefreshToken = resp.RefreshToken
@@ -64,7 +65,7 @@ func (d *Dropbox) refreshToken() error {
 	}
 	log.Debugf("[dropbox] refresh token response: %s", resp.String())
 	if resp.StatusCode() != 200 {
-		return errors.Errorf("failed to refresh token: %s", resp.String())
+		return errs.Errorf("failed to refresh token: %s", resp.String())
 	}
 	_ = utils.JSONTool.UnmarshalFromString(resp.String(), &tokenResp)
 	d.AccessToken = tokenResp.AccessToken
@@ -114,7 +115,7 @@ func (d *Dropbox) request(uri, method string, callback base.ReqCallback, retry .
 			}
 			return d.request(uri, method, callback, true)
 		}
-		return nil, errors.Errorf("%s:%s", e.Error, e.ErrorSummary)
+		return nil, errs.Errorf("%s:%s", e.Error, e.errsummary)
 	}
 	return res.Bytes(), nil
 }

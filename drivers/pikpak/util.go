@@ -17,8 +17,9 @@ import (
 	"time"
 
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
-	"github.com/pkg/errors"
 	"resty.dev/v3"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/driver"
@@ -96,7 +97,7 @@ const (
 func (d *PikPak) login() error {
 	// 检查用户名和密码是否为空
 	if d.Addition.Username == "" || d.Addition.Password == "" {
-		return errors.New("username or password is empty")
+		return errs.New("username or password is empty")
 	}
 
 	url := "https://user.mypikpak.net/v1/auth/signin"
@@ -147,7 +148,7 @@ func (d *PikPak) refreshToken(refreshToken string) error {
 		if e.ErrorCode == 4126 {
 			// 1. 未填写 username 或 password
 			if d.Addition.Username == "" || d.Addition.Password == "" {
-				return errors.New("refresh_token invalid, please re-provide refresh_token")
+				return errs.New("refresh_token invalid, please re-provide refresh_token")
 			} else {
 				// refresh_token invalid, re-login
 				return d.login()
@@ -155,7 +156,7 @@ func (d *PikPak) refreshToken(refreshToken string) error {
 		}
 		d.Status = e.Error()
 		op.MustSaveDriverStorage(d)
-		return errors.New(e.Error())
+		return errs.New(e.Error())
 	}
 	data := res.Bytes()
 	d.Status = "work"
@@ -207,9 +208,9 @@ func (d *PikPak) request(url string, method string, callback base.ReqCallback, r
 		}
 		return d.request(url, method, callback, resp)
 	case 10: // 操作频繁
-		return nil, errors.New(e.ErrorDescription)
+		return nil, errs.New(e.ErrorDescription)
 	default:
-		return nil, errors.New(e.Error())
+		return nil, errs.New(e.Error())
 	}
 }
 
@@ -403,11 +404,11 @@ func (d *PikPak) refreshCaptchaToken(action string, metas map[string]string) err
 	}
 
 	if e.IsError() {
-		return errors.New(e.Error())
+		return errs.New(e.Error())
 	}
 
 	if resp.Url != "" {
-		return errors.Errorf(`need verify: <a target="_blank" href="%s">Click Here</a>`, resp.Url)
+		return errs.Errorf(`need verify: <a target="_blank" href="%s">Click Here</a>`, resp.Url)
 	}
 
 	if d.Common.RefreshCTokenCk != nil {
@@ -497,7 +498,7 @@ func (d *PikPak) UploadByMultipart(ctx context.Context, params *S3Params, fileSi
 		go func(threadId int) {
 			defer func() {
 				if r := recover(); r != nil {
-					errCh <- errors.Errorf("recovered in %v", r)
+					errCh <- errs.Errorf("recovered in %v", r)
 				}
 			}()
 			for chunk := range chunksCh {
@@ -507,12 +508,12 @@ func (d *PikPak) UploadByMultipart(ctx context.Context, params *S3Params, fileSi
 					case <-ctx.Done():
 						break
 					case <-ticker.C:
-						errCh <- errors.Wrap(err, "ossToken 过期")
+						errCh <- errs.Wrap(err, "ossToken 过期")
 					default:
 					}
 
 					buf := make([]byte, chunk.Size)
-					if _, err = tmpF.ReadAt(buf, chunk.Offset); err != nil && !errors.Is(err, io.EOF) {
+					if _, err = tmpF.ReadAt(buf, chunk.Offset); err != nil && !errs.Is(err, io.EOF) {
 						continue
 					}
 
@@ -522,7 +523,7 @@ func (d *PikPak) UploadByMultipart(ctx context.Context, params *S3Params, fileSi
 					}
 				}
 				if err != nil {
-					errCh <- errors.Wrap(err, fmt.Sprintf("上传 %s 的第%d个分片时出现错误：%v", s.GetName(), chunk.Number, err))
+					errCh <- errs.Wrap(err, fmt.Sprintf("上传 %s 的第%d个分片时出现错误：%v", s.GetName(), chunk.Number, err))
 				} else {
 					num := completedNum.Add(1)
 					up(float64(num) * 100.0 / float64(len(chunks)))
@@ -549,12 +550,12 @@ LOOP:
 		case <-errCh:
 			return err
 		case <-timeout.C:
-			return errors.Errorf("time out")
+			return errs.Errorf("time out")
 		}
 	}
 
 	// EOF错误是xml的Unmarshal导致的，响应其实是json格式，所以实际上上传是成功的
-	if _, err = bucket.CompleteMultipartUpload(imur, parts, OssOption(params)...); err != nil && !errors.Is(err, io.EOF) {
+	if _, err = bucket.CompleteMultipartUpload(imur, parts, OssOption(params)...); err != nil && !errs.Is(err, io.EOF) {
 		// 当文件名含有 &< 这两个字符之一时响应的xml解析会出现错误，实际上上传是成功的
 		if filename := filepath.Base(s.GetName()); !strings.ContainsAny(filename, "&<") {
 			return err
@@ -596,11 +597,11 @@ func SplitFile(fileSize int64) (chunks []oss.FileChunk, err error) {
 // Split the file with specified parts count, returns the split result when error is nil.
 func SplitFileByPartNum(fileSize int64, chunkNum int) ([]oss.FileChunk, error) {
 	if chunkNum <= 0 || chunkNum > 10000 {
-		return nil, errors.New("chunkNum invalid")
+		return nil, errs.New("chunkNum invalid")
 	}
 
 	if int64(chunkNum) > fileSize {
-		return nil, errors.New("oss: chunkNum invalid")
+		return nil, errs.New("oss: chunkNum invalid")
 	}
 
 	var chunks []oss.FileChunk
@@ -624,12 +625,12 @@ func SplitFileByPartNum(fileSize int64, chunkNum int) ([]oss.FileChunk, error) {
 // Splits the file by the part size. Returns the FileChunk when error is nil.
 func SplitFileByPartSize(fileSize int64, chunkSize int64) ([]oss.FileChunk, error) {
 	if chunkSize <= 0 {
-		return nil, errors.New("chunkSize invalid")
+		return nil, errs.New("chunkSize invalid")
 	}
 
 	chunkN := fileSize / chunkSize
 	if chunkN >= 10000 {
-		return nil, errors.New("Too many parts, please increase part size")
+		return nil, errs.New("Too many parts, please increase part size")
 	}
 
 	var chunks []oss.FileChunk

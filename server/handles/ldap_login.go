@@ -2,7 +2,6 @@ package handles
 
 import (
 	"crypto/tls"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -15,6 +14,7 @@ import (
 	"github.com/dongdio/OpenList/v4/internal/op"
 	"github.com/dongdio/OpenList/v4/internal/setting"
 	"github.com/dongdio/OpenList/v4/server/common"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 	"github.com/dongdio/OpenList/v4/utility/utils/random"
 )
@@ -124,7 +124,7 @@ func loginLdap(c *gin.Context, req *LoginRequest) {
 
 func ladpRegister(username string) (*model.User, error) {
 	if username == "" {
-		return nil, errors.New("cannot get username from ldap provider")
+		return nil, errs.New("cannot get username from ldap provider")
 	}
 	user := &model.User{
 		ID:         0,

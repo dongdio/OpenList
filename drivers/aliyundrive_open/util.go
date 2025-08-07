@@ -7,9 +7,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/model"
@@ -44,15 +45,15 @@ func (d *AliyundriveOpen) _refreshToken() (string, string, error) {
 			}).
 			Get(u)
 		if err != nil {
-			return "", "", errors.Wrap(err, "发送在线API请求失败")
+			return "", "", errs.Wrap(err, "发送在线API请求失败")
 		}
 
 		// 检查响应是否有效
 		if resp.RefreshToken == "" || resp.AccessToken == "" {
 			if resp.ErrorMessage != "" {
-				return "", "", errors.Errorf("刷新令牌失败: %s", resp.ErrorMessage)
+				return "", "", errs.Errorf("刷新令牌失败: %s", resp.ErrorMessage)
 			}
-			return "", "", errors.New("官方API返回的令牌为空，可能使用了错误的刷新令牌")
+			return "", "", errs.New("官方API返回的令牌为空，可能使用了错误的刷新令牌")
 		}
 
 		// 返回新的令牌
@@ -61,7 +62,7 @@ func (d *AliyundriveOpen) _refreshToken() (string, string, error) {
 
 	// 本地刷新逻辑（不使用在线API时）
 	if d.ClientID == "" || d.ClientSecret == "" {
-		return "", "", errors.New("ClientID或ClientSecret为空，无法刷新令牌")
+		return "", "", errs.New("ClientID或ClientSecret为空，无法刷新令牌")
 	}
 
 	// 构建请求URL和参数
@@ -77,7 +78,7 @@ func (d *AliyundriveOpen) _refreshToken() (string, string, error) {
 		SetError(&e).
 		Post(url)
 	if err != nil {
-		return "", "", errors.Wrap(err, "发送刷新令牌请求失败")
+		return "", "", errs.Wrap(err, "发送刷新令牌请求失败")
 	}
 
 	// 记录响应内容用于调试
@@ -85,27 +86,27 @@ func (d *AliyundriveOpen) _refreshToken() (string, string, error) {
 
 	// 检查是否有错误
 	if e.Code != "" {
-		return "", "", errors.Errorf("刷新令牌失败: %s", e.Message)
+		return "", "", errs.Errorf("刷新令牌失败: %s", e.Message)
 	}
 
 	// 解析响应获取新令牌
 	refresh := utils.GetBytes(res.Bytes(), "refresh_token").String()
 	access := utils.GetBytes(res.Bytes(), "access_token").String()
 	if refresh == "" {
-		return "", "", errors.Errorf("刷新令牌失败: 返回的刷新令牌为空，响应: %s", res.String())
+		return "", "", errs.Errorf("刷新令牌失败: 返回的刷新令牌为空，响应: %s", res.String())
 	}
 
 	// 验证新旧令牌的sub字段是否一致，确保是同一用户
 	curSub, err := getSub(d.RefreshToken)
 	if err != nil {
-		return "", "", errors.Wrap(err, "获取当前令牌的sub失败")
+		return "", "", errs.Wrap(err, "获取当前令牌的sub失败")
 	}
 	newSub, err := getSub(refresh)
 	if err != nil {
-		return "", "", errors.Wrap(err, "获取新令牌的sub失败")
+		return "", "", errs.Wrap(err, "获取新令牌的sub失败")
 	}
 	if curSub != newSub {
-		return "", "", errors.New("刷新令牌失败: sub不匹配，可能是不同用户的令牌")
+		return "", "", errs.New("刷新令牌失败: sub不匹配，可能是不同用户的令牌")
 	}
 
 	return refresh, access, nil
@@ -117,19 +118,19 @@ func getSub(token string) (string, error) {
 	// 分割JWT令牌
 	segments := strings.Split(token, ".")
 	if len(segments) != 3 {
-		return "", errors.New("不是有效的JWT令牌，段数不正确")
+		return "", errs.New("不是有效的JWT令牌，段数不正确")
 	}
 
 	// 解码payload部分（Base64URL编码）
 	bs, err := base64.RawStdEncoding.DecodeString(segments[1])
 	if err != nil {
-		return "", errors.Wrap(err, "解码JWT令牌失败")
+		return "", errs.Wrap(err, "解码JWT令牌失败")
 	}
 
 	// 从payload中提取sub字段
 	sub := utils.GetBytes(bs, "sub").String()
 	if sub == "" {
-		return "", errors.New("JWT令牌中未找到sub字段")
+		return "", errs.New("JWT令牌中未找到sub字段")
 	}
 
 	return sub, nil
@@ -159,7 +160,7 @@ func (d *AliyundriveOpen) refreshToken() error {
 	}
 
 	if err != nil {
-		return errors.Wrap(err, "多次尝试刷新令牌失败")
+		return errs.Wrap(err, "多次尝试刷新令牌失败")
 	}
 
 	// 记录令牌变化并保存
@@ -208,7 +209,7 @@ func (d *AliyundriveOpen) requestReturnErrResp(uri, method string, callback base
 		if res != nil {
 			log.Errorf("[阿里云盘开放版] 请求错误: %s", res.String())
 		}
-		return nil, errors.Wrap(err, "发送请求失败"), nil
+		return nil, errs.Wrap(err, "发送请求失败"), nil
 	}
 
 	// 检查是否已经是重试请求
@@ -221,12 +222,12 @@ func (d *AliyundriveOpen) requestReturnErrResp(uri, method string, callback base
 			log.Debugf("[阿里云盘开放版] 令牌已过期，正在刷新: %s", e.Message)
 			err = d.refreshToken()
 			if err != nil {
-				return nil, errors.Wrap(err, "刷新令牌失败"), nil
+				return nil, errs.Wrap(err, "刷新令牌失败"), nil
 			}
 			// 使用新令牌重试请求
 			return d.requestReturnErrResp(uri, method, callback, true)
 		}
-		return nil, errors.Errorf("%s: %s", e.Code, e.Message), &e
+		return nil, errs.Errorf("%s: %s", e.Code, e.Message), &e
 	}
 
 	return res.Bytes(), nil, nil
@@ -240,7 +241,7 @@ func (d *AliyundriveOpen) list(ctx context.Context, data base.Json) (*Files, err
 		req.SetBody(data).SetResult(&resp)
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "列出文件失败")
+		return nil, errs.Wrap(err, "列出文件失败")
 	}
 	return &resp, nil
 }
@@ -276,7 +277,7 @@ func (d *AliyundriveOpen) getFiles(ctx context.Context, fileID string) ([]File, 
 		// 发送请求
 		resp, err := d.limitList(ctx, data)
 		if err != nil {
-			return nil, errors.Wrap(err, "获取文件列表失败")
+			return nil, errs.Wrap(err, "获取文件列表失败")
 		}
 
 		// 更新分页标记和结果
@@ -320,7 +321,7 @@ func (d *AliyundriveOpen) removeDuplicateFiles(ctx context.Context, parentPath s
 	// 列出目录中的所有文件
 	files, err := op.List(ctx, d, parentPath, model.ListArgs{})
 	if err != nil {
-		return errors.Wrap(err, "列出目录内容失败")
+		return errs.Wrap(err, "列出目录内容失败")
 	}
 
 	// 查找所有同名文件
@@ -335,7 +336,7 @@ func (d *AliyundriveOpen) removeDuplicateFiles(ctx context.Context, parentPath s
 	for _, file := range duplicates {
 		err = d.Remove(ctx, file)
 		if err != nil {
-			return errors.Wrapf(err, "删除重复文件 [%s] 失败", file.GetID())
+			return errs.Wrapf(err, "删除重复文件 [%s] 失败", file.GetID())
 		}
 		log.Debugf("[阿里云盘开放版] 已删除重复文件: %s (ID: %s)", file.GetName(), file.GetID())
 	}

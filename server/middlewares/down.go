@@ -5,14 +5,14 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pkg/errors"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
 	"github.com/dongdio/OpenList/v4/internal/setting"
 	"github.com/dongdio/OpenList/v4/server/common"
-	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
@@ -40,7 +40,7 @@ func Down(verifyFunc func(string, string) error) func(c *gin.Context) {
 		// 获取最近的元数据
 		meta, err := op.GetNearestMeta(rawPath)
 		if err != nil {
-			if !errors.Is(errors.Cause(err), errs.MetaNotFound) {
+			if !errs.Is(errs.Cause(err), errs.MetaNotFound) {
 				common.ErrorResp(c, err, 500, true)
 				c.Abort()
 				return

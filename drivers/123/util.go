@@ -12,9 +12,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/utility/utils"
@@ -212,7 +213,7 @@ func (d *Pan123) login() error {
 
 	// 检查响应状态
 	if utils.GetBytes(res.Bytes(), "code").Int() != 200 {
-		err = errors.New(utils.GetBytes(res.Bytes(), "message").String())
+		err = errs.New(utils.GetBytes(res.Bytes(), "message").String())
 	} else {
 		// 提取访问令牌
 		d.AccessToken = utils.GetBytes(res.Bytes(), "data", "token").String()
@@ -289,7 +290,7 @@ do:
 			isRetry = true
 			goto do
 		}
-		return nil, errors.New(utils.GetBytes(body, "message").String())
+		return nil, errs.New(utils.GetBytes(body, "message").String())
 	}
 
 	return body, nil

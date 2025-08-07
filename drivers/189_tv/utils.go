@@ -12,9 +12,10 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/pkg/errors"
 	"github.com/skip2/go-qrcode"
 	"resty.dev/v3"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/driver"
@@ -88,7 +89,7 @@ func (y *Cloud189TV) request(url, method string, callback base.ReqCallback, para
 
 	if strings.Contains(res.String(), "userSessionBO is null") ||
 		strings.Contains(res.String(), "InvalidSessionKey") {
-		return nil, errors.New("session expired")
+		return nil, errs.New("session expired")
 	}
 
 	// 处理错误
@@ -146,7 +147,7 @@ func (y *Cloud189TV) put(ctx context.Context, url string, headers map[string]str
 		return nil, &erron
 	}
 	if resp.StatusCode != http.StatusOK {
-		return nil, errors.Errorf("put fail,err:%s", string(body))
+		return nil, errs.Errorf("put fail,err:%s", string(body))
 	}
 	return body, nil
 }
@@ -224,7 +225,7 @@ func (y *Cloud189TV) login() (err error) {
 			}
 
 			if uuidInfo.Uuid == "" {
-				return errors.New("uuidInfo is empty")
+				return errs.New("uuidInfo is empty")
 			}
 			y.Addition.TempUUID = uuidInfo.Uuid
 			op.MustSaveDriverStorage(y)
@@ -238,7 +239,7 @@ func (y *Cloud189TV) login() (err error) {
 			// Generate QR code
 			qrCode, err := qrcode.Encode(uuidInfo.Uuid, qrcode.Medium, 256)
 			if err != nil {
-				return errors.Wrap(err, "failed to generate QR code")
+				return errs.Wrap(err, "failed to generate QR code")
 			}
 
 			// Encode QR code to base64
@@ -246,7 +247,7 @@ func (y *Cloud189TV) login() (err error) {
 
 			// Create the HTML page
 			qrPage := fmt.Sprintf(qrTemplate, qrCodeBase64, uuidInfo.Uuid, uuidInfo.Uuid)
-			return errors.Errorf("need verify: \n%s", qrPage)
+			return errs.Errorf("need verify: \n%s", qrPage)
 
 		} else {
 			var accessTokenResp E189AccessTokenResp
@@ -263,7 +264,7 @@ func (y *Cloud189TV) login() (err error) {
 				return &erron
 			}
 			if accessTokenResp.E189AccessToken == "" {
-				return errors.New("E189AccessToken is empty")
+				return errs.New("E189AccessToken is empty")
 			}
 			y.Addition.AccessToken = accessTokenResp.E189AccessToken
 			y.Addition.TempUUID = ""
@@ -293,7 +294,7 @@ func (y *Cloud189TV) login() (err error) {
 func (y *Cloud189TV) RapidUpload(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, isFamily bool, overwrite bool) (model.Obj, error) {
 	fileMd5 := stream.GetHash().GetHash(utils.MD5)
 	if len(fileMd5) < utils.MD5.Width {
-		return nil, errors.New("invalid hash")
+		return nil, errs.New("invalid hash")
 	}
 
 	uploadInfo, err := y.OldUploadCreate(ctx, dstDir.GetID(), fileMd5, stream.GetName(), fmt.Sprint(stream.GetSize()), isFamily)
@@ -302,7 +303,7 @@ func (y *Cloud189TV) RapidUpload(ctx context.Context, dstDir model.Obj, stream m
 	}
 
 	if uploadInfo.FileDataExists != 1 {
-		return nil, errors.New("rapid upload fail")
+		return nil, errs.New("rapid upload fail")
 	}
 
 	return y.OldUploadCommit(ctx, uploadInfo.FileCommitUrl, uploadInfo.UploadFileId, isFamily, overwrite)
@@ -469,7 +470,7 @@ func (y *Cloud189TV) getFamilyID() (string, error) {
 		return "", err
 	}
 	if len(infos) == 0 {
-		return "", errors.Errorf("cannot get automatically,please input family_id")
+		return "", errs.Errorf("cannot get automatically,please input family_id")
 	}
 	for _, info := range infos {
 		if strings.Contains(y.tokenInfo.LoginName, info.RemarkName) {
@@ -543,7 +544,7 @@ func (y *Cloud189TV) ManageBatchTask(aType string, taskID string, targetFolderId
 	return err
 }
 
-var ErrIsConflict = errors.New("there is a conflict with the target object")
+var ErrIsConflict = errs.New("there is a conflict with the target object")
 
 // 等待任务完成
 func (y *Cloud189TV) WaitBatchTask(aType string, taskID string, t time.Duration) error {

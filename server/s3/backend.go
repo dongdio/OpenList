@@ -14,14 +14,14 @@ import (
 
 	"github.com/itsHenry35/gofakes3"
 	"github.com/ncw/swift/v2"
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/fs"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
-	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/http_range"
 	"github.com/dongdio/OpenList/v4/utility/stream"
 	"github.com/dongdio/OpenList/v4/utility/utils"
@@ -87,7 +87,7 @@ func (b *s3Backend) ListBucket(ctx context.Context, bucketName string, prefix *g
 	dir, remaining := prefixParser(prefix)
 
 	err = b.entryListR(bucketPath, dir, remaining, prefix.HasDelimiter, response)
-	if errors.Is(err, gofakes3.ErrNoSuchKey) {
+	if errs.Is(err, gofakes3.ErrNoSuchKey) {
 		// AWS just returns an empty list
 		response = gofakes3.NewObjectList()
 	} else if err != nil {
@@ -259,7 +259,7 @@ func (b *s3Backend) PutObject(
 			log.Debugf("reqPath: %s not found and objectName contains /, need to makeDir", reqPath)
 			err = fs.MakeDir(ctx, reqPath, true)
 			if err != nil {
-				return result, errors.WithMessagef(err, "failed to makeDir, reqPath: %s", reqPath)
+				return result, errs.WithMessagef(err, "failed to makeDir, reqPath: %s", reqPath)
 			}
 		} else {
 			return result, gofakes3.KeyNotFound(objectName)
@@ -338,7 +338,7 @@ func (b *s3Backend) deleteObject(ctx context.Context, bucketName, objectName str
 	fp := path.Join(bucketPath, objectName)
 	fmeta, _ := op.GetNearestMeta(fp)
 	// S3 does not report an error when attemping to delete a key that does not exist, so
-	// we need to skip IsNotExist errors.
+	// we need to skip IsNotExist errs.
 	if _, err := fs.Get(context.WithValue(ctx, consts.MetaKey, fmeta), fp, &fs.GetArgs{}); err != nil && !errs.IsObjectNotFound(err) {
 		return err
 	}

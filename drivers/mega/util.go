@@ -6,8 +6,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/t3rm1n4l/go-mega"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
@@ -47,7 +48,7 @@ func (oo *openObject) Read(p []byte) (n int, err error) {
 	oo.mu.Lock()
 	defer oo.mu.Unlock()
 	if oo.closed {
-		return 0, errors.Errorf("read on closed file")
+		return 0, errs.Errorf("read on closed file")
 	}
 	// Skip data at the start if requested
 	for oo.skip > 0 {
@@ -76,7 +77,7 @@ func (oo *openObject) Read(p []byte) (n int, err error) {
 	return n, nil
 }
 
-// Close closed the file - MAC errors are reported here
+// Close closed the file - MAC errs are reported here
 func (oo *openObject) Close() (err error) {
 	oo.mu.Lock()
 	defer oo.mu.Unlock()
@@ -87,7 +88,7 @@ func (oo *openObject) Close() (err error) {
 		return oo.d.Finish()
 	})
 	if err != nil {
-		return errors.Wrap(err, "failed to finish download")
+		return errs.Wrap(err, "failed to finish download")
 	}
 	oo.closed = true
 	return nil

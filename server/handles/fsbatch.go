@@ -8,14 +8,14 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pkg/errors"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/fs"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
 	"github.com/dongdio/OpenList/v4/server/common"
-	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/generic"
 )
 
@@ -73,7 +73,7 @@ func FsRecursiveMove(c *gin.Context) {
 
 	// 获取元数据
 	meta, err := op.GetNearestMeta(srcDir)
-	if err != nil && !errors.Is(errors.Cause(err), errs.MetaNotFound) {
+	if err != nil && !errs.Is(errs.Cause(err), errs.MetaNotFound) {
 		common.ErrorResp(c, err, 500, true)
 		return
 	}
@@ -219,7 +219,7 @@ func FsBatchRename(c *gin.Context) {
 
 	// 获取元数据
 	meta, err := op.GetNearestMeta(reqPath)
-	if err != nil && !errors.Is(errors.Cause(err), errs.MetaNotFound) {
+	if err != nil && !errs.Is(errs.Cause(err), errs.MetaNotFound) {
 		common.ErrorResp(c, err, 500, true)
 		return
 	}
@@ -287,7 +287,7 @@ func FsRegexRename(c *gin.Context) {
 
 	// 获取元数据
 	meta, err := op.GetNearestMeta(reqPath)
-	if err != nil && !errors.Is(errors.Cause(err), errs.MetaNotFound) {
+	if err != nil && !errs.Is(errs.Cause(err), errs.MetaNotFound) {
 		common.ErrorResp(c, err, 500, true)
 		return
 	}
@@ -296,7 +296,7 @@ func FsRegexRename(c *gin.Context) {
 	// 编译源文件名正则表达式
 	srcRegexp, err := regexp.Compile(req.SrcNameRegex)
 	if err != nil {
-		common.ErrorResp(c, errors.Wrap(err, "invalid source name regex"), 400)
+		common.ErrorResp(c, errs.Wrap(err, "invalid source name regex"), 400)
 		return
 	}
 

@@ -7,7 +7,8 @@ import (
 	"math/big"
 
 	"github.com/dustinxie/ecc"
-	"github.com/pkg/errors"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 )
 
 // GeneratePrivateKey 生成新的ECDSA私钥
@@ -20,7 +21,7 @@ func GeneratePrivateKey() (*ecdsa.PrivateKey, error) {
 func PrivateKeyFromHex(hexStr string) (*ecdsa.PrivateKey, error) {
 	data, err := hex.DecodeString(hexStr)
 	if err != nil {
-		return nil, errors.Wrap(err, "解码私钥失败")
+		return nil, errs.Wrap(err, "解码私钥失败")
 	}
 	return PrivateKeyFromBytes(data), nil
 }

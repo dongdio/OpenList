@@ -5,16 +5,16 @@ import (
 	"net/http"
 
 	"github.com/OpenListTeam/rateg"
-	"github.com/pkg/errors"
 	"github.com/robfig/cron/v3"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/global"
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
-	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
@@ -78,7 +78,7 @@ func (d *AliyundriveShare) Drop(ctx context.Context) error {
 
 func (d *AliyundriveShare) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
 	if d.limitList == nil {
-		return nil, errors.Errorf("driver not init")
+		return nil, errs.Errorf("driver not init")
 	}
 	return d.limitList(ctx, dir)
 }
@@ -95,7 +95,7 @@ func (d *AliyundriveShare) list(ctx context.Context, dir model.Obj) ([]model.Obj
 
 func (d *AliyundriveShare) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	if d.limitLink == nil {
-		return nil, errors.Errorf("driver not init")
+		return nil, errs.Errorf("driver not init")
 	}
 	return d.limitLink(ctx, file)
 }
@@ -142,7 +142,7 @@ func (d *AliyundriveShare) Other(ctx context.Context, args model.OtherArgs) (any
 	_, err := d.request(url, http.MethodPost, func(req *resty.Request) {
 		req.SetBody(data).SetResult(&resp)
 	})
-	return resp, errors.Wrap(err, "处理其他操作失败")
+	return resp, errs.Wrap(err, "处理其他操作失败")
 }
 
 var _ driver.Driver = (*AliyundriveShare)(nil)

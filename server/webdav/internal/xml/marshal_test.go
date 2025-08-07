@@ -1180,7 +1180,7 @@ var marshalIndentTests = []struct {
 	},
 }
 
-func TestMarshalErrors(t *testing.T) {
+func TestMarshalerrs(t *testing.T) {
 	for idx, test := range marshalErrorTests {
 		data, err := Marshal(test.Value)
 		if err == nil {
@@ -1261,7 +1261,7 @@ func (lw *limitedBytesWriter) Write(p []byte) (n int, err error) {
 	return n, err
 }
 
-func TestMarshalWriteErrors(t *testing.T) {
+func TestMarshalWriteerrs(t *testing.T) {
 	var buf bytes.Buffer
 	const writeCap = 1024
 	w := &limitedBytesWriter{&buf, writeCap}
@@ -1289,7 +1289,7 @@ func TestMarshalWriteErrors(t *testing.T) {
 	}
 }
 
-func TestMarshalWriteIOErrors(t *testing.T) {
+func TestMarshalWriteIOerrs(t *testing.T) {
 	enc := NewEncoder(errWriter{})
 
 	expectErr := "unwritable"

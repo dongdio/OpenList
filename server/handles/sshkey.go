@@ -87,7 +87,7 @@ func ListPublicKeys(c *gin.Context) {
 		common.ErrorStrResp(c, "user id format invalid", 400)
 		return
 	}
-	userObj, err := op.GetUserByID(uint(userId))
+	userObj, err := op.GetUserById(uint(userId))
 	if err != nil {
 		common.ErrorStrResp(c, "user invalid", 404)
 		return

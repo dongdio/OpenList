@@ -14,9 +14,10 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/model"
@@ -75,7 +76,7 @@ func (d *QuarkOpen) request(ctx context.Context, pathname string, method string,
 	}
 
 	if e.Status >= 400 || e.Errno != 0 {
-		return nil, errors.New(e.ErrorInfo)
+		return nil, errs.New(e.ErrorInfo)
 	}
 
 	return res.Bytes(), nil
@@ -128,7 +129,7 @@ func (d *QuarkOpen) upPre(ctx context.Context, file model.FileStreamer, parentID
 	// 生成proof相关字段，传入 x-pan-token
 	proofVersion, proofSeed1, proofSeed2, proofCode1, proofCode2, err := d.generateProof(file, xPanToken)
 	if err != nil {
-		return UpPreResp{}, errors.Wrap(err, "failed to generate proof")
+		return UpPreResp{}, errs.Wrap(err, "failed to generate proof")
 	}
 	now := time.Now()
 	data := base.Json{
@@ -175,12 +176,12 @@ func (d *QuarkOpen) generateProof(file model.FileStreamer, xPanToken string) (pr
 	// 生成proof_code1和proof_code2
 	proofCode1, err = d.generateProofCode(file, proofSeed1, fileSize)
 	if err != nil {
-		return "", "", "", "", "", errors.Wrap(err, "failed to generate proof_code1")
+		return "", "", "", "", "", errs.Wrap(err, "failed to generate proof_code1")
 	}
 
 	proofCode2, err = d.generateProofCode(file, proofSeed2, fileSize)
 	if err != nil {
-		return "", "", "", "", "", errors.Wrap(err, "failed to generate proof_code2")
+		return "", "", "", "", "", errs.Wrap(err, "failed to generate proof_code2")
 	}
 
 	return proofVersion, proofSeed1, proofSeed2, proofCode1, proofCode2, nil
@@ -209,7 +210,7 @@ func (d *QuarkOpen) generateProofCode(file model.FileStreamer, proofSeed string,
 	// 获取读取范围
 	proofRange, err := d.getProofRange(proofSeed, fileSize)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to get proof range")
+		return "", errs.Wrap(err, "failed to get proof range")
 	}
 
 	// 计算需要读取的长度
@@ -224,7 +225,7 @@ func (d *QuarkOpen) generateProofCode(file model.FileStreamer, proofSeed string,
 		Length: length,
 	})
 	if err != nil {
-		return "", errors.Wrap(err, "failed to range read")
+		return "", errs.Wrap(err, "failed to range read")
 	}
 	defer func() {
 		if closer, ok := reader.(io.Closer); ok {
@@ -236,7 +237,7 @@ func (d *QuarkOpen) generateProofCode(file model.FileStreamer, proofSeed string,
 	buf := make([]byte, length)
 	n, err := io.ReadFull(reader, buf)
 	if n != int(length) {
-		return "", errors.Wrapf(err, "failed to read all data: (expect =%d, actual =%d)", length, n)
+		return "", errs.Wrapf(err, "failed to read all data: (expect =%d, actual =%d)", length, n)
 	}
 	// Base64编码
 	return base64.StdEncoding.EncodeToString(buf), nil
@@ -253,7 +254,7 @@ func (d *QuarkOpen) getProofRange(proofSeed string, fileSize int64) (*ProofRange
 	// 转为 uint64
 	tmpInt, err := strconv.ParseUint(tmpStr, 16, 64)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to parse hex string")
+		return nil, errs.Wrap(err, "failed to parse hex string")
 	}
 	// 计算索引位置
 	index := tmpInt % uint64(fileSize)
@@ -326,11 +327,11 @@ func (d *QuarkOpen) upPart(ctx context.Context, upUrlInfo UpUrlInfo, partNumber 
 		SetBody(bytes).
 		Put(upUrlInfo.UploadUrls[partNumber].UploadURL)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to upload part")
+		return "", errs.Wrap(err, "failed to upload part")
 	}
 
 	if resp.StatusCode() != 200 {
-		return "", errors.Errorf("up status: %d, error: %s", resp.StatusCode(), resp.String())
+		return "", errs.Errorf("up status: %d, error: %s", resp.StatusCode(), resp.String())
 	}
 
 	// 返回 Etag 作为分片上传的标识
@@ -342,7 +343,7 @@ func (d *QuarkOpen) upFinish(ctx context.Context, pre UpPreResp, partInfo []base
 	partInfoList := make([]base.Json, len(partInfo))
 	// 确保 partInfo 和 etags 长度一致
 	if len(partInfo) != len(etags) {
-		return errors.Errorf("part info count (%d) does not match etags count (%d)", len(partInfo), len(etags))
+		return errs.Errorf("part info count (%d) does not match etags count (%d)", len(partInfo), len(etags))
 	}
 	// 组合 part_info_list
 	for i, part := range partInfo {
@@ -369,7 +370,7 @@ func (d *QuarkOpen) upFinish(ctx context.Context, pre UpPreResp, partInfo []base
 	}
 
 	if !resp.Data.Finish {
-		return errors.Errorf("upload finish failed, task_id: %s", resp.Data.TaskID)
+		return errs.Errorf("upload finish failed, task_id: %s", resp.Data.TaskID)
 	}
 
 	return nil
@@ -434,15 +435,15 @@ func (d *QuarkOpen) _refreshToken() (string, string, error) {
 		}
 		if resp.RefreshToken == "" || resp.AccessToken == "" {
 			if resp.ErrorMessage != "" {
-				return "", "", errors.Errorf("failed to refresh token: %s", resp.ErrorMessage)
+				return "", "", errs.Errorf("failed to refresh token: %s", resp.ErrorMessage)
 			}
-			return "", "", errors.New("empty token returned from official API, a wrong refresh token may have been used")
+			return "", "", errs.New("empty token returned from official API, a wrong refresh token may have been used")
 		}
 		return resp.RefreshToken, resp.AccessToken, nil
 	}
 
 	// TODO 本地刷新逻辑
-	return "", "", errors.New("local refresh token logic is not implemented yet, please use online API or contact the developer")
+	return "", "", errs.New("local refresh token logic is not implemented yet, please use online API or contact the developer")
 }
 
 // 生成认证 Cookie

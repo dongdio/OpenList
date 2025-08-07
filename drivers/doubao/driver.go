@@ -2,7 +2,6 @@ package doubao
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -157,7 +156,7 @@ func (d *Doubao) Link(ctx context.Context, file model.Obj, args model.LinkArgs) 
 		}, nil
 	}
 
-	return nil, errors.New("can't convert obj to URL")
+	return nil, errs.New("can't convert obj to URL")
 }
 
 func (d *Doubao) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {

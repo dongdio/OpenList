@@ -13,22 +13,22 @@ import (
 	"time"
 
 	"github.com/hekmon/transmissionrpc/v3"
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/offline_download/tool"
 	"github.com/dongdio/OpenList/v4/internal/setting"
-	"github.com/dongdio/OpenList/v4/utility/errs"
 )
 
 // 错误类型定义
 var (
-	ErrClientNotInitialized = errors.New("transmission client not initialized")
-	ErrInvalidURL           = errors.New("invalid URL format")
-	ErrInvalidTorrentID     = errors.New("invalid torrent ID")
-	ErrTorrentNotFound      = errors.New("torrent not found")
+	ErrClientNotInitialized = errs.New("transmission client not initialized")
+	ErrInvalidURL           = errs.New("invalid URL format")
+	ErrInvalidTorrentID     = errs.New("invalid torrent ID")
+	ErrTorrentNotFound      = errs.New("torrent not found")
 )
 
 // 常量定义
@@ -93,20 +93,20 @@ func (t *Transmission) Init() (string, error) {
 	// 获取配置的 URI
 	uri := setting.GetStr(consts.TransmissionUri)
 	if uri == "" {
-		return "", errors.New("transmission URI is empty")
+		return "", errs.New("transmission URI is empty")
 	}
 
 	// 解析 URI
 	endpoint, err := url.Parse(uri)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to parse transmission URI")
+		return "", errs.Wrap(err, "failed to parse transmission URI")
 	}
 
 	// 创建 Transmission 客户端
 	// transmissionrpc 库接受 nil 作为默认配置
 	c, err := transmissionrpc.New(endpoint, nil)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to create transmission client")
+		return "", errs.Wrap(err, "failed to create transmission client")
 	}
 
 	// 检查 RPC 版本兼容性
@@ -115,11 +115,11 @@ func (t *Transmission) Init() (string, error) {
 
 	ok, serverVersion, serverMinimumVersion, err := c.RPCVersion(ctx)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to get transmission RPC version")
+		return "", errs.Wrap(err, "failed to get transmission RPC version")
 	}
 
 	if !ok {
-		return "", errors.Errorf("transmission RPC version (v%d) is incompatible with library (v%d): requires at least v%d",
+		return "", errs.Errorf("transmission RPC version (v%d) is incompatible with library (v%d): requires at least v%d",
 			serverVersion, transmissionrpc.RPCVersion, serverMinimumVersion)
 	}
 
@@ -156,11 +156,11 @@ func (t *Transmission) getClient() (*transmissionrpc.Client, error) {
 // 支持磁力链接和 HTTP/HTTPS .torrent 文件
 func (t *Transmission) AddURL(args *tool.AddURLLinkArgs) (string, error) {
 	if args == nil {
-		return "", errors.New("add URL arguments cannot be nil")
+		return "", errs.New("add URL arguments cannot be nil")
 	}
 
 	if args.URL == "" {
-		return "", errors.New("download URL cannot be empty")
+		return "", errs.New("download URL cannot be empty")
 	}
 
 	client, err := t.getClient()
@@ -171,7 +171,7 @@ func (t *Transmission) AddURL(args *tool.AddURLLinkArgs) (string, error) {
 	// 解析 URL
 	endpoint, err := url.Parse(args.URL)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to parse download URL")
+		return "", errs.Wrap(err, "failed to parse download URL")
 	}
 
 	// 准备 RPC 请求参数
@@ -187,18 +187,18 @@ func (t *Transmission) AddURL(args *tool.AddURLLinkArgs) (string, error) {
 
 		req, err := http.NewRequestWithContext(ctx, http.MethodGet, args.URL, nil)
 		if err != nil {
-			return "", errors.Wrap(err, "failed to create HTTP request")
+			return "", errs.Wrap(err, "failed to create HTTP request")
 		}
 
 		// 发送请求
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
-			return "", errors.Wrap(err, "failed to download .torrent file")
+			return "", errs.Wrap(err, "failed to download .torrent file")
 		}
 		defer resp.Body.Close()
 
 		if resp.StatusCode != http.StatusOK {
-			return "", errors.Errorf("failed to download .torrent file: HTTP status %d", resp.StatusCode)
+			return "", errs.Errorf("failed to download .torrent file: HTTP status %d", resp.StatusCode)
 		}
 
 		// 从缓冲区池获取缓冲区
@@ -211,12 +211,12 @@ func (t *Transmission) AddURL(args *tool.AddURLLinkArgs) (string, error) {
 
 		// 流式复制文件内容到编码器
 		if _, err = io.CopyBuffer(encoder, resp.Body, *bufPtr); err != nil {
-			return "", errors.Wrap(err, "failed to copy file content to base64 encoder")
+			return "", errs.Wrap(err, "failed to copy file content to base64 encoder")
 		}
 
 		// 刷新最后的字节
 		if err = encoder.Close(); err != nil {
-			return "", errors.Wrap(err, "failed to flush base64 encoder")
+			return "", errs.Wrap(err, "failed to flush base64 encoder")
 		}
 
 		// 获取 base64 编码的字符串
@@ -233,11 +233,11 @@ func (t *Transmission) AddURL(args *tool.AddURLLinkArgs) (string, error) {
 
 	torrent, err := client.TorrentAdd(ctx, rpcPayload)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to add torrent")
+		return "", errs.Wrap(err, "failed to add torrent")
 	}
 
 	if torrent.ID == nil {
-		return "", errors.New("failed to get torrent ID")
+		return "", errs.New("failed to get torrent ID")
 	}
 
 	// 转换 ID 为字符串
@@ -250,7 +250,7 @@ func (t *Transmission) AddURL(args *tool.AddURLLinkArgs) (string, error) {
 // Remove 删除一个下载任务
 func (t *Transmission) Remove(task *tool.DownloadTask) error {
 	if task == nil {
-		return errors.New("download task cannot be nil")
+		return errs.New("download task cannot be nil")
 	}
 
 	client, err := t.getClient()
@@ -261,7 +261,7 @@ func (t *Transmission) Remove(task *tool.DownloadTask) error {
 	// 解析种子 ID
 	gid, err := strconv.ParseInt(task.GID, 10, 64)
 	if err != nil {
-		return errors.Wrapf(err, "invalid torrent ID: %s", task.GID)
+		return errs.Wrapf(err, "invalid torrent ID: %s", task.GID)
 	}
 
 	// 创建带超时的上下文
@@ -275,7 +275,7 @@ func (t *Transmission) Remove(task *tool.DownloadTask) error {
 	})
 
 	if err != nil {
-		return errors.Wrapf(err, "failed to remove torrent: %s", task.GID)
+		return errs.Wrapf(err, "failed to remove torrent: %s", task.GID)
 	}
 
 	log.WithField("gid", task.GID).Info("torrent removed successfully")
@@ -285,7 +285,7 @@ func (t *Transmission) Remove(task *tool.DownloadTask) error {
 // Status 获取下载任务的状态
 func (t *Transmission) Status(task *tool.DownloadTask) (*tool.Status, error) {
 	if task == nil {
-		return nil, errors.New("download task cannot be nil")
+		return nil, errs.New("download task cannot be nil")
 	}
 
 	client, err := t.getClient()
@@ -296,7 +296,7 @@ func (t *Transmission) Status(task *tool.DownloadTask) (*tool.Status, error) {
 	// 解析种子 ID
 	gid, err := strconv.ParseInt(task.GID, 10, 64)
 	if err != nil {
-		return nil, errors.Wrapf(err, "invalid torrent ID: %s", task.GID)
+		return nil, errs.Wrapf(err, "invalid torrent ID: %s", task.GID)
 	}
 
 	// 创建带超时的上下文
@@ -306,11 +306,11 @@ func (t *Transmission) Status(task *tool.DownloadTask) (*tool.Status, error) {
 	// 获取种子信息
 	infos, err := client.TorrentGetAllFor(ctx, []int64{gid})
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to get torrent status: %s", task.GID)
+		return nil, errs.Wrapf(err, "failed to get torrent status: %s", task.GID)
 	}
 
 	if len(infos) < 1 {
-		return nil, errors.Wrapf(ErrTorrentNotFound, "torrent not found: %s", task.GID)
+		return nil, errs.Wrapf(ErrTorrentNotFound, "torrent not found: %s", task.GID)
 	}
 
 	info := infos[0]
@@ -341,14 +341,14 @@ func (t *Transmission) Status(task *tool.DownloadTask) (*tool.Status, error) {
 		if info.ErrorString != nil {
 			errMsg = *info.ErrorString
 		}
-		status.Err = errors.Errorf("[transmission] download failed: %s, status: %s, error: %s",
+		status.Err = errs.Errorf("[transmission] download failed: %s, status: %s, error: %s",
 			task.GID, info.Status.String(), errMsg)
 	default:
 		errMsg := "unknown error"
 		if info.ErrorString != nil {
 			errMsg = *info.ErrorString
 		}
-		status.Err = errors.Errorf("[transmission] unknown status: %s, error: %s",
+		status.Err = errs.Errorf("[transmission] unknown status: %s, error: %s",
 			info.Status.String(), errMsg)
 	}
 

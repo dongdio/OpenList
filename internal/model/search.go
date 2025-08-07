@@ -3,7 +3,7 @@ package model
 import (
 	"time"
 
-	"github.com/pkg/errors"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 )
 
 type IndexProgress struct {
@@ -30,10 +30,10 @@ type SearchNode struct {
 
 func (p *SearchReq) Validate() error {
 	if p.Page < 1 {
-		return errors.Errorf("page can't < 1")
+		return errs.Errorf("page can't < 1")
 	}
 	if p.PerPage < 1 {
-		return errors.Errorf("per_page can't < 1")
+		return errs.Errorf("per_page can't < 1")
 	}
 	return nil
 }

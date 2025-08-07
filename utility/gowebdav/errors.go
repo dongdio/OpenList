@@ -1,9 +1,10 @@
 package gowebdav
 
 import (
-	"errors"
 	"fmt"
 	"os"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 )
 
 // StatusError implements error and wraps
@@ -21,9 +22,9 @@ func (se StatusError) Error() string {
 // with the given status code.
 func IsErrCode(err error, code int) bool {
 	var pe *os.PathError
-	if errors.As(err, &pe) {
+	if errs.As(err, &pe) {
 		var se StatusError
-		ok := errors.As(pe.Err, &se)
+		ok := errs.As(pe.Err, &se)
 		return ok && se.Status == code
 	}
 	return false

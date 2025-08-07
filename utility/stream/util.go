@@ -8,8 +8,9 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/conf"
@@ -21,7 +22,7 @@ import (
 
 // 错误定义
 var (
-	ErrInvalidLink = errors.New("无效的链接")
+	ErrInvalidLink = errs.New("无效的链接")
 )
 
 // RangeReaderFunc 是一个函数类型，用于实现 model.RangeReaderIF 接口
@@ -38,7 +39,7 @@ func (f RangeReaderFunc) RangeRead(ctx context.Context, httpRange http_range.Ran
 // 它支持多种类型的链接，包括文件、URL和自定义范围读取器
 func GetRangeReaderFromLink(size int64, link *model.Link) (model.RangeReaderIF, error) {
 	if link == nil {
-		return nil, errors.Wrap(ErrInvalidLink, "链接不能为空")
+		return nil, errs.Wrap(ErrInvalidLink, "链接不能为空")
 	}
 
 	// 如果链接包含文件，创建文件范围读取器
@@ -87,7 +88,7 @@ func GetRangeReaderFromLink(size int64, link *model.Link) (model.RangeReaderIF, 
 
 	// 如果链接包含URL，创建HTTP范围读取器
 	if len(link.URL) == 0 {
-		return nil, errors.Wrap(ErrInvalidLink, "链接必须至少包含MFile、URL或RangeReader之一")
+		return nil, errs.Wrap(ErrInvalidLink, "链接必须至少包含MFile、URL或RangeReader之一")
 	}
 
 	rangeReader := func(ctx context.Context, httpRange http_range.Range) (io.ReadCloser, error) {
@@ -105,10 +106,10 @@ func GetRangeReaderFromLink(size int64, link *model.Link) (model.RangeReaderIF, 
 		response, err := net.RequestHTTP(ctx, "GET", header, link.URL)
 		if err != nil {
 			var errorHTTPStatusCode net.ErrorHTTPStatusCode
-			if errors.As(errors.Unwrap(err), &errorHTTPStatusCode) {
+			if errs.As(errs.Unwrap(err), &errorHTTPStatusCode) {
 				return nil, err
 			}
-			return nil, errors.Wrapf(err, "HTTP请求失败: %s", link.URL)
+			return nil, errs.Wrapf(err, "HTTP请求失败: %s", link.URL)
 		}
 
 		// 处理响应
@@ -120,7 +121,7 @@ func GetRangeReaderFromLink(size int64, link *model.Link) (model.RangeReaderIF, 
 			log.Warnf("远程HTTP服务器不支持范围请求，性能可能较低!")
 			readCloser, err := net.GetRangedHTTPReader(response.Body, httpRange.Start, httpRange.Length)
 			if err != nil {
-				return nil, errors.Wrap(err, "创建范围HTTP读取器失败")
+				return nil, errs.Wrap(err, "创建范围HTTP读取器失败")
 			}
 			return readCloser, nil
 		}
@@ -248,7 +249,7 @@ func CacheFullInTempFileAndHash(stream model.FileStreamer, up model.UpdateProgre
 	h := hashType.NewFunc(hashParams...)
 	tmpF, err := CacheFullInTempFileAndWriter(stream, up, h)
 	if err != nil {
-		return nil, "", errors.Wrap(err, "缓存到临时文件并计算哈希失败")
+		return nil, "", errs.Wrap(err, "缓存到临时文件并计算哈希失败")
 	}
 	return tmpF, hex.EncodeToString(h.Sum(nil)), nil
 }
@@ -286,13 +287,13 @@ func (ss *StreamSectionReader) GetSectionReader(off, length int64) (*SectionRead
 	var buf []byte
 	if cache == nil {
 		if off != ss.off {
-			return nil, errors.Errorf("stream not cached: request offset %d != current offset %d", off, ss.off)
+			return nil, errs.Errorf("stream not cached: request offset %d != current offset %d", off, ss.off)
 		}
 		tempBuf := ss.bufPool.Get().([]byte)
 		buf = tempBuf[:length]
 		n, err := io.ReadFull(ss.file, buf)
 		if int64(n) != length {
-			return nil, errors.Wrapf(err, "failed to read all data: (expect =%d, actual =%d)", length, n)
+			return nil, errs.Wrapf(err, "failed to read all data: (expect =%d, actual =%d)", length, n)
 		}
 		ss.off += int64(n)
 		off = 0

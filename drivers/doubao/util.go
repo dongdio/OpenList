@@ -22,9 +22,10 @@ import (
 
 	"github.com/avast/retry-go"
 	"github.com/google/uuid"
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/driver"
@@ -155,7 +156,7 @@ func (d *Doubao) getUserInfo() (UserInfo, error) {
 func (d *Doubao) signRequest(req *resty.Request, method, tokenType, uploadUrl string) error {
 	parsedUrl, err := url.Parse(uploadUrl)
 	if err != nil {
-		return errors.Wrap(err, "invalid URL format")
+		return errs.Wrap(err, "invalid URL format")
 	}
 
 	var accessKeyId, secretAccessKey, sessionToken string
@@ -386,17 +387,17 @@ func (d *Doubao) getUploadConfig(upConfig *UploadConfig, dataType string, file m
 			log.Debugln("[doubao] Upload token expired, re-fetching...")
 			newToken, err := d.initUploadToken()
 			if err != nil {
-				return errors.Wrap(err, "failed to refresh token")
+				return errs.Wrap(err, "failed to refresh token")
 			}
 
 			d.UploadToken = newToken
 			tokenRefreshed = true
 			uploadUrl, params = configureParams()
 
-			return retry.Error{errors.New("token refreshed, retry needed")}
+			return retry.Error{errs.New("token refreshed, retry needed")}
 		}
 
-		return errors.Errorf("get upload_config failed: %s", configResp.ResponseMetadata.Error.Message)
+		return errs.Errorf("get upload_config failed: %s", configResp.ResponseMetadata.Error.Message)
 	})
 
 	return err
@@ -461,7 +462,7 @@ func (d *Doubao) Upload(ctx context.Context, config *UploadConfig, dstDir model.
 	crc32Hash := crc32.NewIEEE()
 	w, err := utils.CopyWithBuffer(crc32Hash, reader)
 	if w != file.GetSize() {
-		return nil, errors.Wrapf(err, "failed to read all data: (expect =%d, actual =%d)", file.GetSize(), w)
+		return nil, errs.Wrapf(err, "failed to read all data: (expect =%d, actual =%d)", file.GetSize(), w)
 	}
 	crc32Value := hex.EncodeToString(crc32Hash.Sum(nil))
 
@@ -496,9 +497,9 @@ func (d *Doubao) Upload(ctx context.Context, config *UploadConfig, dstDir model.
 		resp := UploadResp{}
 		_ = utils.JSONTool.Unmarshal(bytes, &resp)
 		if resp.Code != 2000 {
-			return errors.Errorf("upload part failed: %s", resp.Message)
+			return errs.Errorf("upload part failed: %s", resp.Message)
 		} else if resp.Data.Crc32 != crc32Value {
-			return errors.Errorf("upload part failed: crc32 mismatch, expected %s, got %s", crc32Value, resp.Data.Crc32)
+			return errs.Errorf("upload part failed: crc32 mismatch, expected %s, got %s", crc32Value, resp.Data.Crc32)
 		}
 		return nil
 	})
@@ -534,7 +535,7 @@ func (d *Doubao) UploadByMultipart(ctx context.Context, config *UploadConfig, fi
 		return err
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to initialize multipart upload")
+		return nil, errs.Wrap(err, "failed to initialize multipart upload")
 	}
 	// 准备分片参数
 	chunkSize := DefaultChunkSize
@@ -589,7 +590,7 @@ func (d *Doubao) UploadByMultipart(ctx context.Context, config *UploadConfig, fi
 					hash.Reset()
 					w, err := utils.CopyWithBuffer(hash, reader)
 					if w != size {
-						return errors.Wrapf(err, "failed to read all data: (expect =%d, actual =%d)", size, w)
+						return errs.Wrapf(err, "failed to read all data: (expect =%d, actual =%d)", size, w)
 					}
 					crc32Value = hex.EncodeToString(hash.Sum(nil))
 					rateLimitedRd = driver.NewLimitedUploadStream(ctx, reader)
@@ -622,9 +623,9 @@ func (d *Doubao) UploadByMultipart(ctx context.Context, config *UploadConfig, fi
 				uploadResp := UploadResp{}
 				utils.JSONTool.Unmarshal(bytes, &uploadResp)
 				if uploadResp.Code != 2000 {
-					return errors.Errorf("upload part failed: %s", uploadResp.Message)
+					return errs.Errorf("upload part failed: %s", uploadResp.Message)
 				} else if uploadResp.Data.Crc32 != crc32Value {
-					return errors.Errorf("upload part failed: crc32 mismatch, expected %s, got %s", crc32Value, uploadResp.Data.Crc32)
+					return errs.Errorf("upload part failed: crc32 mismatch, expected %s, got %s", crc32Value, uploadResp.Data.Crc32)
 				}
 				// 记录成功上传的分片
 				partsMutex.Lock()
@@ -652,13 +653,13 @@ func (d *Doubao) UploadByMultipart(ctx context.Context, config *UploadConfig, fi
 	if err = d._retryOperation("Complete multipart upload", func() error {
 		return d.completeMultipartUpload(config, uploadUrl, uploadID, parts)
 	}); err != nil {
-		return nil, errors.Wrap(err, "failed to complete multipart upload")
+		return nil, errs.Wrap(err, "failed to complete multipart upload")
 	}
 	// 提交上传
 	if err = d._retryOperation("Commit upload", func() error {
 		return d.commitMultipartUpload(config)
 	}); err != nil {
-		return nil, errors.Wrap(err, "failed to commit upload")
+		return nil, errs.Wrap(err, "failed to commit upload")
 	}
 
 	up(98.0) // 更新到98%
@@ -670,7 +671,7 @@ func (d *Doubao) UploadByMultipart(ctx context.Context, config *UploadConfig, fi
 		uploadNodeResp, err = d.uploadNode(config, dstDir, file, dataType)
 		return err
 	}); err != nil {
-		return nil, errors.Wrap(err, "failed to upload node")
+		return nil, errs.Wrap(err, "failed to upload node")
 	}
 
 	up(100.0) // 完成上传
@@ -716,7 +717,7 @@ func (d *Doubao) uploadRequest(uploadUrl string, method string, storeInfo StoreI
 
 	res, err := req.Execute(method, uploadUrl)
 	if err != nil && err != io.EOF {
-		return nil, errors.Wrap(err, "upload request failed")
+		return nil, errs.Wrap(err, "upload request failed")
 	}
 
 	return res.Bytes(), nil
@@ -767,11 +768,11 @@ func (d *Doubao) completeMultipartUpload(config *UploadConfig, uploadUrl, upload
 		}
 		// 检查响应状态码 2000 成功 4024 分片合并中
 		if uploadResp.Code != 2000 && uploadResp.Code != 4024 {
-			return errors.Wrapf(err, "finish upload failed: %s", uploadResp.Message)
+			return errs.Wrapf(err, "finish upload failed: %s", uploadResp.Message)
 		}
 		return err
 	})
-	return errors.Wrap(err, "failed to complete multipart upload")
+	return errs.Wrap(err, "failed to complete multipart upload")
 }
 
 func (d *Doubao) commitMultipartUpload(uploadConfig *UploadConfig) error {
@@ -790,7 +791,7 @@ func (d *Doubao) commitMultipartUpload(uploadConfig *UploadConfig) error {
 		"Functions":  []base.Json{},
 	})
 	if err != nil {
-		return errors.Wrap(err, "failed to marshal request data")
+		return errs.Wrap(err, "failed to marshal request data")
 	}
 
 	_, err = d.requestApi(uploadUrl, http.MethodPost, tokenType, func(req *resty.Request) {

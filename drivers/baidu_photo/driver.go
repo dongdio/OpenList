@@ -13,15 +13,15 @@ import (
 	"time"
 
 	"github.com/avast/retry-go"
-	"github.com/pkg/errors"
 	"resty.dev/v3"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/conf"
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/utility/errgroup"
-	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
@@ -236,7 +236,7 @@ func (d *BaiduPhoto) Remove(ctx context.Context, obj model.Obj) error {
 func (d *BaiduPhoto) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) (model.Obj, error) {
 	// 不支持大小为0的文件
 	if stream.GetSize() == 0 {
-		return nil, errors.Errorf("file size cannot be zero")
+		return nil, errs.Errorf("file size cannot be zero")
 	}
 
 	// TODO:
@@ -379,7 +379,7 @@ func (d *BaiduPhoto) Put(ctx context.Context, dstDir model.Obj, stream model.Fil
 			})
 		}
 		if err = threadG.Wait(); err != nil {
-			if errors.Is(err, context.Canceled) {
+			if errs.Is(err, context.Canceled) {
 				precreateResp.BlockList = utils.SliceFilter(precreateResp.BlockList, func(s int) bool { return s >= 0 })
 				base.SaveUploadProgress(d, strconv.FormatInt(d.Uk, 10), contentMd5)
 			}

@@ -2,7 +2,6 @@ package cloudreve_v4
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -150,7 +149,7 @@ func (d *CloudreveV4) Link(ctx context.Context, file model.Obj, args model.LinkA
 		return nil, err
 	}
 	if len(url.Urls) == 0 {
-		return nil, errors.New("server returns no url")
+		return nil, errs.New("server returns no url")
 	}
 	exp := time.Until(url.Expires)
 	return &model.Link{
@@ -236,7 +235,7 @@ func (d *CloudreveV4) Remove(ctx context.Context, obj model.Obj) error {
 			})
 		}, nil)
 	}
-	return errors.New(r.Msg)
+	return errs.New(r.Msg)
 }
 
 func (d *CloudreveV4) Put(ctx context.Context, dstDir model.Obj, file model.FileStreamer, up driver.UpdateProgress) error {

@@ -5,12 +5,12 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
-	"errors"
 	"os"
 	"path/filepath"
 
 	"golang.org/x/crypto/ssh"
 
+	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
@@ -96,7 +96,7 @@ func rsaEncodePrivateKey(privateKey *rsa.PrivateKey) []byte {
 func rsaDecodePrivateKey(bytes []byte) (*rsa.PrivateKey, error) {
 	block, _ := pem.Decode(bytes)
 	if block == nil {
-		return nil, errors.New("failed to parse PEM block containing the key")
+		return nil, errs.New("failed to parse PEM block containing the key")
 	}
 	privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 	if err != nil {

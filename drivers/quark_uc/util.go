@@ -11,9 +11,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/model"
@@ -59,7 +60,7 @@ func (d *QuarkOrUC) request(pathname string, method string, callback base.ReqCal
 		}
 	}
 	if e.Status >= 400 || e.Code != 0 {
-		return nil, errors.New(e.Message)
+		return nil, errs.New(e.Message)
 	}
 	return res.Bytes(), nil
 }
@@ -235,7 +236,7 @@ x-oss-user-agent:aliyun-sdk-js/6.6.1 Chrome 98.0.4758.80 on Windows 10 64-bit
 		return "", err
 	}
 	if res.StatusCode() != 200 {
-		return "", errors.Errorf("up status: %d, error: %s", res.StatusCode(), res.String())
+		return "", errs.Errorf("up status: %d, error: %s", res.StatusCode(), res.String())
 	}
 	return res.Header().Get("Etag"), nil
 }
@@ -305,7 +306,7 @@ x-oss-user-agent:aliyun-sdk-js/6.6.1 Chrome 98.0.4758.80 on Windows 10 64-bit
 		return err
 	}
 	if res.StatusCode() != 200 {
-		return errors.Errorf("up status: %d, error: %s", res.StatusCode(), res.String())
+		return errs.Errorf("up status: %d, error: %s", res.StatusCode(), res.String())
 	}
 	return nil
 }

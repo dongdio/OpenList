@@ -9,16 +9,16 @@ import (
 	"path"
 	"strings"
 
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/server/common"
-	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
@@ -66,7 +66,7 @@ func (d *OpenList) Init(ctx context.Context) error {
 		}
 		allowMounted := utils.GetBytes(res.Bytes(), "data", consts.AllowMounted).String() == "true"
 		if !allowMounted {
-			return errors.Errorf("the site does not allow mounted")
+			return errs.Errorf("the site does not allow mounted")
 		}
 	}
 	return err
@@ -114,12 +114,12 @@ func (d *OpenList) Link(ctx context.Context, file model.Obj, args model.LinkArgs
 	var resp common.Resp[FsGetResp]
 	// if PassUAToUpsteam is true, then pass the user-agent to the upstream
 	userAgent :=
-	consts.ChromeUserAgent
+		consts.ChromeUserAgent
 	if d.PassUAToUpsteam {
 		userAgent = args.Header.Get("user-agent")
 		if userAgent == "" {
 			userAgent =
-			consts.ChromeUserAgent
+				consts.ChromeUserAgent
 		}
 	}
 	_, _, err := d.request("/fs/get", http.MethodPost, func(req *resty.Request) {
@@ -223,7 +223,7 @@ func (d *OpenList) Put(ctx context.Context, dstDir model.Obj, s model.FileStream
 	}
 	log.Debugf("[openlist] response body: %s", string(bytes))
 	if res.StatusCode >= 400 {
-		return errors.Errorf("request failed, status: %s", res.Status)
+		return errs.Errorf("request failed, status: %s", res.Status)
 	}
 	code := utils.GetBytes(bytes, "code").Int()
 	if code != 200 {
@@ -233,7 +233,7 @@ func (d *OpenList) Put(ctx context.Context, dstDir model.Obj, s model.FileStream
 				return err
 			}
 		}
-		return errors.Errorf("request failed,code: %d, message: %s", code, utils.GetBytes(bytes, "message").String())
+		return errs.Errorf("request failed,code: %d, message: %s", code, utils.GetBytes(bytes, "message").String())
 	}
 	return nil
 }

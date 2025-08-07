@@ -2,7 +2,6 @@ package s3
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"net/url"
 	"path"
@@ -17,6 +16,7 @@ import (
 
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
@@ -119,7 +119,7 @@ func (d *S3) listV1(prefix string, args model.ListArgs) ([]model.Obj, error) {
 			files = append(files, &file)
 		}
 		if listObjectsResult.IsTruncated == nil {
-			return nil, errors.New("IsTruncated nil")
+			return nil, errs.New("IsTruncated nil")
 		}
 		if *listObjectsResult.IsTruncated {
 			marker = *listObjectsResult.NextMarker

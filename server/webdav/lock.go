@@ -6,26 +6,27 @@ package webdav
 
 import (
 	"container/heap"
-	"errors"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 )
 
 // WebDAV锁定系统相关错误
 var (
 	// ErrConfirmationFailed 当锁定确认失败时由LockSystem的Confirm方法返回
-	ErrConfirmationFailed = errors.New("webdav: 锁定确认失败")
+	ErrConfirmationFailed = errs.New("webdav: 锁定确认失败")
 
 	// ErrForbidden 当无权限解锁时由LockSystem的Unlock方法返回
-	ErrForbidden = errors.New("webdav: 禁止访问")
+	ErrForbidden = errs.New("webdav: 禁止访问")
 
 	// ErrLocked 当资源已被锁定时由LockSystem的Create、Refresh和Unlock方法返回
-	ErrLocked = errors.New("webdav: 资源已锁定")
+	ErrLocked = errs.New("webdav: 资源已锁定")
 
 	// ErrNoSuchLock 当指定的锁不存在时由LockSystem的Refresh和Unlock方法返回
-	ErrNoSuchLock = errors.New("webdav: 锁不存在")
+	ErrNoSuchLock = errs.New("webdav: 锁不存在")
 )
 
 // Condition 表示WebDAV资源的匹配条件，基于令牌或ETag

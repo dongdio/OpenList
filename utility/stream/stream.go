@@ -3,7 +3,6 @@ package stream
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"math"
@@ -58,7 +57,7 @@ func (f *FileStream) Close() error {
 	var err1, err2 error
 
 	err1 = f.Closers.Close()
-	if errors.Is(err1, os.ErrClosed) {
+	if errs.Is(err1, os.ErrClosed) {
 		err1 = nil
 	}
 	if f.tmpFile != nil {
@@ -70,7 +69,7 @@ func (f *FileStream) Close() error {
 		}
 	}
 
-	return errors.Join(err1, err2)
+	return errs.Join(err1, err2)
 }
 
 func (f *FileStream) GetExist() model.Obj {
@@ -349,7 +348,7 @@ func NewReadAtSeeker(ss *SeekableStream, offset int64, forceRange ...bool) (mode
 	}
 	if offset != 0 || utils.IsBool(forceRange...) {
 		if offset < 0 || offset > ss.GetSize() {
-			return nil, errors.New("offset out of range")
+			return nil, errs.New("offset out of range")
 		}
 		_, err := r.getReaderAtOffset(offset)
 		if err != nil {
@@ -444,7 +443,7 @@ func (r *RangeReadReadAtSeeker) Seek(offset int64, whence int) (int64, error) {
 		return 0, errs.NotSupport
 	}
 	if offset < 0 {
-		return r.masterOff, errors.New("invalid seek: negative position")
+		return r.masterOff, errs.New("invalid seek: negative position")
 	}
 	if offset > r.ss.GetSize() {
 		offset = r.ss.GetSize()

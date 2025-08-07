@@ -7,7 +7,8 @@ import (
 	"path/filepath"
 
 	"github.com/google/uuid"
-	"github.com/pkg/errors"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/consts"
 	_115 "github.com/dongdio/OpenList/v4/drivers/115"
@@ -22,7 +23,6 @@ import (
 	"github.com/dongdio/OpenList/v4/internal/op"
 	"github.com/dongdio/OpenList/v4/internal/setting"
 	"github.com/dongdio/OpenList/v4/server/common"
-	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/task"
 )
 
@@ -47,28 +47,28 @@ func AddURL(ctx context.Context, args *AddURLArgs) (task.TaskExtensionInfo, erro
 	// check storage
 	storage, dstDirActualPath, err := op.GetStorageAndActualPath(args.DstDirPath)
 	if err != nil {
-		return nil, errors.WithMessage(err, "failed get storage")
+		return nil, errs.WithMessage(err, "failed get storage")
 	}
 	// check is it could upload
 	if storage.Config().NoUpload {
-		return nil, errors.WithStack(errs.UploadNotSupported)
+		return nil, errs.WithStack(errs.UploadNotSupported)
 	}
 	// check path is valid
 	obj, err := op.Get(ctx, storage, dstDirActualPath)
 	if err != nil {
 		if !errs.IsObjectNotFound(err) {
-			return nil, errors.WithMessage(err, "failed get object")
+			return nil, errs.WithMessage(err, "failed get object")
 		}
 	} else {
 		if !obj.IsDir() {
 			// can't add to a file
-			return nil, errors.WithStack(errs.NotFolder)
+			return nil, errs.WithStack(errs.NotFolder)
 		}
 	}
 	// try putting url
 	if args.Tool == "SimpleHttp" {
 		err = tryPutURL(ctx, args.DstDirPath, args.URL)
-		if err == nil || !errors.Is(err, errs.NotImplement) {
+		if err == nil || !errs.Is(err, errs.NotImplement) {
 			return nil, err
 		}
 	}
@@ -76,13 +76,13 @@ func AddURL(ctx context.Context, args *AddURLArgs) (task.TaskExtensionInfo, erro
 	// get tool
 	tool, err := Tools.Get(args.Tool)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed get offline download tool")
+		return nil, errs.Wrapf(err, "failed get offline download tool")
 	}
 	// check tool is ready
 	if !tool.IsReady() {
 		// try to init tool
 		if _, err = tool.Init(); err != nil {
-			return nil, errors.Wrapf(err, "failed init offline download tool %s", args.Tool)
+			return nil, errs.Wrapf(err, "failed init offline download tool %s", args.Tool)
 		}
 	}
 

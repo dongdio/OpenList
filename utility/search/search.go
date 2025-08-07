@@ -3,13 +3,13 @@ package search
 import (
 	"context"
 
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
-	"github.com/dongdio/OpenList/v4/utility/errs"
 	searcher2 "github.com/dongdio/OpenList/v4/utility/search/searcher"
 )
 
@@ -29,7 +29,7 @@ func initSearcher(mode string) error {
 		instance = nil
 	}
 	if Running() {
-		return errors.Errorf("index is running")
+		return errs.Errorf("index is running")
 	}
 	if mode == "none" {
 		log.Warnf("not enable search")
@@ -37,7 +37,7 @@ func initSearcher(mode string) error {
 	}
 	s, ok := searcher2.NewMap[mode]
 	if !ok {
-		return errors.Errorf("not support index: %s", mode)
+		return errs.Errorf("not support index: %s", mode)
 	}
 	i, err := s()
 	if err != nil {

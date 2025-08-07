@@ -3,7 +3,6 @@ package utils
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"math"
@@ -12,6 +11,8 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 )
 
 // here is some syntaxic sugar inspired by the Tomas Senart's video,
@@ -160,15 +161,15 @@ type ClosersIF interface {
 type Closers []io.Closer
 
 func (c *Closers) Close() error {
-	var errs []error
+	var errors []error
 	for _, closer := range *c {
 		if closer != nil {
-			errs = append(errs, closer.Close())
+			errors = append(errors, closer.Close())
 		}
 	}
 	clear(*c)
 	*c = (*c)[:0]
-	return errors.Join(errs...)
+	return errs.Join(errors...)
 }
 func (c *Closers) Add(closer io.Closer) {
 	if closer != nil {
@@ -221,15 +222,15 @@ func (c *SyncClosers) Close() error {
 	}
 	c.ref.Store(math.MinInt16)
 
-	var errs []error
+	var errors []error
 	for _, closer := range c.closers {
 		if closer != nil {
-			errs = append(errs, closer.Close())
+			errors = append(errors, closer.Close())
 		}
 	}
 	clear(c.closers)
 	c.closers = nil
-	return errors.Join(errs...)
+	return errs.Join(errors...)
 }
 
 func (c *SyncClosers) Add(closer io.Closer) {

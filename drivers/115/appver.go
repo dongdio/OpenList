@@ -2,8 +2,9 @@ package _115
 
 import (
 	driver115 "github.com/SheltonZhu/115driver/pkg/driver"
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 )
@@ -28,7 +29,7 @@ func (p *Pan115) getAppVersion() ([]driver115.AppVersion, error) {
 	// 检查请求和响应错误
 	err = checkErr(err, &result, resp)
 	if err != nil {
-		return nil, errors.Wrap(err, "获取应用版本信息失败")
+		return nil, errs.Wrap(err, "获取应用版本信息失败")
 	}
 
 	return result.Data.GetAppVersions(), nil

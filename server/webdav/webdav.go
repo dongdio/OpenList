@@ -19,13 +19,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pkg/errors"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/fs"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/server/common"
-	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/net"
 	"github.com/dongdio/OpenList/v4/utility/stream"
 	"github.com/dongdio/OpenList/v4/utility/utils"
@@ -74,7 +73,7 @@ func acquireConnection() error {
 	defer connectionsMutex.Unlock()
 
 	if concurrentConnections >= int32(maxConcurrentConnections) {
-		return errors.New("服务器繁忙，请稍后再试")
+		return errs.New("服务器繁忙，请稍后再试")
 	}
 
 	concurrentConnections++
@@ -296,7 +295,7 @@ func (h *Handler) lock(now time.Time, root string) (token string, status int, er
 	})
 
 	if err != nil {
-		if errors.Is(err, ErrLocked) {
+		if errs.Is(err, ErrLocked) {
 			// 资源已被锁定
 			return "", StatusLocked, err
 		}
@@ -391,7 +390,7 @@ func (h *Handler) confirmLocks(r *http.Request, src, dst string) (release func()
 
 		// 尝试确认锁
 		release, err = h.LockSystem.Confirm(time.Now(), lockSrc, dst, item.conditions...)
-		if errors.Is(err, ErrConfirmationFailed) {
+		if errs.Is(err, ErrConfirmationFailed) {
 			// 如果确认失败，尝试下一个列表
 			continue
 		}
@@ -425,12 +424,12 @@ func (h *Handler) confirmLocks(r *http.Request, src, dst string) (release func()
 func getUserAndPath(ctx context.Context, reqPath string) (string, *model.User, int, error) {
 	user, ok := ctx.Value(consts.UserKey).(*model.User)
 	if !ok || user == nil {
-		return "", nil, http.StatusUnauthorized, errors.New("未找到用户信息")
+		return "", nil, http.StatusUnauthorized, errs.New("未找到用户信息")
 	}
 
 	fullPath, err := user.JoinPath(reqPath)
 	if err != nil {
-		return "", user, http.StatusForbidden, errors.Wrap(err, "无法访问请求路径")
+		return "", user, http.StatusForbidden, errs.Wrap(err, "无法访问请求路径")
 	}
 
 	return fullPath, user, 0, nil
@@ -456,9 +455,9 @@ func getFileInfo(ctx context.Context, path string) (model.Obj, int, error) {
 	fi, err := fs.Get(ctx, path, &fs.GetArgs{})
 	if err != nil {
 		if errs.IsObjectNotFound(err) {
-			return nil, http.StatusNotFound, errors.Wrap(err, "文件不存在")
+			return nil, http.StatusNotFound, errs.Wrap(err, "文件不存在")
 		}
-		return nil, http.StatusInternalServerError, errors.Wrap(err, "获取文件信息失败")
+		return nil, http.StatusInternalServerError, errs.Wrap(err, "获取文件信息失败")
 	}
 
 	// 将结果存入缓存
@@ -481,7 +480,7 @@ func (h *Handler) handleOptions(w http.ResponseWriter, r *http.Request) (status 
 	// 移除路径前缀
 	reqPath, status, err := h.stripPrefix(r.URL.Path)
 	if err != nil {
-		return status, errors.Wrap(err, "路径前缀处理失败")
+		return status, errs.Wrap(err, "路径前缀处理失败")
 	}
 
 	// 获取用户信息并处理路径
@@ -524,29 +523,29 @@ func (h *Handler) handleGetHeadPost(w http.ResponseWriter, r *http.Request) (sta
 	ctx := r.Context()
 	user, ok := ctx.Value(consts.UserKey).(*model.User)
 	if !ok || user == nil {
-		return http.StatusUnauthorized, errors.New("未找到用户信息")
+		return http.StatusUnauthorized, errs.New("未找到用户信息")
 	}
 
 	reqPath, err = user.JoinPath(reqPath)
 	if err != nil {
-		return http.StatusForbidden, errors.Wrap(err, "无法访问请求路径")
+		return http.StatusForbidden, errs.Wrap(err, "无法访问请求路径")
 	}
 
 	fi, err := fs.Get(ctx, reqPath, &fs.GetArgs{})
 	if err != nil {
 		if errs.IsObjectNotFound(err) {
-			return http.StatusNotFound, errors.Wrap(err, "文件不存在")
+			return http.StatusNotFound, errs.Wrap(err, "文件不存在")
 		}
-		return http.StatusInternalServerError, errors.Wrap(err, "获取文件信息失败")
+		return http.StatusInternalServerError, errs.Wrap(err, "获取文件信息失败")
 	}
 
 	if fi.IsDir() {
-		return http.StatusMethodNotAllowed, errors.New("不能对目录执行此操作")
+		return http.StatusMethodNotAllowed, errs.New("不能对目录执行此操作")
 	}
 
 	storage, _ := fs.GetStorage(reqPath, &fs.GetStoragesArgs{})
 	if storage == nil {
-		return http.StatusInternalServerError, errors.New("无法获取存储信息")
+		return http.StatusInternalServerError, errs.New("无法获取存储信息")
 	}
 
 	// 处理WebDAV 302重定向
@@ -558,7 +557,7 @@ func (h *Handler) handleGetHeadPost(w http.ResponseWriter, r *http.Request) (sta
 			Redirect: true,
 		})
 		if err != nil {
-			return http.StatusInternalServerError, errors.Wrap(err, "生成链接失败")
+			return http.StatusInternalServerError, errs.Wrap(err, "生成链接失败")
 		}
 		defer link.Close()
 		http.Redirect(w, r, link.URL, http.StatusFound)
@@ -577,7 +576,7 @@ func (h *Handler) handleGetHeadPost(w http.ResponseWriter, r *http.Request) (sta
 	// 获取文件链接
 	link, _, err := fs.Link(ctx, reqPath, model.LinkArgs{Header: r.Header})
 	if err != nil {
-		return http.StatusInternalServerError, errors.Wrap(err, "生成文件链接失败")
+		return http.StatusInternalServerError, errs.Wrap(err, "生成文件链接失败")
 	}
 	defer link.Close()
 
@@ -590,10 +589,10 @@ func (h *Handler) handleGetHeadPost(w http.ResponseWriter, r *http.Request) (sta
 	err = common.Proxy(w, r, link, fi)
 	if err != nil {
 		var statusCode net.ErrorHTTPStatusCode
-		if errors.As(errors.Unwrap(err), &statusCode) {
-			return int(statusCode), errors.Wrapf(err, "代理请求失败，状态码: %d", int(statusCode))
+		if errs.As(errs.Unwrap(err), &statusCode) {
+			return int(statusCode), errs.Wrapf(err, "代理请求失败，状态码: %d", int(statusCode))
 		}
-		return http.StatusInternalServerError, errors.Wrap(err, "代理文件内容失败")
+		return http.StatusInternalServerError, errs.Wrap(err, "代理文件内容失败")
 	}
 
 	return 0, nil
@@ -602,46 +601,46 @@ func (h *Handler) handleGetHeadPost(w http.ResponseWriter, r *http.Request) (sta
 func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) (status int, err error) {
 	reqPath, status, err := h.stripPrefix(r.URL.Path)
 	if err != nil {
-		return status, errors.Wrap(err, "路径前缀处理失败")
+		return status, errs.Wrap(err, "路径前缀处理失败")
 	}
 
 	release, status, err := h.confirmLocks(r, reqPath, "")
 	if err != nil {
-		return status, errors.Wrap(err, "锁确认失败")
+		return status, errs.Wrap(err, "锁确认失败")
 	}
 	defer release()
 
 	ctx := r.Context()
 	user, ok := ctx.Value(consts.UserKey).(*model.User)
 	if !ok || user == nil {
-		return http.StatusUnauthorized, errors.New("未找到用户信息")
+		return http.StatusUnauthorized, errs.New("未找到用户信息")
 	}
 
 	reqPath, err = user.JoinPath(reqPath)
 	if err != nil {
-		return http.StatusForbidden, errors.Wrap(err, "无法访问请求路径")
+		return http.StatusForbidden, errs.Wrap(err, "无法访问请求路径")
 	}
 
 	// 检查文件是否存在
 	_, err = fs.Get(ctx, reqPath, &fs.GetArgs{})
 	if err != nil {
 		if errs.IsObjectNotFound(err) {
-			return http.StatusNotFound, errors.Wrap(err, "要删除的文件不存在")
+			return http.StatusNotFound, errs.Wrap(err, "要删除的文件不存在")
 		}
-		return http.StatusInternalServerError, errors.Wrap(err, "获取文件信息失败")
+		return http.StatusInternalServerError, errs.Wrap(err, "获取文件信息失败")
 	}
 
 	// 执行删除操作
 	if err = fs.Remove(ctx, reqPath); err != nil {
 		if os.IsPermission(err) {
-			return http.StatusForbidden, errors.Wrap(err, "没有删除权限")
+			return http.StatusForbidden, errs.Wrap(err, "没有删除权限")
 		} else if errs.IsObjectNotFound(err) {
 			// 可能是并发操作导致的文件已被删除
-			return http.StatusNotFound, errors.Wrap(err, "文件已不存在")
+			return http.StatusNotFound, errs.Wrap(err, "文件已不存在")
 		} else if strings.Contains(err.Error(), "not empty") {
-			return http.StatusConflict, errors.Wrap(err, "目录不为空")
+			return http.StatusConflict, errs.Wrap(err, "目录不为空")
 		}
-		return http.StatusInternalServerError, errors.Wrap(err, "删除操作失败")
+		return http.StatusInternalServerError, errs.Wrap(err, "删除操作失败")
 	}
 
 	// 清除文件缓存
@@ -666,27 +665,27 @@ func (h *Handler) handlePut(w http.ResponseWriter, r *http.Request) (status int,
 
 	reqPath, status, err := h.stripPrefix(r.URL.Path)
 	if err != nil {
-		return status, errors.Wrap(err, "路径前缀处理失败")
+		return status, errs.Wrap(err, "路径前缀处理失败")
 	}
 	if reqPath == "" {
-		return http.StatusMethodNotAllowed, errors.New("空路径不允许PUT操作")
+		return http.StatusMethodNotAllowed, errs.New("空路径不允许PUT操作")
 	}
 
 	release, status, err := h.confirmLocks(r, reqPath, "")
 	if err != nil {
-		return status, errors.Wrap(err, "锁确认失败")
+		return status, errs.Wrap(err, "锁确认失败")
 	}
 	defer release()
 
 	ctx := r.Context()
 	user, ok := ctx.Value(consts.UserKey).(*model.User)
 	if !ok || user == nil {
-		return http.StatusUnauthorized, errors.New("未找到用户信息")
+		return http.StatusUnauthorized, errs.New("未找到用户信息")
 	}
 
 	reqPath, err = user.JoinPath(reqPath)
 	if err != nil {
-		return http.StatusForbidden, errors.Wrap(err, "无法访问请求路径")
+		return http.StatusForbidden, errs.Wrap(err, "无法访问请求路径")
 	}
 
 	obj := model.Object{
@@ -710,9 +709,9 @@ func (h *Handler) handlePut(w http.ResponseWriter, r *http.Request) (status int,
 	err = fs.PutDirectly(ctx, path.Dir(reqPath), fsStream)
 	if err != nil {
 		if errs.IsNotFoundError(err) {
-			return http.StatusNotFound, errors.Wrap(err, "目标目录不存在")
+			return http.StatusNotFound, errs.Wrap(err, "目标目录不存在")
 		}
-		return http.StatusMethodNotAllowed, errors.Wrap(err, "文件上传失败")
+		return http.StatusMethodNotAllowed, errs.Wrap(err, "文件上传失败")
 	}
 
 	// 清除文件缓存
@@ -731,7 +730,7 @@ func (h *Handler) handlePut(w http.ResponseWriter, r *http.Request) (status int,
 
 	etag, err := findETag(ctx, h.LockSystem, reqPath, fi)
 	if err != nil {
-		return http.StatusInternalServerError, errors.Wrap(err, "无法生成ETag")
+		return http.StatusInternalServerError, errs.Wrap(err, "无法生成ETag")
 	}
 
 	w.Header().Set("Etag", etag)
@@ -741,55 +740,55 @@ func (h *Handler) handlePut(w http.ResponseWriter, r *http.Request) (status int,
 func (h *Handler) handleMkcol(w http.ResponseWriter, r *http.Request) (status int, err error) {
 	reqPath, status, err := h.stripPrefix(r.URL.Path)
 	if err != nil {
-		return status, errors.Wrap(err, "路径前缀处理失败")
+		return status, errs.Wrap(err, "路径前缀处理失败")
 	}
 
 	release, status, err := h.confirmLocks(r, reqPath, "")
 	if err != nil {
-		return status, errors.Wrap(err, "锁确认失败")
+		return status, errs.Wrap(err, "锁确认失败")
 	}
 	defer release()
 
 	ctx := r.Context()
 	user, ok := ctx.Value(consts.UserKey).(*model.User)
 	if !ok || user == nil {
-		return http.StatusUnauthorized, errors.New("未找到用户信息")
+		return http.StatusUnauthorized, errs.New("未找到用户信息")
 	}
 
 	reqPath, err = user.JoinPath(reqPath)
 	if err != nil {
-		return http.StatusForbidden, errors.Wrap(err, "无法访问请求路径")
+		return http.StatusForbidden, errs.Wrap(err, "无法访问请求路径")
 	}
 
 	// RFC 4918 9.3.1: MKCOL 请求不应包含请求体
 	if r.ContentLength > 0 {
-		return http.StatusUnsupportedMediaType, errors.New("MKCOL 请求不应包含请求体")
+		return http.StatusUnsupportedMediaType, errs.New("MKCOL 请求不应包含请求体")
 	}
 
 	// RFC 4918 9.3.1: 检查目标路径是否已存在
 	if _, err = fs.Get(ctx, reqPath, &fs.GetArgs{}); err == nil {
-		return http.StatusMethodNotAllowed, errors.New("目标路径已存在，无法创建")
+		return http.StatusMethodNotAllowed, errs.New("目标路径已存在，无法创建")
 	}
 
 	// RFC 4918 9.3.1: 检查父目录是否存在
 	reqDir := path.Dir(reqPath)
 	if _, err = fs.Get(ctx, reqDir, &fs.GetArgs{}); err != nil {
 		if errs.IsObjectNotFound(err) {
-			return http.StatusConflict, errors.Wrap(err, "父目录不存在")
+			return http.StatusConflict, errs.Wrap(err, "父目录不存在")
 		}
-		return http.StatusInternalServerError, errors.Wrap(err, "检查父目录失败")
+		return http.StatusInternalServerError, errs.Wrap(err, "检查父目录失败")
 	}
 
 	// 创建目录
 	if err = fs.MakeDir(ctx, reqPath); err != nil {
 		if os.IsNotExist(err) {
-			return http.StatusConflict, errors.Wrap(err, "父目录不存在")
+			return http.StatusConflict, errs.Wrap(err, "父目录不存在")
 		} else if os.IsPermission(err) {
-			return http.StatusForbidden, errors.Wrap(err, "没有创建目录的权限")
+			return http.StatusForbidden, errs.Wrap(err, "没有创建目录的权限")
 		} else if strings.Contains(err.Error(), "already exists") {
-			return http.StatusMethodNotAllowed, errors.Wrap(err, "目录已存在")
+			return http.StatusMethodNotAllowed, errs.Wrap(err, "目录已存在")
 		}
-		return http.StatusInternalServerError, errors.Wrap(err, "创建目录失败")
+		return http.StatusInternalServerError, errs.Wrap(err, "创建目录失败")
 	}
 
 	return http.StatusCreated, nil
@@ -799,53 +798,53 @@ func (h *Handler) handleCopyMove(w http.ResponseWriter, r *http.Request) (status
 	// 检查目标路径
 	hdr := r.Header.Get("Destination")
 	if hdr == "" {
-		return http.StatusBadRequest, errors.Wrap(errInvalidDestination, "缺少目标路径")
+		return http.StatusBadRequest, errs.Wrap(errInvalidDestination, "缺少目标路径")
 	}
 
 	u, err := url.Parse(hdr)
 	if err != nil {
-		return http.StatusBadRequest, errors.Wrap(errInvalidDestination, "目标路径格式错误")
+		return http.StatusBadRequest, errs.Wrap(errInvalidDestination, "目标路径格式错误")
 	}
 
 	if u.Host != "" && u.Host != r.Host {
-		return http.StatusBadGateway, errors.Wrap(errInvalidDestination, "不支持跨主机操作")
+		return http.StatusBadGateway, errs.Wrap(errInvalidDestination, "不支持跨主机操作")
 	}
 
 	// 处理源路径
 	src, status, err := h.stripPrefix(r.URL.Path)
 	if err != nil {
-		return status, errors.Wrap(err, "处理源路径前缀失败")
+		return status, errs.Wrap(err, "处理源路径前缀失败")
 	}
 
 	// 处理目标路径
 	dst, status, err := h.stripPrefix(u.Path)
 	if err != nil {
-		return status, errors.Wrap(err, "处理目标路径前缀失败")
+		return status, errs.Wrap(err, "处理目标路径前缀失败")
 	}
 
 	if dst == "" {
-		return http.StatusBadGateway, errors.Wrap(errInvalidDestination, "目标路径为空")
+		return http.StatusBadGateway, errs.Wrap(errInvalidDestination, "目标路径为空")
 	}
 
 	if dst == src {
-		return http.StatusForbidden, errors.Wrap(errDestinationEqualsSource, "源路径和目标路径相同")
+		return http.StatusForbidden, errs.Wrap(errDestinationEqualsSource, "源路径和目标路径相同")
 	}
 
 	// 获取用户信息并处理路径
 	ctx := r.Context()
 	user, ok := ctx.Value(consts.UserKey).(*model.User)
 	if !ok || user == nil {
-		return http.StatusUnauthorized, errors.New("未找到用户信息")
+		return http.StatusUnauthorized, errs.New("未找到用户信息")
 	}
 
 	src, err = user.JoinPath(src)
 	if err != nil {
-		return http.StatusForbidden, errors.Wrap(err, "无法访问源路径")
+		return http.StatusForbidden, errs.Wrap(err, "无法访问源路径")
 	}
 
 	dst, err = user.JoinPath(dst)
 	if err != nil {
-		return http.StatusForbidden, errors.Wrap(err, "无法访问目标路径")
+		return http.StatusForbidden, errs.Wrap(err, "无法访问目标路径")
 	}
 
 	var release func()
@@ -855,7 +854,7 @@ func (h *Handler) handleCopyMove(w http.ResponseWriter, r *http.Request) (status
 		// 对于COPY操作，只需要锁定目标路径
 		release, status, err = h.confirmLocks(r, "", dst)
 		if err != nil {
-			return status, errors.Wrap(err, "锁确认失败")
+			return status, errs.Wrap(err, "锁确认失败")
 		}
 		defer release()
 
@@ -864,7 +863,7 @@ func (h *Handler) handleCopyMove(w http.ResponseWriter, r *http.Request) (status
 		if hdr = r.Header.Get("Depth"); hdr != "" {
 			depth = parseDepth(hdr)
 			if depth != 0 && depth != infiniteDepth {
-				return http.StatusBadRequest, errors.Wrap(errInvalidDepth, "COPY操作只支持深度为0或infinity")
+				return http.StatusBadRequest, errs.Wrap(errInvalidDepth, "COPY操作只支持深度为0或infinity")
 			}
 		}
 
@@ -875,14 +874,14 @@ func (h *Handler) handleCopyMove(w http.ResponseWriter, r *http.Request) (status
 	// 对于MOVE操作，需要锁定源和目标路径
 	release, status, err = h.confirmLocks(r, src, dst)
 	if err != nil {
-		return status, errors.Wrap(err, "锁确认失败")
+		return status, errs.Wrap(err, "锁确认失败")
 	}
 	defer release()
 
 	// 处理深度参数
 	if hdr = r.Header.Get("Depth"); hdr != "" {
 		if parseDepth(hdr) != infiniteDepth {
-			return http.StatusBadRequest, errors.Wrap(errInvalidDepth, "MOVE操作只支持深度为infinity")
+			return http.StatusBadRequest, errs.Wrap(errInvalidDepth, "MOVE操作只支持深度为infinity")
 		}
 	}
 
@@ -918,7 +917,7 @@ func (h *Handler) handleLock(w http.ResponseWriter, r *http.Request) (retStatus 
 		}
 		ld, err = h.LockSystem.Refresh(now, token, duration)
 		if err != nil {
-			if errors.Is(err, ErrNoSuchLock) {
+			if errs.Is(err, ErrNoSuchLock) {
 				return http.StatusPreconditionFailed, err
 			}
 			return http.StatusInternalServerError, err
@@ -953,7 +952,7 @@ func (h *Handler) handleLock(w http.ResponseWriter, r *http.Request) (retStatus 
 		}
 		token, err = h.LockSystem.Create(now, ld)
 		if err != nil {
-			if errors.Is(err, ErrLocked) {
+			if errs.Is(err, ErrLocked) {
 				return StatusLocked, err
 			}
 			return http.StatusInternalServerError, err
@@ -1019,7 +1018,7 @@ func (h *Handler) handlePropfind(w http.ResponseWriter, r *http.Request) (status
 	// 移除路径前缀
 	reqPath, status, err := h.stripPrefix(r.URL.Path)
 	if err != nil {
-		return status, errors.Wrap(err, "路径前缀处理失败")
+		return status, errs.Wrap(err, "路径前缀处理失败")
 	}
 
 	// 获取用户信息和处理路径
@@ -1042,14 +1041,14 @@ func (h *Handler) handlePropfind(w http.ResponseWriter, r *http.Request) (status
 	if hdr := r.Header.Get("Depth"); hdr != "" {
 		depth = parseDepth(hdr)
 		if depth == invalidDepth {
-			return http.StatusBadRequest, errors.Wrap(errInvalidDepth, "无效的深度参数")
+			return http.StatusBadRequest, errs.Wrap(errInvalidDepth, "无效的深度参数")
 		}
 	}
 
 	// 读取 PROPFIND 请求体
 	pf, status, err := readPropfind(r.Body)
 	if err != nil {
-		return status, errors.Wrap(err, "解析PROPFIND请求体失败")
+		return status, errs.Wrap(err, "解析PROPFIND请求体失败")
 	}
 
 	// 创建多状态响应写入器
@@ -1058,7 +1057,7 @@ func (h *Handler) handlePropfind(w http.ResponseWriter, r *http.Request) (status
 	// 定义文件系统遍历函数
 	walkFn := func(reqPath string, info model.Obj, err error) error {
 		if err != nil {
-			return errors.Wrap(err, "遍历文件系统失败")
+			return errs.Wrap(err, "遍历文件系统失败")
 		}
 
 		var pstats []Propstat
@@ -1066,7 +1065,7 @@ func (h *Handler) handlePropfind(w http.ResponseWriter, r *http.Request) (status
 			// 处理属性名请求
 			pnames, err := propnames(ctx, h.LockSystem, info)
 			if err != nil {
-				return errors.Wrap(err, "获取属性名失败")
+				return errs.Wrap(err, "获取属性名失败")
 			}
 			pstat := Propstat{Status: http.StatusOK}
 			for _, xmlname := range pnames {
@@ -1077,13 +1076,13 @@ func (h *Handler) handlePropfind(w http.ResponseWriter, r *http.Request) (status
 			// 处理所有属性请求
 			pstats, err = allprop(ctx, h.LockSystem, info, pf.Prop)
 			if err != nil {
-				return errors.Wrap(err, "获取所有属性失败")
+				return errs.Wrap(err, "获取所有属性失败")
 			}
 		} else {
 			// 处理指定属性请求
 			pstats, err = props(ctx, h.LockSystem, info, pf.Prop)
 			if err != nil {
-				return errors.Wrap(err, "获取指定属性失败")
+				return errs.Wrap(err, "获取指定属性失败")
 			}
 		}
 
@@ -1102,10 +1101,10 @@ func (h *Handler) handlePropfind(w http.ResponseWriter, r *http.Request) (status
 	closeErr := mw.close()
 
 	if walkErr != nil {
-		return http.StatusInternalServerError, errors.Wrap(walkErr, "遍历文件系统失败")
+		return http.StatusInternalServerError, errs.Wrap(walkErr, "遍历文件系统失败")
 	}
 	if closeErr != nil {
-		return http.StatusInternalServerError, errors.Wrap(closeErr, "关闭响应写入器失败")
+		return http.StatusInternalServerError, errs.Wrap(closeErr, "关闭响应写入器失败")
 	}
 
 	return 0, nil
@@ -1115,13 +1114,13 @@ func (h *Handler) handleProppatch(w http.ResponseWriter, r *http.Request) (statu
 	// 移除路径前缀
 	reqPath, status, err := h.stripPrefix(r.URL.Path)
 	if err != nil {
-		return status, errors.Wrap(err, "路径前缀处理失败")
+		return status, errs.Wrap(err, "路径前缀处理失败")
 	}
 
 	// 确认锁定状态
 	release, status, err := h.confirmLocks(r, reqPath, "")
 	if err != nil {
-		return status, errors.Wrap(err, "锁确认失败")
+		return status, errs.Wrap(err, "锁确认失败")
 	}
 	defer release()
 
@@ -1143,13 +1142,13 @@ func (h *Handler) handleProppatch(w http.ResponseWriter, r *http.Request) (statu
 	// 读取 PROPPATCH 请求体
 	patches, status, err := readProppatch(r.Body)
 	if err != nil {
-		return status, errors.Wrap(err, "解析PROPPATCH请求体失败")
+		return status, errs.Wrap(err, "解析PROPPATCH请求体失败")
 	}
 
 	// 应用属性修改
 	pstats, err := patch(ctx, h.LockSystem, reqPath, patches)
 	if err != nil {
-		return http.StatusInternalServerError, errors.Wrap(err, "应用属性修改失败")
+		return http.StatusInternalServerError, errs.Wrap(err, "应用属性修改失败")
 	}
 
 	// 创建多状态响应写入器
@@ -1160,10 +1159,10 @@ func (h *Handler) handleProppatch(w http.ResponseWriter, r *http.Request) (statu
 	closeErr := mw.close()
 
 	if writeErr != nil {
-		return http.StatusInternalServerError, errors.Wrap(writeErr, "写入响应失败")
+		return http.StatusInternalServerError, errs.Wrap(writeErr, "写入响应失败")
 	}
 	if closeErr != nil {
-		return http.StatusInternalServerError, errors.Wrap(closeErr, "关闭响应写入器失败")
+		return http.StatusInternalServerError, errs.Wrap(closeErr, "关闭响应写入器失败")
 	}
 
 	return 0, nil
@@ -1242,22 +1241,22 @@ func StatusText(code int) string {
 }
 
 var (
-	errDestinationEqualsSource = errors.New("webdav: destination equals source")
-	errDirectoryNotEmpty       = errors.New("webdav: directory not empty")
-	errInvalidDepth            = errors.New("webdav: invalid depth")
-	errInvalidDestination      = errors.New("webdav: invalid destination")
-	errInvalidIfHeader         = errors.New("webdav: invalid If header")
-	errInvalidLockInfo         = errors.New("webdav: invalid lock info")
-	errInvalidLockToken        = errors.New("webdav: invalid lock token")
-	errInvalidPropfind         = errors.New("webdav: invalid propfind")
-	errInvalidProppatch        = errors.New("webdav: invalid proppatch")
-	errInvalidResponse         = errors.New("webdav: invalid response")
-	errInvalidTimeout          = errors.New("webdav: invalid timeout")
-	errNoFileSystem            = errors.New("webdav: no file system")
-	errNoLockSystem            = errors.New("webdav: no lock system")
-	errNotADirectory           = errors.New("webdav: not a directory")
-	errPrefixMismatch          = errors.New("webdav: prefix mismatch")
-	errRecursionTooDeep        = errors.New("webdav: recursion too deep")
-	errUnsupportedLockInfo     = errors.New("webdav: unsupported lock info")
-	errUnsupportedMethod       = errors.New("webdav: unsupported method")
+	errDestinationEqualsSource = errs.New("webdav: destination equals source")
+	errDirectoryNotEmpty       = errs.New("webdav: directory not empty")
+	errInvalidDepth            = errs.New("webdav: invalid depth")
+	errInvalidDestination      = errs.New("webdav: invalid destination")
+	errInvalidIfHeader         = errs.New("webdav: invalid If header")
+	errInvalidLockInfo         = errs.New("webdav: invalid lock info")
+	errInvalidLockToken        = errs.New("webdav: invalid lock token")
+	errInvalidPropfind         = errs.New("webdav: invalid propfind")
+	errInvalidProppatch        = errs.New("webdav: invalid proppatch")
+	errInvalidResponse         = errs.New("webdav: invalid response")
+	errInvalidTimeout          = errs.New("webdav: invalid timeout")
+	errNoFileSystem            = errs.New("webdav: no file system")
+	errNoLockSystem            = errs.New("webdav: no lock system")
+	errNotADirectory           = errs.New("webdav: not a directory")
+	errPrefixMismatch          = errs.New("webdav: prefix mismatch")
+	errRecursionTooDeep        = errs.New("webdav: recursion too deep")
+	errUnsupportedLockInfo     = errs.New("webdav: unsupported lock info")
+	errUnsupportedMethod       = errs.New("webdav: unsupported method")
 )

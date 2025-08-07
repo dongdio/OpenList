@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/utility/http_range"
 )
@@ -377,7 +377,7 @@ func GetRangedHTTPReader(readCloser io.ReadCloser, offset, length int64) (io.Rea
 
 		if n != offset {
 			readCloser.Close()
-			return nil, errors.Errorf("expected to skip %d bytes, but skipped %d", offset, n)
+			return nil, errs.Errorf("expected to skip %d bytes, but skipped %d", offset, n)
 		}
 	}
 

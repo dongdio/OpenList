@@ -7,9 +7,9 @@ import (
 
 	"github.com/OpenListTeam/go-cache"
 	"github.com/go-webauthn/webauthn/webauthn"
-	"github.com/pkg/errors"
 
 	"github.com/dongdio/OpenList/v4/utility/errs"
+
 	"github.com/dongdio/OpenList/v4/utility/utils"
 	"github.com/dongdio/OpenList/v4/utility/utils/random"
 )
@@ -75,10 +75,10 @@ func (u *User) ValidateRawPassword(password string) error {
 
 func (u *User) ValidatePwdStaticHash(pwdStaticHash string) error {
 	if pwdStaticHash == "" {
-		return errors.WithStack(errs.EmptyPassword)
+		return errs.WithStack(errs.EmptyPassword)
 	}
 	if u.PwdHash != HashPwd(pwdStaticHash, u.Salt) {
-		return errors.WithStack(errs.WrongPassword)
+		return errs.WithStack(errs.WrongPassword)
 	}
 	return nil
 }

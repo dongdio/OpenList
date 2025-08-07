@@ -12,8 +12,9 @@ import (
 	"strconv"
 
 	"github.com/avast/retry-go"
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/driver"
@@ -47,9 +48,9 @@ func (d *Terabox) Init(ctx context.Context) error {
 	}
 	if resp.Errno != 0 {
 		if resp.Errno == 9000 {
-			return errors.Errorf("terabox is not yet available in this area")
+			return errs.Errorf("terabox is not yet available in this area")
 		}
-		return errors.Errorf("failed to check login status according to cookie")
+		return errs.Errorf("failed to check login status according to cookie")
 	}
 	return err
 }
@@ -173,7 +174,7 @@ func (d *Terabox) Put(ctx context.Context, dstDir model.Obj, stream model.FileSt
 	log.Debugf("%+v", precreateResp)
 	if precreateResp.Errno != 0 {
 		log.Debugln(string(res))
-		return errors.Errorf("[terabox] failed to precreate file, errno: %d", precreateResp.Errno)
+		return errs.Errorf("[terabox] failed to precreate file, errno: %d", precreateResp.Errno)
 	}
 	if precreateResp.ReturnType == 2 {
 		return nil
@@ -278,7 +279,7 @@ func (d *Terabox) Put(ctx context.Context, dstDir model.Obj, stream model.FileSt
 		return err
 	}
 	if createResp.Errno != 0 {
-		return errors.Errorf("[terabox] failed to create file, errno: %d", createResp.Errno)
+		return errs.Errorf("[terabox] failed to create file, errno: %d", createResp.Errno)
 	}
 	return nil
 }

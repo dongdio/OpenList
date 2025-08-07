@@ -4,8 +4,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/pkg/errors"
 	"resty.dev/v3"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/op"
@@ -36,9 +37,9 @@ func (d *YandexDisk) refreshToken() error {
 		}
 		if resp.RefreshToken == "" || resp.AccessToken == "" {
 			if resp.ErrorMessage != "" {
-				return errors.Errorf("faild tp refresh token: %s", resp.ErrorMessage)
+				return errs.Errorf("faild tp refresh token: %s", resp.ErrorMessage)
 			}
-			return errors.Errorf("empty token returned from official API, a wrong refresh token may have been used")
+			return errs.Errorf("empty token returned from official API, a wrong refresh token may have been used")
 		}
 		d.AccessToken = resp.AccessToken
 		d.RefreshToken = resp.RefreshToken
@@ -47,7 +48,7 @@ func (d *YandexDisk) refreshToken() error {
 	}
 	// 使用本地客户端的情况下检查是否为空
 	if d.ClientID == "" || d.ClientSecret == "" {
-		return errors.Errorf("empty ClientID or ClientSecret")
+		return errs.Errorf("empty ClientID or ClientSecret")
 	}
 	// 走原有的刷新逻辑
 	u := "https://oauth.yandex.com/token"
@@ -63,7 +64,7 @@ func (d *YandexDisk) refreshToken() error {
 		return err
 	}
 	if e.Error != "" {
-		return errors.Errorf("%s : %s", e.Error, e.ErrorDescription)
+		return errs.Errorf("%s : %s", e.Error, e.ErrorDescription)
 	}
 	d.AccessToken, d.RefreshToken = resp.AccessToken, resp.RefreshToken
 	op.MustSaveDriverStorage(d)
@@ -95,7 +96,7 @@ func (d *YandexDisk) request(pathname string, method string, callback base.ReqCa
 			}
 			return d.request(pathname, method, callback, resp)
 		}
-		return nil, errors.New(e.Description)
+		return nil, errs.New(e.Description)
 	}
 	return res.Bytes(), nil
 }

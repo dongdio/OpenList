@@ -12,17 +12,17 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/pkg/errors"
 	"github.com/robfig/cron/v3"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/global"
 	"github.com/dongdio/OpenList/v4/internal/conf"
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
-	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/stream"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
@@ -52,13 +52,13 @@ func (d *AliDrive) Init(ctx context.Context) error {
 	// 刷新令牌
 	err := d.refreshToken()
 	if err != nil {
-		return errors.Wrap(err, "刷新令牌失败")
+		return errs.Wrap(err, "刷新令牌失败")
 	}
 
 	// 获取驱动ID和用户ID
 	res, err, _ := d.request("https://api.alipan.com/v2/user/get", http.MethodPost, nil, nil)
 	if err != nil {
-		return errors.Wrap(err, "获取用户信息失败")
+		return errs.Wrap(err, "获取用户信息失败")
 	}
 	d.DriveID = utils.GetBytes(res, "default_drive_id").String()
 	d.UserID = utils.GetBytes(res, "user_id").String()
@@ -106,7 +106,7 @@ func (d *AliDrive) Drop(ctx context.Context) error {
 func (d *AliDrive) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
 	files, err := d.getFiles(dir.GetID())
 	if err != nil {
-		return nil, errors.Wrap(err, "获取文件列表失败")
+		return nil, errs.Wrap(err, "获取文件列表失败")
 	}
 	return utils.SliceConvert(files, func(src File) (model.Obj, error) {
 		return fileToObj(src), nil
@@ -124,7 +124,7 @@ func (d *AliDrive) Link(ctx context.Context, file model.Obj, args model.LinkArgs
 		req.SetBody(data)
 	}, nil)
 	if err != nil {
-		return nil, errors.Wrap(err, "获取下载链接失败")
+		return nil, errs.Wrap(err, "获取下载链接失败")
 	}
 	return &model.Link{
 		Header: http.Header{
@@ -221,12 +221,12 @@ func (d *AliDrive) Put(ctx context.Context, dstDir model.Obj, streamer model.Fil
 		buf := bytes.NewBuffer(make([]byte, 0, 1024))
 		_, err := utils.CopyWithBufferN(buf, file, 1024)
 		if err != nil {
-			return errors.Wrap(err, "读取文件头部失败")
+			return errs.Wrap(err, "读取文件头部失败")
 		}
 		reqBody["pre_hash"] = utils.HashData(utils.SHA1, buf.Bytes())
 		if localFile != nil {
 			if _, err = localFile.Seek(0, io.SeekStart); err != nil {
-				return errors.Wrap(err, "文件指针重置失败")
+				return errs.Wrap(err, "文件指针重置失败")
 			}
 		} else {
 			// 把头部拼接回去
@@ -249,7 +249,7 @@ func (d *AliDrive) Put(ctx context.Context, dstDir model.Obj, streamer model.Fil
 	}, &resp)
 
 	if err != nil && e.Code != "PreHashMatched" {
-		return errors.Wrap(err, "创建文件失败")
+		return errs.Wrap(err, "创建文件失败")
 	}
 
 	// 处理预哈希匹配的情况
@@ -258,22 +258,22 @@ func (d *AliDrive) Put(ctx context.Context, dstDir model.Obj, streamer model.Fil
 		h := sha1.New()
 		if localFile != nil {
 			if err = utils.CopyWithCtx(ctx, h, localFile, 0, nil); err != nil {
-				return errors.Wrap(err, "计算文件哈希失败")
+				return errs.Wrap(err, "计算文件哈希失败")
 			}
 			if _, err = localFile.Seek(0, io.SeekStart); err != nil {
-				return errors.Wrap(err, "文件指针重置失败")
+				return errs.Wrap(err, "文件指针重置失败")
 			}
 		} else {
 			tempFile, err := os.CreateTemp(conf.Conf.TempDir, "file-*")
 			if err != nil {
-				return errors.Wrap(err, "创建临时文件失败")
+				return errs.Wrap(err, "创建临时文件失败")
 			}
 			defer func() {
 				_ = tempFile.Close()
 				_ = os.Remove(tempFile.Name())
 			}()
 			if err = utils.CopyWithCtx(ctx, io.MultiWriter(tempFile, h), file, 0, nil); err != nil {
-				return errors.Wrap(err, "写入临时文件失败")
+				return errs.Wrap(err, "写入临时文件失败")
 			}
 			localFile = tempFile
 		}
@@ -303,14 +303,14 @@ func (d *AliDrive) Put(ctx context.Context, dstDir model.Obj, streamer model.Fil
 			req.SetBody(reqBody)
 		}, &resp)
 		if err != nil && e.Code != "PreHashMatched" {
-			return errors.Wrap(err, "秒传验证失败")
+			return errs.Wrap(err, "秒传验证失败")
 		}
 		if resp.RapidUpload {
 			return nil
 		}
 		// 秒传失败
 		if _, err = localFile.Seek(0, io.SeekStart); err != nil {
-			return errors.Wrap(err, "文件指针重置失败")
+			return errs.Wrap(err, "文件指针重置失败")
 		}
 		file.Reader = localFile
 	}
@@ -327,12 +327,12 @@ func (d *AliDrive) Put(ctx context.Context, dstDir model.Obj, streamer model.Fil
 		}
 		req, err := http.NewRequestWithContext(ctx, http.MethodPut, url, io.LimitReader(rateLimited, DEFAULT))
 		if err != nil {
-			return errors.Wrap(err, "创建上传请求失败")
+			return errs.Wrap(err, "创建上传请求失败")
 		}
 		req = req.WithContext(ctx)
 		res, err := base.HttpClient.Do(req)
 		if err != nil {
-			return errors.Wrap(err, "上传分片失败")
+			return errs.Wrap(err, "上传分片失败")
 		}
 		_ = res.Body.Close()
 		if count > 0 {
@@ -350,12 +350,12 @@ func (d *AliDrive) Put(ctx context.Context, dstDir model.Obj, streamer model.Fil
 		})
 	}, &resp2)
 	if err != nil && e.Code != "PreHashMatched" {
-		return errors.Wrap(err, "完成上传失败")
+		return errs.Wrap(err, "完成上传失败")
 	}
 	if resp2["file_id"] == resp.FileID {
 		return nil
 	}
-	return errors.Errorf("上传完成但返回的文件ID不匹配: %+v", resp2)
+	return errs.Errorf("上传完成但返回的文件ID不匹配: %+v", resp2)
 }
 
 // Other 处理其他操作
@@ -381,7 +381,7 @@ func (d *AliDrive) Other(ctx context.Context, args model.OtherArgs) (any, error)
 		req.SetBody(data)
 	}, &resp)
 	if err != nil {
-		return nil, errors.Wrap(err, "处理其他操作失败")
+		return nil, errs.Wrap(err, "处理其他操作失败")
 	}
 	return resp, nil
 }

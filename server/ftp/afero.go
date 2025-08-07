@@ -2,7 +2,6 @@ package ftp
 
 import (
 	"context"
-	"errors"
 	"os"
 	"strings"
 	"time"
@@ -117,7 +116,7 @@ func (a *AferoAdapter) GetHandle(name string, flags int, offset int64) (ftpserve
 	// 获取用户并转换路径
 	user, ok := a.ctx.Value(consts.UserKey).(*model.User)
 	if !ok {
-		return nil, errors.New("user not found in context")
+		return nil, errs.New("user not found in context")
 	}
 
 	path, err := user.JoinPath(name)
@@ -134,7 +133,7 @@ func (a *AferoAdapter) GetHandle(name string, flags int, offset int64) (ftpserve
 		return nil, errs.ObjectNotFound
 	}
 	if (flags&os.O_EXCL) != 0 && exists {
-		return nil, errors.New("file already exists")
+		return nil, errs.New("file already exists")
 	}
 
 	// 根据操作类型创建适当的句柄

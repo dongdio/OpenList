@@ -6,11 +6,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
 	"resty.dev/v3"
 
-	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/utility/errs"
+
+	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
@@ -31,7 +31,7 @@ func (d *Seafile) getToken() error {
 		return err
 	}
 	if res.StatusCode() >= 400 {
-		return errors.Errorf("get token failed: %s", res.String())
+		return errs.Errorf("get token failed: %s", res.String())
 	}
 	d.authorization = fmt.Sprintf("Token %s", authResp.Token)
 	return nil
@@ -66,7 +66,7 @@ func (d *Seafile) request(method string, pathname string, callback base.ReqCallb
 		}
 	}
 	if res.StatusCode() >= 400 {
-		return nil, errors.Errorf("request failed: %s", res.String())
+		return nil, errs.Errorf("request failed: %s", res.String())
 	}
 	return res.Bytes(), nil
 }
@@ -140,8 +140,8 @@ func (d *Seafile) listLibraries() (resp []LibraryItemResp, err error) {
 	return resp, nil
 }
 
-var repoPwdNotConfigured = errors.New("library password not configured")
-var repoPwdIncorrect = errors.New("library password is incorrect")
+var repoPwdNotConfigured = errs.New("library password not configured")
+var repoPwdIncorrect = errs.New("library password is incorrect")
 
 func (d *Seafile) decryptLibrary(repo *LibraryInfo) (err error) {
 	if !repo.Encrypted {

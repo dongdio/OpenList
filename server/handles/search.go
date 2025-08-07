@@ -5,13 +5,13 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pkg/errors"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
 	"github.com/dongdio/OpenList/v4/server/common"
-	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/search"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
@@ -82,7 +82,7 @@ func filterSearchResults(nodes []model.SearchNode, user *model.User, password st
 
 		// Get metadata for permission check
 		meta, err := op.GetNearestMeta(node.Parent)
-		if err != nil && !errors.Is(errors.Cause(err), errs.MetaNotFound) {
+		if err != nil && !errs.Is(errs.Cause(err), errs.MetaNotFound) {
 			continue
 		}
 

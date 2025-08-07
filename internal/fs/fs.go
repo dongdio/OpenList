@@ -6,13 +6,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
-	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/task"
 )
 
@@ -37,7 +37,7 @@ func getStorageWithCache(path string) (driver.Driver, string, error) {
 		storageCacheLock.RUnlock()
 		_, actualPath, err := op.GetStorageAndActualPath(path)
 		if err != nil {
-			return nil, "", errors.Wrap(err, "failed get actual path")
+			return nil, "", errs.Wrap(err, "failed get actual path")
 		}
 		return storage, actualPath, nil
 	}
@@ -46,7 +46,7 @@ func getStorageWithCache(path string) (driver.Driver, string, error) {
 	// 缓存未命中，获取存储并缓存
 	storage, actualPath, err := op.GetStorageAndActualPath(path)
 	if err != nil {
-		return nil, "", errors.Wrap(err, "failed get storage")
+		return nil, "", errs.Wrap(err, "failed get storage")
 	}
 
 	// 添加到缓存
@@ -222,7 +222,7 @@ func GetStorage(path string, args *GetStoragesArgs) (driver.Driver, error) {
 	if args != nil && args.SkipCache {
 		storageDriver, _, err := op.GetStorageAndActualPath(path)
 		if err != nil {
-			return nil, errors.WithMessage(err, "failed get storage")
+			return nil, errs.WithMessage(err, "failed get storage")
 		}
 		return storageDriver, nil
 	}
@@ -230,7 +230,7 @@ func GetStorage(path string, args *GetStoragesArgs) (driver.Driver, error) {
 	// 使用缓存获取存储驱动
 	storageDriver, _, err := getStorageWithCache(path)
 	if err != nil {
-		return nil, errors.WithMessage(err, "failed get storage")
+		return nil, errs.WithMessage(err, "failed get storage")
 	}
 	return storageDriver, nil
 }
@@ -246,12 +246,12 @@ func Other(ctx context.Context, args model.FsOtherArgs) (any, error) {
 func PutURL(ctx context.Context, path, dstName, urlStr string) error {
 	storage, dstDirActualPath, err := getStorageWithCache(path)
 	if err != nil {
-		return errors.WithMessage(err, "failed get storage")
+		return errs.WithMessage(err, "failed get storage")
 	}
 
 	// 快速检查存储配置
 	if storage.Config().NoUpload {
-		return errors.WithStack(errs.UploadNotSupported)
+		return errs.WithStack(errs.UploadNotSupported)
 	}
 
 	// 类型检查优化

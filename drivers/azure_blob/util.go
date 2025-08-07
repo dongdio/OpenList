@@ -16,8 +16,9 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/container"
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/sas"
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/service"
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 )
 
 const (
@@ -47,7 +48,7 @@ func extractAccountName(endpoint string) string {
 // isNotFoundError checks if the error is a "not found" type error
 func isNotFoundError(err error) bool {
 	var storageErr *azcore.ResponseError
-	if errors.As(err, &storageErr) {
+	if errs.As(err, &storageErr) {
 		return storageErr.StatusCode == 404
 	}
 	// Fallback to string matching for backwards compatibility
@@ -70,7 +71,7 @@ func (d *AzureBlob) flattenListBlobs(ctx context.Context, prefix string) ([]cont
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to list blobs")
+			return nil, errs.Wrap(err, "failed to list blobs")
 		}
 
 		for _, blob := range page.Segment.BlobItems {
@@ -95,20 +96,20 @@ func (d *AzureBlob) batchDeleteBlobs(ctx context.Context, blobPaths []string) er
 		// Create batch builder
 		batchBuilder, err := d.containerClient.NewBatchBuilder()
 		if err != nil {
-			return errors.Wrap(err, "failed to create batch builder")
+			return errs.Wrap(err, "failed to create batch builder")
 		}
 
 		// Add delete operations
 		for _, blobPath := range currentBatch {
 			if err := batchBuilder.Delete(blobPath, nil); err != nil {
-				return errors.Errorf("failed to add delete operation for %s: %w", blobPath, err)
+				return errs.Errorf("failed to add delete operation for %s: %w", blobPath, err)
 			}
 		}
 
 		// Submit batch
 		responses, err := d.containerClient.SubmitBatch(ctx, batchBuilder, nil)
 		if err != nil {
-			return errors.Wrap(err, "batch delete request failed")
+			return errs.Wrap(err, "batch delete request failed")
 		}
 
 		// Check responses
@@ -119,7 +120,7 @@ func (d *AzureBlob) batchDeleteBlobs(ctx context.Context, blobPaths []string) er
 				if resp.BlobName != nil {
 					blobName = *resp.BlobName
 				}
-				return errors.Errorf("failed to delete blob %s: %v", blobName, resp.Error)
+				return errs.Errorf("failed to delete blob %s: %v", blobName, resp.Error)
 			}
 		}
 	}
@@ -135,7 +136,7 @@ func (d *AzureBlob) deleteFolder(ctx context.Context, prefix string) error {
 	// Get all blobs under the directory using flattenListBlobs
 	globs, err := d.flattenListBlobs(ctx, prefix)
 	if err != nil {
-		return errors.Wrap(err, "failed to list blobs for deletion")
+		return errs.Wrap(err, "failed to list blobs for deletion")
 	}
 
 	// If there are blobs in the directory, delete them
@@ -208,7 +209,7 @@ func (d *AzureBlob) copyFile(ctx context.Context, srcPath, dstPath string) error
 	expireDuration := time.Hour * time.Duration(d.SignURLExpire)
 	srcURL, err := srcBlob.GetSASURL(sas.BlobPermissions{Read: true}, time.Now().Add(expireDuration), nil)
 	if err != nil {
-		return errors.Wrap(err, "failed to generate source SAS URL")
+		return errs.Wrap(err, "failed to generate source SAS URL")
 	}
 
 	_, err = dstBlob.StartCopyFromURL(ctx, srcURL, nil)
@@ -226,8 +227,8 @@ func (d *AzureBlob) createContainerIfNotExists(ctx context.Context, containerNam
 	_, err := containerClient.Create(ctx, &options)
 	if err != nil {
 		var responseErr *azcore.ResponseError
-		if errors.As(err, &responseErr) && responseErr.ErrorCode != "ContainerAlreadyExists" {
-			return errors.Errorf("failed to create or access container [%s]: %w", containerName, err)
+		if errs.As(err, &responseErr) && responseErr.ErrorCode != "ContainerAlreadyExists" {
+			return errs.Errorf("failed to create or access container [%s]: %w", containerName, err)
 		}
 	}
 
@@ -273,7 +274,7 @@ func (d *AzureBlob) moveOrRename(ctx context.Context, srcPath, dstPath string, i
 		// List all blobs under the source directory
 		blobs, err := d.flattenListBlobs(ctx, srcPath)
 		if err != nil {
-			return errors.Wrap(err, "failed to list blobs")
+			return errs.Wrap(err, "failed to list blobs")
 		}
 
 		// Iterate and copy each blob to the destination
@@ -285,12 +286,12 @@ func (d *AzureBlob) moveOrRename(ctx context.Context, srcPath, dstPath string, i
 			if isDirectory(item) {
 				// Create directory marker at destination
 				if err := d.mkDir(ctx, itemDstPath); err != nil {
-					return errors.Errorf("failed to create directory marker [%s]: %w", itemDstPath, err)
+					return errs.Errorf("failed to create directory marker [%s]: %w", itemDstPath, err)
 				}
 			} else {
 				// Copy file blob to destination
 				if err := d.copyFile(ctx, srcBlobName, itemDstPath); err != nil {
-					return errors.Errorf("failed to copy blob [%s]: %w", srcBlobName, err)
+					return errs.Errorf("failed to copy blob [%s]: %w", srcBlobName, err)
 				}
 			}
 		}
@@ -298,7 +299,7 @@ func (d *AzureBlob) moveOrRename(ctx context.Context, srcPath, dstPath string, i
 		// Handle empty directories by creating a marker at destination
 		if len(blobs) == 0 {
 			if err := d.mkDir(ctx, dstPath); err != nil {
-				return errors.Errorf("failed to create directory [%s]: %w", dstPath, err)
+				return errs.Errorf("failed to create directory [%s]: %w", dstPath, err)
 			}
 		}
 
@@ -316,7 +317,7 @@ func (d *AzureBlob) moveOrRename(ctx context.Context, srcPath, dstPath string, i
 
 	// Single file move or rename operation
 	if err := d.copyFile(ctx, srcPath, dstPath); err != nil {
-		return errors.Wrap(err, "failed to copy file")
+		return errs.Wrap(err, "failed to copy file")
 	}
 
 	// Delete source file after successful copy
@@ -390,7 +391,7 @@ func (d *AzureBlob) deleteEmptyDirectory(ctx context.Context, dirPath string) er
 		_, err = blobClient.Delete(ctx, nil)
 	}
 
-	// Ignore not found errors
+	// Ignore not found errs
 	if err != nil && isNotFoundError(err) {
 		log.Infof("Directory [%s] not found during deletion: %v", dirPath, err)
 		return nil

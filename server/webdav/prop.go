@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/xml"
-	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -18,6 +17,7 @@ import (
 	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/server/common"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
@@ -401,7 +401,7 @@ func findCreationDate(ctx context.Context, ls LockSystem, name string, fi model.
 
 // ErrNotImplemented should be returned by optional interfaces if they
 // want the original implementation to be used.
-var ErrNotImplemented = errors.New("not implemented")
+var ErrNotImplemented = errs.New("not implemented")
 
 // ContentTyper is an optional interface for the os.FileInfo
 // objects returned by the FileSystem.
@@ -472,7 +472,7 @@ type ETager interface {
 func findETag(ctx context.Context, ls LockSystem, name string, fi model.Obj) (string, error) {
 	if do, ok := fi.(ETager); ok {
 		etag, err := do.ETag(ctx)
-		if !errors.Is(err, ErrNotImplemented) {
+		if !errs.Is(err, ErrNotImplemented) {
 			return etag, err
 		}
 	}

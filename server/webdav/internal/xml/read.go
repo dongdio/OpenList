@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/pkg/errors"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 )
 
 // BUG(rsc): Mapping between XML elements and data structures is inherently flawed:
@@ -127,7 +127,7 @@ func (d *Decoder) Decode(v any) error {
 func (d *Decoder) DecodeElement(v any, start *StartElement) error {
 	val := reflect.ValueOf(v)
 	if val.Kind() != reflect.Ptr {
-		return errors.New("non-pointer passed to Unmarshal")
+		return errs.New("non-pointer passed to Unmarshal")
 	}
 	return d.unmarshal(val.Elem(), start)
 }
@@ -192,7 +192,7 @@ func (p *Decoder) unmarshalInterface(val Unmarshaler, start *StartElement) error
 	}
 
 	if !p.popEOF() {
-		return errors.Errorf("xml: %s.UnmarshalXML did not consume entire <%s> element", receiverType(val), start.Name.Local)
+		return errs.Errorf("xml: %s.UnmarshalXML did not consume entire <%s> element", receiverType(val), start.Name.Local)
 	}
 
 	return nil
@@ -339,7 +339,7 @@ func (p *Decoder) unmarshal(val reflect.Value, start *StartElement) error {
 
 	switch v := val; v.Kind() {
 	default:
-		return errors.New("unknown type " + v.Type().String())
+		return errs.New("unknown type " + v.Type().String())
 
 	case reflect.Interface:
 		// TODO: For now, simply ignore the field. In the near
@@ -566,7 +566,7 @@ func copyValue(dst reflect.Value, src []byte) (err error) {
 	case reflect.Invalid:
 		// Probably a comment.
 	default:
-		return errors.New("cannot unmarshal into " + dst0.Type().String())
+		return errs.New("cannot unmarshal into " + dst0.Type().String())
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		itmp, err := strconv.ParseInt(string(src), 10, dst.Type().Bits())
 		if err != nil {

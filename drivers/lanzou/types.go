@@ -1,17 +1,17 @@
 package lanzou
 
 import (
-	"errors"
 	"fmt"
 	"time"
 
 	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
-var ErrFileShareCancel = errors.New("file sharing cancellation")
-var ErrFileNotExist = errors.New("file does not exist")
-var ErrCookieExpiration = errors.New("cookie expiration")
+var ErrFileShareCancel = errs.New("file sharing cancellation")
+var ErrFileNotExist = errs.New("file does not exist")
+var ErrCookieExpiration = errs.New("cookie expiration")
 
 type RespText[T any] struct {
 	Text T `json:"text"`

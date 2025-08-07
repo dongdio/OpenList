@@ -8,7 +8,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
-	"github.com/pkg/errors"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/db"
@@ -58,7 +59,7 @@ func BeginAuthnLogin(c *gin.Context) {
 	// 创建 WebAuthn 实例
 	authnInstance, err := authn.NewAuthnInstance(c)
 	if err != nil {
-		common.ErrorResp(c, errors.Wrap(err, "创建 WebAuthn 实例失败"), 400)
+		common.ErrorResp(c, errs.Wrap(err, "创建 WebAuthn 实例失败"), 400)
 		return
 	}
 
@@ -73,7 +74,7 @@ func BeginAuthnLogin(c *gin.Context) {
 		// 用户名登录模式
 		user, err := db.GetUserByName(username)
 		if err != nil {
-			common.ErrorResp(c, errors.Wrap(err, "failed to get user info"), 400)
+			common.ErrorResp(c, errs.Wrap(err, "failed to get user info"), 400)
 			return
 		}
 		options, sessionData, err = authnInstance.BeginLogin(user)
@@ -83,14 +84,14 @@ func BeginAuthnLogin(c *gin.Context) {
 	}
 
 	if err != nil {
-		common.ErrorResp(c, errors.Wrap(err, "failed to begin login"), 400)
+		common.ErrorResp(c, errs.Wrap(err, "failed to begin login"), 400)
 		return
 	}
 
 	// 序列化会话数据
 	sessionBytes, err := utils.JSONTool.Marshal(sessionData)
 	if err != nil {
-		common.ErrorResp(c, errors.Wrap(err, "failed to marshal session data"), 400)
+		common.ErrorResp(c, errs.Wrap(err, "failed to marshal session data"), 400)
 		return
 	}
 
@@ -113,7 +114,7 @@ func FinishAuthnLogin(c *gin.Context) {
 	// 创建 WebAuthn 实例
 	authnInstance, err := authn.NewAuthnInstance(c)
 	if err != nil {
-		common.ErrorResp(c, errors.Wrap(err, "failed to create authn instance"), 400)
+		common.ErrorResp(c, errs.Wrap(err, "failed to create authn instance"), 400)
 		return
 	}
 
@@ -126,13 +127,13 @@ func FinishAuthnLogin(c *gin.Context) {
 
 	sessionDataBytes, err := base64.StdEncoding.DecodeString(sessionDataString)
 	if err != nil {
-		common.ErrorResp(c, errors.Wrap(err, "failed to decode session data"), 400)
+		common.ErrorResp(c, errs.Wrap(err, "failed to decode session data"), 400)
 		return
 	}
 
 	var sessionData webauthn.SessionData
 	if err = utils.JSONTool.Unmarshal(sessionDataBytes, &sessionData); err != nil {
-		common.ErrorResp(c, errors.Wrap(err, "failed to unmarshal session data"), 400)
+		common.ErrorResp(c, errs.Wrap(err, "failed to unmarshal session data"), 400)
 		return
 	}
 
@@ -142,7 +143,7 @@ func FinishAuthnLogin(c *gin.Context) {
 		// 用户名登录模式
 		user, err = db.GetUserByName(username)
 		if err != nil {
-			common.ErrorResp(c, errors.Wrap(err, "failed to get user info"), 400)
+			common.ErrorResp(c, errs.Wrap(err, "failed to get user info"), 400)
 			return
 		}
 		_, err = authnInstance.FinishLogin(user, sessionData, c.Request)
@@ -153,21 +154,21 @@ func FinishAuthnLogin(c *gin.Context) {
 			userID := uint(binary.LittleEndian.Uint64(userHandle))
 			user, err = db.GetUserByID(userID)
 			if err != nil {
-				return nil, errors.Wrap(err, "failed to get user by id")
+				return nil, errs.Wrap(err, "failed to get user by id")
 			}
 			return user, nil
 		}, sessionData, c.Request)
 	}
 
 	if err != nil {
-		common.ErrorResp(c, errors.Wrap(err, "failed to finish login"), 400)
+		common.ErrorResp(c, errs.Wrap(err, "failed to finish login"), 400)
 		return
 	}
 
 	// 生成登录令牌
 	token, err := common.GenerateToken(user)
 	if err != nil {
-		common.ErrorResp(c, errors.Wrap(err, "failed to generate token"), 400)
+		common.ErrorResp(c, errs.Wrap(err, "failed to generate token"), 400)
 		return
 	}
 
@@ -189,21 +190,21 @@ func BeginAuthnRegistration(c *gin.Context) {
 	// 创建 WebAuthn 实例
 	authnInstance, err := authn.NewAuthnInstance(c)
 	if err != nil {
-		common.ErrorResp(c, errors.Wrap(err, "failed to create authn instance"), 400)
+		common.ErrorResp(c, errs.Wrap(err, "failed to create authn instance"), 400)
 		return
 	}
 
 	// 开始注册流程
 	options, sessionData, err := authnInstance.BeginRegistration(user)
 	if err != nil {
-		common.ErrorResp(c, errors.Wrap(err, "failed to begin registration"), 400)
+		common.ErrorResp(c, errs.Wrap(err, "failed to begin registration"), 400)
 		return
 	}
 
 	// 序列化会话数据
 	sessionBytes, err := utils.JSONTool.Marshal(sessionData)
 	if err != nil {
-		common.ErrorResp(c, errors.Wrap(err, "failed to marshal session data"), 400)
+		common.ErrorResp(c, errs.Wrap(err, "failed to marshal session data"), 400)
 		return
 	}
 
@@ -236,40 +237,40 @@ func FinishAuthnRegistration(c *gin.Context) {
 	// 创建 WebAuthn 实例
 	authnInstance, err := authn.NewAuthnInstance(c)
 	if err != nil {
-		common.ErrorResp(c, errors.Wrap(err, "failed to create authn instance"), 400)
+		common.ErrorResp(c, errs.Wrap(err, "failed to create authn instance"), 400)
 		return
 	}
 
 	// 解码会话数据
 	sessionDataBytes, err := base64.StdEncoding.DecodeString(sessionDataString)
 	if err != nil {
-		common.ErrorResp(c, errors.Wrap(err, "failed to decode session data"), 400)
+		common.ErrorResp(c, errs.Wrap(err, "failed to decode session data"), 400)
 		return
 	}
 
 	// 解析会话数据
 	var sessionData webauthn.SessionData
 	if err = utils.JSONTool.Unmarshal(sessionDataBytes, &sessionData); err != nil {
-		common.ErrorResp(c, errors.Wrap(err, "failed to unmarshal session data"), 400)
+		common.ErrorResp(c, errs.Wrap(err, "failed to unmarshal session data"), 400)
 		return
 	}
 
 	// 完成注册流程
 	credential, err := authnInstance.FinishRegistration(user, sessionData, c.Request)
 	if err != nil {
-		common.ErrorResp(c, errors.Wrap(err, "failed to finish registration"), 400)
+		common.ErrorResp(c, errs.Wrap(err, "failed to finish registration"), 400)
 		return
 	}
 
 	// 保存凭证
 	if err = db.RegisterAuthn(user, credential); err != nil {
-		common.ErrorResp(c, errors.Wrap(err, "failed to register authn"), 400)
+		common.ErrorResp(c, errs.Wrap(err, "failed to register authn"), 400)
 		return
 	}
 
 	// 清除用户缓存
 	if err = op.DelUserCache(user.Username); err != nil {
-		common.ErrorResp(c, errors.Wrap(err, "failed to delete user cache"), 400)
+		common.ErrorResp(c, errs.Wrap(err, "failed to delete user cache"), 400)
 		return
 	}
 
@@ -284,7 +285,7 @@ func DeleteAuthnLogin(c *gin.Context) {
 	// 解析请求
 	var req DeleteAuthnRequest
 	if err := c.ShouldBind(&req); err != nil {
-		common.ErrorResp(c, errors.Wrap(err, "failed to bind request"), 400)
+		common.ErrorResp(c, errs.Wrap(err, "failed to bind request"), 400)
 		return
 	}
 
@@ -296,13 +297,13 @@ func DeleteAuthnLogin(c *gin.Context) {
 
 	// 删除凭证
 	if err := db.RemoveAuthn(user, req.ID); err != nil {
-		common.ErrorResp(c, errors.Wrap(err, "failed to remove authn"), 400)
+		common.ErrorResp(c, errs.Wrap(err, "failed to remove authn"), 400)
 		return
 	}
 
 	// 清除用户缓存
 	if err := op.DelUserCache(user.Username); err != nil {
-		common.ErrorResp(c, errors.Wrap(err, "failed to delete user cache"), 400)
+		common.ErrorResp(c, errs.Wrap(err, "failed to delete user cache"), 400)
 		return
 	}
 

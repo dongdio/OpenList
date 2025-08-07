@@ -115,7 +115,7 @@ func (m *Meilisearch) BatchIndex(ctx context.Context, nodes []model.SearchNode) 
 	//	return err
 	// }
 	// if forTask.Status != meilisearch.TaskStatusSucceeded {
-	//	return errors.Errorf("BatchIndex failed, task status is %s", forTask.Status)
+	//	return errs.Errorf("BatchIndex failed, task status is %s", forTask.Status)
 	// }
 	return nil
 }

@@ -6,7 +6,8 @@ import (
 	"path"
 
 	shell "github.com/ipfs/go-ipfs-api"
-	"github.com/pkg/errors"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
@@ -61,7 +62,7 @@ func (d *IPFS) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]
 			}
 			ipfsPath = path.Join("/ipfs", fileStat.Hash)
 		default:
-			return nil, errors.Errorf("mode error")
+			return nil, errs.Errorf("mode error")
 		}
 	}
 	dirs, err := d.sh.List(ipfsPath)
@@ -98,7 +99,7 @@ func (d *IPFS) Get(ctx context.Context, rawPath string) (model.Obj, error) {
 		}
 		ipfsPath = path.Join("/ipfs", fileStat.Hash)
 	default:
-		return nil, errors.Errorf("mode error")
+		return nil, errs.Errorf("mode error")
 	}
 	file, err := d.sh.FilesStat(ctx, ipfsPath)
 	if err != nil {
@@ -109,7 +110,7 @@ func (d *IPFS) Get(ctx context.Context, rawPath string) (model.Obj, error) {
 
 func (d *IPFS) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) (model.Obj, error) {
 	if d.Mode != "mfs" {
-		return nil, errors.Errorf("only write in mfs mode")
+		return nil, errs.Errorf("only write in mfs mode")
 	}
 	dirPath := parentDir.GetPath()
 	err := d.sh.FilesMkdir(ctx, path.Join(dirPath, dirName), shell.FilesMkdir.Parents(true))
@@ -125,7 +126,7 @@ func (d *IPFS) MakeDir(ctx context.Context, parentDir model.Obj, dirName string)
 
 func (d *IPFS) Move(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj, error) {
 	if d.Mode != "mfs" {
-		return nil, errors.Errorf("only write in mfs mode")
+		return nil, errs.Errorf("only write in mfs mode")
 	}
 	dstPath := path.Join(dstDir.GetPath(), path.Base(srcObj.GetPath()))
 	d.sh.FilesRm(ctx, dstPath, true)
@@ -135,7 +136,7 @@ func (d *IPFS) Move(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj, e
 
 func (d *IPFS) Rename(ctx context.Context, srcObj model.Obj, newName string) (model.Obj, error) {
 	if d.Mode != "mfs" {
-		return nil, errors.Errorf("only write in mfs mode")
+		return nil, errs.Errorf("only write in mfs mode")
 	}
 	dstPath := path.Join(path.Dir(srcObj.GetPath()), newName)
 	d.sh.FilesRm(ctx, dstPath, true)
@@ -145,7 +146,7 @@ func (d *IPFS) Rename(ctx context.Context, srcObj model.Obj, newName string) (mo
 
 func (d *IPFS) Copy(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj, error) {
 	if d.Mode != "mfs" {
-		return nil, errors.Errorf("only write in mfs mode")
+		return nil, errs.Errorf("only write in mfs mode")
 	}
 	dstPath := path.Join(dstDir.GetPath(), path.Base(srcObj.GetPath()))
 	d.sh.FilesRm(ctx, dstPath, true)
@@ -155,14 +156,14 @@ func (d *IPFS) Copy(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj, e
 
 func (d *IPFS) Remove(ctx context.Context, obj model.Obj) error {
 	if d.Mode != "mfs" {
-		return errors.Errorf("only write in mfs mode")
+		return errs.Errorf("only write in mfs mode")
 	}
 	return d.sh.FilesRm(ctx, obj.GetPath(), true)
 }
 
 func (d *IPFS) Put(ctx context.Context, dstDir model.Obj, s model.FileStreamer, up driver.UpdateProgress) (model.Obj, error) {
 	if d.Mode != "mfs" {
-		return nil, errors.Errorf("only write in mfs mode")
+		return nil, errs.Errorf("only write in mfs mode")
 	}
 	outHash, err := d.sh.Add(driver.NewLimitedUploadStream(ctx, &driver.ReaderUpdatingProgress{
 		Reader:         s,

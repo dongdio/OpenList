@@ -6,8 +6,9 @@ import (
 	"time"
 
 	"github.com/OpenListTeam/sftpd-openlist"
-	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/global"
@@ -76,14 +77,14 @@ func (d *SftpDriver) Close() {
 
 func (d *SftpDriver) NoClientAuth(conn ssh.ConnMetadata) (*ssh.Permissions, error) {
 	if conn.User() != "guest" {
-		return nil, errors.New("only guest is allowed to login without authorization")
+		return nil, errs.New("only guest is allowed to login without authorization")
 	}
 	guest, err := op.GetGuest()
 	if err != nil {
 		return nil, err
 	}
 	if guest.Disabled || !guest.CanFTPAccess() {
-		return nil, errors.New("user is not allowed to access via SFTP")
+		return nil, errs.New("user is not allowed to access via SFTP")
 	}
 	return nil, nil
 }
@@ -94,7 +95,7 @@ func (d *SftpDriver) PasswordAuth(conn ssh.ConnMetadata, password []byte) (*ssh.
 		return nil, err
 	}
 	if userObj.Disabled || !userObj.CanFTPAccess() {
-		return nil, errors.New("user is not allowed to access via SFTP")
+		return nil, errs.New("user is not allowed to access via SFTP")
 	}
 	passHash := model.StaticHash(string(password))
 	if err = userObj.ValidatePwdStaticHash(passHash); err != nil {
@@ -109,7 +110,7 @@ func (d *SftpDriver) PublicKeyAuth(conn ssh.ConnMetadata, key ssh.PublicKey) (*s
 		return nil, err
 	}
 	if userObj.Disabled || !userObj.CanFTPAccess() {
-		return nil, errors.New("user is not allowed to access via SFTP")
+		return nil, errs.New("user is not allowed to access via SFTP")
 	}
 	keys, _, err := op.GetSSHPublicKeyByUserID(userObj.ID, 1, -1)
 	if err != nil {
@@ -127,7 +128,7 @@ func (d *SftpDriver) PublicKeyAuth(conn ssh.ConnMetadata, key ssh.PublicKey) (*s
 		_ = op.UpdateSSHPublicKey(&sk)
 		return nil, nil
 	}
-	return nil, errors.New("public key refused")
+	return nil, errs.New("public key refused")
 }
 
 func (d *SftpDriver) AuthLogCallback(conn ssh.ConnMetadata, method string, err error) {

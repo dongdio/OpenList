@@ -6,7 +6,6 @@ package webdav
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"path"
 	"path/filepath"
@@ -15,6 +14,7 @@ import (
 	"github.com/dongdio/OpenList/v4/internal/fs"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 )
 
 // slashClean 清理路径名，确保以斜杠开头
@@ -48,7 +48,7 @@ func slashClean(name string) string {
 //   - error: 错误信息
 func moveFiles(ctx context.Context, src, dst string, overwrite bool) (status int, err error) {
 	if ctx == nil {
-		return http.StatusInternalServerError, errors.New("上下文为空")
+		return http.StatusInternalServerError, errs.New("上下文为空")
 	}
 
 	// 提取源和目标的目录和文件名
@@ -60,12 +60,12 @@ func moveFiles(ctx context.Context, src, dst string, overwrite bool) (status int
 	// 获取用户信息
 	userVal := ctx.Value(consts.UserKey)
 	if userVal == nil {
-		return http.StatusUnauthorized, errors.New("未找到用户信息")
+		return http.StatusUnauthorized, errs.New("未找到用户信息")
 	}
 
 	user, ok := userVal.(*model.User)
 	if !ok {
-		return http.StatusInternalServerError, errors.New("用户信息类型错误")
+		return http.StatusInternalServerError, errs.New("用户信息类型错误")
 	}
 
 	// 检查权限
@@ -121,7 +121,7 @@ func moveFiles(ctx context.Context, src, dst string, overwrite bool) (status int
 //   - error: 错误信息
 func copyFiles(ctx context.Context, src, dst string, overwrite bool) (status int, err error) {
 	if ctx == nil {
-		return http.StatusInternalServerError, errors.New("上下文为空")
+		return http.StatusInternalServerError, errs.New("上下文为空")
 	}
 
 	// 获取目标目录
@@ -156,13 +156,13 @@ func copyFiles(ctx context.Context, src, dst string, overwrite bool) (status int
 //   - error: 遍历错误
 func walkFS(ctx context.Context, depth int, name string, info model.Obj, walkFn func(reqPath string, info model.Obj, err error) error) error {
 	if ctx == nil || walkFn == nil {
-		return errors.New("上下文或回调函数为空")
+		return errs.New("上下文或回调函数为空")
 	}
 
 	// 对当前节点调用回调函数
 	err := walkFn(name, info, nil)
 	if err != nil {
-		if info.IsDir() && errors.Is(err, filepath.SkipDir) {
+		if info.IsDir() && errs.Is(err, filepath.SkipDir) {
 			return nil // 如果是目录且要求跳过，直接返回nil
 		}
 		return err
@@ -197,7 +197,7 @@ func walkFS(ctx context.Context, depth int, name string, info model.Obj, walkFn 
 		// 递归遍历
 		err = walkFS(ctx, depth, filename, fileInfo, walkFn)
 		if err != nil {
-			if !fileInfo.IsDir() || !errors.Is(err, filepath.SkipDir) {
+			if !fileInfo.IsDir() || !errs.Is(err, filepath.SkipDir) {
 				return err
 			}
 			// 如果是目录且要求跳过，继续遍历下一个节点

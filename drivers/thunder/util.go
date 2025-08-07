@@ -10,8 +10,9 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/pkg/errors"
 	"resty.dev/v3"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/utility/utils"
@@ -151,11 +152,11 @@ func (c *Common) refreshCaptchaToken(action string, metas map[string]string) err
 	}
 
 	if resp.Url != "" {
-		return errors.Errorf(`need verify: <a target="_blank" href="%s">Click Here</a>`, resp.Url)
+		return errs.Errorf(`need verify: <a target="_blank" href="%s">Click Here</a>`, resp.Url)
 	}
 
 	if resp.CaptchaToken == "" {
-		return errors.Errorf("empty captchaToken")
+		return errs.Errorf("empty captchaToken")
 	}
 
 	if c.refreshCTokenCk != nil {
@@ -222,7 +223,7 @@ func (c *Common) getReviewData(res *resty.Response) error {
 	reviewDataJSON, _ := utils.JSONTool.MarshalIndent(reviewData, "", "  ")
 	// reviewDataJSON, _ := utils.Json.Marshal(reviewData)
 
-	return errors.Errorf(`
+	return errs.Errorf(`
 <div style="font-family: Arial, sans-serif; padding: 15px; border-radius: 5px; border: 1px solid #e0e0e0;>
     <h3 style="color: #d9534f; margin-top: 0;">
         <span style="font-size: 16px;">🔒 本次登录需要验证</span><br>

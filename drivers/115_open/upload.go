@@ -9,7 +9,8 @@ import (
 	sdk "github.com/OpenListTeam/115-sdk-go"
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 	"github.com/avast/retry-go"
-	"github.com/pkg/errors"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
@@ -64,13 +65,13 @@ func (d *Open115) singleUpload(ctx context.Context, tempF model.File, tokenResp 
 		oss.SecurityToken(tokenResp.SecurityToken),
 	)
 	if err != nil {
-		return errors.Wrap(err, "创建OSS客户端失败")
+		return errs.Wrap(err, "创建OSS客户端失败")
 	}
 
 	// 获取存储桶
 	bucket, err := ossClient.Bucket(initResp.Bucket)
 	if err != nil {
-		return errors.Wrap(err, "获取OSS存储桶失败")
+		return errs.Wrap(err, "获取OSS存储桶失败")
 	}
 
 	// 执行上传，设置回调参数
@@ -82,7 +83,7 @@ func (d *Open115) singleUpload(ctx context.Context, tempF model.File, tokenResp 
 	)
 
 	if err != nil {
-		return errors.Wrap(err, "上传文件到OSS失败")
+		return errs.Wrap(err, "上传文件到OSS失败")
 	}
 
 	return nil
@@ -124,19 +125,19 @@ func (d *Open115) multpartUpload(ctx context.Context, stream model.FileStreamer,
 		oss.SecurityToken(tokenResp.SecurityToken),
 	)
 	if err != nil {
-		return errors.Wrap(err, "创建OSS客户端失败")
+		return errs.Wrap(err, "创建OSS客户端失败")
 	}
 
 	// 获取存储桶
 	bucket, err := ossClient.Bucket(initResp.Bucket)
 	if err != nil {
-		return errors.Wrap(err, "获取OSS存储桶失败")
+		return errs.Wrap(err, "获取OSS存储桶失败")
 	}
 
 	// 初始化分片上传，启用顺序上传模式
 	imur, err := bucket.InitiateMultipartUpload(initResp.Object, oss.Sequential())
 	if err != nil {
-		return errors.Wrap(err, "初始化分片上传失败")
+		return errs.Wrap(err, "初始化分片上传失败")
 	}
 
 	// 获取文件大小
@@ -181,7 +182,7 @@ func (d *Open115) multpartUpload(ctx context.Context, stream model.FileStreamer,
 				// 上传分片
 				part, err := bucket.UploadPart(imur, rateLimitedRd, partSize, int(i))
 				if err != nil {
-					return errors.Wrap(err, "上传分片失败")
+					return errs.Wrap(err, "上传分片失败")
 				}
 
 				// 保存分片信息
@@ -194,7 +195,7 @@ func (d *Open115) multpartUpload(ctx context.Context, stream model.FileStreamer,
 		)
 		ss.RecycleSectionReader(rd)
 		if err != nil {
-			return errors.Wrapf(err, "上传第%d个分片失败", i)
+			return errs.Wrapf(err, "上传第%d个分片失败", i)
 		}
 		// 更新偏移量和进度
 		if i == partNum {
@@ -217,7 +218,7 @@ func (d *Open115) multpartUpload(ctx context.Context, stream model.FileStreamer,
 	)
 
 	if err != nil {
-		return errors.Wrap(err, "完成分片上传失败")
+		return errs.Wrap(err, "完成分片上传失败")
 	}
 
 	return nil

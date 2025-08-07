@@ -5,7 +5,6 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"mime/multipart"
 	"net/http"
@@ -14,6 +13,7 @@ import (
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 )
 
 func (d *ChaoXing) requestDownload(pathname string, method string, callback base.ReqCallback, resp any) ([]byte, error) {
@@ -81,7 +81,7 @@ func (d *ChaoXing) GetFiles(parent string) ([]File, error) {
 	}
 	if resp.Result != 1 {
 		msg := fmt.Sprintf("error code is:%d", resp.Result)
-		return nil, errors.New(msg)
+		return nil, errs.New(msg)
 	}
 	if len(resp.List) > 0 {
 		files = append(files, resp.List...)

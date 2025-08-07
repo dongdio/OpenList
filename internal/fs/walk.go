@@ -2,17 +2,17 @@ package fs
 
 import (
 	"context"
-	"errors"
 	"path"
 	"path/filepath"
 
 	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 )
 
 // ErrWalkFailed 遍历失败错误
-var ErrWalkFailed = errors.New("walk failed")
+var ErrWalkFailed = errs.New("walk failed")
 
 // WalkFS 遍历文件系统，从指定名称开始，最多遍历到指定深度
 //
@@ -32,18 +32,18 @@ var ErrWalkFailed = errors.New("walk failed")
 func WalkFS(ctx context.Context, depth int, name string, info model.Obj, walkFn func(reqPath string, info model.Obj) error) error {
 	// 参数验证
 	if info == nil {
-		return errors.New("info cannot be nil")
+		return errs.New("info cannot be nil")
 	}
 
 	if walkFn == nil {
-		return errors.New("walkFn cannot be nil")
+		return errs.New("walkFn cannot be nil")
 	}
 
 	// 调用回调函数处理当前节点
 	walkFnErr := walkFn(name, info)
 	if walkFnErr != nil {
 		// 如果是目录且回调函数返回 SkipDir，则跳过该目录
-		if info.IsDir() && errors.Is(walkFnErr, filepath.SkipDir) {
+		if info.IsDir() && errs.Is(walkFnErr, filepath.SkipDir) {
 			return nil
 		}
 		return walkFnErr
@@ -60,7 +60,7 @@ func WalkFS(ctx context.Context, depth int, name string, info model.Obj, walkFn 
 	// 获取目录内容
 	objs, err := List(context.WithValue(ctx, consts.MetaKey, meta), name, &ListArgs{})
 	if err != nil {
-		return errors.Join(ErrWalkFailed, err)
+		return errs.Join(ErrWalkFailed, err)
 	}
 
 	// 遍历子节点
@@ -71,7 +71,7 @@ func WalkFS(ctx context.Context, depth int, name string, info model.Obj, walkFn 
 		// 递归遍历子节点
 		if err = WalkFS(ctx, depth-1, filename, fileInfo, walkFn); err != nil {
 			// 如果子节点返回 SkipDir，则跳过当前目录的剩余内容
-			if errors.Is(err, filepath.SkipDir) {
+			if errs.Is(err, filepath.SkipDir) {
 				break
 			}
 			return err

@@ -53,40 +53,42 @@ OpenListプロジェクトへのご支援とご理解をありがとうござい
 ## 特徴
 
 - [x] 複数ストレージ
-  - [x] ローカルストレージ
-  - [x] [Aliyundrive](https://www.alipan.com)
-  - [x] OneDrive / Sharepoint ([グローバル](https://www.microsoft.com/en-us/microsoft-365/onedrive/online-cloud-storage), [中国](https://portal.partner.microsoftonline.cn), DE, US)
-  - [x] [189cloud](https://cloud.189.cn)（個人、家族）
-  - [x] [GoogleDrive](https://drive.google.com)
-  - [x] [123pan](https://www.123pan.com)
-  - [x] [FTP / SFTP](https://en.wikipedia.org/wiki/File_Transfer_Protocol)
-  - [x] [PikPak](https://www.mypikpak.com)
-  - [x] [S3](https://aws.amazon.com/s3)
-  - [x] [Seafile](https://seafile.com)
-  - [x] [UPYUN Storage Service](https://www.upyun.com/products/file-storage)
-  - [x] [WebDAV](https://en.wikipedia.org/wiki/WebDAV)
-  - [x] Teambition([中国](https://www.teambition.com), [国際](https://us.teambition.com))
-  - [x] [Mediatrack](https://www.mediatrack.cn)
-  - [x] [139yun](https://yun.139.com)（個人、家族、グループ）
-  - [x] [YandexDisk](https://disk.yandex.com)
-  - [x] [BaiduNetdisk](http://pan.baidu.com)
-  - [x] [Terabox](https://www.terabox.com/main)
-  - [x] [UC](https://drive.uc.cn)
-  - [x] [Quark](https://pan.quark.cn)
-  - [x] [Thunder](https://pan.xunlei.com)
-  - [x] [Lanzou](https://www.lanzou.com)
-  - [x] [ILanzou](https://www.ilanzou.com)
-  - [x] [Aliyundrive share](https://www.alipan.com)
-  - [x] [Google photo](https://photos.google.com)
-  - [x] [Mega.nz](https://mega.nz)
-  - [x] [Baidu photo](https://photo.baidu.com)
-  - [x] [SMB](https://en.wikipedia.org/wiki/Server_Message_Block)
-  - [x] [115](https://115.com)
-  - [x] [Cloudreve](https://cloudreve.org)
-  - [x] [Dropbox](https://www.dropbox.com)
-  - [x] [FeijiPan](https://www.feijipan.com)
-  - [x] [dogecloud](https://www.dogecloud.com/product/oss)
-  - [x] [Azure Blob Storage](https://azure.microsoft.com/products/storage/blobs)
+    - [x] ローカルストレージ
+    - [x] [Aliyundrive](https://www.alipan.com)
+    - [x] OneDrive /
+      Sharepoint ([グローバル](https://www.microsoft.com/en-us/microsoft-365/onedrive/online-cloud-storage), [中国](https://portal.partner.microsoftonline.cn),
+      DE, US)
+    - [x] [189cloud](https://cloud.189.cn)（個人、家族）
+    - [x] [GoogleDrive](https://drive.google.com)
+    - [x] [123pan](https://www.123pan.com)
+    - [x] [FTP / SFTP](https://en.wikipedia.org/wiki/File_Transfer_Protocol)
+    - [x] [PikPak](https://www.mypikpak.com)
+    - [x] [S3](https://aws.amazon.com/s3)
+    - [x] [Seafile](https://seafile.com)
+    - [x] [UPYUN Storage Service](https://www.upyun.com/products/file-storage)
+    - [x] [WebDAV](https://en.wikipedia.org/wiki/WebDAV)
+    - [x] Teambition([中国](https://www.teambition.com), [国際](https://us.teambition.com))
+    - [x] [Mediatrack](https://www.mediatrack.cn)
+    - [x] [139yun](https://yun.139.com)（個人、家族、グループ）
+    - [x] [YandexDisk](https://disk.yandex.com)
+    - [x] [BaiduNetdisk](http://pan.baidu.com)
+    - [x] [Terabox](https://www.terabox.com/main)
+    - [x] [UC](https://drive.uc.cn)
+    - [x] [Quark](https://pan.quark.cn)
+    - [x] [Thunder](https://pan.xunlei.com)
+    - [x] [Lanzou](https://www.lanzou.com)
+    - [x] [ILanzou](https://www.ilanzou.com)
+    - [x] [Aliyundrive share](https://www.alipan.com)
+    - [x] [Google photo](https://photos.google.com)
+    - [x] [Mega.nz](https://mega.nz)
+    - [x] [Baidu photo](https://photo.baidu.com)
+    - [x] [SMB](https://en.wikipedia.org/wiki/Server_Message_Block)
+    - [x] [115](https://115.com)
+    - [x] [Cloudreve](https://cloudreve.org)
+    - [x] [Dropbox](https://www.dropbox.com)
+    - [x] [FeijiPan](https://www.feijipan.com)
+    - [x] [dogecloud](https://www.dogecloud.com/product/oss)
+    - [x] [Azure Blob Storage](https://azure.microsoft.com/products/storage/blobs)
 - [x] 簡単にデプロイでき、すぐに使える
 - [x] ファイルプレビュー（PDF、markdown、コード、テキストなど）
 - [x] ギャラリーモードでの画像プレビュー
@@ -118,7 +120,8 @@ N/A（再構築中）
 
 ## ディスカッション
 
-一般的な質問は [*Discussions*](https://github.com/OpenListTeam/OpenList/discussions) をご利用ください。***Issues* はバグ報告と機能リクエスト専用です。**
+一般的な質問は [*Discussions*](https://github.com/OpenListTeam/OpenList/discussions) をご利用ください。***Issues*
+はバグ報告と機能リクエスト専用です。**
 
 ## ライセンス
 
@@ -126,7 +129,8 @@ N/A（再構築中）
 
 ## 免責事項
 
-- 本プロジェクトは無料のオープンソースソフトウェアであり、ネットワークディスクを通じたファイル共有を容易にすることを目的とし、主に Go 言語のダウンロードと学習をサポートします。
+- 本プロジェクトは無料のオープンソースソフトウェアであり、ネットワークディスクを通じたファイル共有を容易にすることを目的とし、主に
+  Go 言語のダウンロードと学習をサポートします。
 - 本ソフトウェアの利用にあたっては、関連する法令を遵守し、不正利用を固く禁じます。
 - 本ソフトウェアは公式 SDK または API に基づいており、その動作を一切改変・破壊・妨害しません。
 - 302 リダイレクトまたはトラフィック転送のみを行い、ユーザーデータの傍受・保存・改ざんは一切行いません。
@@ -134,4 +138,5 @@ N/A（再構築中）
 - 本ソフトウェアは「現状有姿」で提供されており、商品性や特定目的への適合性を含むいかなる保証もありません。
 - 本ソフトウェアの使用または使用不能によるいかなる直接的・間接的損害についても、メンテナは責任を負いません。
 - 本ソフトウェアの利用に伴うすべてのリスク（アカウントの凍結やダウンロード速度制限などを含む）は、利用者自身が負うものとします。
-- 本プロジェクトは [AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.txt) ライセンスに従います。詳細は [LICENSE](./LICENSE) ファイルをご覧ください。
+- 本プロジェクトは [AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.txt)
+  ライセンスに従います。詳細は [LICENSE](./LICENSE) ファイルをご覧ください。

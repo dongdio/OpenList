@@ -3,7 +3,6 @@ package chaoxing
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -125,7 +124,7 @@ func (d *ChaoXing) MakeDir(ctx context.Context, parentDir model.Obj, dirName str
 	}
 	if resp.Result != 1 {
 		msg := fmt.Sprintf("error:%s", resp.Msg)
-		return errors.New(msg)
+		return errs.New(msg)
 	}
 	return nil
 }
@@ -152,7 +151,7 @@ func (d *ChaoXing) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 	}
 	if !resp.Status {
 		msg := fmt.Sprintf("error:%s", resp.Msg)
-		return errors.New(msg)
+		return errs.New(msg)
 	}
 	return nil
 }
@@ -171,7 +170,7 @@ func (d *ChaoXing) Rename(ctx context.Context, srcObj model.Obj, newName string)
 		// 	"recIds":   strings.Split(srcObj.GetID(), "$")[0],
 		// 	"name":     newName,
 		// }
-		return errors.New("此网盘不支持修改文件名")
+		return errs.New("此网盘不支持修改文件名")
 	}
 	var resp ListFileResp
 	_, err := d.request(path, http.MethodGet, func(req *resty.Request) {
@@ -182,7 +181,7 @@ func (d *ChaoXing) Rename(ctx context.Context, srcObj model.Obj, newName string)
 	}
 	if resp.Result != 1 {
 		msg := fmt.Sprintf("error:%s", resp.Msg)
-		return errors.New(msg)
+		return errs.New(msg)
 	}
 	return nil
 }
@@ -214,7 +213,7 @@ func (d *ChaoXing) Remove(ctx context.Context, obj model.Obj) error {
 	}
 	if resp.Result != 1 {
 		msg := fmt.Sprintf("error:%s", resp.Msg)
-		return errors.New(msg)
+		return errs.New(msg)
 	}
 	return nil
 }
@@ -227,7 +226,7 @@ func (d *ChaoXing) Put(ctx context.Context, dstDir model.Obj, file model.FileStr
 		return err
 	}
 	if resp.Result != 1 {
-		return errors.New("get upload data error")
+		return errs.New("get upload data error")
 	}
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
@@ -281,7 +280,7 @@ func (d *ChaoXing) Put(ctx context.Context, dstDir model.Obj, file model.FileStr
 		return err
 	}
 	if fileRsp.Msg != "success" {
-		return errors.New(fileRsp.Msg)
+		return errs.New(fileRsp.Msg)
 	}
 	uploadDoneParam := UploadDoneParam{Key: fileRsp.ObjectID, Cataid: "100000019", Param: fileRsp.Data}
 	params, err := utils.JSONTool.Marshal(uploadDoneParam)
@@ -303,7 +302,7 @@ func (d *ChaoXing) Put(ctx context.Context, dstDir model.Obj, file model.FileStr
 	}
 	if respd.Result != 1 {
 		msg := fmt.Sprintf("error:%v", resp.Msg)
-		return errors.New(msg)
+		return errs.New(msg)
 	}
 	return nil
 }

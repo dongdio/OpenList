@@ -4,8 +4,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/pkg/errors"
 	"resty.dev/v3"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/op"
@@ -59,10 +60,10 @@ func (d *FebBox) request(url string, method string, callback base.ReqCallback, r
 			}
 			return d.request(url, method, callback, resp)
 		} else {
-			return nil, errors.New(e.Error())
+			return nil, errs.New(e.Error())
 		}
 	default:
-		return nil, errors.New(e.Error())
+		return nil, errs.New(e.Error())
 	}
 }
 
@@ -138,7 +139,7 @@ func (d *FebBox) getDownloadLink(id string, ip string) (string, error) {
 		return "", err
 	}
 	if len(fileDownloadResp.Data) == 0 {
-		return "", errors.Errorf("can not get download link, code:%d, msg:%s", fileDownloadResp.Code, fileDownloadResp.Msg)
+		return "", errs.Errorf("can not get download link, code:%d, msg:%s", fileDownloadResp.Code, fileDownloadResp.Msg)
 	}
 
 	return fileDownloadResp.Data[0].DownloadURL, nil

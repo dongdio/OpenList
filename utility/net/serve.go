@@ -13,8 +13,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/conf"
@@ -86,7 +87,7 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request, name string, modTime time
 	ranges, err := http_range.ParseRange(rangeReq, size)
 	switch {
 	case err == nil:
-	case errors.Is(err, http_range.ErrNoOverlap):
+	case errs.Is(err, http_range.ErrNoOverlap):
 		if size == 0 {
 			// Some clients add a Range header to all requests to
 			// limit the size of the response. If the file is empty,
@@ -116,7 +117,7 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request, name string, modTime time
 		reader, err := rangeReadCloser.RangeRead(ctx, http_range.Range{Length: -1})
 		if err != nil {
 			code = http.StatusRequestedRangeNotSatisfiable
-			if statusCode, ok := errors.Unwrap(err).(ErrorHTTPStatusCode); ok {
+			if statusCode, ok := errs.Unwrap(err).(ErrorHTTPStatusCode); ok {
 				code = int(statusCode)
 			}
 			http.Error(w, err.Error(), code)
@@ -139,7 +140,7 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request, name string, modTime time
 		sendContent, err = rangeReadCloser.RangeRead(ctx, ra)
 		if err != nil {
 			code = http.StatusRequestedRangeNotSatisfiable
-			if statusCode, ok := errors.Unwrap(err).(ErrorHTTPStatusCode); ok {
+			if statusCode, ok := errs.Unwrap(err).(ErrorHTTPStatusCode); ok {
 				code = int(statusCode)
 			}
 			http.Error(w, err.Error(), code)
@@ -154,7 +155,7 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request, name string, modTime time
 			http.Error(w, err.Error(), http.StatusRequestedRangeNotSatisfiable)
 		}
 		code = http.StatusPartialContent
-		if statusCode, ok := errors.Unwrap(err).(ErrorHTTPStatusCode); ok {
+		if statusCode, ok := errs.Unwrap(err).(ErrorHTTPStatusCode); ok {
 			code = int(statusCode)
 		}
 		pr, pw := io.Pipe()
@@ -196,7 +197,7 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request, name string, modTime time
 	if r.Method != "HEAD" {
 		written, err := utils.CopyWithBufferN(w, sendContent, sendSize)
 		if err != nil {
-			if errors.Is(context.Cause(ctx), context.Canceled) {
+			if errs.Is(context.Cause(ctx), context.Canceled) {
 				return nil
 			}
 			log.Warnf("ServeHttp error: %s", err)
@@ -204,7 +205,7 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request, name string, modTime time
 				log.Warnf("Size mismatch: written=%d, expected=%d - possible causes: incorrect size, reader not providing full data, or connection closed prematurely", written, sendSize)
 			}
 			code = http.StatusInternalServerError
-			if errors.Is(err, ErrExceedMaxConcurrency) {
+			if errs.Is(err, ErrExceedMaxConcurrency) {
 				code = http.StatusTooManyRequests
 			}
 			w.WriteHeader(code)
@@ -277,7 +278,7 @@ func GetHTTPClient() *http.Client {
 		httpClient = NewHTTPClient()
 		httpClient.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 			if len(via) >= 10 {
-				return errors.New("stopped after 10 redirects")
+				return errs.New("stopped after 10 redirects")
 			}
 			req.Header.Del("Referer")
 			return nil

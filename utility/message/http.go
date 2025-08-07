@@ -4,7 +4,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pkg/errors"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 )
 
 type Http struct {
@@ -67,7 +68,7 @@ func (p *Http) Send(message Message) error {
 	case p.ToSend <- message:
 		return nil
 	default:
-		return errors.New("send failed")
+		return errs.New("send failed")
 	}
 }
 
@@ -76,7 +77,7 @@ func (p *Http) Receive() (string, error) {
 	case message := <-p.Received:
 		return message, nil
 	default:
-		return "", errors.New("receive failed")
+		return "", errs.New("receive failed")
 	}
 }
 
@@ -85,7 +86,7 @@ func (p *Http) WaitSend(message Message, d int) error {
 	case p.ToSend <- message:
 		return nil
 	case <-time.After(time.Duration(d) * time.Second):
-		return errors.New("send timeout")
+		return errs.New("send timeout")
 	}
 }
 
@@ -94,7 +95,7 @@ func (p *Http) WaitReceive(d int) (string, error) {
 	case message := <-p.Received:
 		return message, nil
 	case <-time.After(time.Duration(d) * time.Second):
-		return "", errors.New("receive timeout")
+		return "", errs.New("receive timeout")
 	}
 }
 

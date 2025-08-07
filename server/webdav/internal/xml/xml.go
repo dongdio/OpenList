@@ -23,7 +23,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/pkg/errors"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 )
 
 // A SyntaxError represents a syntax error in the XML input stream.
@@ -519,7 +519,7 @@ func (d *Decoder) autoClose(t Token) (Token, bool) {
 	return nil, false
 }
 
-var errRawToken = errors.New("xml: cannot use RawToken from UnmarshalXML method")
+var errRawToken = errs.New("xml: cannot use RawToken from UnmarshalXML method")
 
 // RawToken is like Token but does not verify that
 // start and end elements match and does not translate
@@ -610,18 +610,18 @@ func (d *Decoder) rawToken() (Token, error) {
 			content := string(data)
 			ver := procInst("version", content)
 			if ver != "" && ver != "1.0" {
-				d.err = errors.Errorf("xml: unsupported version %q; only version 1.0 is supported", ver)
+				d.err = errs.Errorf("xml: unsupported version %q; only version 1.0 is supported", ver)
 				return nil, d.err
 			}
 			enc := procInst("encoding", content)
 			if enc != "" && enc != "utf-8" && enc != "UTF-8" {
 				if d.CharsetReader == nil {
-					d.err = errors.Errorf("xml: encoding %q declared but Decoder.CharsetReader is nil", enc)
+					d.err = errs.Errorf("xml: encoding %q declared but Decoder.CharsetReader is nil", enc)
 					return nil, d.err
 				}
 				newr, err := d.CharsetReader(enc, d.r.(io.Reader))
 				if err != nil {
-					d.err = errors.Errorf("xml: opening charset %q: %v", enc, err)
+					d.err = errs.Errorf("xml: opening charset %q: %v", enc, err)
 					return nil, d.err
 				}
 				if newr == nil {

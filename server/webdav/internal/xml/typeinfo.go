@@ -10,7 +10,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/pkg/errors"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 )
 
 // typeInfo holds details for the xml representation of a type.
@@ -165,14 +165,14 @@ func structFieldInfo(typ reflect.Type, f *reflect.StructField) (*fieldInfo, erro
 			valid = false
 		}
 		if !valid {
-			return nil, errors.Errorf("xml: invalid tag in field %s of type %s: %q",
+			return nil, errs.Errorf("xml: invalid tag in field %s of type %s: %q",
 				f.Name, typ, f.Tag.Get("xml"))
 		}
 	}
 
 	// Use of xmlns without a name is not allowed.
 	if finfo.xmlns != "" && tag == "" {
-		return nil, errors.Errorf("xml: namespace without name in field %s of type %s: %q",
+		return nil, errs.Errorf("xml: namespace without name in field %s of type %s: %q",
 			f.Name, typ, f.Tag.Get("xml"))
 	}
 
@@ -210,12 +210,12 @@ func structFieldInfo(typ reflect.Type, f *reflect.StructField) (*fieldInfo, erro
 		parents[0] = f.Name
 	}
 	if parents[len(parents)-1] == "" {
-		return nil, errors.Errorf("xml: trailing '>' in field %s of type %s", f.Name, typ)
+		return nil, errs.Errorf("xml: trailing '>' in field %s of type %s", f.Name, typ)
 	}
 	finfo.name = parents[len(parents)-1]
 	if len(parents) > 1 {
 		if (finfo.flags & fElement) == 0 {
-			return nil, errors.Errorf("xml: %s chain not valid with %s flag", tag, strings.Join(tokens[1:], ","))
+			return nil, errs.Errorf("xml: %s chain not valid with %s flag", tag, strings.Join(tokens[1:], ","))
 		}
 		finfo.parents = parents[:len(parents)-1]
 	}
@@ -227,7 +227,7 @@ func structFieldInfo(typ reflect.Type, f *reflect.StructField) (*fieldInfo, erro
 		ftyp := f.Type
 		xmlname := lookupXMLName(ftyp)
 		if xmlname != nil && xmlname.name != finfo.name {
-			return nil, errors.Errorf("xml: name %q in tag of %s.%s conflicts with name %q in %s.XMLName",
+			return nil, errs.Errorf("xml: name %q in tag of %s.%s conflicts with name %q in %s.XMLName",
 				finfo.name, typ, f.Name, xmlname.name, ftyp)
 		}
 	}
@@ -253,7 +253,7 @@ func lookupXMLName(typ reflect.Type) (xmlname *fieldInfo) {
 		if err == nil || finfo.name != "" {
 			return finfo
 		}
-		// Also consider errors as a non-existent field tag
+		// Also consider errs as a non-existent field tag
 		// and let getTypeInfo itself report the error.
 		break
 	}

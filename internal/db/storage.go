@@ -3,7 +3,7 @@ package db
 import (
 	"fmt"
 
-	"github.com/pkg/errors"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/internal/model"
 )
@@ -15,17 +15,17 @@ import (
 
 // CreateStorage just insert storage to database
 func CreateStorage(storage *model.Storage) error {
-	return errors.WithStack(db.Create(storage).Error)
+	return errs.WithStack(db.Create(storage).Error)
 }
 
 // UpdateStorage just update storage in database
 func UpdateStorage(storage *model.Storage) error {
-	return errors.WithStack(db.Save(storage).Error)
+	return errs.WithStack(db.Save(storage).Error)
 }
 
 // DeleteStorageByID just delete storage from database by id
 func DeleteStorageByID(id uint) error {
-	return errors.WithStack(db.Delete(&model.Storage{}, id).Error)
+	return errs.WithStack(db.Delete(&model.Storage{}, id).Error)
 }
 
 // GetStorages Get all storages from database order by index
@@ -33,7 +33,7 @@ func GetStorages(pageIndex, pageSize int) ([]model.Storage, int64, error) {
 	storageDB := db.Model(&model.Storage{})
 	var count int64
 	if err := storageDB.Count(&count).Error; err != nil {
-		return nil, 0, errors.Wrap(err, "failed get storages count")
+		return nil, 0, errs.Wrap(err, "failed get storages count")
 	}
 	var storages []model.Storage
 	if err := addStorageOrder(storageDB).
@@ -42,7 +42,7 @@ func GetStorages(pageIndex, pageSize int) ([]model.Storage, int64, error) {
 		Limit(pageSize).
 		Find(&storages).
 		Error; err != nil {
-		return nil, 0, errors.WithStack(err)
+		return nil, 0, errs.WithStack(err)
 	}
 	return storages, count, nil
 }
@@ -52,7 +52,7 @@ func GetStorageByID(id uint) (*model.Storage, error) {
 	var storage model.Storage
 	storage.ID = id
 	if err := db.First(&storage).Error; err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errs.WithStack(err)
 	}
 	return &storage, nil
 }
@@ -61,7 +61,7 @@ func GetStorageByID(id uint) (*model.Storage, error) {
 func GetStorageByMountPath(mountPath string) (*model.Storage, error) {
 	var storage model.Storage
 	if err := db.Where("mount_path = ?", mountPath).First(&storage).Error; err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errs.WithStack(err)
 	}
 	return &storage, nil
 }
@@ -72,7 +72,7 @@ func GetEnabledStorages() ([]model.Storage, error) {
 		Where(fmt.Sprintf("%s = ?", columnName("disabled")), false).
 		Find(&storages).Error
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errs.WithStack(err)
 	}
 	return storages, nil
 }

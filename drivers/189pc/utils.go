@@ -21,9 +21,10 @@ import (
 
 	"github.com/avast/retry-go"
 	"github.com/google/uuid"
-	"github.com/pkg/errors"
 	"github.com/spf13/cast"
 	"resty.dev/v3"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/drivers/base"
@@ -33,7 +34,6 @@ import (
 	"github.com/dongdio/OpenList/v4/internal/op"
 	"github.com/dongdio/OpenList/v4/internal/setting"
 	"github.com/dongdio/OpenList/v4/utility/errgroup"
-	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/stream"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
@@ -179,7 +179,7 @@ func (y *Cloud189PC) put(ctx context.Context, url string, headers map[string]str
 		return nil, &erron
 	}
 	if resp.StatusCode != http.StatusOK {
-		return nil, errors.Errorf("put fail,err:%s", string(body))
+		return nil, errs.Errorf("put fail,err:%s", string(body))
 	}
 	return body, nil
 }
@@ -552,7 +552,7 @@ func (y *Cloud189PC) StreamUpload(ctx context.Context, dstDir model.Obj, file mo
 					silceMd5.Reset()
 					w, err := utils.CopyWithBuffer(writers, reader)
 					if w != sizeTmp {
-						return errors.Wrapf(err, "failed to read all data: (expect =%d, actual =%d)", sizeTmp, w)
+						return errs.Wrapf(err, "failed to read all data: (expect =%d, actual =%d)", sizeTmp, w)
 					}
 					// 计算块md5并进行hex和base64编码
 					md5Bytes := silceMd5.Sum(nil)
@@ -620,7 +620,7 @@ func (y *Cloud189PC) StreamUpload(ctx context.Context, dstDir model.Obj, file mo
 func (y *Cloud189PC) RapidUpload(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, isFamily bool, overwrite bool) (model.Obj, error) {
 	fileMd5 := stream.GetHash().GetHash(utils.MD5)
 	if len(fileMd5) < utils.MD5.Width {
-		return nil, errors.New("invalid hash")
+		return nil, errs.New("invalid hash")
 	}
 
 	uploadInfo, err := y.OldUploadCreate(ctx, dstDir.GetID(), fileMd5, stream.GetName(), fmt.Sprint(stream.GetSize()), isFamily)
@@ -629,7 +629,7 @@ func (y *Cloud189PC) RapidUpload(ctx context.Context, dstDir model.Obj, stream m
 	}
 
 	if uploadInfo.FileDataExists != 1 {
-		return nil, errors.New("rapid upload fail")
+		return nil, errs.New("rapid upload fail")
 	}
 
 	return y.OldUploadCommit(ctx, uploadInfo.FileCommitURL, uploadInfo.UploadFileID, isFamily, overwrite)
@@ -697,11 +697,11 @@ func (y *Cloud189PC) FastUpload(ctx context.Context, dstDir model.Obj, file mode
 
 	if tmpF != nil {
 		if size > 0 && written != size {
-			return nil, errors.Wrapf(err, "CreateTempFile failed, incoming stream actual size= %d, expect = %d ", written, size)
+			return nil, errs.Wrapf(err, "CreateTempFile failed, incoming stream actual size= %d, expect = %d ", written, size)
 		}
 		_, err = tmpF.Seek(0, io.SeekStart)
 		if err != nil {
-			return nil, errors.Wrap(err, "CreateTempFile failed, can't seek to 0 ")
+			return nil, errs.Wrap(err, "CreateTempFile failed, can't seek to 0 ")
 		}
 	}
 
@@ -786,7 +786,7 @@ func (y *Cloud189PC) FastUpload(ctx context.Context, dstDir model.Obj, file mode
 			})
 		}
 		if err = threadG.Wait(); err != nil {
-			if errors.Is(err, context.Canceled) {
+			if errs.Is(err, context.Canceled) {
 				uploadProgress.UploadParts = utils.SliceFilter(uploadProgress.UploadParts, func(s string) bool { return s != "" })
 				base.SaveUploadProgress(y, uploadProgress, y.getTokenInfo().SessionKey, fileMd5Hex)
 			}
@@ -834,7 +834,7 @@ func (y *Cloud189PC) GetMultiUploadUrls(ctx context.Context, isFamily bool, uplo
 	uploadUrls := uploadUrlsResp.Data
 
 	if len(uploadUrls) != len(partInfo) {
-		return nil, errors.Errorf("uploadUrls get error, due to get length %d, real length %d", len(partInfo), len(uploadUrls))
+		return nil, errs.Errorf("uploadUrls get error, due to get length %d, real length %d", len(partInfo), len(uploadUrls))
 	}
 
 	uploadUrlInfos := make([]UploadUrlInfo, 0, len(uploadUrls))
@@ -892,7 +892,7 @@ func (y *Cloud189PC) OldUpload(ctx context.Context, dstDir model.Obj, file model
 
 		_, err = y.put(ctx, status.FileUploadURL, header, true, rateLimited, isFamily)
 		var e *RespErr
-		if errors.As(err, &e) && e.Code != "InputStreamReadError" {
+		if errs.As(err, &e) && e.Code != "InputStreamReadError" {
 			return nil, err
 		}
 
@@ -1086,7 +1086,7 @@ func (y *Cloud189PC) getFamilyID() (string, error) {
 		return "", err
 	}
 	if len(infos) == 0 {
-		return "", errors.New("cannot get automatically,please input family_id")
+		return "", errs.New("cannot get automatically,please input family_id")
 	}
 	for _, info := range infos {
 		if strings.Contains(y.getTokenInfo().LoginName, info.RemarkName) {
@@ -1233,7 +1233,7 @@ func (y *Cloud189PC) ManageBatchTask(aType string, taskID string, targetFolderId
 	return err
 }
 
-var ErrIsConflict = errors.New("there is a conflict with the target object")
+var ErrIsConflict = errs.New("there is a conflict with the target object")
 
 // 等待任务完成
 func (y *Cloud189PC) WaitBatchTask(aType string, taskID string, t time.Duration) error {

@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/OpenListTeam/tache"
-	"github.com/pkg/errors"
 
 	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/driver"
@@ -21,7 +20,7 @@ import (
 
 // 自定义错误类型
 var (
-	ErrUploadFailed = errors.New("upload failed")
+	ErrUploadFailed = errs.New("upload failed")
 )
 
 // UploadTask 上传任务结构
@@ -96,29 +95,29 @@ var UploadTaskManager *tache.Manager[*UploadTask]
 func putAsTask(ctx context.Context, dstDirPath string, file model.FileStreamer) (task.TaskExtensionInfo, error) {
 	// 参数验证
 	if dstDirPath == "" {
-		return nil, errors.WithStack(ErrInvalidPath)
+		return nil, errs.WithStack(ErrInvalidPath)
 	}
 
 	if file == nil {
-		return nil, errors.New("file cannot be nil")
+		return nil, errs.New("file cannot be nil")
 	}
 
 	// 获取存储驱动和实际路径
 	storage, dstDirActualPath, err := getStorageWithCache(dstDirPath)
 	if err != nil {
-		return nil, errors.WithMessage(err, "failed get storage")
+		return nil, errs.WithMessage(err, "failed get storage")
 	}
 
 	// 检查存储是否支持上传
 	if storage.Config().NoUpload {
-		return nil, errors.WithStack(errs.UploadNotSupported)
+		return nil, errs.WithStack(errs.UploadNotSupported)
 	}
 
 	// 如果文件需要缓存，先创建临时文件
 	if file.NeedStore() {
 		_, err := file.CacheFullInTempFile()
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to create temp file")
+			return nil, errs.Wrapf(err, "failed to create temp file")
 		}
 	}
 
@@ -159,30 +158,30 @@ func putDirectly(ctx context.Context, dstDirPath string, file model.FileStreamer
 	// 参数验证
 	if dstDirPath == "" {
 		_ = file.Close()
-		return errors.WithStack(ErrInvalidPath)
+		return errs.WithStack(ErrInvalidPath)
 	}
 
 	if file == nil {
-		return errors.New("file cannot be nil")
+		return errs.New("file cannot be nil")
 	}
 
 	// 获取存储驱动和实际路径
 	storage, dstDirActualPath, err := getStorageWithCache(dstDirPath)
 	if err != nil {
 		_ = file.Close()
-		return errors.WithMessage(err, "failed get storage")
+		return errs.WithMessage(err, "failed get storage")
 	}
 
 	// 检查存储是否支持上传
 	if storage.Config().NoUpload {
 		_ = file.Close()
-		return errors.WithStack(errs.UploadNotSupported)
+		return errs.WithStack(errs.UploadNotSupported)
 	}
 
 	// 执行上传操作
 	err = op.Put(ctx, storage, dstDirActualPath, file, nil, lazyCache...)
 	if err != nil {
-		return errors.Wrap(ErrUploadFailed, err.Error())
+		return errs.Wrap(ErrUploadFailed, err.Error())
 	}
 
 	return nil

@@ -1,13 +1,12 @@
 package qbit
 
 import (
-	"github.com/pkg/errors"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/offline_download/tool"
 	"github.com/dongdio/OpenList/v4/internal/setting"
-	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/qbittorrent"
 )
 
@@ -73,9 +72,9 @@ func (a *QBittorrent) Status(task *tool.DownloadTask) (*tool.Status, error) {
 	case qbittorrent.ALLOCATING, qbittorrent.DOWNLOADING, qbittorrent.METADL, qbittorrent.PAUSEDDL, qbittorrent.QUEUEDDL, qbittorrent.STALLEDDL, qbittorrent.CHECKINGDL, qbittorrent.FORCEDDL, qbittorrent.CHECKINGRESUMEDATA, qbittorrent.MOVING:
 		s.Status = "[qBittorrent] downloading"
 	case qbittorrent.ERROR, qbittorrent.MISSINGFILES, qbittorrent.UNKNOWN:
-		s.Err = errors.Errorf("[qBittorrent] failed to download %s, error: %s", task.GID, info.State)
+		s.Err = errs.Errorf("[qBittorrent] failed to download %s, error: %s", task.GID, info.State)
 	default:
-		s.Err = errors.Errorf("[qBittorrent] unknown error occurred downloading %s", task.GID)
+		s.Err = errs.Errorf("[qBittorrent] unknown error occurred downloading %s", task.GID)
 	}
 	return s, nil
 }

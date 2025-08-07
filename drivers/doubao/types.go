@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/pkg/errors"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/utility/utils"
@@ -400,7 +400,7 @@ func (r *CommonResp) GetError() error {
 		errMsg = r.Error.Message
 	}
 
-	return errors.Errorf("[doubao] API error (code: %d): %s", r.Code, errMsg)
+	return errs.Errorf("[doubao] API error (code: %d): %s", r.Code, errMsg)
 }
 
 // UnmarshalData 将data字段解析为指定类型

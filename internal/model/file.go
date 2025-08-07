@@ -1,8 +1,9 @@
 package model
 
 import (
-	"errors"
 	"io"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 )
 
 // File is basic file level accessing interface
@@ -18,14 +19,14 @@ type FileCloser struct {
 }
 
 func (f *FileCloser) Close() error {
-	var errs []error
+	var errors []error
 	if clr, ok := f.File.(io.Closer); ok {
-		errs = append(errs, clr.Close())
+		errors = append(errors, clr.Close())
 	}
 	if f.Closer != nil {
-		errs = append(errs, f.Closer.Close())
+		errors = append(errors, f.Closer.Close())
 	}
-	return errors.Join(errs...)
+	return errs.Join(errors...)
 }
 
 type FileRangeReader struct {

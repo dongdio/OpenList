@@ -2,7 +2,6 @@ package doubao_share
 
 import (
 	"context"
-	"errors"
 	"net/http"
 
 	"resty.dev/v3"
@@ -118,7 +117,7 @@ func (d *DoubaoShare) Link(ctx context.Context, file model.Obj, args model.LinkA
 		}, nil
 	}
 
-	return nil, errors.New("can't convert obj to URL")
+	return nil, errs.New("can't convert obj to URL")
 }
 
 func (d *DoubaoShare) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) (model.Obj, error) {

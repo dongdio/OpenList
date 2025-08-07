@@ -6,7 +6,8 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pkg/errors"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/fs"
@@ -14,7 +15,6 @@ import (
 	"github.com/dongdio/OpenList/v4/internal/op"
 	"github.com/dongdio/OpenList/v4/internal/sign"
 	"github.com/dongdio/OpenList/v4/server/common"
-	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/generic"
 	"github.com/dongdio/OpenList/v4/utility/task"
 	"github.com/dongdio/OpenList/v4/utility/utils"
@@ -43,7 +43,7 @@ func FsMkdir(c *gin.Context) {
 	// 检查用户权限
 	if !user.CanWrite() {
 		meta, err := op.GetNearestMeta(stdpath.Dir(reqPath))
-		if err != nil && !errors.Is(errors.Cause(err), errs.MetaNotFound) {
+		if err != nil && !errs.Is(errs.Cause(err), errs.MetaNotFound) {
 			common.ErrorResp(c, err, 500, true)
 			return
 		}
@@ -336,7 +336,7 @@ func FsRemoveEmptyDirectory(c *gin.Context) {
 	}
 
 	meta, err := op.GetNearestMeta(srcDir)
-	if err != nil && !errors.Is(errors.Cause(err), errs.MetaNotFound) {
+	if err != nil && !errs.Is(errs.Cause(err), errs.MetaNotFound) {
 		common.ErrorResp(c, err, 500, true)
 		return
 	}

@@ -5,15 +5,15 @@ import (
 	"io"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/pquerna/otp/totp"
 	"github.com/rclone/rclone/lib/readers"
 	log "github.com/sirupsen/logrus"
 	"github.com/t3rm1n4l/go-mega"
 
+	"github.com/dongdio/OpenList/v4/utility/errs"
+
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
-	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/http_range"
 	"github.com/dongdio/OpenList/v4/utility/stream"
 	"github.com/dongdio/OpenList/v4/utility/utils"
@@ -39,7 +39,7 @@ func (d *Mega) Init(ctx context.Context) error {
 	if d.TwoFASecret != "" {
 		code, err := totp.GenerateCode(d.TwoFASecret, time.Now())
 		if err != nil {
-			return errors.Wrap(err, "generate totp code failed")
+			return errs.Wrap(err, "generate totp code failed")
 		}
 		twoFACode = code
 	}
@@ -75,7 +75,7 @@ func (d *Mega) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]
 		return res, nil
 	}
 	log.Errorf("can't convert: %+v", dir)
-	return nil, errors.Errorf("unable to convert dir to mega n")
+	return nil, errs.Errorf("unable to convert dir to mega n")
 }
 
 func (d *Mega) GetRoot(ctx context.Context) (model.Obj, error) {
@@ -98,7 +98,7 @@ func (d *Mega) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*
 				return err
 			})
 			if err != nil {
-				return nil, errors.Wrap(err, "open download file failed")
+				return nil, errs.Wrap(err, "open download file failed")
 			}
 			oo := &openObject{
 				ctx:  ctx,
@@ -112,7 +112,7 @@ func (d *Mega) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*
 			RangeReader: stream.RateLimitRangeReaderFunc(resultRangeReader),
 		}, nil
 	}
-	return nil, errors.Errorf("unable to convert dir to mega n")
+	return nil, errs.Errorf("unable to convert dir to mega n")
 }
 
 func (d *Mega) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
@@ -120,7 +120,7 @@ func (d *Mega) MakeDir(ctx context.Context, parentDir model.Obj, dirName string)
 		_, err := d.c.CreateDir(dirName, parentNode.n)
 		return err
 	}
-	return errors.Errorf("unable to convert dir to mega n")
+	return errs.Errorf("unable to convert dir to mega n")
 }
 
 func (d *Mega) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
@@ -129,14 +129,14 @@ func (d *Mega) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 			return d.c.Move(srcNode.n, dstNode.n)
 		}
 	}
-	return errors.Errorf("unable to convert dir to mega n")
+	return errs.Errorf("unable to convert dir to mega n")
 }
 
 func (d *Mega) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
 	if srcNode, ok := srcObj.(*MegaNode); ok {
 		return d.c.Rename(srcNode.n, newName)
 	}
-	return errors.Errorf("unable to convert dir to mega n")
+	return errs.Errorf("unable to convert dir to mega n")
 }
 
 func (d *Mega) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
@@ -147,7 +147,7 @@ func (d *Mega) Remove(ctx context.Context, obj model.Obj) error {
 	if node, ok := obj.(*MegaNode); ok {
 		return d.c.Delete(node.n, false)
 	}
-	return errors.Errorf("unable to convert dir to mega n")
+	return errs.Errorf("unable to convert dir to mega n")
 }
 
 func (d *Mega) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
@@ -172,7 +172,7 @@ func (d *Mega) Put(ctx context.Context, dstDir model.Obj, stream model.FileStrea
 				return err
 			}
 			if n != len(chunk) {
-				return errors.New("chunk too short")
+				return errs.New("chunk too short")
 			}
 
 			err = u.UploadChunk(id, chunk)
@@ -185,7 +185,7 @@ func (d *Mega) Put(ctx context.Context, dstDir model.Obj, stream model.FileStrea
 		_, err = u.Finish()
 		return err
 	}
-	return errors.Errorf("unable to convert dir to mega n")
+	return errs.Errorf("unable to convert dir to mega n")
 }
 
 // func (d *Mega) Other(ctx context.Context, args model.OtherArgs) (any, error) {

@@ -5,9 +5,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 )
@@ -48,7 +49,7 @@ func (d *GithubReleases) ParseRepos(text string) ([]MountPoint, error) {
 			path = fmt.Sprintf("/%s", strings.Trim(parts[0], "/"))
 			repo = parts[1]
 		} else {
-			return nil, errors.Errorf("invalid format: %s", line)
+			return nil, errs.Errorf("invalid format: %s", line)
 		}
 
 		points = append(points, MountPoint{

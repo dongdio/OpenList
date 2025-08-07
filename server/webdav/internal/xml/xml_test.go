@@ -13,7 +13,7 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	"github.com/pkg/errors"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 )
 
 const testInput = `
@@ -148,7 +148,7 @@ var xmlInput = []string{
 	"<t/><![CDATA[d]",
 	"<t/><![CDATA[d]]",
 
-	// other Syntax errors
+	// other Syntax errs
 	"<>",
 	"<t/a",
 	"<0 />",
@@ -716,9 +716,9 @@ func TestDirectivesWithComments(t *testing.T) {
 // Writer whose Write method always returns an error.
 type errWriter struct{}
 
-func (errWriter) Write(p []byte) (n int, err error) { return 0, errors.Errorf("unwritable") }
+func (errWriter) Write(p []byte) (n int, err error) { return 0, errs.Errorf("unwritable") }
 
-func TestEscapeTextIOErrors(t *testing.T) {
+func TestEscapeTextIOerrs(t *testing.T) {
 	expectErr := "unwritable"
 	err := EscapeText(errWriter{}, []byte{'A'})
 

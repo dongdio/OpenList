@@ -11,14 +11,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/pkg/errors"
 	"resty.dev/v3"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
-	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/stream"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 	hash_extend "github.com/dongdio/OpenList/v4/utility/utils/hash"
@@ -611,7 +611,7 @@ func (xc *XunLeiCommon) OfflineList(ctx context.Context, nextPageToken string) (
 	}, &resp)
 
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get offline list")
+		return nil, errs.Wrap(err, "failed to get offline list")
 	}
 	res = append(res, resp.Tasks...)
 	return res, nil
@@ -626,7 +626,7 @@ func (xc *XunLeiCommon) DeleteOfflineTasks(ctx context.Context, taskIDs []string
 			})
 	}, nil)
 	if err != nil {
-		return errors.Wrapf(err, "failed to delete tasks %v", taskIDs)
+		return errs.Wrapf(err, "failed to delete tasks %v", taskIDs)
 	}
 	return nil
 }

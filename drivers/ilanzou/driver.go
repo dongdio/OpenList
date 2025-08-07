@@ -13,14 +13,14 @@ import (
 	"time"
 
 	"github.com/foxxorcat/mopan-sdk-go"
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
-	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/stream"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
@@ -168,7 +168,7 @@ func (d *ILanZou) Link(ctx context.Context, file model.Obj, args model.LinkArgs)
 	if res.StatusCode() == 302 {
 		realURL = res.Header().Get("location")
 	} else {
-		return nil, errors.Errorf("redirect failed, status: %d, msg: %s", res.StatusCode(), utils.GetBytes(res.Bytes(), "msg").String())
+		return nil, errs.Errorf("redirect failed, status: %d, msg: %s", res.StatusCode(), utils.GetBytes(res.Bytes(), "msg").String())
 	}
 	link := model.Link{URL: realURL}
 	return &link, nil
@@ -366,7 +366,7 @@ func (d *ILanZou) Put(ctx context.Context, dstDir model.Obj, s model.FileStreame
 			return nil, err
 		}
 		if len(resp.List) == 0 {
-			return nil, errors.Errorf("upload failed, empty response")
+			return nil, errs.Errorf("upload failed, empty response")
 		}
 		if resp.List[0].Status == 1 {
 			break
@@ -375,7 +375,7 @@ func (d *ILanZou) Put(ctx context.Context, dstDir model.Obj, s model.FileStreame
 	}
 	file := resp.List[0]
 	if file.Status != 1 {
-		return nil, errors.Errorf("upload failed, status: %d", resp.List[0].Status)
+		return nil, errs.Errorf("upload failed, status: %d", resp.List[0].Status)
 	}
 	return &model.Object{
 		ID: strconv.FormatInt(file.FileId, 10),

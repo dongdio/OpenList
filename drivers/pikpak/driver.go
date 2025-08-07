@@ -7,9 +7,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/driver"
@@ -317,7 +318,7 @@ func (d *PikPak) OfflineList(ctx context.Context, nextPageToken string, phase []
 		}
 		filtersJSON, err := utils.JSONTool.Marshal(filters)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to marshal filters")
+			return nil, errs.Wrap(err, "failed to marshal filters")
 		}
 		params["filters"] = string(filtersJSON)
 	}
@@ -328,7 +329,7 @@ func (d *PikPak) OfflineList(ctx context.Context, nextPageToken string, phase []
 	}, &resp)
 
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get offline list")
+		return nil, errs.Wrap(err, "failed to get offline list")
 	}
 	res = append(res, resp.Tasks...)
 	return res, nil
@@ -344,7 +345,7 @@ func (d *PikPak) DeleteOfflineTasks(ctx context.Context, taskIDs []string, delet
 		req.SetContext(ctx).SetQueryParams(params)
 	}, nil)
 	if err != nil {
-		return errors.Errorf("failed to delete tasks %v: %w", taskIDs, err)
+		return errs.Errorf("failed to delete tasks %v: %w", taskIDs, err)
 	}
 	return nil
 }

@@ -9,14 +9,14 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/pkg/errors"
 	"resty.dev/v3"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
-	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
@@ -457,7 +457,7 @@ func (y *Cloud189PC) Put(ctx context.Context, dstDir model.Obj, stream model.Fil
 				file, err = y.findFileByName(context.TODO(), newObj.GetName(), transferDstDir.GetID(), false)
 				if err != nil {
 					if err == errs.ObjectNotFound {
-						err = errors.Errorf("unknown error: No transfer file obtained %s", newObj.GetName())
+						err = errs.Errorf("unknown error: No transfer file obtained %s", newObj.GetName())
 					}
 					return
 				}

@@ -35,19 +35,19 @@ func New(ctx context.Context, uri string, token string, timeout time.Duration, n
 	if err != nil {
 		return nil, err
 	}
-	var caller caller
+	var callerTmp caller
 	switch u.Scheme {
 	case "http", "https":
-		caller = newHTTPCaller(ctx, u, timeout, notifier)
+		callerTmp = newHTTPCaller(ctx, u, timeout, notifier)
 	case "ws", "wss":
-		caller, err = newWebsocketCaller(ctx, u.String(), timeout, notifier)
+		callerTmp, err = newWebsocketCaller(ctx, u.String(), timeout, notifier)
 		if err != nil {
 			return nil, err
 		}
 	default:
 		return nil, errInvalidParameter
 	}
-	c := &client{caller: caller, url: u, token: token}
+	c := &client{caller: callerTmp, url: u, token: token}
 	return c, nil
 }
 

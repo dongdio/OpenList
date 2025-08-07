@@ -1,6 +1,5 @@
 ## 个人修改娱乐使用
 
-
 <div align="center">
   <img style="width: 128px; height: 128px;" src="https://raw.githubusercontent.com/OpenListTeam/Logo/main/logo.svg" alt="logo" />
 
@@ -54,40 +53,42 @@ OpenList 是一个由 OpenList 团队独立维护的开源项目，遵循 AGPL-3
 ## 功能
 
 - [x] 多种存储
-  - [x] 本地存储
-  - [x] [阿里云盘](https://www.alipan.com)
-  - [x] OneDrive / Sharepoint ([国际版](https://www.microsoft.com/en-us/microsoft-365/onedrive/online-cloud-storage), [中国](https://portal.partner.microsoftonline.cn), DE, US)
-  - [x] [天翼云盘](https://cloud.189.cn)（个人、家庭）
-  - [x] [GoogleDrive](https://drive.google.com)
-  - [x] [123云盘](https://www.123pan.com)
-  - [x] [FTP / SFTP](https://en.wikipedia.org/wiki/File_Transfer_Protocol)
-  - [x] [PikPak](https://www.mypikpak.com)
-  - [x] [S3](https://aws.amazon.com/s3)
-  - [x] [Seafile](https://seafile.com)
-  - [x] [又拍云对象存储](https://www.upyun.com/products/file-storage)
-  - [x] [WebDAV](https://en.wikipedia.org/wiki/WebDAV)
-  - [x] Teambition([中国](https://www.teambition.com), [国际](https://us.teambition.com))
-  - [x] [分秒帧](https://www.mediatrack.cn)
-  - [x] [和彩云](https://yun.139.com)（个人、家庭、群组）
-  - [x] [YandexDisk](https://disk.yandex.com)
-  - [x] [百度网盘](http://pan.baidu.com)
-  - [x] [Terabox](https://www.terabox.com/main)
-  - [x] [UC网盘](https://drive.uc.cn)
-  - [x] [夸克网盘](https://pan.quark.cn)
-  - [x] [迅雷网盘](https://pan.xunlei.com)
-  - [x] [蓝奏云](https://www.lanzou.com)
-  - [x] [蓝奏云优享版](https://www.ilanzou.com)
-  - [x] [阿里云盘分享](https://www.alipan.com)
-  - [x] [Google 相册](https://photos.google.com)
-  - [x] [Mega.nz](https://mega.nz)
-  - [x] [百度相册](https://photo.baidu.com)
-  - [x] [SMB](https://en.wikipedia.org/wiki/Server_Message_Block)
-  - [x] [115](https://115.com)
-  - [x] [Cloudreve](https://cloudreve.org)
-  - [x] [Dropbox](https://www.dropbox.com)
-  - [x] [飞机盘](https://www.feijipan.com)
-  - [x] [多吉云](https://www.dogecloud.com/product/oss)
-  - [x] [Azure Blob Storage](https://azure.microsoft.com/products/storage/blobs)
+    - [x] 本地存储
+    - [x] [阿里云盘](https://www.alipan.com)
+    - [x] OneDrive /
+      Sharepoint ([国际版](https://www.microsoft.com/en-us/microsoft-365/onedrive/online-cloud-storage), [中国](https://portal.partner.microsoftonline.cn),
+      DE, US)
+    - [x] [天翼云盘](https://cloud.189.cn)（个人、家庭）
+    - [x] [GoogleDrive](https://drive.google.com)
+    - [x] [123云盘](https://www.123pan.com)
+    - [x] [FTP / SFTP](https://en.wikipedia.org/wiki/File_Transfer_Protocol)
+    - [x] [PikPak](https://www.mypikpak.com)
+    - [x] [S3](https://aws.amazon.com/s3)
+    - [x] [Seafile](https://seafile.com)
+    - [x] [又拍云对象存储](https://www.upyun.com/products/file-storage)
+    - [x] [WebDAV](https://en.wikipedia.org/wiki/WebDAV)
+    - [x] Teambition([中国](https://www.teambition.com), [国际](https://us.teambition.com))
+    - [x] [分秒帧](https://www.mediatrack.cn)
+    - [x] [和彩云](https://yun.139.com)（个人、家庭、群组）
+    - [x] [YandexDisk](https://disk.yandex.com)
+    - [x] [百度网盘](http://pan.baidu.com)
+    - [x] [Terabox](https://www.terabox.com/main)
+    - [x] [UC网盘](https://drive.uc.cn)
+    - [x] [夸克网盘](https://pan.quark.cn)
+    - [x] [迅雷网盘](https://pan.xunlei.com)
+    - [x] [蓝奏云](https://www.lanzou.com)
+    - [x] [蓝奏云优享版](https://www.ilanzou.com)
+    - [x] [阿里云盘分享](https://www.alipan.com)
+    - [x] [Google 相册](https://photos.google.com)
+    - [x] [Mega.nz](https://mega.nz)
+    - [x] [百度相册](https://photo.baidu.com)
+    - [x] [SMB](https://en.wikipedia.org/wiki/Server_Message_Block)
+    - [x] [115](https://115.com)
+    - [x] [Cloudreve](https://cloudreve.org)
+    - [x] [Dropbox](https://www.dropbox.com)
+    - [x] [飞机盘](https://www.feijipan.com)
+    - [x] [多吉云](https://www.dogecloud.com/product/oss)
+    - [x] [Azure Blob Storage](https://azure.microsoft.com/products/storage/blobs)
 - [x] 部署方便，开箱即用
 - [x] 文件预览（PDF、markdown、代码、纯文本等）
 - [x] 画廊模式下的图片预览
@@ -119,7 +120,8 @@ N/A（待重建）
 
 ## 讨论
 
-如有一般性问题请前往 [*Discussions*](https://github.com/OpenListTeam/OpenList/discussions) 讨论区，***Issues* 仅用于错误报告和功能请求。**
+如有一般性问题请前往 [*Discussions*](https://github.com/OpenListTeam/OpenList/discussions) 讨论区，***Issues*
+仅用于错误报告和功能请求。**
 
 ## 许可证
 

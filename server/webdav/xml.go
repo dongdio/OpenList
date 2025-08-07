@@ -15,7 +15,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/pkg/errors"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	// 由于 Go 1.5 中对命名空间编码方式的变更（后来在 Go 1.6 中被回滚），
 	// 本包使用了标准库 encoding/xml 的内部分支。
@@ -159,7 +159,7 @@ func (pn *propfindProps) UnmarshalXML(d *ixml.Decoder, start ixml.StartElement) 
 		switch t.(type) {
 		case ixml.EndElement:
 			if len(*pn) == 0 {
-				return errors.Errorf("%s 不能为空", start.Name.Local)
+				return errs.Errorf("%s 不能为空", start.Name.Local)
 			}
 			return nil
 		case ixml.StartElement:
@@ -169,7 +169,7 @@ func (pn *propfindProps) UnmarshalXML(d *ixml.Decoder, start ixml.StartElement) 
 				return err
 			}
 			if _, ok := t.(ixml.EndElement); !ok {
-				return errors.Errorf("意外的标记 %T", t)
+				return errs.Errorf("意外的标记 %T", t)
 			}
 			*pn = append(*pn, xml.Name(name))
 		}
@@ -496,7 +496,7 @@ func (ps *proppatchProps) UnmarshalXML(d *ixml.Decoder, start ixml.StartElement)
 		switch elem := t.(type) {
 		case ixml.EndElement:
 			if len(*ps) == 0 {
-				return errors.Errorf("%s 不能为空", start.Name.Local)
+				return errs.Errorf("%s 不能为空", start.Name.Local)
 			}
 			return nil
 		case ixml.StartElement:

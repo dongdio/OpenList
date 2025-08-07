@@ -1,7 +1,6 @@
 package mediatrack
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -10,6 +9,7 @@ import (
 	"resty.dev/v3"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
@@ -29,7 +29,7 @@ func (d *MediaTrack) request(url string, method string, callback base.ReqCallbac
 	}
 	log.Debugln(res.String())
 	if e.Status != "SUCCESS" {
-		return nil, errors.New(e.Message)
+		return nil, errs.New(e.Message)
 	}
 	if resp != nil {
 		err = utils.JSONTool.Unmarshal(res.Bytes(), resp)

@@ -7,9 +7,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/microcosm-cc/bluemonday"
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/yuin/goldmark"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/conf"
@@ -168,7 +169,7 @@ func proxy(c *gin.Context, link *model.Link, file model.Obj, proxyRange bool) {
 			// 将Markdown转换为HTML
 			var html bytes.Buffer
 			if err = goldmark.Convert(buf.Bytes(), &html); err != nil {
-				err = errors.Wrap(err, "markdown conversion failed")
+				err = errs.Wrap(err, "markdown conversion failed")
 			} else {
 				// 清空原缓冲区并进行安全过滤
 				buf.Reset()
@@ -197,7 +198,7 @@ func proxy(c *gin.Context, link *model.Link, file model.Obj, proxyRange bool) {
 	} else {
 		// 否则返回错误响应
 		var statusCode net.ErrorHTTPStatusCode
-		if errors.As(errors.Unwrap(err), &statusCode) {
+		if errs.As(errs.Unwrap(err), &statusCode) {
 			common.ErrorResp(c, err, int(statusCode), true)
 		}
 	}

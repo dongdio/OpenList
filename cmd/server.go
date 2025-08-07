@@ -3,7 +3,6 @@ package cmd
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -28,6 +27,7 @@ import (
 	"github.com/dongdio/OpenList/v4/internal/fs"
 	"github.com/dongdio/OpenList/v4/server"
 	"github.com/dongdio/OpenList/v4/server/middlewares"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
@@ -102,7 +102,7 @@ and S3-compatible APIs as configured in the configuration file.`,
 
 			// Start HTTP server in a goroutine
 			go func() {
-				if err := httpSrv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+				if err := httpSrv.ListenAndServe(); err != nil && !errs.Is(err, http.ErrServerClosed) {
 					utils.Log.Fatalf("Failed to start HTTP server: %v", err)
 				}
 			}()
@@ -134,7 +134,7 @@ and S3-compatible APIs as configured in the configuration file.`,
 					if err := httpsSrv.ListenAndServeTLS(
 						conf.Conf.Scheme.CertFile,
 						conf.Conf.Scheme.KeyFile,
-					); err != nil && !errors.Is(err, http.ErrServerClosed) {
+					); err != nil && !errs.Is(err, http.ErrServerClosed) {
 						utils.Log.Fatalf("Failed to start HTTPS server: %v", err)
 					}
 				}()
@@ -184,7 +184,7 @@ and S3-compatible APIs as configured in the configuration file.`,
 				}
 
 				// Start serving on the Unix socket
-				if err = unixSrv.Serve(listener); err != nil && !errors.Is(err, http.ErrServerClosed) {
+				if err = unixSrv.Serve(listener); err != nil && !errs.Is(err, http.ErrServerClosed) {
 					utils.Log.Fatalf("Failed to start Unix socket server: %v", err)
 				}
 			}()
@@ -243,8 +243,8 @@ and S3-compatible APIs as configured in the configuration file.`,
 					err = s3Server.ListenAndServe()
 				}
 
-				// Check for server errors
-				if err != nil && !errors.Is(err, http.ErrServerClosed) {
+				// Check for server errs
+				if err != nil && !errs.Is(err, http.ErrServerClosed) {
 					utils.Log.Fatalf("Failed to start S3-compatible API server: %v", err)
 				}
 			}()

@@ -1,7 +1,7 @@
 package db
 
 import (
-	"github.com/pkg/errors"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/internal/model"
 )
@@ -9,17 +9,17 @@ import (
 func GetTaskDataByType(taskType string) (*model.TaskItem, error) {
 	task := model.TaskItem{Key: taskType}
 	if err := db.Where(task).First(&task).Error; err != nil {
-		return nil, errors.Wrapf(err, "failed find task")
+		return nil, errs.Wrapf(err, "failed find task")
 	}
 	return &task, nil
 }
 
 func UpdateTaskData(t *model.TaskItem) error {
-	return errors.WithStack(db.Model(&model.TaskItem{}).Where("key = ?", t.Key).Update("persist_data", t.PersistData).Error)
+	return errs.WithStack(db.Model(&model.TaskItem{}).Where("key = ?", t.Key).Update("persist_data", t.PersistData).Error)
 }
 
 func CreateTaskData(t *model.TaskItem) error {
-	return errors.WithStack(db.Create(t).Error)
+	return errs.WithStack(db.Create(t).Error)
 }
 
 func GetTaskDataFunc(taskType string, enabled bool) func() ([]byte, error) {

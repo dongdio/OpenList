@@ -9,14 +9,14 @@ import (
 	"time"
 
 	"github.com/avast/retry-go"
-	"github.com/pkg/errors"
 	"resty.dev/v3"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
-	"github.com/dongdio/OpenList/v4/utility/errs"
 	streamPkg "github.com/dongdio/OpenList/v4/utility/stream"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
@@ -78,7 +78,7 @@ func (d *OnedriveAPP) _accessToken() error {
 		return err
 	}
 	if e.Error != "" {
-		return errors.Errorf("%s", e.ErrorDescription)
+		return errs.Errorf("%s", e.ErrorDescription)
 	}
 	if resp.AccessToken == "" {
 		return errs.EmptyToken
@@ -111,7 +111,7 @@ func (d *OnedriveAPP) Request(url string, method string, callback base.ReqCallba
 			}
 			return d.Request(url, method, callback, resp)
 		}
-		return nil, errors.New(e.Error.Message)
+		return nil, errs.New(e.Error.Message)
 	}
 	return res.Bytes(), nil
 }
@@ -190,7 +190,7 @@ func (d *OnedriveAPP) upBig(ctx context.Context, dstDir model.Obj, stream model.
 					return fmt.Errorf("server error: %d", res.StatusCode)
 				case res.StatusCode != 201 && res.StatusCode != 202 && res.StatusCode != 200:
 					data, _ := io.ReadAll(res.Body)
-					return errors.New(string(data))
+					return errs.New(string(data))
 				default:
 					return nil
 				}

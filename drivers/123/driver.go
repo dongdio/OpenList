@@ -14,15 +14,15 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/time/rate"
 	"resty.dev/v3"
 
+	"github.com/dongdio/OpenList/v4/utility/errs"
+
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
-	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/stream"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
@@ -147,7 +147,7 @@ func (d *Pan123) Link(ctx context.Context, file model.Obj, args model.LinkArgs) 
 		}
 		return &link, nil
 	} else {
-		return nil, errors.New("无法将对象转换为123网盘文件类型")
+		return nil, errs.New("无法将对象转换为123网盘文件类型")
 	}
 }
 
@@ -223,7 +223,7 @@ func (d *Pan123) Remove(ctx context.Context, obj model.Obj) error {
 		}, nil)
 		return err
 	} else {
-		return errors.New("无法将对象转换为123网盘文件类型")
+		return errs.New("无法将对象转换为123网盘文件类型")
 	}
 }
 

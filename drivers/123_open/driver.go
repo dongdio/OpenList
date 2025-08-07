@@ -5,12 +5,11 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/pkg/errors"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
-	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/stream"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
@@ -101,7 +100,7 @@ func (d *Open123) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 	// parentFileID 父目录id，上传到根目录时填写 0
 	parentFileId, err := strconv.ParseInt(dstDir.GetID(), 10, 64)
 	if err != nil {
-		return errors.Wrap(err, "parse parentFileID error")
+		return errs.Wrap(err, "parse parentFileID error")
 	}
 	etag := srcObj.(File).Etag
 	createResp, err := d.create(parentFileId, srcObj.GetName(), etag, srcObj.GetSize(), 2, false)
@@ -126,7 +125,7 @@ func (d *Open123) Put(ctx context.Context, dstDir model.Obj, file model.FileStre
 	// parentFileID 父目录id，上传到根目录时填写 0
 	parentFileId, err := strconv.ParseInt(dstDir.GetID(), 10, 64)
 	if err != nil {
-		return errors.Wrap(err, "parse parentFileID error")
+		return errs.Wrap(err, "parse parentFileID error")
 	}
 	// etag 文件md5
 	etag := file.GetHash().GetHash(utils.MD5)

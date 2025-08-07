@@ -4,7 +4,7 @@ import (
 	"context"
 	"strconv"
 
-	"github.com/pkg/errors"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/drivers/thunder"
@@ -12,7 +12,6 @@ import (
 	"github.com/dongdio/OpenList/v4/internal/offline_download/tool"
 	"github.com/dongdio/OpenList/v4/internal/op"
 	"github.com/dongdio/OpenList/v4/internal/setting"
-	"github.com/dongdio/OpenList/v4/utility/errs"
 )
 
 type Thunder struct {
@@ -60,7 +59,7 @@ func (t *Thunder) AddURL(args *tool.AddURLLinkArgs) (string, error) {
 	}
 	thunderDriver, ok := storage.(*thunder.Thunder)
 	if !ok {
-		return "", errors.New("unsupported storage driver for offline download, only Thunder is supported")
+		return "", errs.New("unsupported storage driver for offline download, only Thunder is supported")
 	}
 
 	ctx := context.Background()
@@ -76,7 +75,7 @@ func (t *Thunder) AddURL(args *tool.AddURLLinkArgs) (string, error) {
 
 	task, err := thunderDriver.OfflineDownload(ctx, args.URL, parentDir, "")
 	if err != nil {
-		return "", errors.Wrapf(err, "failed to add offline download task")
+		return "", errs.Wrapf(err, "failed to add offline download task")
 	}
 
 	return task.ID, nil
@@ -89,7 +88,7 @@ func (t *Thunder) Remove(task *tool.DownloadTask) error {
 	}
 	thunderDriver, ok := storage.(*thunder.Thunder)
 	if !ok {
-		return errors.New("unsupported storage driver for offline download, only Thunder is supported")
+		return errs.New("unsupported storage driver for offline download, only Thunder is supported")
 	}
 	ctx := context.Background()
 	err = thunderDriver.DeleteOfflineTasks(ctx, []string{task.GID}, false)
@@ -106,7 +105,7 @@ func (t *Thunder) Status(task *tool.DownloadTask) (*tool.Status, error) {
 	}
 	thunderDriver, ok := storage.(*thunder.Thunder)
 	if !ok {
-		return nil, errors.New("unsupported storage driver for offline download, only Thunder is supported")
+		return nil, errs.New("unsupported storage driver for offline download, only Thunder is supported")
 	}
 	tasks, err := t.GetTasks(thunderDriver)
 	if err != nil {
@@ -131,11 +130,11 @@ func (t *Thunder) Status(task *tool.DownloadTask) (*tool.Status, error) {
 			s.TotalBytes = 0
 		}
 		if tsk.Phase == "PHASE_TYPE_ERROR" {
-			s.Err = errors.New(tsk.Message)
+			s.Err = errs.New(tsk.Message)
 		}
 		return s, nil
 	}
-	s.Err = errors.New("the task has been deleted")
+	s.Err = errs.New("the task has been deleted")
 	return s, nil
 }
 

@@ -2,12 +2,13 @@
 package http_range
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"net/textproto"
 	"strconv"
 	"strings"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 )
 
 // Range specifies the byte range to be sent to the client.
@@ -24,10 +25,10 @@ func (r Range) ContentRange(size int64) string {
 var (
 	// ErrNoOverlap is returned by ParseRange if first-byte-pos of
 	// all the byte-range-spec values is greater than the content size.
-	ErrNoOverlap = errors.New("invalid range: failed to overlap")
+	ErrNoOverlap = errs.New("invalid range: failed to overlap")
 
 	// ErrInvalid is returned by ParseRange on invalid input.
-	ErrInvalid = errors.New("invalid range")
+	ErrInvalid = errs.New("invalid range")
 )
 
 // ParseRange parses a Range header string as per RFC 7233.
@@ -125,7 +126,7 @@ func ParseContentRange(s string) (start, end int64, err error) {
 	start, startErr := strconv.ParseInt(startStr, 10, 64)
 	end, endErr := strconv.ParseInt(endStr, 10, 64)
 
-	return start, end, errors.Join(startErr, endErr)
+	return start, end, errs.Join(startErr, endErr)
 }
 
 func (r Range) MimeHeader(contentType string, size int64) textproto.MIMEHeader {

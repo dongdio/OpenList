@@ -7,14 +7,14 @@ import (
 	"time"
 
 	"github.com/OpenListTeam/tache"
-	"github.com/pkg/errors"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
 	"github.com/dongdio/OpenList/v4/internal/task_group"
 	"github.com/dongdio/OpenList/v4/server/common"
-	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/stream"
 	"github.com/dongdio/OpenList/v4/utility/task"
 	"github.com/dongdio/OpenList/v4/utility/utils"
@@ -89,22 +89,22 @@ func (t *FileTransferTask) SetRetry(retry int, maxRetry int) {
 func transfer(ctx context.Context, taskType taskType, srcObjPath, dstDirPath string, lazyCache ...bool) (task.TaskExtensionInfo, error) {
 	srcStorage, srcObjActualPath, err := op.GetStorageAndActualPath(srcObjPath)
 	if err != nil {
-		return nil, errors.WithMessage(err, "failed get src storage")
+		return nil, errs.WithMessage(err, "failed get src storage")
 	}
 	dstStorage, dstDirActualPath, err := op.GetStorageAndActualPath(dstDirPath)
 	if err != nil {
-		return nil, errors.WithMessage(err, "failed get dst storage")
+		return nil, errs.WithMessage(err, "failed get dst storage")
 	}
 
 	if srcStorage.GetStorage() == dstStorage.GetStorage() {
 		if taskType == copy {
 			err = op.Copy(ctx, srcStorage, srcObjActualPath, dstDirActualPath, lazyCache...)
-			if !errors.Is(err, errs.NotImplement) && !errors.Is(err, errs.NotSupport) {
+			if !errs.Is(err, errs.NotImplement) && !errs.Is(err, errs.NotSupport) {
 				return nil, err
 			}
 		} else {
 			err = op.Move(ctx, srcStorage, srcObjActualPath, dstDirActualPath, lazyCache...)
-			if !errors.Is(err, errs.NotImplement) && !errors.Is(err, errs.NotSupport) {
+			if !errs.Is(err, errs.NotImplement) && !errs.Is(err, errs.NotSupport) {
 				return nil, err
 			}
 		}
@@ -163,13 +163,13 @@ func (t *FileTransferTask) RunWithNextTaskCallback(f func(nextTask *FileTransfer
 	t.Status = "getting src object"
 	srcObj, err := op.Get(t.Ctx(), t.SrcStorage, t.SrcActualPath)
 	if err != nil {
-		return errors.WithMessagef(err, "failed get src [%s] file", t.SrcActualPath)
+		return errs.WithMessagef(err, "failed get src [%s] file", t.SrcActualPath)
 	}
 	if srcObj.IsDir() {
 		t.Status = "src object is dir, listing objs"
 		objs, err := op.List(t.Ctx(), t.SrcStorage, t.SrcActualPath, model.ListArgs{})
 		if err != nil {
-			return errors.WithMessagef(err, "failed list src [%s] objs", t.SrcActualPath)
+			return errs.WithMessagef(err, "failed list src [%s] objs", t.SrcActualPath)
 		}
 		dstActualPath := stdpath.Join(t.DstActualPath, srcObj.GetName())
 		if t.TaskType == copy {
@@ -208,7 +208,7 @@ func (t *FileTransferTask) RunWithNextTaskCallback(f func(nextTask *FileTransfer
 
 	link, _, err := op.Link(t.Ctx(), t.SrcStorage, t.SrcActualPath, model.LinkArgs{})
 	if err != nil {
-		return errors.WithMessagef(err, "failed get [%s] link", t.SrcActualPath)
+		return errs.WithMessagef(err, "failed get [%s] link", t.SrcActualPath)
 	}
 	// any link provided is seekable
 	ss, err := stream.NewSeekableStream(&stream.FileStream{
@@ -217,7 +217,7 @@ func (t *FileTransferTask) RunWithNextTaskCallback(f func(nextTask *FileTransfer
 	}, link)
 	if err != nil {
 		_ = link.Close()
-		return errors.WithMessagef(err, "failed get [%s] stream", t.SrcActualPath)
+		return errs.WithMessagef(err, "failed get [%s] stream", t.SrcActualPath)
 	}
 	t.SetTotalBytes(ss.GetSize())
 	t.Status = "uploading"

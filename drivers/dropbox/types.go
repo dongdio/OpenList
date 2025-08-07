@@ -16,7 +16,7 @@ type ErrorResp struct {
 	Error struct {
 		Tag string `json:".tag"`
 	} `json:"error"`
-	ErrorSummary string `json:"error_summary"`
+	errsummary string `json:"error_summary"`
 }
 
 type RefreshTokenErrorResp struct {

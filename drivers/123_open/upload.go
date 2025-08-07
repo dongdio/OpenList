@@ -13,8 +13,9 @@ import (
 	"time"
 
 	"github.com/avast/retry-go"
-	"github.com/pkg/errors"
 	"resty.dev/v3"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/driver"
@@ -139,7 +140,7 @@ func (d *Open123) Upload(ctx context.Context, file model.FileStreamer, createRes
 				}
 				defer res.Body.Close()
 				if res.StatusCode != 200 {
-					return errors.Errorf("slice %d upload failed, status code: %d", partNumber, res.StatusCode)
+					return errs.Errorf("slice %d upload failed, status code: %d", partNumber, res.StatusCode)
 				}
 				var resp BaseResp
 				respBody, err := io.ReadAll(res.Body)
@@ -151,7 +152,7 @@ func (d *Open123) Upload(ctx context.Context, file model.FileStreamer, createRes
 					return err
 				}
 				if resp.Code != 0 {
-					return errors.Errorf("slice %d upload failed: %s", partNumber, resp.Message)
+					return errs.Errorf("slice %d upload failed: %s", partNumber, resp.Message)
 				}
 
 				progress := 10.0 + 85.0*float64(threadG.Success())/float64(uploadNums)

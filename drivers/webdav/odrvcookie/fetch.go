@@ -11,8 +11,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
 	"golang.org/x/net/publicsuffix"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 )
@@ -156,7 +157,7 @@ func getLoginUrl(endpoint string) (string, error) {
 	tld := domains[len(domains)-1]
 	loginUrl, ok := loginUrlsMap[tld]
 	if !ok {
-		return "", errors.Errorf("tld %s is not supported", tld)
+		return "", errs.Errorf("tld %s is not supported", tld)
 	}
 	return loginUrl + "/extSTS.srf", nil
 }

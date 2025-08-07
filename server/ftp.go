@@ -12,7 +12,8 @@ import (
 	"sync"
 
 	ftpserver "github.com/fclairamb/ftpserverlib"
-	"github.com/pkg/errors"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/conf"
@@ -53,7 +54,7 @@ func NewMainDriver() (*FtpMainDriver, error) {
 	}
 	tlsConf, err := getTlsConf(setting.GetStr(consts.FTPTLSPrivateKeyPath), setting.GetStr(consts.FTPTLSPublicCertPath))
 	if err != nil && tlsRequired != ftpserver.ClearOrEncrypted {
-		return nil, errors.Wrap(err, "FTP mandatory TLS has been enabled, but the certificate failed to load")
+		return nil, errs.Wrap(err, "FTP mandatory TLS has been enabled, but the certificate failed to load")
 	}
 	return &FtpMainDriver{
 		settings: &ftpserver.Settings{
@@ -95,7 +96,7 @@ func (d *FtpMainDriver) GetSettings() (*ftpserver.Settings, error) {
 
 func (d *FtpMainDriver) ClientConnected(cc ftpserver.ClientContext) (string, error) {
 	if d.isShutdown || !d.shutdownLock.TryRLock() {
-		return "", errors.New("server has shutdown")
+		return "", errs.New("server has shutdown")
 	}
 	defer d.shutdownLock.RUnlock()
 	d.clients[cc.ID()] = cc
@@ -129,7 +130,7 @@ func (d *FtpMainDriver) AuthUser(cc ftpserver.ClientContext, user, pass string) 
 		}
 	}
 	if userObj.Disabled || !userObj.CanFTPAccess() {
-		return nil, errors.New("user is not allowed to access via FTP")
+		return nil, errs.New("user is not allowed to access via FTP")
 	}
 
 	ctx := context.Background()
@@ -146,7 +147,7 @@ func (d *FtpMainDriver) AuthUser(cc ftpserver.ClientContext, user, pass string) 
 
 func (d *FtpMainDriver) GetTLSConfig() (*tls.Config, error) {
 	if d.tlsConfig == nil {
-		return nil, errors.New("TLS config not provided")
+		return nil, errs.New("TLS config not provided")
 	}
 	return d.tlsConfig, nil
 }
@@ -226,7 +227,7 @@ func newPortMapper(str string) ftpserver.PasvPortGetter {
 				return 0, 0, err
 			}
 			if ei < si || ei < 1024 || si < 1024 || ei > 65535 || si > 65535 {
-				return 0, 0, errors.New("invalid port")
+				return 0, 0, errs.New("invalid port")
 			}
 			return si, ei - si + 1, nil
 		} else {
@@ -253,7 +254,7 @@ func newPortMapper(str string) ftpserver.PasvPortGetter {
 					break
 				}
 				if el != ll {
-					err = errors.New("the number of exposed ports and listened ports does not match")
+					err = errs.New("the number of exposed ports and listened ports does not match")
 					break
 				}
 				groups[i].ExposedStart = es
@@ -280,7 +281,7 @@ func newPortMapper(str string) ftpserver.PasvPortGetter {
 
 func getTlsConf(keyPath, certPath string) (*tls.Config, error) {
 	if keyPath == "" || certPath == "" {
-		return nil, errors.New("private key or certificate is not provided")
+		return nil, errs.New("private key or certificate is not provided")
 	}
 	cert, err := os.ReadFile(certPath)
 	if err != nil {

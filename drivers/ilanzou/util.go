@@ -9,9 +9,10 @@ import (
 	"time"
 
 	"github.com/foxxorcat/mopan-sdk-go"
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/utility/utils"
@@ -29,7 +30,7 @@ func (d *ILanZou) login() error {
 	}
 	d.Token = utils.GetBytes(res, "data", "appToken").String()
 	if d.Token == "" {
-		return errors.Errorf("failed to login: token is empty, resp: %s", res)
+		return errs.Errorf("failed to login: token is empty, resp: %s", res)
 	}
 	return nil
 }
@@ -104,7 +105,7 @@ func (d *ILanZou) request(pathname, method string, callback base.ReqCallback, pr
 			}
 			return d.request(pathname, method, callback, proved, true)
 		}
-		return nil, errors.Errorf("%d: %s", code, msg)
+		return nil, errs.Errorf("%d: %s", code, msg)
 	}
 	return body, nil
 }

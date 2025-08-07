@@ -10,10 +10,10 @@ import (
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	"github.com/dongdio/OpenList/v4/internal/db"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
@@ -28,19 +28,19 @@ var disableStorageCmd = &cobra.Command{
 	Short: "Disable a storage by mount path",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) < 1 {
-			return errors.New("mount path is required")
+			return errs.New("mount path is required")
 		}
 		mountPath := args[0]
 		Init()
 		defer Release()
 		storage, err := db.GetStorageByMountPath(mountPath)
 		if err != nil {
-			return errors.WithMessage(err, "failed to query storage")
+			return errs.WithMessage(err, "failed to query storage")
 		}
 		storage.Disabled = true
 		err = db.UpdateStorage(storage)
 		if err != nil {
-			return errors.WithMessage(err, "failed to update storage")
+			return errs.WithMessage(err, "failed to update storage")
 		}
 		utils.Log.Infof("Storage with mount path [%s] has been disabled from CLI", mountPath)
 		fmt.Printf("Storage with mount path [%s] has been disabled\n", mountPath)
@@ -53,11 +53,11 @@ var deleteStorageCmd = &cobra.Command{
 	Short: "Delete a storage by id",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) < 1 {
-			return errors.New("id is required")
+			return errs.New("id is required")
 		}
 		id, err := strconv.Atoi(args[0])
 		if err != nil {
-			return errors.New("id must be a number")
+			return errs.New("id must be a number")
 		}
 
 		if force, _ := cmd.Flags().GetBool("force"); force {
@@ -74,7 +74,7 @@ var deleteStorageCmd = &cobra.Command{
 		defer Release()
 		err = db.DeleteStorageByID(uint(id))
 		if err != nil {
-			return errors.WithMessage(err, "failed to delete storage by id")
+			return errs.WithMessage(err, "failed to delete storage by id")
 		}
 		utils.Log.Infof("Storage with id [%d] have been deleted from CLI", id)
 		fmt.Printf("Storage with id [%d] have been deleted\n", id)
@@ -128,7 +128,7 @@ var listStorageCmd = &cobra.Command{
 		defer Release()
 		storages, _, err := db.GetStorages(1, -1)
 		if err != nil {
-			return errors.WithMessage(err, "failed to query storages")
+			return errs.WithMessage(err, "failed to query storages")
 		}
 		utils.Log.Infof("Found %d storages", len(storages))
 		columns := []table.Column{

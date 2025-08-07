@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -22,6 +21,7 @@ import (
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/setting"
 	"github.com/dongdio/OpenList/v4/utility/cookie"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 	streamPkg "github.com/dongdio/OpenList/v4/utility/stream"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
@@ -61,7 +61,7 @@ func (d *Cloudreve) request(method string, path string, callback base.ReqCallbac
 		return err
 	}
 	if !resp.IsSuccess() {
-		return errors.New(resp.String())
+		return errs.New(resp.String())
 	}
 
 	if r.Code != 0 {
@@ -77,7 +77,7 @@ func (d *Cloudreve) request(method string, path string, callback base.ReqCallbac
 			}
 		}
 
-		return errors.New(r.Msg)
+		return errs.New(r.Msg)
 	}
 	sess := cookie.GetCookie(resp.Cookies(), "cloudreve-session")
 	if sess != nil {
@@ -126,7 +126,7 @@ func (d *Cloudreve) doLogin(needCaptcha bool) error {
 			return err
 		}
 		if len(captcha) == 0 {
-			return errors.New("can not get captcha")
+			return errs.New("can not get captcha")
 		}
 		i := strings.Index(captcha, ",")
 		dec := base64.NewDecoder(base64.StdEncoding, strings.NewReader(captcha[i+1:]))
@@ -137,7 +137,7 @@ func (d *Cloudreve) doLogin(needCaptcha bool) error {
 			return err
 		}
 		if utils.GetBytes(vRes.Bytes(), "status").Int() != 200 {
-			return errors.New("ocr error:" + utils.GetBytes(vRes.Bytes(), "msg").String())
+			return errs.New("ocr error:" + utils.GetBytes(vRes.Bytes(), "msg").String())
 		}
 		captchaCode = utils.GetBytes(vRes.Bytes(), "result").String()
 	}
@@ -286,7 +286,7 @@ func (d *Cloudreve) upRemote(ctx context.Context, stream model.FileStreamer, u U
 					return err
 				}
 				if up.Code != 0 {
-					return errors.New(up.Msg)
+					return errs.New(up.Msg)
 				}
 				return nil
 			},
@@ -345,7 +345,7 @@ func (d *Cloudreve) upOneDrive(ctx context.Context, stream model.FileStreamer, u
 					return fmt.Errorf("server error: %d", res.StatusCode)
 				case res.StatusCode != 201 && res.StatusCode != 202 && res.StatusCode != 200:
 					data, _ := io.ReadAll(res.Body)
-					return errors.New(string(data))
+					return errs.New(string(data))
 				default:
 					return nil
 				}
@@ -406,7 +406,7 @@ func (d *Cloudreve) upS3(ctx context.Context, stream model.FileStreamer, u Uploa
 				case res.StatusCode != 200:
 					return fmt.Errorf("server error: %d", res.StatusCode)
 				case etag == "":
-					return errors.New("failed to get ETag from header")
+					return errs.New("failed to get ETag from header")
 				default:
 					etags = append(etags, etag)
 					return nil

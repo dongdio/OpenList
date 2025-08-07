@@ -12,8 +12,9 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws/awsutil"
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/internal/conf"
 	"github.com/dongdio/OpenList/v4/internal/model"
@@ -307,7 +308,7 @@ func (d *downloader) sendChunkTask(newConcurrency bool) error {
 // interrupt 中断下载
 func (d *downloader) interrupt() error {
 	if d.cancel != nil {
-		d.cancel(errors.New("download interrupted"))
+		d.cancel(errs.New("download interrupted"))
 	}
 	return d.getErr()
 }
@@ -360,7 +361,7 @@ func (d *downloader) downloadPart() {
 			// 如果是新的并发任务，继续发送分块任务
 			if ch.newConcurrency {
 				if err := d.sendChunkTask(true); err != nil {
-					if !errors.Is(err, ErrExceedMaxConcurrency) {
+					if !errs.Is(err, ErrExceedMaxConcurrency) {
 						d.setErr(err)
 						d.cancel(err)
 					}
@@ -388,7 +389,7 @@ func (d *downloader) downloadChunk(ch *chunk) error {
 		}
 
 		// 检查是否需要重试
-		if retry == d.cfg.PartBodyMaxRetries || !errors.Is(errors.Unwrap(err), &errNeedRetry{}) {
+		if retry == d.cfg.PartBodyMaxRetries || !errs.Is(errs.Unwrap(err), &errNeedRetry{}) {
 			return err
 		}
 
@@ -405,14 +406,14 @@ func (d *downloader) downloadChunk(ch *chunk) error {
 	return nil
 }
 
-var errCancelConcurrency = errors.New("cancel concurrency")
-var errInfiniteRetry = errors.New("infinite retry")
+var errCancelConcurrency = errs.New("cancel concurrency")
+var errInfiniteRetry = errs.New("infinite retry")
 
 // tryDownloadChunk 尝试下载分块
 func (d *downloader) tryDownloadChunk(params *HTTPRequestParams, ch *chunk) (int64, error) {
 	resp, err := d.cfg.HTTPClient(d.ctx, params)
 	if err != nil {
-		statusCode, ok := errors.Unwrap(err).(ErrorHTTPStatusCode)
+		statusCode, ok := errs.Unwrap(err).(ErrorHTTPStatusCode)
 		if !ok {
 			return 0, err
 		}
@@ -513,7 +514,7 @@ func (d *downloader) checkTotalBytes(resp *http.Response) error {
 
 	// 验证总大小
 	if totalBytes != d.params.Size {
-		return errors.Errorf("expected file size %d, got %d from Content-Range", d.params.Size, totalBytes)
+		return errs.Errorf("expected file size %d, got %d from Content-Range", d.params.Size, totalBytes)
 	}
 
 	return nil

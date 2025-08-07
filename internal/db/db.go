@@ -2,7 +2,6 @@
 package db
 
 import (
-	"errors"
 	"sync"
 
 	log "github.com/sirupsen/logrus"
@@ -10,12 +9,13 @@ import (
 
 	"github.com/dongdio/OpenList/v4/internal/conf"
 	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 )
 
 // Error definitions
 var (
 	// ErrDatabaseNotInitialized is returned when a database operation is attempted before initialization
-	ErrDatabaseNotInitialized = errors.New("database not initialized")
+	ErrDatabaseNotInitialized = errs.New("database not initialized")
 )
 
 // Global database connection and mutex for thread safety

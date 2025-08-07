@@ -10,8 +10,9 @@ import (
 
 	"github.com/avast/retry-go"
 	"github.com/foxxorcat/mopan-sdk-go"
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/driver"
@@ -96,7 +97,7 @@ func (d *MoPan) Init(ctx context.Context) error {
 		if _, err := d.client.LoginBySms(d.Phone); err != nil {
 			return err
 		}
-		return errors.New("please enter the SMS code")
+		return errs.New("please enter the SMS code")
 	}
 	return login()
 }
@@ -235,7 +236,7 @@ func (d *MoPan) newTask(srcObj, dstDir model.Obj, taskType mopan.TaskType) (mode
 			if err := d.client.CancelBatchTask(stat.TaskID, task.TaskType); err != nil {
 				return nil, err
 			}
-			return nil, errors.New("file name conflict")
+			return nil, errs.New("file name conflict")
 		case 4:
 			if task.TaskType == mopan.TASK_MOVE {
 				return CloneObj(srcObj, srcObj.GetID(), srcObj.GetName()), nil
@@ -325,7 +326,7 @@ func (d *MoPan) Put(ctx context.Context, dstDir model.Obj, stream model.FileStre
 				}
 				_ = resp.Body.Close()
 				if resp.StatusCode != http.StatusOK {
-					return errors.Errorf("upload err,code=%d", resp.StatusCode)
+					return errs.Errorf("upload err,code=%d", resp.StatusCode)
 				}
 				up(100 * float64(threadG.Success()) / float64(len(parts)))
 				initUpdload.PartInfos[i] = ""
@@ -333,7 +334,7 @@ func (d *MoPan) Put(ctx context.Context, dstDir model.Obj, stream model.FileStre
 			})
 		}
 		if err = threadG.Wait(); err != nil {
-			if errors.Is(err, context.Canceled) {
+			if errs.Is(err, context.Canceled) {
 				initUpdload.PartInfos = utils.SliceFilter(initUpdload.PartInfos, func(s string) bool { return s != "" })
 				base.SaveUploadProgress(d, initUpdload, d.client.Authorization, uploadPartData.FileMd5)
 			}

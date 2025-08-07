@@ -5,9 +5,10 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/drivers/base"
@@ -73,7 +74,7 @@ func (d *Cloud189) Link(ctx context.Context, file model.Obj, args model.LinkArgs
 	}, &resp)
 
 	if err != nil {
-		return nil, errors.Wrap(err, "获取文件信息失败")
+		return nil, errs.Wrap(err, "获取文件信息失败")
 	}
 
 	// 创建不自动重定向的客户端
@@ -84,7 +85,7 @@ func (d *Cloud189) Link(ctx context.Context, file model.Obj, args model.LinkArgs
 	// 请求下载链接
 	res, err := client.Get("https:" + resp.FileDownloadURL)
 	if err != nil {
-		return nil, errors.Wrap(err, "请求下载链接失败")
+		return nil, errs.Wrap(err, "请求下载链接失败")
 	}
 
 	log.Debugln("下载链接状态:", res.Status(), res.String())
@@ -122,7 +123,7 @@ func (d *Cloud189) MakeDir(ctx context.Context, parentDir model.Obj, dirName str
 		"folderName":     dirName,
 	}
 	_, err := d.request(_createFolder, http.MethodPost, _callBack(form), nil)
-	return errors.Wrap(err, "创建目录失败")
+	return errs.Wrap(err, "创建目录失败")
 }
 
 // Move 移动文件/目录
@@ -146,7 +147,7 @@ func (d *Cloud189) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 	// 序列化任务信息
 	taskInfosBytes, err := utils.JSONTool.Marshal(taskInfos)
 	if err != nil {
-		return errors.Wrap(err, "序列化任务信息失败")
+		return errs.Wrap(err, "序列化任务信息失败")
 	}
 
 	// 构建表单数据
@@ -158,7 +159,7 @@ func (d *Cloud189) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 
 	// 发送请求
 	_, err = d.request(_createBatchTask, http.MethodPost, _callBack(form), nil)
-	return errors.Wrap(err, "移动文件失败")
+	return errs.Wrap(err, "移动文件失败")
 }
 
 // Rename 重命名文件/目录
@@ -184,7 +185,7 @@ func (d *Cloud189) Rename(ctx context.Context, srcObj model.Obj, newName string)
 
 	// 发送请求
 	_, err := d.request(link, http.MethodPost, _callBack(form), nil)
-	return errors.Wrap(err, "重命名失败")
+	return errs.Wrap(err, "重命名失败")
 }
 
 // Copy 复制文件/目录
@@ -208,7 +209,7 @@ func (d *Cloud189) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 	// 序列化任务信息
 	taskInfosBytes, err := utils.JSONTool.Marshal(taskInfos)
 	if err != nil {
-		return errors.Wrap(err, "序列化任务信息失败")
+		return errs.Wrap(err, "序列化任务信息失败")
 	}
 
 	// 构建表单数据
@@ -220,7 +221,7 @@ func (d *Cloud189) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 
 	// 发送请求
 	_, err = d.request(_createBatchTask, http.MethodPost, _callBack(form), nil)
-	return errors.Wrap(err, "复制文件失败")
+	return errs.Wrap(err, "复制文件失败")
 }
 
 // Remove 删除文件/目录
@@ -244,7 +245,7 @@ func (d *Cloud189) Remove(ctx context.Context, obj model.Obj) error {
 	// 序列化任务信息
 	taskInfosBytes, err := utils.JSONTool.Marshal(taskInfos)
 	if err != nil {
-		return errors.Wrap(err, "序列化任务信息失败")
+		return errs.Wrap(err, "序列化任务信息失败")
 	}
 
 	// 构建表单数据
@@ -256,7 +257,7 @@ func (d *Cloud189) Remove(ctx context.Context, obj model.Obj) error {
 
 	// 发送请求
 	_, err = d.request(_createBatchTask, http.MethodPost, _callBack(form), nil)
-	return errors.Wrap(err, "删除文件失败")
+	return errs.Wrap(err, "删除文件失败")
 }
 
 // Put 上传文件

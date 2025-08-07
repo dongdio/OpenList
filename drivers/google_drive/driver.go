@@ -6,13 +6,13 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/pkg/errors"
 	"resty.dev/v3"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
-	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
@@ -155,7 +155,7 @@ func (d *GoogleDrive) Put(ctx context.Context, dstDir model.Obj, stream model.Fi
 			}
 			return d.Put(ctx, dstDir, stream, up)
 		}
-		return errors.Errorf("%s: %v", e.Error.Message, e.Error.Errors)
+		return errs.Errorf("%s: %v", e.Error.Message, e.Error.errs)
 	}
 	putUrl := res.Header().Get("location")
 	if stream.GetSize() < d.ChunkSize*1024*1024 {

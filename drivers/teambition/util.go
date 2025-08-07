@@ -3,7 +3,6 @@ package teambition
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -20,6 +19,7 @@ import (
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
@@ -49,7 +49,7 @@ func (d *Teambition) request(pathname string, method string, callback base.ReqCa
 		return nil, err
 	}
 	if e.Name != "" {
-		return nil, errors.New(e.Message)
+		return nil, errs.New(e.Message)
 	}
 	return res.Bytes(), nil
 }

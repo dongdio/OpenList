@@ -7,7 +7,7 @@ import (
 	stdpath "path"
 	"strings"
 
-	"github.com/pkg/errors"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/utility/stream"
 
@@ -203,5 +203,5 @@ func _decompress(file SubFile, targetPath, password string, up model.UpdateProgr
 		},
 		UpdateProgress: up,
 	})
-	return errors.Wrap(err, "decompress failed")
+	return errs.Wrap(err, "decompress failed")
 }

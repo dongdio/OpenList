@@ -1,6 +1,8 @@
 package sign
 
-import "errors"
+import (
+	"errors"
+)
 
 type Sign interface {
 	Sign(data string, expire int64) string

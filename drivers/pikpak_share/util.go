@@ -10,8 +10,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
 	"resty.dev/v3"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/utility/utils"
@@ -107,9 +108,9 @@ func (d *PikPakShare) request(url string, method string, callback base.ReqCallba
 		}
 		return d.request(url, method, callback, resp)
 	case 10: // 操作频繁
-		return nil, errors.New(e.ErrorDescription)
+		return nil, errs.New(e.ErrorDescription)
 	default:
-		return nil, errors.New(e.Error())
+		return nil, errs.New(e.Error())
 	}
 }
 
@@ -163,7 +164,7 @@ func (d *PikPakShare) getFiles(id string) ([]File, error) {
 				}
 				return d.getFiles(id)
 			}
-			return nil, errors.New(resp.ShareStatusText)
+			return nil, errs.New(resp.ShareStatusText)
 		}
 		pageToken = resp.NextPageToken
 		res = append(res, resp.Files...)
@@ -315,11 +316,11 @@ func (d *PikPakShare) refreshCaptchaToken(action string, metas map[string]string
 	}
 
 	if e.IsError() {
-		return errors.New(e.Error())
+		return errs.New(e.Error())
 	}
 
 	// if resp.Url != "" {
-	//	return errors.Errorf(`need verify: <a target="_blank" href="%s">Click Here</a>`, resp.Url)
+	//	return errs.Errorf(`need verify: <a target="_blank" href="%s">Click Here</a>`, resp.Url)
 	// }
 
 	if d.Common.RefreshCTokenCk != nil {

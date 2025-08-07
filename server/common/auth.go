@@ -5,7 +5,8 @@ import (
 
 	"github.com/OpenListTeam/go-cache"
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/pkg/errors"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/internal/conf"
 	"github.com/dongdio/OpenList/v4/internal/model"
@@ -35,7 +36,7 @@ var validTokenCache = cache.NewMemCache[bool]()
 func GenerateToken(user *model.User) (tokenString string, err error) {
 	// 检查用户是否为nil
 	if user == nil {
-		return "", errors.New("用户不能为空")
+		return "", errs.New("用户不能为空")
 	}
 
 	// 创建JWT声明
@@ -53,7 +54,7 @@ func GenerateToken(user *model.User) (tokenString string, err error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claim)
 	tokenString, err = token.SignedString(SecretKey)
 	if err != nil {
-		return "", errors.Wrap(err, "签名令牌失败")
+		return "", errs.Wrap(err, "签名令牌失败")
 	}
 
 	// 将令牌加入有效缓存
@@ -72,12 +73,12 @@ func GenerateToken(user *model.User) (tokenString string, err error) {
 func ParseToken(tokenString string) (*UserClaims, error) {
 	// 检查令牌是否为空
 	if tokenString == "" {
-		return nil, errors.New("令牌不能为空")
+		return nil, errs.New("令牌不能为空")
 	}
 
 	// 检查令牌是否已被注销
 	if IsTokenInvalidated(tokenString) {
-		return nil, errors.New("令牌已被注销")
+		return nil, errs.New("令牌已被注销")
 	}
 
 	// 解析令牌
@@ -88,23 +89,23 @@ func ParseToken(tokenString string) (*UserClaims, error) {
 	// 处理解析错误
 	if err != nil {
 		var ve *jwt.ValidationError
-		if errors.As(err, &ve) {
+		if errs.As(err, &ve) {
 			if ve.Errors&jwt.ValidationErrorMalformed != 0 {
-				return nil, errors.New("令牌格式不正确")
+				return nil, errs.New("令牌格式不正确")
 			} else if ve.Errors&jwt.ValidationErrorExpired != 0 {
-				return nil, errors.New("令牌已过期")
+				return nil, errs.New("令牌已过期")
 			} else if ve.Errors&jwt.ValidationErrorNotValidYet != 0 {
-				return nil, errors.New("令牌尚未生效")
+				return nil, errs.New("令牌尚未生效")
 			} else {
-				return nil, errors.New("无法处理此令牌")
+				return nil, errs.New("无法处理此令牌")
 			}
 		}
-		return nil, errors.Wrap(err, "解析令牌失败")
+		return nil, errs.Wrap(err, "解析令牌失败")
 	}
 
 	// 检查令牌是否为nil
 	if token == nil {
-		return nil, errors.New("无法解析令牌")
+		return nil, errs.New("无法解析令牌")
 	}
 
 	// 提取声明
@@ -112,7 +113,7 @@ func ParseToken(tokenString string) (*UserClaims, error) {
 		return claims, nil
 	}
 
-	return nil, errors.New("无法处理此令牌")
+	return nil, errs.New("无法处理此令牌")
 }
 
 // InvalidateToken 使令牌失效

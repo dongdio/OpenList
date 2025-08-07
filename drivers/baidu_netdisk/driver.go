@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/hex"
-	"errors"
 	"io"
 	"net/url"
 	"os"
@@ -155,7 +154,7 @@ func (d *BaiduNetdisk) Remove(ctx context.Context, obj model.Obj) error {
 func (d *BaiduNetdisk) PutRapid(ctx context.Context, dstDir model.Obj, stream model.FileStreamer) (model.Obj, error) {
 	contentMd5 := stream.GetHash().GetHash(utils.MD5)
 	if len(contentMd5) < utils.MD5.Width {
-		return nil, errors.New("invalid hash")
+		return nil, errs.New("invalid hash")
 	}
 
 	streamSize := stream.GetSize()
@@ -328,7 +327,7 @@ func (d *BaiduNetdisk) Put(ctx context.Context, dstDir model.Obj, stream model.F
 	}
 	if err = threadG.Wait(); err != nil {
 		// 如果属于用户主动取消，则保存上传进度
-		if errors.Is(err, context.Canceled) {
+		if errs.Is(err, context.Canceled) {
 			precreateResp.BlockList = utils.SliceFilter(precreateResp.BlockList, func(s int) bool { return s >= 0 })
 			base.SaveUploadProgress(d, precreateResp, d.AccessToken, contentMd5)
 		}

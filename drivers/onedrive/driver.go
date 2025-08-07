@@ -7,13 +7,13 @@ import (
 	"path"
 	"sync"
 
-	"github.com/pkg/errors"
 	"resty.dev/v3"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
-	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
@@ -155,7 +155,7 @@ func (d *Onedrive) Rename(ctx context.Context, srcObj model.Obj, newName string)
 	if o, ok := srcObj.(*Object); ok {
 		parentID = o.ParentID
 	} else {
-		return errors.Errorf("srcObj is not Object")
+		return errs.Errorf("srcObj is not Object")
 	}
 	if parentID == "" {
 		parentID = "root"

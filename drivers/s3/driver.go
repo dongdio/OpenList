@@ -12,9 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/pkg/errors"
 	"github.com/robfig/cron/v3"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/global"
 	"github.com/dongdio/OpenList/v4/internal/driver"
@@ -102,7 +103,7 @@ func (d *S3) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*mo
 	}
 	req, _ := d.linkClient.GetObjectRequest(input)
 	if req == nil {
-		return nil, errors.Errorf("failed to create Getobject request")
+		return nil, errs.Errorf("failed to create Getobject request")
 	}
 	var link model.Link
 	var err error
@@ -114,7 +115,7 @@ func (d *S3) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*mo
 			link.URL = req.HTTPRequest.URL.String()
 		}
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to generate link url")
+			return nil, errs.Wrap(err, "failed to generate link url")
 		}
 		if d.RemoveBucket {
 			parsedURL, parseErr := url.Parse(link.URL)

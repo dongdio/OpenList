@@ -7,7 +7,6 @@ import (
 	"encoding"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"hash"
 	"io"
 	"iter"
@@ -25,7 +24,7 @@ func GetMD5EncodeStr(data string) string {
 
 // ErrUnsupported should be returned by filesystem,
 // if it is requested to deliver an unsupported hash type.
-var ErrUnsupported = errors.New("hash type not supported")
+var ErrUnsupported = errs.New("hash type not supported")
 
 // HashType indicates a standard hashing algorithm
 type HashType struct {

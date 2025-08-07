@@ -2,7 +2,6 @@ package febbox
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"net/url"
 	"strings"
@@ -11,6 +10,7 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
 
+	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
@@ -43,7 +43,7 @@ func (c *customTokenSource) Token() (*oauth2.Token, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, errors.New("oauth2: cannot fetch token")
+		return nil, errs.New("oauth2: cannot fetch token")
 	}
 
 	var tokenResp struct {
@@ -63,7 +63,7 @@ func (c *customTokenSource) Token() (*oauth2.Token, error) {
 		return nil, err
 	}
 	if tokenResp.Code != 1 {
-		return nil, errors.New("oauth2: server response error")
+		return nil, errs.New("oauth2: server response error")
 	}
 
 	c.refreshToken = tokenResp.Data.RefreshToken

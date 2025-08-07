@@ -8,14 +8,13 @@ import (
 	"os"
 	"time"
 
-	"github.com/pkg/errors"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/fs"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
 	"github.com/dongdio/OpenList/v4/server/common"
-	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/stream"
 )
 
@@ -41,7 +40,7 @@ func OpenDownload(ctx context.Context, reqPath string, offset int64) (*FileDownl
 	// 获取最近的元数据用于权限检查
 	meta, err := op.GetNearestMeta(reqPath)
 	if err != nil {
-		if !errors.Is(errors.Cause(err), errs.MetaNotFound) {
+		if !errs.Is(errs.Cause(err), errs.MetaNotFound) {
 			return nil, err
 		}
 		// 元数据不存在时继续，使用nil元数据
@@ -60,7 +59,7 @@ func OpenDownload(ctx context.Context, reqPath string, offset int64) (*FileDownl
 
 	header, ok := ctx.Value(consts.ProxyHeaderKey).(http.Header)
 	if !ok || header == nil {
-		return nil, errors.New("proxy header not found in context")
+		return nil, errs.New("proxy header not found in context")
 	}
 	clientIP, _ := ctx.Value(consts.ClientIPKey).(string)
 	link, obj, err := fs.Link(ctx, reqPath, model.LinkArgs{IP: clientIP, Header: header})
@@ -172,7 +171,7 @@ func Stat(ctx context.Context, path string) (os.FileInfo, error) {
 	// 获取元数据用于权限检查
 	meta, err := op.GetNearestMeta(reqPath)
 	if err != nil {
-		if !errors.Is(errors.Cause(err), errs.MetaNotFound) {
+		if !errs.Is(errs.Cause(err), errs.MetaNotFound) {
 			return nil, err
 		}
 		// 元数据不存在时继续，使用nil元数据
@@ -216,7 +215,7 @@ func List(ctx context.Context, path string) ([]os.FileInfo, error) {
 	// 获取元数据用于权限检查
 	meta, err := op.GetNearestMeta(reqPath)
 	if err != nil {
-		if !errors.Is(errors.Cause(err), errs.MetaNotFound) {
+		if !errs.Is(errs.Cause(err), errs.MetaNotFound) {
 			return nil, err
 		}
 		// 元数据不存在时继续，使用nil元数据

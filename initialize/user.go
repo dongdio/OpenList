@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/pkg/errors"
 	"gorm.io/gorm"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/global"
 	"github.com/dongdio/OpenList/v4/internal/db"
@@ -25,7 +26,7 @@ func initUser() {
 		adminPassword = envpass
 	}
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errs.Is(err, gorm.ErrRecordNotFound) {
 			salt := random.String(16)
 			admin = &model.User{
 				Username: "admin",
@@ -51,7 +52,7 @@ func initUser() {
 	if err == nil {
 		return
 	}
-	if !errors.Is(err, gorm.ErrRecordNotFound) {
+	if !errs.Is(err, gorm.ErrRecordNotFound) {
 		utils.Log.Fatalf("[init user] Failed to get guest user: %v", err)
 		os.Exit(1)
 	}

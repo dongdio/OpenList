@@ -2,7 +2,6 @@ package alias
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	stdpath "path"
@@ -36,7 +35,7 @@ func (d *Alias) GetAddition() driver.Additional {
 
 func (d *Alias) Init(ctx context.Context) error {
 	if d.Paths == "" {
-		return errors.New("paths is required")
+		return errs.New("paths is required")
 	}
 	d.pathMap = make(map[string][]string)
 	for _, path := range strings.Split(d.Paths, "\n") {
@@ -198,12 +197,12 @@ func (d *Alias) MakeDir(ctx context.Context, parentDir model.Obj, dirName string
 	reqPath, err := d.getReqPath(ctx, parentDir, true)
 	if err == nil {
 		for _, path := range reqPath {
-			err = errors.Join(err, fs.MakeDir(ctx, stdpath.Join(*path, dirName)))
+			err = errs.Join(err, fs.MakeDir(ctx, stdpath.Join(*path, dirName)))
 		}
 		return err
 	}
 	if errs.IsNotImplement(err) {
-		return errors.New("same-name dirs cannot make sub-dir")
+		return errs.New("same-name dirs cannot make sub-dir")
 	}
 	return err
 }
@@ -214,14 +213,14 @@ func (d *Alias) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 	}
 	srcPath, err := d.getReqPath(ctx, srcObj, false)
 	if errs.IsNotImplement(err) {
-		return errors.New("same-name files cannot be moved")
+		return errs.New("same-name files cannot be moved")
 	}
 	if err != nil {
 		return err
 	}
 	dstPath, err := d.getReqPath(ctx, dstDir, true)
 	if errs.IsNotImplement(err) {
-		return errors.New("same-name dirs cannot be moved to")
+		return errs.New("same-name dirs cannot be moved to")
 	}
 	if err != nil {
 		return err
@@ -229,11 +228,11 @@ func (d *Alias) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 	if len(srcPath) == len(dstPath) {
 		for i := range srcPath {
 			_, e := fs.Move(ctx, *srcPath[i], *dstPath[i])
-			err = errors.Join(err, e)
+			err = errs.Join(err, e)
 		}
 		return err
 	} else {
-		return errors.New("parallel paths mismatch")
+		return errs.New("parallel paths mismatch")
 	}
 }
 
@@ -244,12 +243,12 @@ func (d *Alias) Rename(ctx context.Context, srcObj model.Obj, newName string) er
 	reqPath, err := d.getReqPath(ctx, srcObj, false)
 	if err == nil {
 		for _, path := range reqPath {
-			err = errors.Join(err, fs.Rename(ctx, *path, newName))
+			err = errs.Join(err, fs.Rename(ctx, *path, newName))
 		}
 		return err
 	}
 	if errs.IsNotImplement(err) {
-		return errors.New("same-name files cannot be Rename")
+		return errs.New("same-name files cannot be Rename")
 	}
 	return err
 }
@@ -260,14 +259,14 @@ func (d *Alias) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 	}
 	srcPath, err := d.getReqPath(ctx, srcObj, false)
 	if errs.IsNotImplement(err) {
-		return errors.New("same-name files cannot be copied")
+		return errs.New("same-name files cannot be copied")
 	}
 	if err != nil {
 		return err
 	}
 	dstPath, err := d.getReqPath(ctx, dstDir, true)
 	if errs.IsNotImplement(err) {
-		return errors.New("same-name dirs cannot be copied to")
+		return errs.New("same-name dirs cannot be copied to")
 	}
 	if err != nil {
 		return err
@@ -275,17 +274,17 @@ func (d *Alias) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 	if len(srcPath) == len(dstPath) {
 		for i := range srcPath {
 			_, e := fs.Copy(ctx, *srcPath[i], *dstPath[i])
-			err = errors.Join(err, e)
+			err = errs.Join(err, e)
 		}
 		return err
 	} else if len(srcPath) == 1 || !d.ProtectSameName {
 		for _, path := range dstPath {
 			_, e := fs.Copy(ctx, *srcPath[0], *path)
-			err = errors.Join(err, e)
+			err = errs.Join(err, e)
 		}
 		return err
 	} else {
-		return errors.New("parallel paths mismatch")
+		return errs.New("parallel paths mismatch")
 	}
 }
 
@@ -296,12 +295,12 @@ func (d *Alias) Remove(ctx context.Context, obj model.Obj) error {
 	reqPath, err := d.getReqPath(ctx, obj, false)
 	if err == nil {
 		for _, path := range reqPath {
-			err = errors.Join(err, fs.Remove(ctx, *path))
+			err = errs.Join(err, fs.Remove(ctx, *path))
 		}
 		return err
 	}
 	if errs.IsNotImplement(err) {
-		return errors.New("same-name files cannot be Delete")
+		return errs.New("same-name files cannot be Delete")
 	}
 	return err
 }
@@ -325,7 +324,7 @@ func (d *Alias) Put(ctx context.Context, dstDir model.Obj, s model.FileStreamer,
 				return err
 			}
 			for _, path := range reqPath {
-				err = errors.Join(err, fs.PutDirectly(ctx, *path, &stream.FileStream{
+				err = errs.Join(err, fs.PutDirectly(ctx, *path, &stream.FileStream{
 					Obj:          s,
 					Mimetype:     s.GetMimetype(),
 					WebPutAsTask: s.NeedStore(),
@@ -333,14 +332,14 @@ func (d *Alias) Put(ctx context.Context, dstDir model.Obj, s model.FileStreamer,
 				}))
 				_, e := file.Seek(0, io.SeekStart)
 				if e != nil {
-					return errors.Join(err, e)
+					return errs.Join(err, e)
 				}
 			}
 			return err
 		}
 	}
 	if errs.IsNotImplement(err) {
-		return errors.New("same-name dirs cannot be Put")
+		return errs.New("same-name dirs cannot be Put")
 	}
 	return err
 }
@@ -352,12 +351,12 @@ func (d *Alias) PutURL(ctx context.Context, dstDir model.Obj, name, url string) 
 	reqPath, err := d.getReqPath(ctx, dstDir, true)
 	if err == nil {
 		for _, path := range reqPath {
-			err = errors.Join(err, fs.PutURL(ctx, *path, name, url))
+			err = errs.Join(err, fs.PutURL(ctx, *path, name, url))
 		}
 		return err
 	}
 	if errs.IsNotImplement(err) {
-		return errors.New("same-name files cannot offline download")
+		return errs.New("same-name files cannot offline download")
 	}
 	return err
 }
@@ -416,14 +415,14 @@ func (d *Alias) ArchiveDecompress(ctx context.Context, srcObj, dstDir model.Obj,
 	}
 	srcPath, err := d.getReqPath(ctx, srcObj, false)
 	if errs.IsNotImplement(err) {
-		return errors.New("same-name files cannot be decompressed")
+		return errs.New("same-name files cannot be decompressed")
 	}
 	if err != nil {
 		return err
 	}
 	dstPath, err := d.getReqPath(ctx, dstDir, true)
 	if errs.IsNotImplement(err) {
-		return errors.New("same-name dirs cannot be decompressed to")
+		return errs.New("same-name dirs cannot be decompressed to")
 	}
 	if err != nil {
 		return err
@@ -431,17 +430,17 @@ func (d *Alias) ArchiveDecompress(ctx context.Context, srcObj, dstDir model.Obj,
 	if len(srcPath) == len(dstPath) {
 		for i := range srcPath {
 			_, e := fs.ArchiveDecompress(ctx, *srcPath[i], *dstPath[i], args)
-			err = errors.Join(err, e)
+			err = errs.Join(err, e)
 		}
 		return err
 	} else if len(srcPath) == 1 || !d.ProtectSameName {
 		for _, path := range dstPath {
 			_, e := fs.ArchiveDecompress(ctx, *srcPath[0], *path, args)
-			err = errors.Join(err, e)
+			err = errs.Join(err, e)
 		}
 		return err
 	} else {
-		return errors.New("parallel paths mismatch")
+		return errs.New("parallel paths mismatch")
 	}
 }
 

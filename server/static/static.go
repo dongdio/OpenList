@@ -1,7 +1,6 @@
 package static
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -17,6 +16,7 @@ import (
 	"github.com/dongdio/OpenList/v4/internal/conf"
 	"github.com/dongdio/OpenList/v4/internal/setting"
 	"github.com/dongdio/OpenList/v4/public"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
@@ -80,7 +80,7 @@ func initIndexHTML(siteConfig SiteConfig) {
 		utils.Log.Debug("Reading index.html from static files system...")
 		indexFile, err := staticFS.Open("index.html")
 		if err != nil {
-			if errors.Is(err, fs.ErrNotExist) {
+			if errs.Is(err, fs.ErrNotExist) {
 				utils.Log.Fatalf("index.html not exist, you may forget to put dist of frontend to public/dist")
 			}
 			utils.Log.Fatalf("failed to read index.html: %v", err)

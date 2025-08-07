@@ -2,9 +2,9 @@ package teambition
 
 import (
 	"context"
-	"errors"
 	"net/http"
 
+	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 
 	"resty.dev/v3"
@@ -49,7 +49,7 @@ func (d *Teambition) Link(ctx context.Context, file model.Obj, args model.LinkAr
 		}
 		return &model.Link{URL: url}, nil
 	}
-	return nil, errors.New("can't convert obj to URL")
+	return nil, errs.New("can't convert obj to URL")
 }
 
 func (d *Teambition) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {

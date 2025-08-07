@@ -181,7 +181,7 @@ func (c *Client) copymove(method string, oldpath string, newpath string, overwri
 		return nil
 
 	case 207:
-		// TODO handle multistat errors, worst case ...
+		// TODO handle multistat errs, worst case ...
 		log(fmt.Sprintf(" TODO handle %s - %s multistatus result %s", method, oldpath, String(data)))
 
 	case 409:

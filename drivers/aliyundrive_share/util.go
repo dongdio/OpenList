@@ -1,8 +1,9 @@
 package aliyundrive_share
 
 import (
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/op"
@@ -27,7 +28,7 @@ func (d *AliyundriveShare) refreshToken() error {
 		return err
 	}
 	if e.Code != "" {
-		return errors.Errorf("failed to refresh token: %s", e.Message)
+		return errs.Errorf("failed to refresh token: %s", e.Message)
 	}
 	d.RefreshToken, d.AccessToken = resp.RefreshToken, resp.AccessToken
 	op.MustSaveDriverStorage(d)
@@ -51,7 +52,7 @@ func (d *AliyundriveShare) getShareToken() error {
 		return err
 	}
 	if e.Code != "" {
-		return errors.New(e.Message)
+		return errs.New(e.Message)
 	}
 	d.ShareToken = resp.ShareToken
 	return nil
@@ -86,7 +87,7 @@ func (d *AliyundriveShare) request(url, method string, callback base.ReqCallback
 			}
 			return d.request(url, method, callback)
 		} else {
-			return nil, errors.New(e.Code + ": " + e.Message)
+			return nil, errs.New(e.Code + ": " + e.Message)
 		}
 	}
 	return resp.Bytes(), nil
@@ -128,7 +129,7 @@ func (d *AliyundriveShare) getFiles(fileId string) ([]File, error) {
 				}
 				return d.getFiles(fileId)
 			}
-			return nil, errors.New(e.Message)
+			return nil, errs.New(e.Message)
 		}
 		data["marker"] = resp.NextMarker
 		files = append(files, resp.Items...)

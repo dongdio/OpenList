@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/offline_download/tool"
@@ -69,7 +69,7 @@ func (s SimpleHttp) Run(task *tool.DownloadTask) error {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode >= 400 {
-		return errors.Errorf("http status code %d", resp.StatusCode)
+		return errs.Errorf("http status code %d", resp.StatusCode)
 	}
 	filename, err := parseFilenameFromContentDisposition(resp.Header.Get("Content-Disposition"))
 	if err != nil {

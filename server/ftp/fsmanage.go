@@ -4,14 +4,13 @@ import (
 	"context"
 	stdpath "path"
 
-	"github.com/pkg/errors"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/fs"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
 	"github.com/dongdio/OpenList/v4/server/common"
-	"github.com/dongdio/OpenList/v4/utility/errs"
 )
 
 // Mkdir 在指定路径创建目录
@@ -35,7 +34,7 @@ func Mkdir(ctx context.Context, path string) error {
 		// 如果用户没有全局写入权限，检查元数据中的权限
 		meta, err := op.GetNearestMeta(stdpath.Dir(reqPath))
 		if err != nil {
-			if !errors.Is(errors.Cause(err), errs.MetaNotFound) {
+			if !errs.Is(errs.Cause(err), errs.MetaNotFound) {
 				return err
 			}
 			// 元数据不存在时继续，默认为无权限
@@ -124,7 +123,7 @@ func Rename(ctx context.Context, oldPath, newPath string) error {
 
 			// 文件名相同但移动失败，尝试复制
 			if _, err1 := fs.Copy(ctx, srcPath, dstDir); err1 != nil {
-				return errors.Errorf("failed move for %v, and failed try copying for %v", err, err1)
+				return errs.Errorf("failed move for %v, and failed try copying for %v", err, err1)
 			}
 			return nil
 		}

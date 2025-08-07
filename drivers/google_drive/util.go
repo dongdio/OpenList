@@ -14,9 +14,10 @@ import (
 
 	"github.com/avast/retry-go"
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/driver"
@@ -64,9 +65,9 @@ func (d *GoogleDrive) refreshToken() error {
 		}
 		if resp.RefreshToken == "" || resp.AccessToken == "" {
 			if resp.ErrorMessage != "" {
-				return errors.Errorf("empty token returned from official API: %s", resp.ErrorMessage)
+				return errs.Errorf("empty token returned from official API: %s", resp.ErrorMessage)
 			}
-			return errors.Errorf("empty token returned from official API, a wrong refresh token may have been used")
+			return errs.Errorf("empty token returned from official API, a wrong refresh token may have been used")
 		}
 		d.AccessToken = resp.AccessToken
 		d.RefreshToken = resp.RefreshToken
@@ -75,7 +76,7 @@ func (d *GoogleDrive) refreshToken() error {
 	}
 	// 使用本地客户端的情况下检查是否为空
 	if d.ClientID == "" || d.ClientSecret == "" {
-		return errors.Errorf("empty ClientID or ClientSecret")
+		return errs.Errorf("empty ClientID or ClientSecret")
 	}
 	// 走原有的刷新逻辑
 
@@ -164,7 +165,7 @@ func (d *GoogleDrive) refreshToken() error {
 		}
 		log.Debug(res.String())
 		if e.Error != "" {
-			return errors.Errorf(e.Error)
+			return errs.Errorf(e.Error)
 		}
 		d.AccessToken = resp.AccessToken
 		return nil
@@ -186,7 +187,7 @@ func (d *GoogleDrive) refreshToken() error {
 	}
 	log.Debug(res.String())
 	if e.Error != "" {
-		return errors.Errorf(e.Error)
+		return errs.Errorf(e.Error)
 	}
 	d.AccessToken = resp.AccessToken
 	return nil
@@ -217,7 +218,7 @@ func (d *GoogleDrive) request(url string, method string, callback base.ReqCallba
 			}
 			return d.request(url, method, callback, resp)
 		}
-		return nil, errors.Errorf("%s: %v", e.Error.Message, e.Error.Errors)
+		return nil, errs.Errorf("%s: %v", e.Error.Message, e.Error.errs)
 	}
 	return res.Bytes(), nil
 }
@@ -299,7 +300,7 @@ func (d *GoogleDrive) chunkUpload(ctx context.Context, file model.FileStreamer, 
 						return err
 					}
 				}
-				return fmt.Errorf("%s: %v", e.Error.Message, e.Error.Errors)
+				return fmt.Errorf("%s: %v", e.Error.Message, e.Error.errs)
 			}
 			return nil
 		},

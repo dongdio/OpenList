@@ -13,6 +13,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/dongdio/OpenList/v4/utility/errs"
 	d "github.com/dongdio/OpenList/v4/utility/gowebdav"
 )
 
@@ -246,7 +247,7 @@ func getStream(pathOrString string) (io.ReadCloser, error) {
 		return nil, &os.PathError{
 			Op:   "Open",
 			Path: pathOrString,
-			Err:  errors.New("Path: '" + pathOrString + "' is a directory"),
+			Err:  errs.New("Path: '" + pathOrString + "' is a directory"),
 		}
 	}
 

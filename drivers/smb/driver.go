@@ -2,12 +2,12 @@ package smb
 
 import (
 	"context"
-	"errors"
 	"path/filepath"
 	"strings"
 
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/stream"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 
@@ -194,7 +194,7 @@ func (d *SMB) Put(ctx context.Context, dstDir model.Obj, stream model.FileStream
 	d.updateLastConnTime()
 	defer func() {
 		_ = out.Close()
-		if errors.Is(err, context.Canceled) {
+		if errs.Is(err, context.Canceled) {
 			_ = d.fs.Remove(fullPath)
 		}
 	}()

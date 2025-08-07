@@ -122,7 +122,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        image: ["latest", "ffmpeg", "aria2", "aio"]
+        image: [ "latest", "ffmpeg", "aria2", "aio" ]
         include:
           - image: "latest"
             base_image_tag: "base"
@@ -206,7 +206,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        image: ["latest", "ffmpeg", "aria2", "aio"]
+        image: [ "latest", "ffmpeg", "aria2", "aio" ]
         include:
           - image: "latest"
             base_image_tag: "base"

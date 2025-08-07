@@ -5,7 +5,6 @@ import (
 	"crypto/md5"
 	"crypto/sha256"
 	"encoding/hex"
-	"errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -15,6 +14,7 @@ import (
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
@@ -82,7 +82,7 @@ func (d *QuarkUCTV) request(ctx context.Context, pathname string, method string,
 	}
 
 	if e.Status >= 400 || e.Errno != 0 {
-		return nil, errors.New(e.ErrorInfo)
+		return nil, errs.New(e.ErrorInfo)
 	}
 	return res.Bytes(), nil
 }
@@ -171,14 +171,14 @@ func (d *QuarkUCTV) getRefreshTokenByTV(ctx context.Context, code string, isRefr
 		return err
 	}
 	if resp.Code != 200 {
-		return errors.New(resp.Message)
+		return errs.New(resp.Message)
 	}
 	if resp.Data.RefreshToken != "" {
 		d.Addition.RefreshToken = resp.Data.RefreshToken
 		op.MustSaveDriverStorage(d)
 		d.QuarkUCTVCommon.AccessToken = resp.Data.AccessToken
 	} else {
-		return errors.New("refresh token is empty")
+		return errs.New("refresh token is empty")
 	}
 	return nil
 }

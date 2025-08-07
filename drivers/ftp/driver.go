@@ -2,7 +2,6 @@ package ftp
 
 import (
 	"context"
-	"errors"
 	"io"
 	stdpath "path"
 
@@ -104,7 +103,7 @@ func (d *FTP) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*m
 			closeFunc = resp.Close
 		} else {
 			closeFunc = func() error {
-				return errors.Join(resp.Close(), c.Quit())
+				return errs.Join(resp.Close(), c.Quit())
 			}
 		}
 		return utils.ReadCloser{

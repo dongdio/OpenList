@@ -3,7 +3,6 @@ package local
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"io/fs"
 	"net/http"
@@ -343,7 +342,7 @@ func (d *Local) Put(ctx context.Context, dstDir model.Obj, stream model.FileStre
 	}
 	defer func() {
 		_ = out.Close()
-		if errors.Is(err, context.Canceled) {
+		if errs.Is(err, context.Canceled) {
 			_ = os.Remove(fullPath)
 		}
 	}()

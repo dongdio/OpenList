@@ -1,9 +1,8 @@
 package LenovoNasShare
 
 import (
-	"errors"
-
 	"github.com/dongdio/OpenList/v4/drivers/base"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
@@ -29,7 +28,7 @@ func (d *LenovoNasShare) request(url string, method string, callback base.ReqCal
 	body := res.Bytes()
 	result := utils.GetBytes(body, "result").Bool()
 	if !result {
-		return nil, errors.New(utils.GetBytes(body, "error", "msg").String())
+		return nil, errs.New(utils.GetBytes(body, "error", "msg").String())
 	}
 	return body, nil
 }

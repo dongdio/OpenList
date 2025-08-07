@@ -10,8 +10,9 @@ import (
 
 	"github.com/ProtonMail/go-crypto/openpgp"
 	"github.com/ProtonMail/go-crypto/openpgp/armor"
-	"github.com/pkg/errors"
 	"resty.dev/v3"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/model"
@@ -43,9 +44,9 @@ func calculateBase64Length(inputLength int64) int64 {
 func toErr(res *resty.Response) error {
 	var errMsg ErrResp
 	if err := utils.JSONTool.Unmarshal(res.Bytes(), &errMsg); err != nil {
-		return errors.New(res.Status())
+		return errs.New(res.Status())
 	} else {
-		return errors.Errorf("%s: %s", res.Status(), errMsg.Message)
+		return errs.Errorf("%s: %s", res.Status(), errMsg.Message)
 	}
 }
 
@@ -111,20 +112,20 @@ func loadPrivateKey(key, passphrase string) (*openpgp.Entity, error) {
 		return nil, err
 	}
 	if len(entityList) < 1 {
-		return nil, errors.Errorf("no keys found in key ring")
+		return nil, errs.Errorf("no keys found in key ring")
 	}
 	entity := entityList[0]
 
 	pass := []byte(passphrase)
 	if entity.PrivateKey != nil && entity.PrivateKey.Encrypted {
 		if err = entity.PrivateKey.Decrypt(pass); err != nil {
-			return nil, errors.Errorf("password incorrect: %+v", err)
+			return nil, errs.Errorf("password incorrect: %+v", err)
 		}
 	}
 	for _, subKey := range entity.Subkeys {
 		if subKey.PrivateKey != nil && subKey.PrivateKey.Encrypted {
 			if err = subKey.PrivateKey.Decrypt(pass); err != nil {
-				return nil, errors.Errorf("password incorrect: %+v", err)
+				return nil, errs.Errorf("password incorrect: %+v", err)
 			}
 		}
 	}
@@ -153,7 +154,7 @@ func signCommit(m *map[string]any, entity *openpgp.Entity) (string, error) {
 	var sigBuffer bytes.Buffer
 	err := openpgp.DetachSign(&sigBuffer, entity, strings.NewReader(data), nil)
 	if err != nil {
-		return "", errors.Wrap(err, "signing failed")
+		return "", errs.Wrap(err, "signing failed")
 	}
 	var armoredSig bytes.Buffer
 	armorWriter, err := armor.Encode(&armoredSig, "PGP SIGNATURE", nil)

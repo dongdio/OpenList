@@ -11,9 +11,10 @@ import (
 	"time"
 
 	"github.com/avast/retry-go"
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/driver"
@@ -80,7 +81,7 @@ func (d *AliyundriveOpen) uploadPart(ctx context.Context, r io.Reader, partInfo 
 	}
 	_ = res.Body.Close()
 	if res.StatusCode != http.StatusOK && res.StatusCode != http.StatusConflict {
-		return errors.Errorf("upload status: %d", res.StatusCode)
+		return errs.Errorf("upload status: %d", res.StatusCode)
 	}
 	return nil
 }
@@ -139,7 +140,7 @@ func (d *AliyundriveOpen) calProofCode(stream model.FileStreamer) (string, error
 	buf := make([]byte, length)
 	n, err := io.ReadFull(reader, buf)
 	if n != int(length) {
-		return "", errors.Wrapf(err, "failed to read all data: (expect =%d, actual =%d)", length, n)
+		return "", errs.Wrapf(err, "failed to read all data: (expect =%d, actual =%d)", length, n)
 	}
 	return base64.StdEncoding.EncodeToString(buf), nil
 }
@@ -206,7 +207,7 @@ func (d *AliyundriveOpen) upload(ctx context.Context, dstDir model.Obj, stream m
 		createData["content_hash"] = hash
 		createData["proof_code"], err = d.calProofCode(stream)
 		if err != nil {
-			return nil, errors.Wrap(err, "cal proof code error")
+			return nil, errs.Wrap(err, "cal proof code error")
 		}
 		_, err = d.request("/adrive/v1.0/openFile/create", http.MethodPost, func(req *resty.Request) {
 			req.SetBody(createData).SetResult(&createResp)

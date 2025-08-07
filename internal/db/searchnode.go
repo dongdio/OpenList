@@ -5,8 +5,9 @@ import (
 	stdpath "path"
 	"strings"
 
-	"github.com/pkg/errors"
 	"gorm.io/gorm"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/internal/conf"
 	"github.com/dongdio/OpenList/v4/internal/model"
@@ -74,7 +75,7 @@ func SearchNode(req model.SearchReq, useFullText bool) ([]model.SearchNode, int6
 		}
 	}
 	if searchDB == nil {
-		return nil, 0, errors.Errorf("unsupported database type: %s", conf.Conf.Database.Type)
+		return nil, 0, errs.Errorf("unsupported database type: %s", conf.Conf.Database.Type)
 	}
 
 	if req.Scope != 0 {
@@ -84,7 +85,7 @@ func SearchNode(req model.SearchReq, useFullText bool) ([]model.SearchNode, int6
 
 	var count int64
 	if err := searchDB.Count(&count).Error; err != nil {
-		return nil, 0, errors.Wrapf(err, "failed get search items count")
+		return nil, 0, errs.Wrapf(err, "failed get search items count")
 	}
 	var files []model.SearchNode
 	if err := searchDB.Order("name asc").Offset((req.Page - 1) * req.PerPage).Limit(req.PerPage).

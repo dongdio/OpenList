@@ -9,9 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/model"
@@ -184,7 +185,7 @@ func (d *DoubaoShare) getShareOverviewWithHistory(shareId, cursor string, cursor
 
 func (d *DoubaoShare) initShareList() error {
 	if d.Addition.ShareIds == "" {
-		return errors.Errorf("share_ids is empty")
+		return errs.Errorf("share_ids is empty")
 	}
 
 	// 解析分享配置
@@ -204,7 +205,7 @@ func (d *DoubaoShare) initShareList() error {
 	// 提取顶级节点
 	topLevelNodes := d._extractTopLevelNodes(rootMap, rootShares)
 	if len(topLevelNodes) == 0 {
-		return errors.Errorf("no valid share_ids found")
+		return errs.Errorf("no valid share_ids found")
 	}
 
 	// 存储结果
@@ -220,7 +221,7 @@ func (d *DoubaoShare) _parseShareConfigs() (map[string]string, []string, error) 
 
 	lines := strings.Split(strings.TrimSpace(d.Addition.ShareIds), "\n")
 	if len(lines) == 0 {
-		return nil, nil, errors.Errorf("no share_ids found")
+		return nil, nil, errs.Errorf("no share_ids found")
 	}
 
 	for _, line := range lines {
@@ -273,7 +274,7 @@ func (d *DoubaoShare) _detectPathConflicts(shareConfigs map[string]string) error
 
 	for sharePath, ids := range pathToShareIds {
 		if len(ids) > 1 {
-			return errors.Errorf("路径冲突: 路径 '%s' 被多个不同的分享ID使用: %s",
+			return errs.Errorf("路径冲突: 路径 '%s' 被多个不同的分享ID使用: %s",
 				sharePath, strings.Join(ids, ", "))
 		}
 	}
@@ -287,7 +288,7 @@ func (d *DoubaoShare) _detectPathConflicts(shareConfigs map[string]string) error
 
 			// 检查前缀冲突
 			if strings.HasPrefix(path2, path1+"/") || strings.HasPrefix(path1, path2+"/") {
-				return errors.Errorf("路径冲突: 路径 '%s' (ID: %s) 与路径 '%s' (ID: %s) 存在层次冲突",
+				return errs.Errorf("路径冲突: 路径 '%s' (ID: %s) 与路径 '%s' (ID: %s) 存在层次冲突",
 					path1, id1, path2, id2)
 			}
 		}
@@ -551,7 +552,7 @@ func (d *DoubaoShare) _findShareAndPath(dir model.Obj) (string, string, error) {
 	}
 
 	log.Warnf("[doubao_share] No matching share path found: %s", dirPath)
-	return "", "", errors.Errorf("no matching share path found: %s", dirPath)
+	return "", "", errs.Errorf("no matching share path found: %s", dirPath)
 }
 
 // convertToFileObject 将File转换为FileObject
@@ -587,7 +588,7 @@ func (d *DoubaoShare) getFilesInPath(ctx context.Context, shareId, nodeId, relat
 	if nodeId == "" {
 		files, err = d.getShareOverview(shareId, "")
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to get share link information")
+			return nil, errs.Wrap(err, "failed to get share link information")
 		}
 
 		result := make([]model.Obj, 0, len(files))
@@ -600,7 +601,7 @@ func (d *DoubaoShare) getFilesInPath(ctx context.Context, shareId, nodeId, relat
 	} else {
 		files, err = d.getFiles(shareId, nodeId, "")
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to get share file")
+			return nil, errs.Wrap(err, "failed to get share file")
 		}
 
 		result := make([]model.Obj, 0, len(files))

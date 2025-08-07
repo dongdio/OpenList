@@ -8,13 +8,13 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/pkg/errors"
 	"resty.dev/v3"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
-	"github.com/dongdio/OpenList/v4/utility/errs"
 	streamPkg "github.com/dongdio/OpenList/v4/utility/stream"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
@@ -45,7 +45,7 @@ func (d *QuarkOpen) Init(ctx context.Context) error {
 	if resp.Data.UserID != "" {
 		d.conf.userId = resp.Data.UserID
 	} else {
-		return errors.New("failed to get user id")
+		return errs.New("failed to get user id")
 	}
 	return err
 }
@@ -213,7 +213,7 @@ func (d *QuarkOpen) Put(ctx context.Context, dstDir model.Obj, stream model.File
 
 		// 读取分片数据
 		n, err := io.ReadFull(stream, part)
-		if err != nil && !errors.Is(err, io.ErrUnexpectedEOF) {
+		if err != nil && !errs.Is(err, io.ErrUnexpectedEOF) {
 			return err
 		}
 
@@ -221,7 +221,7 @@ func (d *QuarkOpen) Put(ctx context.Context, dstDir model.Obj, stream model.File
 		reader := driver.NewLimitedUploadStream(ctx, bytes.NewReader(part))
 		etag, err := d.upPart(ctx, upUrlInfo, i, reader)
 		if err != nil {
-			return errors.Errorf("failed to upload part %d: %w", i, err)
+			return errs.Errorf("failed to upload part %d: %w", i, err)
 		}
 
 		// 保存ETag，用于后续commit

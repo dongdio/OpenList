@@ -3,12 +3,12 @@ package http
 import (
 	"mime"
 
-	"github.com/pkg/errors"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 )
 
 func parseFilenameFromContentDisposition(contentDisposition string) (string, error) {
 	if contentDisposition == "" {
-		return "", errors.New("Content-Disposition is empty")
+		return "", errs.New("Content-Disposition is empty")
 	}
 	_, params, err := mime.ParseMediaType(contentDisposition)
 	if err != nil {
@@ -16,7 +16,7 @@ func parseFilenameFromContentDisposition(contentDisposition string) (string, err
 	}
 	filename := params["filename"]
 	if filename == "" {
-		return "", errors.New("filename not found in Content-Disposition: " + contentDisposition)
+		return "", errs.New("filename not found in Content-Disposition: " + contentDisposition)
 	}
 	return filename, nil
 }

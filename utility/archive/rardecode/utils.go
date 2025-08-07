@@ -11,11 +11,11 @@ import (
 	"time"
 
 	"github.com/nwaples/rardecode/v2"
-	"github.com/pkg/errors"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/utility/archive/tool"
-	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/stream"
 )
 
@@ -214,7 +214,7 @@ func _decompress(reader *rardecode.Reader, header *rardecode.FileHeader, targetP
 		},
 		UpdateProgress: up,
 	})
-	return errors.Wrap(err, "decompress failed")
+	return errs.Wrap(err, "decompress failed")
 }
 
 func filterPassword(err error) error {

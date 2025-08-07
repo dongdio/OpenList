@@ -14,9 +14,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/driver"
@@ -52,7 +53,7 @@ import (
 //		}
 //	}
 //	if lt == "" {
-//		return errors.Errorf("get page: %s \nstatus: %d \nrequest url: %s\nredirect url: %s",
+//		return errs.Errorf("get page: %s \nstatus: %d \nrequest url: %s\nredirect url: %s",
 //			b, res.StatusCode(), res.RawResponse.Request.URL.String(), res.Header().Get("location"))
 //	}
 //	captchaToken := regexp.MustCompile(`captchaToken' value='(.+?)'`).FindStringSubmatch(b)[1]
@@ -94,7 +95,7 @@ import (
 //			return err
 //		}
 //		if utils.GetBytes(vres.Bytes(), "status").Int() != 200 {
-//			return errors.New("ocr error:" + utils.GetBytes(vres.Bytes(), "msg").String())
+//			return errs.New("ocr error:" + utils.GetBytes(vres.Bytes(), "msg").String())
 //		}
 //		vCodeRS = utils.GetBytes(vres.Bytes(), "result").String()
 //		log.Debugln("code: ", vCodeRS)
@@ -133,7 +134,7 @@ import (
 //		return err
 //	}
 //	if loginResp.Result != 0 {
-//		return errors.Errorf(loginResp.Msg)
+//		return errs.Errorf(loginResp.Msg)
 //	}
 //	_, err = d.client.R().Get(loginResp.ToUrl)
 //	return err
@@ -174,7 +175,7 @@ func (d *Cloud189) request(url string, method string, callback base.ReqCallback,
 	// 执行请求
 	res, err := req.Execute(method, url)
 	if err != nil {
-		return nil, errors.Wrap(err, "执行HTTP请求失败")
+		return nil, errs.Wrap(err, "执行HTTP请求失败")
 	}
 
 	// 检查API错误
@@ -184,19 +185,19 @@ func (d *Cloud189) request(url string, method string, callback base.ReqCallback,
 			log.Debug("会话密钥无效，尝试重新登录")
 			err = d.newLogin()
 			if err != nil {
-				return nil, errors.Wrap(err, "重新登录失败")
+				return nil, errs.Wrap(err, "重新登录失败")
 			}
 			// 重新发送请求
 			return d.request(url, method, callback, resp)
 		}
-		return nil, errors.Errorf("API错误: [%s] %s", errResp.ErrorCode, errResp.ErrorMsg)
+		return nil, errs.Errorf("API错误: [%s] %s", errResp.ErrorCode, errResp.ErrorMsg)
 	}
 
 	// 检查响应代码
 	resCode := utils.GetBytes(res.Bytes(), "res_code").Int()
 	if resCode != 0 {
 		resMessage := utils.GetBytes(res.Bytes(), "res_message").String()
-		err = errors.Errorf("响应错误: [%d] %s", resCode, resMessage)
+		err = errs.Errorf("响应错误: [%d] %s", resCode, resMessage)
 	}
 
 	return res.Bytes(), err
@@ -229,7 +230,7 @@ func (d *Cloud189) getFiles(fileID string) ([]model.Obj, error) {
 		}, &resp)
 
 		if err != nil {
-			return nil, errors.Wrap(err, "获取文件列表失败")
+			return nil, errs.Wrap(err, "获取文件列表失败")
 		}
 
 		// 没有更多数据，退出循环
@@ -276,12 +277,12 @@ func (d *Cloud189) getFiles(fileID string) ([]model.Obj, error) {
 func (d *Cloud189) getSessionKey() (string, error) {
 	resp, err := d.request(_getUserBriefInfo, http.MethodGet, nil, nil)
 	if err != nil {
-		return "", errors.Wrap(err, "获取用户信息失败")
+		return "", errs.Wrap(err, "获取用户信息失败")
 	}
 
 	sessionKey := utils.GetBytes(resp, "sessionKey").String()
 	if sessionKey == "" {
-		return "", errors.New("未找到会话密钥")
+		return "", errs.New("未找到会话密钥")
 	}
 
 	return sessionKey, nil
@@ -303,7 +304,7 @@ func (d *Cloud189) getResKey() (string, string, error) {
 	// 获取新的RSA密钥
 	resp, err := d.request(_generateRsaKey, http.MethodGet, nil, nil)
 	if err != nil {
-		return "", "", errors.Wrap(err, "获取RSA密钥失败")
+		return "", "", errs.Wrap(err, "获取RSA密钥失败")
 	}
 
 	// 解析响应
@@ -376,13 +377,13 @@ func (d *Cloud189) uploadRequest(uri string, form map[string]string, resp any) (
 	// 执行请求
 	res, err := req.Get(u)
 	if err != nil {
-		return nil, errors.Wrap(err, "执行上传请求失败")
+		return nil, errs.Wrap(err, "执行上传请求失败")
 	}
 
 	// 检查响应
 	responseData := res.Bytes()
 	if utils.GetBytes(responseData, "code").String() != "SUCCESS" {
-		return nil, errors.Errorf("上传请求失败: %s - %s",
+		return nil, errs.Errorf("上传请求失败: %s - %s",
 			uri, utils.GetBytes(responseData, "msg").String())
 	}
 
@@ -421,13 +422,13 @@ func (d *Cloud189) newUpload(ctx context.Context, dstDir model.Obj, file model.F
 	}, nil)
 
 	if err != nil {
-		return errors.Wrap(err, "初始化上传失败")
+		return errs.Wrap(err, "初始化上传失败")
 	}
 
 	// 获取上传文件ID
 	uploadFileID := utils.GetBytes(res, "data", "uploadFileId").String()
 	if uploadFileID == "" {
-		return errors.New("获取上传文件ID失败")
+		return errs.New("获取上传文件ID失败")
 	}
 
 	// 可以获取已上传的分片信息（目前未使用）
@@ -454,7 +455,7 @@ func (d *Cloud189) newUpload(ctx context.Context, dstDir model.Obj, file model.F
 		sliceData := make([]byte, sliceSize)
 		numBytes, err = io.ReadFull(file, sliceData)
 		if err != nil {
-			return errors.Wrap(err, "读取文件分片失败")
+			return errs.Wrap(err, "读取文件分片失败")
 		}
 
 		uploadedBytes += int64(numBytes)
@@ -476,7 +477,7 @@ func (d *Cloud189) newUpload(ctx context.Context, dstDir model.Obj, file model.F
 		}, &uploadUrlsResp)
 
 		if err != nil {
-			return errors.Wrap(err, "获取分片上传URL失败")
+			return errs.Wrap(err, "获取分片上传URL失败")
 		}
 
 		// 获取上传数据
@@ -498,12 +499,12 @@ func (d *Cloud189) newUpload(ctx context.Context, dstDir model.Obj, file model.F
 		}
 		resp, err := cli.Put(requestURL)
 		if err != nil {
-			return errors.Wrap(err, "执行分片上传请求失败")
+			return errs.Wrap(err, "执行分片上传请求失败")
 		}
 		// 检查响应状态
 		if resp.StatusCode() != http.StatusOK {
 			_ = resp.Body.Close()
-			return errors.Errorf("分片上传失败，状态码: %d", resp.StatusCode())
+			return errs.Errorf("分片上传失败，状态码: %d", resp.StatusCode())
 		}
 
 		log.Debugf("189 分片上传响应: %+v\n", resp.String())
@@ -530,5 +531,5 @@ func (d *Cloud189) newUpload(ctx context.Context, dstDir model.Obj, file model.F
 		"lazyCheck":    "1",
 		"opertype":     "3", // 操作类型：上传完成
 	}, nil)
-	return errors.Wrap(err, "提交上传失败")
+	return errs.Wrap(err, "提交上传失败")
 }

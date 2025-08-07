@@ -11,9 +11,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/model"
@@ -42,12 +43,12 @@ func (d *LanZou) get(url string, callback base.ReqCallback) ([]byte, error) {
 
 func (d *LanZou) post(url string, callback base.ReqCallback, resp any) ([]byte, error) {
 	data, err := d._post(url, callback, resp, false)
-	if errors.Is(err, ErrCookieExpiration) && d.IsAccount() {
+	if errs.Is(err, ErrCookieExpiration) && d.IsAccount() {
 		if atomic.CompareAndSwapInt32(&d.flag, 0, 1) {
 			_, err2 := d.Login()
 			atomic.SwapInt32(&d.flag, 0)
 			if err2 != nil {
-				d.Status = errors.Wrap(err, err2.Error()).Error()
+				d.Status = errs.Wrap(err, err2.Error()).Error()
 				op.MustSaveDriverStorage(d)
 				return data, err
 			}
@@ -90,7 +91,7 @@ func (d *LanZou) _post(url string, callback base.ReqCallback, resp any, up bool)
 		if info == "" {
 			info = utils.GetBytes(data, "info").String()
 		}
-		return data, errors.Errorf(info)
+		return data, errs.Errorf(info)
 	}
 }
 
@@ -143,7 +144,7 @@ func (d *LanZou) Login() ([]*http.Cookie, error) {
 		return nil, err
 	}
 	if utils.GetBytes(resp.Bytes(), "zt").Int() != 1 {
-		return nil, errors.Errorf("login err: %s", resp.Bytes())
+		return nil, errs.Errorf("login err: %s", resp.Bytes())
 	}
 	d.Cookie = CookieToString(resp.Cookies())
 	return resp.Cookies(), nil
@@ -303,7 +304,7 @@ func (d *LanZou) getShareUrlHtml(shareID string) (string, error) {
 		}
 		return firstPageDataStr, nil
 	}
-	return "", errors.New("acw_sc__v2 validation error")
+	return "", errs.New("acw_sc__v2 validation error")
 }
 
 // 通过分享链接获取文件或文件夹
@@ -370,7 +371,7 @@ func (d *LanZou) getFilesByShareUrl(shareID, pwd string, sharePageData string) (
 		if len(fileIDs) > 1 {
 			fileID = fileIDs[1]
 		} else {
-			return nil, errors.Errorf("not find file id")
+			return nil, errs.Errorf("not find file id")
 		}
 		var resp FileShareInfoAndUrlResp[string]
 		_, err = d.post(d.ShareUrl+"/ajaxm.php?file="+fileID, func(req *resty.Request) { req.SetFormData(param) }, &resp)
@@ -385,7 +386,7 @@ func (d *LanZou) getFilesByShareUrl(shareID, pwd string, sharePageData string) (
 		urlpaths := findDownPageParamReg.FindStringSubmatch(sharePageData)
 		if len(urlpaths) != 2 {
 			log.Errorf("lanzou: err => not find file page param ,data => %s\n", sharePageData)
-			return nil, errors.Errorf("not find file page param")
+			return nil, errs.Errorf("not find file page param")
 		}
 		data, err := d.get(fmt.Sprint(d.ShareUrl, urlpaths[1]), nil)
 		if err != nil {
@@ -402,7 +403,7 @@ func (d *LanZou) getFilesByShareUrl(shareID, pwd string, sharePageData string) (
 		if len(fileIDs) > 1 {
 			fileID = fileIDs[1]
 		} else {
-			return nil, errors.Errorf("not find file id")
+			return nil, errs.Errorf("not find file id")
 		}
 		var resp FileShareInfoAndUrlResp[int]
 		_, err = d.post(d.ShareUrl+"/ajaxm.php?file="+fileID, func(req *resty.Request) { req.SetFormData(param) }, &resp)
@@ -538,7 +539,7 @@ func (d *LanZou) getVeiAndUid() (vei string, uid string, err error) {
 	// uid
 	uids := regexp.MustCompile(`uid=([^'"&;]+)`).FindStringSubmatch(string(resp))
 	if len(uids) < 2 {
-		err = errors.Errorf("uid variable not find")
+		err = errs.Errorf("uid variable not find")
 		return
 	}
 	uid = uids[1]

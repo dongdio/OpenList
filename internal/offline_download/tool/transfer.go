@@ -9,8 +9,9 @@ import (
 	"time"
 
 	"github.com/OpenListTeam/tache"
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/fs"
@@ -26,11 +27,11 @@ import (
 
 // 错误类型定义
 var (
-	ErrSourceNotFound      = errors.New("源文件或目录不存在")
-	ErrDestinationNotFound = errors.New("目标目录不存在")
-	ErrInvalidSource       = errors.New("无效的源文件或目录")
-	ErrInvalidDestination  = errors.New("无效的目标目录")
-	ErrTransferCanceled    = errors.New("传输任务被取消")
+	ErrSourceNotFound      = errs.New("源文件或目录不存在")
+	ErrDestinationNotFound = errs.New("目标目录不存在")
+	ErrInvalidSource       = errs.New("无效的源文件或目录")
+	ErrInvalidDestination  = errs.New("无效的目标目录")
+	ErrTransferCanceled    = errs.New("传输任务被取消")
 )
 
 // TransferTask 表示一个文件传输任务
@@ -50,7 +51,7 @@ type TransferTask struct {
 func (t *TransferTask) Run() error {
 	// 重新初始化上下文并设置任务开始时间
 	if err := t.ReinitCtx(); err != nil {
-		return errors.Wrap(err, "无法初始化任务上下文")
+		return errs.Wrap(err, "无法初始化任务上下文")
 	}
 	t.ClearEndTime()
 	t.SetStartTime(time.Now())
@@ -58,7 +59,7 @@ func (t *TransferTask) Run() error {
 
 	// 检查目标存储是否有效
 	if t.DstStorage == nil {
-		return errors.Wrap(ErrInvalidDestination, "目标存储不能为空")
+		return errs.Wrap(ErrInvalidDestination, "目标存储不能为空")
 	}
 
 	// 根据源类型选择不同的传输方式
@@ -79,13 +80,13 @@ func (t *TransferTask) transferFromURL() error {
 	// 获取范围读取器
 	rr, err := stream.GetRangeReaderFromLink(t.GetTotalBytes(), &model.Link{URL: t.URL})
 	if err != nil {
-		return errors.Wrap(err, "无法从URL创建范围读取器")
+		return errs.Wrap(err, "无法从URL创建范围读取器")
 	}
 
 	// 读取整个内容
 	r, err := rr.RangeRead(t.Ctx(), http_range.Range{Length: t.GetTotalBytes()})
 	if err != nil {
-		return errors.Wrap(err, "无法从URL读取数据")
+		return errs.Wrap(err, "无法从URL读取数据")
 	}
 
 	// 准备文件流
@@ -166,13 +167,13 @@ func TransferFromStd(ctx context.Context, tempDir, dstDirPath string, deletePoli
 	// 获取目标存储和实际路径
 	dstStorage, dstDirActualPath, err := op.GetStorageAndActualPath(dstDirPath)
 	if err != nil {
-		return errors.Wrap(err, "无法获取目标存储")
+		return errs.Wrap(err, "无法获取目标存储")
 	}
 
 	// 检查源目录是否存在
 	entries, err := os.ReadDir(tempDir)
 	if err != nil {
-		return errors.Wrap(err, "无法读取源目录")
+		return errs.Wrap(err, "无法读取源目录")
 	}
 
 	// 获取任务创建者
@@ -208,7 +209,7 @@ func (t *TransferTask) transferFromStdPath() error {
 	// 检查源文件或目录是否存在
 	info, err := os.Stat(t.SrcActualPath)
 	if err != nil {
-		return errors.Wrap(err, "无法获取源文件信息")
+		return errs.Wrap(err, "无法获取源文件信息")
 	}
 
 	// 如果是目录，为每个子项创建传输任务
@@ -220,7 +221,7 @@ func (t *TransferTask) transferFromStdPath() error {
 	t.Status = "源对象是目录，列出文件"
 	entries, err := os.ReadDir(t.SrcActualPath)
 	if err != nil {
-		return errors.Wrap(err, "无法读取源目录")
+		return errs.Wrap(err, "无法读取源目录")
 	}
 	dstDirActualPath := stdpath.Join(t.DstActualPath, info.Name())
 	task_group.TransferCoordinator.AppendPayload(t.groupID, task_group.DstPathToRefresh(dstDirActualPath))
@@ -259,14 +260,14 @@ func (t *TransferTask) transferStdFile() error {
 	// 打开源文件
 	rc, err := os.Open(t.SrcActualPath)
 	if err != nil {
-		return errors.Wrapf(err, "无法打开文件 %s", t.SrcActualPath)
+		return errs.Wrapf(err, "无法打开文件 %s", t.SrcActualPath)
 	}
 	defer rc.Close()
 
 	// 获取文件信息
 	info, err := rc.Stat()
 	if err != nil {
-		return errors.Wrapf(err, "无法获取文件信息 %s", t.SrcActualPath)
+		return errs.Wrapf(err, "无法获取文件信息 %s", t.SrcActualPath)
 	}
 
 	// 准备文件流
@@ -314,19 +315,19 @@ func TransferFromObj(ctx context.Context, tempDir, dstDirPath string, deletePoli
 	// 获取源存储和实际路径
 	srcStorage, srcObjActualPath, err := op.GetStorageAndActualPath(tempDir)
 	if err != nil {
-		return errors.Wrap(err, "无法获取源存储")
+		return errs.Wrap(err, "无法获取源存储")
 	}
 
 	// 获取目标存储和实际路径
 	dstStorage, dstDirActualPath, err := op.GetStorageAndActualPath(dstDirPath)
 	if err != nil {
-		return errors.Wrap(err, "无法获取目标存储")
+		return errs.Wrap(err, "无法获取目标存储")
 	}
 
 	// 列出源目录中的对象
 	objs, err := op.List(ctx, srcStorage, srcObjActualPath, model.ListArgs{})
 	if err != nil {
-		return errors.Wrapf(err, "无法列出源目录 [%s] 中的对象", tempDir)
+		return errs.Wrapf(err, "无法列出源目录 [%s] 中的对象", tempDir)
 	}
 
 	// 获取任务创建者
@@ -369,7 +370,7 @@ func (t *TransferTask) transferFromObjPath() error {
 	// 获取源对象
 	srcObj, err := op.Get(t.Ctx(), t.SrcStorage, t.SrcActualPath)
 	if err != nil {
-		return errors.Wrapf(err, "无法获取源对象 [%s]", t.SrcActualPath)
+		return errs.Wrapf(err, "无法获取源对象 [%s]", t.SrcActualPath)
 	}
 
 	// 如果是目录，为每个子对象创建传输任务
@@ -381,7 +382,7 @@ func (t *TransferTask) transferFromObjPath() error {
 	t.Status = "源对象是目录，列出对象"
 	objs, err := op.List(t.Ctx(), t.SrcStorage, t.SrcActualPath, model.ListArgs{})
 	if err != nil {
-		return errors.Wrapf(err, "无法列出源目录 [%s] 中的对象", t.SrcActualPath)
+		return errs.Wrapf(err, "无法列出源目录 [%s] 中的对象", t.SrcActualPath)
 	}
 
 	dstDirActualPath := stdpath.Join(t.DstActualPath, srcObj.GetName())
@@ -426,13 +427,13 @@ func (t *TransferTask) transferObjFile() error {
 	// 获取源文件
 	srcFile, err := op.Get(t.Ctx(), t.SrcStorage, t.SrcActualPath)
 	if err != nil {
-		return errors.Wrapf(err, "无法获取源文件 [%s]", t.SrcActualPath)
+		return errs.Wrapf(err, "无法获取源文件 [%s]", t.SrcActualPath)
 	}
 
 	// 获取文件链接
 	link, _, err := op.Link(t.Ctx(), t.SrcStorage, t.SrcActualPath, model.LinkArgs{})
 	if err != nil {
-		return errors.Wrapf(err, "无法获取源文件 [%s] 的链接", t.SrcActualPath)
+		return errs.Wrapf(err, "无法获取源文件 [%s] 的链接", t.SrcActualPath)
 	}
 	defer link.Close()
 
@@ -443,7 +444,7 @@ func (t *TransferTask) transferObjFile() error {
 		Ctx: t.Ctx(),
 	}, link)
 	if err != nil {
-		return errors.Wrapf(err, "无法为源文件 [%s] 创建流", t.SrcActualPath)
+		return errs.Wrapf(err, "无法为源文件 [%s] 创建流", t.SrcActualPath)
 	}
 
 	// 设置总字节数并上传

@@ -12,14 +12,14 @@ import (
 	"text/template"
 
 	"github.com/ProtonMail/go-crypto/openpgp"
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
-	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
@@ -49,16 +49,16 @@ func (d *Github) GetAddition() driver.Additional {
 func (d *Github) Init(ctx context.Context) error {
 	d.RootFolderPath = utils.FixAndCleanPath(d.RootFolderPath)
 	if d.CommitterName != "" && d.CommitterEmail == "" {
-		return errors.New("committer email is required")
+		return errs.New("committer email is required")
 	}
 	if d.CommitterName == "" && d.CommitterEmail != "" {
-		return errors.New("committer name is required")
+		return errs.New("committer name is required")
 	}
 	if d.AuthorName != "" && d.AuthorEmail == "" {
-		return errors.New("author email is required")
+		return errs.New("author email is required")
 	}
 	if d.AuthorName == "" && d.AuthorEmail != "" {
-		return errors.New("author name is required")
+		return errs.New("author name is required")
 	}
 	var err error
 	d.mkdirMsgTmpl, err = template.New("mkdirCommitMsgTemplate").Parse(d.MkdirCommitMsg)
@@ -146,7 +146,7 @@ func (d *Github) List(ctx context.Context, dir model.Obj, args model.ListArgs) (
 			return nil, err
 		}
 		if tree.Truncated {
-			return nil, errors.Errorf("tree %s is truncated", dir.GetPath())
+			return nil, errs.Errorf("tree %s is truncated", dir.GetPath())
 		}
 		ret := make([]model.Obj, 0, len(tree.Trees))
 		for _, t := range tree.Trees {
@@ -172,7 +172,7 @@ func (d *Github) Link(ctx context.Context, file model.Obj, args model.LinkArgs) 
 		return nil, err
 	}
 	if obj.Type == "submodule" {
-		return nil, errors.New("cannot download a submodule")
+		return nil, errs.New("cannot download a submodule")
 	}
 	url := obj.DownloadURL
 	ghProxy := strings.TrimSpace(d.Addition.GitHubProxy)
@@ -186,7 +186,7 @@ func (d *Github) Link(ctx context.Context, file model.Obj, args model.LinkArgs) 
 
 func (d *Github) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
 	if !d.isOnBranch {
-		return errors.New("cannot write to non-branch reference")
+		return errs.New("cannot write to non-branch reference")
 	}
 	d.commitMutex.Lock()
 	defer d.commitMutex.Unlock()
@@ -247,10 +247,10 @@ func (d *Github) MakeDir(ctx context.Context, parentDir model.Obj, dirName strin
 
 func (d *Github) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 	if !d.isOnBranch {
-		return errors.New("cannot write to non-branch reference")
+		return errs.New("cannot write to non-branch reference")
 	}
 	if strings.HasPrefix(dstDir.GetPath(), srcObj.GetPath()) {
-		return errors.New("cannot move parent dir to child")
+		return errs.New("cannot move parent dir to child")
 	}
 	d.commitMutex.Lock()
 	defer d.commitMutex.Unlock()
@@ -308,7 +308,7 @@ func (d *Github) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 		for _, t := range srcParentTree.Trees {
 			if t.Path == srcObj.GetName() {
 				if t.Type == "commit" {
-					return errors.New("cannot move a submodule")
+					return errs.New("cannot move a submodule")
 				}
 				src = &t.TreeObjReq
 				break
@@ -340,7 +340,7 @@ func (d *Github) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 		}
 		srcNextName, _, ok := strings.Cut(srcRest, "/")
 		if !ok { // /aa/1 -> /aa/
-			return errors.New("cannot move in place")
+			return errs.New("cannot move in place")
 		}
 		srcNextPath := stdpath.Join(dstDir.GetPath(), srcNextName)
 		srcNextTreeSha, err := d.renewParentTrees(srcParentPath, srcParentOldSha, srcParentNewSha, srcNextPath)
@@ -471,7 +471,7 @@ func (d *Github) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 
 func (d *Github) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
 	if !d.isOnBranch {
-		return errors.New("cannot write to non-branch reference")
+		return errs.New("cannot write to non-branch reference")
 	}
 	d.commitMutex.Lock()
 	defer d.commitMutex.Unlock()
@@ -485,7 +485,7 @@ func (d *Github) Rename(ctx context.Context, srcObj model.Obj, newName string) e
 	for _, t := range tree.Trees {
 		if t.Path == srcObj.GetName() {
 			if t.Type == "commit" {
-				return errors.New("cannot rename a submodule")
+				return errs.New("cannot rename a submodule")
 			}
 			delCopy := t.TreeObjReq
 			delCopy.Sha = nil
@@ -524,10 +524,10 @@ func (d *Github) Rename(ctx context.Context, srcObj model.Obj, newName string) e
 
 func (d *Github) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 	if !d.isOnBranch {
-		return errors.New("cannot write to non-branch reference")
+		return errs.New("cannot write to non-branch reference")
 	}
 	if strings.HasPrefix(dstDir.GetPath(), srcObj.GetPath()) {
-		return errors.New("cannot copy parent dir to child")
+		return errs.New("cannot copy parent dir to child")
 	}
 	d.commitMutex.Lock()
 	defer d.commitMutex.Unlock()
@@ -557,7 +557,7 @@ func (d *Github) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 
 func (d *Github) Remove(ctx context.Context, obj model.Obj) error {
 	if !d.isOnBranch {
-		return errors.New("cannot write to non-branch reference")
+		return errs.New("cannot write to non-branch reference")
 	}
 	d.commitMutex.Lock()
 	defer d.commitMutex.Unlock()
@@ -570,7 +570,7 @@ func (d *Github) Remove(ctx context.Context, obj model.Obj) error {
 	for _, t := range tree.Trees {
 		if t.Path == obj.GetName() {
 			if t.Type == "commit" {
-				return errors.New("cannot remove a submodule")
+				return errs.New("cannot remove a submodule")
 			}
 			del = &t.TreeObjReq
 			del.Sha = nil
@@ -613,7 +613,7 @@ func (d *Github) Remove(ctx context.Context, obj model.Obj) error {
 
 func (d *Github) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
 	if !d.isOnBranch {
-		return errors.New("cannot write to non-branch reference")
+		return errs.New("cannot write to non-branch reference")
 	}
 	blob, err := d.putBlob(ctx, stream, up)
 	if err != nil {
@@ -733,9 +733,9 @@ func (d *Github) putBlob(ctx context.Context, s model.FileStreamer, up driver.Up
 	if res.StatusCode != 201 {
 		var errMsg ErrResp
 		if err = utils.JSONTool.Unmarshal(resBody, &errMsg); err != nil {
-			return "", errors.New(res.Status)
+			return "", errs.New(res.Status)
 		} else {
-			return "", errors.Errorf("%s: %s", res.Status, errMsg.Message)
+			return "", errs.Errorf("%s: %s", res.Status, errMsg.Message)
 		}
 	}
 	var resp PutBlobResp
@@ -793,14 +793,14 @@ func (d *Github) getTreeDirectly(path string) (*TreeResp, string, error) {
 		return nil, "", err
 	}
 	if p.Entries == nil {
-		return nil, "", errors.Errorf("%s is not a folder", path)
+		return nil, "", errs.Errorf("%s is not a folder", path)
 	}
 	tree, err := d.getTree(p.Sha)
 	if err != nil {
 		return nil, "", err
 	}
 	if tree.Truncated {
-		return nil, "", errors.Errorf("tree %s is truncated", path)
+		return nil, "", errs.Errorf("tree %s is truncated", path)
 	}
 	return tree, p.Sha, nil
 }
@@ -901,7 +901,7 @@ func (d *Github) copyWithoutRenewTree(srcObj, dstDir model.Obj) (dstSha, newSha,
 	for _, t := range srcParentTree.Trees {
 		if t.Path == srcObj.GetName() {
 			if t.Type == "commit" {
-				return "", "", "", nil, errors.New("cannot copy a submodule")
+				return "", "", "", nil, errs.New("cannot copy a submodule")
 			}
 			src = &t.TreeObjReq
 			break

@@ -4,7 +4,8 @@ import (
 	"time"
 
 	"github.com/meilisearch/meilisearch-go"
-	"github.com/pkg/errors"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/internal/conf"
 	"github.com/dongdio/OpenList/v4/internal/model"
@@ -21,7 +22,7 @@ func init() {
 	searcher2.RegisterSearcher(config, func() (searcher2.Searcher, error) {
 		indexUid := conf.Conf.Meilisearch.Index
 		if len(indexUid) == 0 {
-			return nil, errors.New("index is blank")
+			return nil, errs.New("index is blank")
 		}
 		m := Meilisearch{
 			Client: meilisearch.New(
@@ -37,7 +38,7 @@ func init() {
 		_, err := m.Client.GetIndex(m.IndexUid)
 		if err != nil {
 			var mErr *meilisearch.Error
-			ok := errors.As(err, &mErr)
+			ok := errs.As(err, &mErr)
 			if ok && mErr.MeilisearchApiError.Code == "index_not_found" {
 				task, err := m.Client.CreateIndex(&meilisearch.IndexConfig{
 					Uid:        m.IndexUid,
@@ -51,7 +52,7 @@ func init() {
 					return nil, err
 				}
 				if forTask.Status != meilisearch.TaskStatusSucceeded {
-					return nil, errors.Errorf("index creation failed, task status is %s", forTask.Status)
+					return nil, errs.Errorf("index creation failed, task status is %s", forTask.Status)
 				}
 			} else {
 				return nil, err

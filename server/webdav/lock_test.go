@@ -15,7 +15,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pkg/errors"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 )
 
 func TestWalkToRoot(t *testing.T) {
@@ -546,30 +546,30 @@ func (m *memLS) consistent() error {
 	if len(m.byName) > 0 {
 		n := m.byName["/"]
 		if n == nil {
-			return errors.Errorf(`non-empty m.byName does not contain the root "/"`)
+			return errs.Errorf(`non-empty m.byName does not contain the root "/"`)
 		}
 		if n.refCount != len(m.byToken) {
-			return errors.Errorf("root node refCount=%d, differs from len(m.byToken)=%d", n.refCount, len(m.byToken))
+			return errs.Errorf("root node refCount=%d, differs from len(m.byToken)=%d", n.refCount, len(m.byToken))
 		}
 	}
 
 	for name, n := range m.byName {
 		// The map keys should be consistent with the node's copy of the key.
 		if n.details.Root != name {
-			return errors.Errorf("node name %q != byName map key %q", n.details.Root, name)
+			return errs.Errorf("node name %q != byName map key %q", n.details.Root, name)
 		}
 
 		// A name must be clean, and start with a "/".
 		if len(name) == 0 || name[0] != '/' {
-			return errors.Errorf(`node name %q does not start with "/"`, name)
+			return errs.Errorf(`node name %q does not start with "/"`, name)
 		}
 		if name != path.Clean(name) {
-			return errors.Errorf(`node name %q is not clean`, name)
+			return errs.Errorf(`node name %q is not clean`, name)
 		}
 
 		// A node's refCount should be positive.
 		if n.refCount <= 0 {
-			return errors.Errorf("non-positive refCount for node at name %q", name)
+			return errs.Errorf("non-positive refCount for node at name %q", name)
 		}
 
 		// A node's refCount should be the number of self-or-descendents that
@@ -586,24 +586,24 @@ func (m *memLS) consistent() error {
 		}
 		if n.refCount != len(list) {
 			sort.Strings(list)
-			return errors.Errorf("node at name %q has refCount %d but locked self-or-descendents are %q (len=%d)",
+			return errs.Errorf("node at name %q has refCount %d but locked self-or-descendents are %q (len=%d)",
 				name, n.refCount, list, len(list))
 		}
 
 		// A node n is in m.byToken if it has a non-empty token.
 		if n.token != "" {
 			if _, ok := m.byToken[n.token]; !ok {
-				return errors.Errorf("node at name %q has token %q but not in m.byToken", name, n.token)
+				return errs.Errorf("node at name %q has token %q but not in m.byToken", name, n.token)
 			}
 		}
 
 		// A node n is in m.byExpiry if it has a non-negative byExpiryIndex.
 		if n.byExpiryIndex >= 0 {
 			if n.byExpiryIndex >= len(m.byExpiry) {
-				return errors.Errorf("node at name %q has byExpiryIndex %d but m.byExpiry has length %d", name, n.byExpiryIndex, len(m.byExpiry))
+				return errs.Errorf("node at name %q has byExpiryIndex %d but m.byExpiry has length %d", name, n.byExpiryIndex, len(m.byExpiry))
 			}
 			if n != m.byExpiry[n.byExpiryIndex] {
-				return errors.Errorf("node at name %q has byExpiryIndex %d but that indexes a different node", name, n.byExpiryIndex)
+				return errs.Errorf("node at name %q has byExpiryIndex %d but that indexes a different node", name, n.byExpiryIndex)
 			}
 		}
 	}
@@ -611,29 +611,29 @@ func (m *memLS) consistent() error {
 	for token, n := range m.byToken {
 		// The map keys should be consistent with the node's copy of the key.
 		if n.token != token {
-			return errors.Errorf("node token %q != byToken map key %q", n.token, token)
+			return errs.Errorf("node token %q != byToken map key %q", n.token, token)
 		}
 
 		// Every node in m.byToken is in m.byName.
 		if _, ok := m.byName[n.details.Root]; !ok {
-			return errors.Errorf("node at name %q in m.byToken but not in m.byName", n.details.Root)
+			return errs.Errorf("node at name %q in m.byToken but not in m.byName", n.details.Root)
 		}
 	}
 
 	for i, n := range m.byExpiry {
 		// The slice indices should be consistent with the node's copy of the index.
 		if n.byExpiryIndex != i {
-			return errors.Errorf("node byExpiryIndex %d != byExpiry slice index %d", n.byExpiryIndex, i)
+			return errs.Errorf("node byExpiryIndex %d != byExpiry slice index %d", n.byExpiryIndex, i)
 		}
 
 		// Every node in m.byExpiry is in m.byName.
 		if _, ok := m.byName[n.details.Root]; !ok {
-			return errors.Errorf("node at name %q in m.byExpiry but not in m.byName", n.details.Root)
+			return errs.Errorf("node at name %q in m.byExpiry but not in m.byName", n.details.Root)
 		}
 
 		// No node in m.byExpiry should be held.
 		if n.held {
-			return errors.Errorf("node at name %q in m.byExpiry is held", n.details.Root)
+			return errs.Errorf("node at name %q in m.byExpiry is held", n.details.Root)
 		}
 	}
 	return nil

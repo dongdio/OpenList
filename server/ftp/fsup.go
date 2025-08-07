@@ -10,7 +10,8 @@ import (
 	"time"
 
 	ftpserver "github.com/fclairamb/ftpserverlib"
-	"github.com/pkg/errors"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/conf"
@@ -18,7 +19,6 @@ import (
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
 	"github.com/dongdio/OpenList/v4/server/common"
-	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/stream"
 )
 
@@ -44,7 +44,7 @@ func uploadAuth(ctx context.Context, path string) error {
 	// 获取目录的元数据
 	meta, err := op.GetNearestMeta(stdpath.Dir(path))
 	if err != nil {
-		if !errors.Is(errors.Cause(err), errs.MetaNotFound) {
+		if !errs.Is(errs.Cause(err), errs.MetaNotFound) {
 			return err
 		}
 		// 元数据不存在时继续，使用nil元数据

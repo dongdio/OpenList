@@ -2,7 +2,6 @@ package misskey
 
 import (
 	"context"
-	"errors"
 	"io"
 	"net/http"
 	"time"
@@ -40,7 +39,7 @@ func (d *Misskey) request(path, method string, callback base.ReqCallback, resp a
 		return err
 	}
 	if !response.IsSuccess() {
-		return errors.New(response.String())
+		return errs.New(response.String())
 	}
 	return nil
 }
@@ -215,7 +214,7 @@ func (d *Misskey) put(ctx context.Context, dstDir model.Obj, stream model.FileSt
 		return nil, err
 	}
 	if !resp.IsSuccess() {
-		return nil, errors.New(resp.String())
+		return nil, errs.New(resp.String())
 	}
 
 	return mFile2Object(file), nil

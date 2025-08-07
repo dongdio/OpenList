@@ -7,14 +7,14 @@ import (
 	"time"
 
 	"github.com/OpenListTeam/rateg"
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
-	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
@@ -58,11 +58,11 @@ func (d *AliyundriveOpen) Init(ctx context.Context) error {
 	// 获取驱动ID
 	res, err := d.request("/adrive/v1.0/user/getDriveInfo", http.MethodPost, nil)
 	if err != nil {
-		return errors.Wrap(err, "获取驱动信息失败")
+		return errs.Wrap(err, "获取驱动信息失败")
 	}
 	d.DriveID = utils.GetBytes(res, d.DriveType+"_drive_id").String()
 	if d.DriveID == "" {
-		return errors.Errorf("获取驱动ID失败，请确认驱动类型[%s]是否正确", d.DriveType)
+		return errs.Errorf("获取驱动ID失败，请确认驱动类型[%s]是否正确", d.DriveType)
 	}
 
 	// 设置限流
@@ -112,13 +112,13 @@ func (d *AliyundriveOpen) GetRoot(ctx context.Context) (model.Obj, error) {
 // 实现 driver.Driver 接口
 func (d *AliyundriveOpen) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
 	if d.limitList == nil {
-		return nil, errors.New("驱动未初始化")
+		return nil, errs.New("驱动未初始化")
 	}
 
 	// 获取文件列表
 	files, err := d.getFiles(ctx, dir.GetID())
 	if err != nil {
-		return nil, errors.Wrap(err, "获取文件列表失败")
+		return nil, errs.Wrap(err, "获取文件列表失败")
 	}
 
 	// 转换为通用对象
@@ -144,7 +144,7 @@ func (d *AliyundriveOpen) link(ctx context.Context, file model.Obj) (*model.Link
 		})
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "获取下载链接失败")
+		return nil, errs.Wrap(err, "获取下载链接失败")
 	}
 
 	// 获取下载URL
@@ -154,10 +154,10 @@ func (d *AliyundriveOpen) link(ctx context.Context, file model.Obj) (*model.Link
 		if utils.Ext(file.GetName()) == "livp" {
 			url = utils.GetBytes(res, "streamsUrl", d.LIVPDownloadFormat).String()
 			if url == "" {
-				return nil, errors.Errorf("获取LIVP文件下载URL失败: %s", string(res))
+				return nil, errs.Errorf("获取LIVP文件下载URL失败: %s", string(res))
 			}
 		} else {
-			return nil, errors.Errorf("获取下载URL失败: %s", string(res))
+			return nil, errs.Errorf("获取下载URL失败: %s", string(res))
 		}
 	}
 	exp := time.Minute * 60 // 设置缓存时间为60分钟
@@ -171,7 +171,7 @@ func (d *AliyundriveOpen) link(ctx context.Context, file model.Obj) (*model.Link
 // 实现 driver.Driver 接口
 func (d *AliyundriveOpen) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	if d.limitLink == nil {
-		return nil, errors.New("驱动未初始化")
+		return nil, errs.New("驱动未初始化")
 	}
 	return d.limitLink(ctx, file)
 }
@@ -193,7 +193,7 @@ func (d *AliyundriveOpen) MakeDir(ctx context.Context, parentDir model.Obj, dirN
 		}).SetResult(&newDir)
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "创建目录失败")
+		return nil, errs.Wrap(err, "创建目录失败")
 	}
 
 	obj := fileToObj(newDir)
@@ -224,7 +224,7 @@ func (d *AliyundriveOpen) Move(ctx context.Context, srcObj, dstDir model.Obj) (m
 		}).SetResult(&resp)
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "移动文件失败")
+		return nil, errs.Wrap(err, "移动文件失败")
 	}
 
 	// 更新对象信息
@@ -240,7 +240,7 @@ func (d *AliyundriveOpen) Move(ctx context.Context, srcObj, dstDir model.Obj) (m
 		}
 		return srcObj, nil
 	}
-	return nil, errors.New("无法转换源对象类型")
+	return nil, errs.New("无法转换源对象类型")
 }
 
 // Rename 重命名文件/目录
@@ -257,7 +257,7 @@ func (d *AliyundriveOpen) Rename(ctx context.Context, srcObj model.Obj, newName 
 		}).SetResult(&newFile)
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "重命名文件失败")
+		return nil, errs.Wrap(err, "重命名文件失败")
 	}
 
 	// 检查父目录中是否有重复文件
@@ -294,7 +294,7 @@ func (d *AliyundriveOpen) Copy(ctx context.Context, srcObj, dstDir model.Obj) er
 		}).SetResult(&resp)
 	})
 	if err != nil {
-		return errors.Wrap(err, "复制文件失败")
+		return errs.Wrap(err, "复制文件失败")
 	}
 
 	// 检查目标目录中是否有重复文件
@@ -323,7 +323,7 @@ func (d *AliyundriveOpen) Remove(ctx context.Context, obj model.Obj) error {
 		})
 	})
 	if err != nil {
-		return errors.Wrap(err, "删除文件失败")
+		return errs.Wrap(err, "删除文件失败")
 	}
 	return nil
 }
@@ -334,7 +334,7 @@ func (d *AliyundriveOpen) Put(ctx context.Context, dstDir model.Obj, stream mode
 	// 上传文件
 	obj, err := d.upload(ctx, dstDir, stream, up)
 	if err != nil {
-		return nil, errors.Wrap(err, "上传文件失败")
+		return nil, errs.Wrap(err, "上传文件失败")
 	}
 
 	// 设置正确的路径
@@ -374,7 +374,7 @@ func (d *AliyundriveOpen) Other(ctx context.Context, args model.OtherArgs) (any,
 		req.SetBody(data).SetResult(&resp)
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "处理其他操作失败")
+		return nil, errs.Wrap(err, "处理其他操作失败")
 	}
 	return resp, nil
 }

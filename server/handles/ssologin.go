@@ -12,10 +12,11 @@ import (
 	"github.com/OpenListTeam/go-cache"
 	"github.com/coreos/go-oidc"
 	"github.com/gin-gonic/gin"
-	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 	"gorm.io/gorm"
 	"resty.dev/v3"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/db"
@@ -175,13 +176,13 @@ func GetOIDCClient(c *gin.Context, useCompatibility bool, redirectUri, method st
 	// 获取OIDC配置
 	endpoint := setting.GetStr(consts.SSOEndpointName)
 	if endpoint == "" {
-		return nil, errors.New("OIDC endpoint not configured")
+		return nil, errs.New("OIDC endpoint not configured")
 	}
 
 	// 创建OIDC提供者
 	provider, err := oidc.NewProvider(c, endpoint)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to create OIDC provider")
+		return nil, errs.Wrap(err, "failed to create OIDC provider")
 	}
 
 	// 获取客户端配置
@@ -208,13 +209,13 @@ func GetOIDCClient(c *gin.Context, useCompatibility bool, redirectUri, method st
 // 当用户不存在且启用了自动注册时，创建新用户
 func autoRegister(username, userID string, err error) (*model.User, error) {
 	// 如果错误不是"记录未找到"或者未启用自动注册，则返回错误
-	if !errors.Is(err, gorm.ErrRecordNotFound) || !setting.GetBool(consts.SSOAutoRegister) {
+	if !errs.Is(err, gorm.ErrRecordNotFound) || !setting.GetBool(consts.SSOAutoRegister) {
 		return nil, err
 	}
 
 	// 验证用户名
 	if username == "" {
-		return nil, errors.New("cannot get username from SSO provider")
+		return nil, errs.New("cannot get username from SSO provider")
 	}
 
 	// 创建新用户
@@ -250,13 +251,13 @@ func parseJWT(p string) ([]byte, error) {
 	// 分割JWT令牌
 	parts := strings.Split(p, ".")
 	if len(parts) < 2 {
-		return nil, errors.Errorf("oidc: malformed jwt, expected 3 parts got %d", len(parts))
+		return nil, errs.Errorf("oidc: malformed jwt, expected 3 parts got %d", len(parts))
 	}
 
 	// 解码载荷部分
 	payload, err := base64.RawURLEncoding.DecodeString(parts[1])
 	if err != nil {
-		return nil, errors.Wrap(err, "oidc: malformed jwt payload")
+		return nil, errs.Wrap(err, "oidc: malformed jwt payload")
 	}
 
 	return payload, nil
@@ -538,7 +539,7 @@ func SSOLoginCallback(c *gin.Context) {
 	}
 
 	if err != nil {
-		common.ErrorResp(c, errors.Wrap(err, "failed to exchange token"), 400)
+		common.ErrorResp(c, errs.Wrap(err, "failed to exchange token"), 400)
 		return
 	}
 
@@ -570,7 +571,7 @@ func SSOLoginCallback(c *gin.Context) {
 	}
 
 	if err != nil {
-		common.ErrorResp(c, errors.Wrap(err, "failed to get user info"), 400)
+		common.ErrorResp(c, errs.Wrap(err, "failed to get user info"), 400)
 		return
 	}
 

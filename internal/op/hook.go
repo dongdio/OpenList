@@ -5,8 +5,9 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/conf"
@@ -85,7 +86,7 @@ var settingItemHooks = map[string]SettingItemHook{
 
 			reg, err := regexp.Compile(regStr)
 			if err != nil {
-				return errors.Wrapf(err, "invalid regex pattern: %s", regStr)
+				return errs.Wrapf(err, "invalid regex pattern: %s", regStr)
 			}
 			regs = append(regs, reg)
 		}
@@ -98,7 +99,7 @@ var settingItemHooks = map[string]SettingItemHook{
 	consts.FilenameCharMapping: func(item *model.SettingItem) error {
 		err := utils.JSONTool.UnmarshalFromString(item.Value, &conf.FilenameCharMap)
 		if err != nil {
-			return errors.Wrap(err, "failed to parse filename character mapping")
+			return errs.Wrap(err, "failed to parse filename character mapping")
 		}
 		log.Debugf("filename char mapping: %+v", conf.FilenameCharMap)
 		return nil
@@ -130,7 +131,7 @@ func RegisterSettingItemHook(key string, hook SettingItemHook) {
 //   - err: any error that occurred during hook execution
 func HandleSettingItemHook(item *model.SettingItem) (hasHook bool, err error) {
 	if item == nil {
-		return false, errors.New("cannot handle nil setting item")
+		return false, errs.New("cannot handle nil setting item")
 	}
 
 	hook, ok := settingItemHooks[item.Key]

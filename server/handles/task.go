@@ -149,17 +149,17 @@ func getBatchHandler[T task2.TaskExtensionInfo](manager task2.Manager[T], callba
 		}
 
 		// 处理每个任务
-		errors := make(map[string]string)
+		errs := make(map[string]string)
 		for _, taskID := range taskIDs {
 			task, ok := manager.GetByID(taskID)
 			if !ok || (!isAdmin && (task.GetCreator() == nil || uid != task.GetCreator().ID)) {
-				errors[taskID] = "task not found"
+				errs[taskID] = "task not found"
 				continue
 			}
 			callback(task)
 		}
 
-		common.SuccessResp(c, errors)
+		common.SuccessResp(c, errs)
 	}
 }
 

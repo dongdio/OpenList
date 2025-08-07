@@ -18,12 +18,13 @@ import (
 	pubUserFile "github.com/city404/v6-public-rpc-proto/go/v6/userfile"
 	"github.com/google/uuid"
 	"github.com/ipfs/go-cid"
-	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/utility/utils"
@@ -43,7 +44,7 @@ const (
 func (d *HalalCloud) NewAuthServiceWithOauth(options ...HalalOption) (*AuthService, error) {
 
 	aService := &AuthService{}
-	err2 := errors.New("")
+	err2 := errs.New("")
 
 	svc := d.HalalCommon.AuthService
 	for _, opt := range options {
@@ -81,7 +82,7 @@ func (d *HalalCloud) NewAuthServiceWithOauth(options ...HalalOption) (*AuthServi
 
 	if oauthToken.Url != "" {
 
-		return nil, errors.Errorf(`need verify: <a target="_blank" href="%s">Click Here</a>`, oauthToken.Url)
+		return nil, errs.Errorf(`need verify: <a target="_blank" href="%s">Click Here</a>`, oauthToken.Url)
 	}
 
 	return aService, err2
@@ -221,7 +222,7 @@ type Common struct {
 func getRawFiles(addr *pubUserFile.SliceDownloadInfo) ([]byte, error) {
 
 	if addr == nil {
-		return nil, errors.New("addr is nil")
+		return nil, errs.New("addr is nil")
 	}
 
 	client := http.Client{
@@ -238,7 +239,7 @@ func getRawFiles(addr *pubUserFile.SliceDownloadInfo) ([]byte, error) {
 		return nil, err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return nil, errors.Errorf("bad status: %s, body: %s", resp.Status, body)
+		return nil, errs.Errorf("bad status: %s, body: %s", resp.Status, body)
 	}
 
 	if addr.Encrypt > 0 {
@@ -259,7 +260,7 @@ func getRawFiles(addr *pubUserFile.SliceDownloadInfo) ([]byte, error) {
 			return nil, err
 		}
 		if !checkCid.Equals(sourceCid) {
-			return nil, errors.Errorf("bad cid: %s, body: %s", checkCid.String(), body)
+			return nil, errs.Errorf("bad cid: %s, body: %s", checkCid.String(), body)
 		}
 	}
 
@@ -303,7 +304,7 @@ func (oo *openObject) Read(p []byte) (n int, err error) {
 	oo.mu.Lock()
 	defer oo.mu.Unlock()
 	if oo.closed {
-		return 0, errors.Errorf("read on closed file")
+		return 0, errs.Errorf("read on closed file")
 	}
 	// Skip data at the start if requested
 	for oo.skip > 0 {
@@ -336,7 +337,7 @@ func (oo *openObject) Read(p []byte) (n int, err error) {
 	return n, nil
 }
 
-// Close closed the file - MAC errors are reported here
+// Close closed the file - MAC errs are reported here
 func (oo *openObject) Close() (err error) {
 	oo.mu.Lock()
 	defer oo.mu.Unlock()
@@ -345,7 +346,7 @@ func (oo *openObject) Close() (err error) {
 	}
 	// 校验Sha1
 	if string(oo.shaTemp.Sum(nil)) != oo.sha {
-		return errors.Wrap(err, "failed to finish download")
+		return errs.Wrap(err, "failed to finish download")
 	}
 
 	oo.closed = true
@@ -379,7 +380,7 @@ func getChunkSizes(sliceSize []*pubUserFile.SliceSize) (chunks []chunkSize) {
 
 func (oo *openObject) ChunkLocation(id int) (position int64, size int, err error) {
 	if id < 0 || id >= len(*oo.chunks) {
-		return 0, 0, errors.New("invalid arguments")
+		return 0, 0, errs.New("invalid arguments")
 	}
 
 	return (*oo.chunks)[id].position, (*oo.chunks)[id].size, nil

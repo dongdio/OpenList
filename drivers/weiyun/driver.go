@@ -11,8 +11,9 @@ import (
 
 	"github.com/avast/retry-go"
 	weiyunsdkgo "github.com/foxxorcat/weiyun-sdk-go"
-	"github.com/pkg/errors"
 	"github.com/robfig/cron/v3"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/global"
@@ -20,7 +21,6 @@ import (
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
 	"github.com/dongdio/OpenList/v4/utility/errgroup"
-	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
@@ -92,7 +92,7 @@ func (d *WeiYun) Init(ctx context.Context) error {
 		return err
 	}
 	if len(folders) == 0 {
-		return errors.Errorf("invalid directory ID")
+		return errs.Errorf("invalid directory ID")
 	}
 
 	folder := folders[len(folders)-1]

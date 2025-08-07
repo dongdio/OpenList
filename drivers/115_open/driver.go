@@ -8,8 +8,9 @@ import (
 	"time"
 
 	sdk "github.com/OpenListTeam/115-sdk-go"
-	"github.com/pkg/errors"
 	"golang.org/x/time/rate"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/global"
@@ -64,7 +65,7 @@ func (d *Open115) Init(ctx context.Context) error {
 	// 测试API连接，获取用户信息
 	_, err := d.client.UserInfo(ctx)
 	if err != nil {
-		return errors.Wrap(err, "初始化115开放平台客户端失败")
+		return errs.Wrap(err, "初始化115开放平台客户端失败")
 	}
 
 	// 如果设置了速率限制，初始化限制器
@@ -102,7 +103,7 @@ func (d *Open115) List(ctx context.Context, dir model.Obj, args model.ListArgs) 
 	for {
 		// 等待请求限制
 		if err := d.WaitLimit(ctx); err != nil {
-			return nil, errors.Wrap(err, "等待请求限制时被中断")
+			return nil, errs.Wrap(err, "等待请求限制时被中断")
 		}
 
 		// 构建获取文件列表请求
@@ -116,7 +117,7 @@ func (d *Open115) List(ctx context.Context, dir model.Obj, args model.ListArgs) 
 		})
 
 		if err != nil {
-			return nil, errors.Wrap(err, "获取文件列表失败")
+			return nil, errs.Wrap(err, "获取文件列表失败")
 		}
 
 		// 转换文件列表为模型对象
@@ -142,7 +143,7 @@ func (d *Open115) List(ctx context.Context, dir model.Obj, args model.ListArgs) 
 func (d *Open115) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	// 等待请求限制
 	if err := d.WaitLimit(ctx); err != nil {
-		return nil, errors.Wrap(err, "等待请求限制时被中断")
+		return nil, errs.Wrap(err, "等待请求限制时被中断")
 	}
 
 	// 获取用户代理
@@ -157,7 +158,7 @@ func (d *Open115) Link(ctx context.Context, file model.Obj, args model.LinkArgs)
 	// 类型断言为115对象
 	obj, ok := file.(*Obj)
 	if !ok {
-		return nil, errors.New("无法将对象转换为115开放平台文件对象")
+		return nil, errs.New("无法将对象转换为115开放平台文件对象")
 	}
 
 	// 获取提取码
@@ -166,13 +167,13 @@ func (d *Open115) Link(ctx context.Context, file model.Obj, args model.LinkArgs)
 	// 获取下载URL
 	resp, err := d.client.DownURL(ctx, pickCode, userAgent)
 	if err != nil {
-		return nil, errors.Wrap(err, "获取下载URL失败")
+		return nil, errs.Wrap(err, "获取下载URL失败")
 	}
 
 	// 从响应中获取URL
 	downloadInfo, ok := resp[obj.GetID()]
 	if !ok {
-		return nil, errors.Errorf("无法获取文件[%s]的下载链接", obj.GetID())
+		return nil, errs.Errorf("无法获取文件[%s]的下载链接", obj.GetID())
 	}
 
 	// 构建链接
@@ -206,13 +207,13 @@ func (d *Open115) GetObjInfo(ctx context.Context, path string) (model.Obj, error
 func (d *Open115) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) (model.Obj, error) {
 	// 等待请求限制
 	if err := d.WaitLimit(ctx); err != nil {
-		return nil, errors.Wrap(err, "等待请求限制时被中断")
+		return nil, errs.Wrap(err, "等待请求限制时被中断")
 	}
 
 	// 创建目录
 	resp, err := d.client.Mkdir(ctx, parentDir.GetID(), dirName)
 	if err != nil {
-		return nil, errors.Wrap(err, "创建目录失败")
+		return nil, errs.Wrap(err, "创建目录失败")
 	}
 
 	// 构建目录对象
@@ -233,7 +234,7 @@ func (d *Open115) MakeDir(ctx context.Context, parentDir model.Obj, dirName stri
 func (d *Open115) Move(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj, error) {
 	// 等待请求限制
 	if err := d.WaitLimit(ctx); err != nil {
-		return nil, errors.Wrap(err, "等待请求限制时被中断")
+		return nil, errs.Wrap(err, "等待请求限制时被中断")
 	}
 
 	// 执行移动操作
@@ -243,7 +244,7 @@ func (d *Open115) Move(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj
 	})
 
 	if err != nil {
-		return nil, errors.Wrap(err, "移动文件失败")
+		return nil, errs.Wrap(err, "移动文件失败")
 	}
 
 	return srcObj, nil
@@ -254,7 +255,7 @@ func (d *Open115) Move(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj
 func (d *Open115) Rename(ctx context.Context, srcObj model.Obj, newName string) (model.Obj, error) {
 	// 等待请求限制
 	if err := d.WaitLimit(ctx); err != nil {
-		return nil, errors.Wrap(err, "等待请求限制时被中断")
+		return nil, errs.Wrap(err, "等待请求限制时被中断")
 	}
 
 	// 执行重命名操作
@@ -264,7 +265,7 @@ func (d *Open115) Rename(ctx context.Context, srcObj model.Obj, newName string) 
 	})
 
 	if err != nil {
-		return nil, errors.Wrap(err, "重命名文件失败")
+		return nil, errs.Wrap(err, "重命名文件失败")
 	}
 
 	// 更新对象的文件名
@@ -281,7 +282,7 @@ func (d *Open115) Rename(ctx context.Context, srcObj model.Obj, newName string) 
 func (d *Open115) Copy(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj, error) {
 	// 等待请求限制
 	if err := d.WaitLimit(ctx); err != nil {
-		return nil, errors.Wrap(err, "等待请求限制时被中断")
+		return nil, errs.Wrap(err, "等待请求限制时被中断")
 	}
 
 	// 执行复制操作
@@ -292,7 +293,7 @@ func (d *Open115) Copy(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj
 	})
 
 	if err != nil {
-		return nil, errors.Wrap(err, "复制文件失败")
+		return nil, errs.Wrap(err, "复制文件失败")
 	}
 
 	return srcObj, nil
@@ -303,13 +304,13 @@ func (d *Open115) Copy(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj
 func (d *Open115) Remove(ctx context.Context, obj model.Obj) error {
 	// 等待请求限制
 	if err := d.WaitLimit(ctx); err != nil {
-		return errors.Wrap(err, "等待请求限制时被中断")
+		return errs.Wrap(err, "等待请求限制时被中断")
 	}
 
 	// 类型断言为115对象
 	fileObj, ok := obj.(*Obj)
 	if !ok {
-		return errors.New("无法将对象转换为115开放平台文件对象")
+		return errs.New("无法将对象转换为115开放平台文件对象")
 	}
 
 	// 执行删除操作
@@ -319,7 +320,7 @@ func (d *Open115) Remove(ctx context.Context, obj model.Obj) error {
 	})
 
 	if err != nil {
-		return errors.Wrap(err, "删除文件失败")
+		return errs.Wrap(err, "删除文件失败")
 	}
 
 	return nil
@@ -331,7 +332,7 @@ func (d *Open115) Put(ctx context.Context, dstDir model.Obj, file model.FileStre
 	// 等待请求限制
 	err := d.WaitLimit(ctx)
 	if err != nil {
-		return errors.Wrap(err, "等待请求限制时被中断")
+		return errs.Wrap(err, "等待请求限制时被中断")
 	}
 
 	// 获取文件SHA1哈希
@@ -343,7 +344,7 @@ func (d *Open115) Put(ctx context.Context, dstDir model.Obj, file model.FileStre
 		_, sha1, err = stream.CacheFullInTempFileAndHash(file, cacheFileProgress, utils.SHA1)
 
 		if err != nil {
-			return errors.Wrap(err, "计算文件SHA1哈希失败")
+			return errs.Wrap(err, "计算文件SHA1哈希失败")
 		}
 	}
 
@@ -353,12 +354,12 @@ func (d *Open115) Put(ctx context.Context, dstDir model.Obj, file model.FileStre
 
 	reader, err := file.RangeRead(http_range.Range{Start: 0, Length: hashSize})
 	if err != nil {
-		return errors.Wrap(err, "读取文件前部分失败")
+		return errs.Wrap(err, "读取文件前部分失败")
 	}
 
 	sha1128k, err := utils.HashReader(utils.SHA1, reader)
 	if err != nil {
-		return errors.Wrap(err, "计算文件预哈希失败")
+		return errs.Wrap(err, "计算文件预哈希失败")
 	}
 
 	// 1. 初始化上传
@@ -371,7 +372,7 @@ func (d *Open115) Put(ctx context.Context, dstDir model.Obj, file model.FileStre
 	})
 
 	if err != nil {
-		return errors.Wrap(err, "初始化上传失败")
+		return errs.Wrap(err, "初始化上传失败")
 	}
 
 	// 如果状态为2，表示秒传成功
@@ -386,24 +387,24 @@ func (d *Open115) Put(ctx context.Context, dstDir model.Obj, file model.FileStre
 		signCheck := strings.Split(resp.SignCheck, "-") // 格式："2392148-2392298"，表示取该范围内容的SHA1
 		start, err := strconv.ParseInt(signCheck[0], 10, 64)
 		if err != nil {
-			return errors.Wrap(err, "解析签名检查范围起始位置失败")
+			return errs.Wrap(err, "解析签名检查范围起始位置失败")
 		}
 
 		end, err := strconv.ParseInt(signCheck[1], 10, 64)
 		if err != nil {
-			return errors.Wrap(err, "解析签名检查范围结束位置失败")
+			return errs.Wrap(err, "解析签名检查范围结束位置失败")
 		}
 
 		// 读取指定范围的数据
 		reader, err = file.RangeRead(http_range.Range{Start: start, Length: end - start + 1})
 		if err != nil {
-			return errors.Wrap(err, "读取文件指定范围失败")
+			return errs.Wrap(err, "读取文件指定范围失败")
 		}
 
 		// 计算该范围的SHA1哈希
 		signVal, err := utils.HashReader(utils.SHA1, reader)
 		if err != nil {
-			return errors.Wrap(err, "计算签名值失败")
+			return errs.Wrap(err, "计算签名值失败")
 		}
 
 		// 再次初始化上传，带上签名信息
@@ -418,7 +419,7 @@ func (d *Open115) Put(ctx context.Context, dstDir model.Obj, file model.FileStre
 		})
 
 		if err != nil {
-			return errors.Wrap(err, "带签名初始化上传失败")
+			return errs.Wrap(err, "带签名初始化上传失败")
 		}
 
 		// 如果状态为2，表示秒传成功
@@ -431,13 +432,13 @@ func (d *Open115) Put(ctx context.Context, dstDir model.Obj, file model.FileStre
 	// 3. 获取上传令牌
 	tokenResp, err := d.client.UploadGetToken(ctx)
 	if err != nil {
-		return errors.Wrap(err, "获取上传令牌失败")
+		return errs.Wrap(err, "获取上传令牌失败")
 	}
 
 	// 4. 上传文件
 	err = d.multpartUpload(ctx, file, up, tokenResp, resp)
 	if err != nil {
-		return errors.Wrap(err, "分片上传文件失败")
+		return errs.Wrap(err, "分片上传文件失败")
 	}
 
 	return nil

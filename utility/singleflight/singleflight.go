@@ -8,11 +8,12 @@ package singleflight
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"runtime"
 	"runtime/debug"
 	"sync"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 )
 
 var AnyGroup Group[any]
@@ -20,7 +21,7 @@ var ErrorGroup Group[error]
 
 // errGoexit indicates the runtime.Goexit was called in
 // the user given function.
-var errGoexit = errors.New("runtime.Goexit was called")
+var errGoexit = errs.New("runtime.Goexit was called")
 
 // A panicError is an arbitrary value recovered from a panic
 // with the stack trace during the execution of given function.
@@ -107,9 +108,9 @@ func (g *Group[T]) Do(key string, fn func() (T, error)) (v T, err error, shared 
 		c.wg.Wait()
 
 		var e *panicError
-		if errors.As(c.err, &e) {
+		if errs.As(c.err, &e) {
 			panic(e)
-		} else if errors.Is(c.err, errGoexit) {
+		} else if errs.Is(c.err, errGoexit) {
 			runtime.Goexit()
 		}
 		return c.val, c.err, true
@@ -170,7 +171,7 @@ func (g *Group[T]) doCall(c *call[T], key string, fn func() (T, error)) {
 		}
 
 		var e *panicError
-		if errors.As(c.err, &e) {
+		if errs.As(c.err, &e) {
 			// In order to prevent the waiting channels from being blocked forever,
 			// needs to ensure that this panic cannot be recovered.
 			if len(c.chans) > 0 {
@@ -179,7 +180,7 @@ func (g *Group[T]) doCall(c *call[T], key string, fn func() (T, error)) {
 			} else {
 				panic(e)
 			}
-		} else if errors.Is(c.err, errGoexit) {
+		} else if errs.Is(c.err, errGoexit) {
 			// Already in the process of goexit, no need to call again
 		} else {
 			// Normal return

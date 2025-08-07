@@ -5,8 +5,9 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/pkg/errors"
 	"gorm.io/gorm"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/global"
@@ -63,7 +64,7 @@ func initSettings() {
 		stored, ok := settingMap[item.Key]
 		if !ok {
 			stored, err = op.GetSettingItemByKey(item.Key)
-			if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			if err != nil && !errs.Is(err, gorm.ErrRecordNotFound) {
 				utils.Log.Fatalf("failed get setting: %+v", err)
 				continue
 			}

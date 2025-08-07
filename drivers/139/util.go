@@ -11,8 +11,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
 	"resty.dev/v3"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/model"
@@ -77,21 +78,21 @@ func (d *Yun139) refreshToken() error {
 	}
 	decodedAuth, err := base64.StdEncoding.DecodeString(d.Authorization)
 	if err != nil {
-		return errors.Errorf("authorization decode failed: %s", err)
+		return errs.Errorf("authorization decode failed: %s", err)
 	}
 	authStr := string(decodedAuth)
 	authParts := strings.Split(authStr, ":")
 	if len(authParts) < 3 {
-		return errors.Errorf("authorization is invalid, splits < 3")
+		return errs.Errorf("authorization is invalid, splits < 3")
 	}
 	d.Account = authParts[1]
 	tokenParts := strings.Split(authParts[2], "|")
 	if len(tokenParts) < 4 {
-		return errors.Errorf("authorization is invalid, strs < 4")
+		return errs.Errorf("authorization is invalid, strs < 4")
 	}
 	expirationTime, err := strconv.ParseInt(tokenParts[3], 10, 64)
 	if err != nil {
-		return errors.Errorf("authorization is invalid")
+		return errs.Errorf("authorization is invalid")
 	}
 	timeRemaining := expirationTime - time.Now().UnixMilli()
 	if timeRemaining > 1000*60*60*24*15 {
@@ -99,7 +100,7 @@ func (d *Yun139) refreshToken() error {
 		return nil
 	}
 	if timeRemaining < 0 {
-		return errors.Errorf("authorization has expired")
+		return errs.Errorf("authorization has expired")
 	}
 
 	link := "https://aas.caiyun.feixin.10086.cn:443/tellin/authTokenRefresh.do"
@@ -114,7 +115,7 @@ func (d *Yun139) refreshToken() error {
 		return err
 	}
 	if resp.Return != "0" {
-		return errors.Errorf("failed to refresh token: %s", resp.Desc)
+		return errs.Errorf("failed to refresh token: %s", resp.Desc)
 	}
 	d.Authorization = base64.StdEncoding.EncodeToString([]byte(authParts[0] + ":" + authParts[1] + ":" + resp.Token))
 	op.MustSaveDriverStorage(d)
@@ -169,7 +170,7 @@ func (d *Yun139) request(pathname string, method string, callback base.ReqCallba
 		return nil, err
 	}
 	if !errorResp.Success {
-		return nil, errors.New(errorResp.Message)
+		return nil, errs.New(errorResp.Message)
 	}
 	if resp != nil {
 		err = utils.JSONTool.Unmarshal(response.Bytes(), resp)
@@ -222,7 +223,7 @@ func (d *Yun139) requestRoute(data any, resp any) ([]byte, error) {
 		return nil, err
 	}
 	if !e.Success {
-		return nil, errors.New(e.Message)
+		return nil, errs.New(e.Message)
 	}
 	if resp != nil {
 		err = utils.JSONTool.Unmarshal(res.Bytes(), resp)
@@ -515,7 +516,7 @@ func (d *Yun139) personalRequest(pathname string, method string, callback base.R
 		return nil, err
 	}
 	if !e.Success {
-		return nil, errors.New(e.Message)
+		return nil, errs.New(e.Message)
 	}
 	if resp != nil {
 		err = utils.JSONTool.Unmarshal(res.Bytes(), resp)

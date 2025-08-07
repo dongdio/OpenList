@@ -4,7 +4,7 @@ package cmd
 //
 // import (
 // 	"context"
-// 	"errors"
+//
 // 	"fmt"
 // 	"net"
 // 	"net/http"
@@ -169,7 +169,7 @@ package cmd
 // 	}
 //
 // 	go func() {
-// 		if err := httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+// 		if err := httpServer.ListenAndServe(); err != nil && !errs.Is(err, http.ErrServerClosed) {
 // 			utils.Log.Fatalf("Failed to start HTTP server: %v", err)
 // 		}
 // 	}()
@@ -206,7 +206,7 @@ package cmd
 // 		if err := httpsServer.ListenAndServeTLS(
 // 			conf.Conf.Scheme.CertFile,
 // 			conf.Conf.Scheme.KeyFile,
-// 		); err != nil && !errors.Is(err, http.ErrServerClosed) {
+// 		); err != nil && !errs.Is(err, http.ErrServerClosed) {
 // 			utils.Log.Fatalf("Failed to start HTTPS server: %v", err)
 // 		}
 // 	}()
@@ -252,7 +252,7 @@ package cmd
 // 		}
 //
 // 		// Start serving on the Unix socket
-// 		if err := unixServer.Serve(listener); err != nil && !errors.Is(err, http.ErrServerClosed) {
+// 		if err := unixServer.Serve(listener); err != nil && !errs.Is(err, http.ErrServerClosed) {
 // 			utils.Log.Fatalf("Failed to start Unix socket server: %v", err)
 // 		}
 // 	}()
@@ -268,11 +268,11 @@ package cmd
 //
 // 	mode, err := strconv.ParseUint(conf.Conf.Scheme.UnixFilePerm, 8, 32)
 // 	if err != nil {
-// 		return errors.Errorf("failed to parse Unix socket file permission '%s': %w", conf.Conf.Scheme.UnixFilePerm, err)
+// 		return errs.Errorf("failed to parse Unix socket file permission '%s': %w", conf.Conf.Scheme.UnixFilePerm, err)
 // 	}
 //
 // 	if err := os.Chmod(socketPath, os.FileMode(mode)); err != nil {
-// 		return errors.Wrap(err, "failed to set Unix socket file permissions")
+// 		return errs.Wrap(err, "failed to set Unix socket file permissions")
 // 	}
 //
 // 	utils.Log.Debugf("Set Unix socket file permissions to %s", conf.Conf.Scheme.UnixFilePerm)
@@ -316,7 +316,7 @@ package cmd
 // 			err = s3HttpServer.ListenAndServe()
 // 		}
 //
-// 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
+// 		if err != nil && !errs.Is(err, http.ErrServerClosed) {
 // 			utils.Log.Fatalf("Failed to start S3-compatible API server: %v", err)
 // 		}
 // 	}()

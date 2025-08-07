@@ -3,17 +3,17 @@ package fs
 import (
 	"context"
 
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
 // ErrListFailed 列表获取失败错误
-var ErrListFailed = errors.New("failed to list objects")
+var ErrListFailed = errs.New("failed to list objects")
 
 // List files
 func list(ctx context.Context, path string, args *ListArgs) ([]model.Obj, error) {
@@ -29,7 +29,7 @@ func list(ctx context.Context, path string, args *ListArgs) ([]model.Obj, error)
 	// 获取存储驱动
 	storage, actualPath, err := getStorageWithCache(path)
 	if err != nil && len(virtualFiles) == 0 {
-		return nil, errors.WithMessage(err, "failed get storage")
+		return nil, errs.WithMessage(err, "failed get storage")
 	}
 
 	var objs []model.Obj
@@ -48,7 +48,7 @@ func list(ctx context.Context, path string, args *ListArgs) ([]model.Obj, error)
 
 			// 如果没有虚拟文件，则返回错误
 			if len(virtualFiles) == 0 {
-				return nil, errors.Wrap(ErrListFailed, err.Error())
+				return nil, errs.Wrap(ErrListFailed, err.Error())
 			}
 		}
 	}

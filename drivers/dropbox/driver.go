@@ -7,9 +7,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/driver"
@@ -44,7 +45,7 @@ func (d *Dropbox) Init(ctx context.Context) error {
 	}
 	result := utils.GetBytes(res, "result").String()
 	if result != query {
-		return errors.Errorf("failed to check user: %s", string(res))
+		return errs.Errorf("failed to check user: %s", string(res))
 	}
 	d.RootNamespaceId, err = d.GetRootNamespaceId(ctx)
 

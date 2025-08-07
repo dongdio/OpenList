@@ -5,8 +5,9 @@ import (
 	stdpath "path"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/fs"
@@ -16,7 +17,6 @@ import (
 	"github.com/dongdio/OpenList/v4/internal/sign"
 	"github.com/dongdio/OpenList/v4/server/common"
 	"github.com/dongdio/OpenList/v4/utility/archive/tool"
-	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/task"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
@@ -101,7 +101,7 @@ func FsArchiveMeta(c *gin.Context) {
 
 	// 获取元数据
 	meta, err := op.GetNearestMeta(reqPath)
-	if err != nil && !errors.Is(errors.Cause(err), errs.MetaNotFound) {
+	if err != nil && !errs.Is(errs.Cause(err), errs.MetaNotFound) {
 		common.ErrorResp(c, err, 500, true)
 		return
 	}
@@ -127,7 +127,7 @@ func FsArchiveMeta(c *gin.Context) {
 		Refresh:     req.Refresh,
 	})
 	if err != nil {
-		if errors.Is(err, errs.WrongArchivePassword) {
+		if errs.Is(err, errs.WrongArchivePassword) {
 			common.ErrorResp(c, err, 202)
 		} else {
 			common.ErrorResp(c, err, 500)
@@ -198,7 +198,7 @@ func FsArchiveList(c *gin.Context) {
 
 	// 获取元数据
 	meta, err := op.GetNearestMeta(reqPath)
-	if err != nil && !errors.Is(errors.Cause(err), errs.MetaNotFound) {
+	if err != nil && !errs.Is(errs.Cause(err), errs.MetaNotFound) {
 		common.ErrorResp(c, err, 500, true)
 		return
 	}
@@ -225,7 +225,7 @@ func FsArchiveList(c *gin.Context) {
 		Refresh: req.Refresh,
 	})
 	if err != nil {
-		if errors.Is(err, errs.WrongArchivePassword) {
+		if errs.Is(err, errs.WrongArchivePassword) {
 			common.ErrorResp(c, err, 202)
 		} else {
 			common.ErrorResp(c, err, 500)
@@ -337,7 +337,7 @@ func FsArchiveDecompress(c *gin.Context) {
 			PutIntoNewDir: req.PutIntoNewDir,
 		})
 		if err != nil {
-			if errors.Is(err, errs.WrongArchivePassword) {
+			if errs.Is(err, errs.WrongArchivePassword) {
 				common.ErrorResp(c, err, 202)
 			} else {
 				common.ErrorResp(c, err, 500)

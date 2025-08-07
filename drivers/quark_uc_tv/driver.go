@@ -7,13 +7,13 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/pkg/errors"
 	"resty.dev/v3"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
-	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
@@ -58,7 +58,7 @@ func (d *QuarkUCTV) Init(ctx context.Context) error {
         <img src="data:image/jpeg;base64,%s"/>
     </body>`
 			qrPage := fmt.Sprintf(qrTemplate, qrData)
-			return errors.Errorf("need verify: \n%s", qrPage)
+			return errs.Errorf("need verify: \n%s", qrPage)
 		} else {
 			// 通过query token获取code -> refresh token
 			code, err := d.getCode(ctx1)

@@ -68,7 +68,7 @@ func fileToObj(f File) *model.ObjThumb {
 
 type Error struct {
 	Error struct {
-		Errors []struct {
+		errs []struct {
 			Domain       string `json:"domain"`
 			Reason       string `json:"reason"`
 			Message      string `json:"message"`

@@ -8,8 +8,9 @@ import (
 
 	"github.com/dustinxie/ecc"
 	"github.com/google/uuid"
-	"github.com/pkg/errors"
 	"resty.dev/v3"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/op"
@@ -20,7 +21,7 @@ import (
 func (d *AliDrive) createSession() error {
 	state, ok := userStates.Load(d.UserID)
 	if !ok {
-		return errors.Errorf("无法加载用户状态，用户ID: %s", d.UserID)
+		return errs.Errorf("无法加载用户状态，用户ID: %s", d.UserID)
 	}
 
 	// 生成签名
@@ -30,7 +31,7 @@ func (d *AliDrive) createSession() error {
 	state.retry++
 	if state.retry > 3 {
 		state.retry = 0
-		return errors.New("创建会话失败，已重试3次")
+		return errs.New("创建会话失败，已重试3次")
 	}
 
 	// 发送创建会话请求
@@ -81,15 +82,15 @@ func (d *AliDrive) refreshToken() error {
 		Post(url)
 
 	if err != nil {
-		return errors.Wrap(err, "发送刷新令牌请求失败")
+		return errs.Wrap(err, "发送刷新令牌请求失败")
 	}
 
 	if e.Code != "" {
-		return errors.Errorf("刷新令牌失败: %s", e.Message)
+		return errs.Errorf("刷新令牌失败: %s", e.Message)
 	}
 
 	if resp.RefreshToken == "" {
-		return errors.New("刷新令牌失败: 返回的刷新令牌为空")
+		return errs.New("刷新令牌失败: 返回的刷新令牌为空")
 	}
 
 	// 更新令牌
@@ -107,7 +108,7 @@ func (d *AliDrive) request(url, method string, callback base.ReqCallback, resp a
 		if url == "https://api.alipan.com/v2/user/get" {
 			state = &State{}
 		} else {
-			return nil, errors.Errorf("无法加载用户状态，用户ID: %s", d.UserID), RespErr{}
+			return nil, errs.Errorf("无法加载用户状态，用户ID: %s", d.UserID), RespErr{}
 		}
 	}
 
@@ -141,7 +142,7 @@ func (d *AliDrive) request(url, method string, callback base.ReqCallback, resp a
 	// 发送请求
 	res, err := req.Execute(method, url)
 	if err != nil {
-		return nil, errors.Wrap(err, "发送请求失败"), e
+		return nil, errs.Wrap(err, "发送请求失败"), e
 	}
 
 	// 处理错误响应
@@ -151,21 +152,21 @@ func (d *AliDrive) request(url, method string, callback base.ReqCallback, resp a
 			// 令牌无效，尝试刷新
 			err = d.refreshToken()
 			if err != nil {
-				return nil, errors.Wrap(err, "刷新令牌失败"), e
+				return nil, errs.Wrap(err, "刷新令牌失败"), e
 			}
 		case "DeviceSessionSignatureInvalid":
 			// 会话签名无效，尝试创建新会话
 			err = d.createSession()
 			if err != nil {
-				return nil, errors.Wrap(err, "创建会话失败"), e
+				return nil, errs.Wrap(err, "创建会话失败"), e
 			}
 		default:
-			return nil, errors.New(e.Message), e
+			return nil, errs.New(e.Message), e
 		}
 		// 重试请求
 		return d.request(url, method, callback, resp)
 	} else if res.IsError() {
-		return nil, errors.Errorf("请求返回错误状态码: %s", res.Status()), e
+		return nil, errs.Errorf("请求返回错误状态码: %s", res.Status()), e
 	}
 
 	return res.Bytes(), nil, e
@@ -201,7 +202,7 @@ func (d *AliDrive) getFiles(fileID string) ([]File, error) {
 		}, &resp)
 
 		if err != nil {
-			return nil, errors.Wrap(err, "获取文件列表失败")
+			return nil, errs.Wrap(err, "获取文件列表失败")
 		}
 
 		marker = resp.NextMarker
@@ -236,7 +237,7 @@ func (d *AliDrive) batch(srcID, dstID string, url string) error {
 	}, nil)
 
 	if err != nil {
-		return errors.Wrap(err, "批量操作请求失败")
+		return errs.Wrap(err, "批量操作请求失败")
 	}
 
 	status := utils.GetBytes(res, "responses.0.status").Int()
@@ -244,5 +245,5 @@ func (d *AliDrive) batch(srcID, dstID string, url string) error {
 		return nil
 	}
 
-	return errors.Errorf("批量操作失败，状态码: %d，响应: %s", status, string(res))
+	return errs.Errorf("批量操作失败，状态码: %d，响应: %s", status, string(res))
 }

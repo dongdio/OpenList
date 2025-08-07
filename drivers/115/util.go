@@ -20,8 +20,9 @@ import (
 	driver115 "github.com/SheltonZhu/115driver/pkg/driver"
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 
-	"github.com/pkg/errors"
 	"resty.dev/v3"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/conf"
@@ -61,7 +62,7 @@ func (p *Pan115) login() error {
 
 		// 执行二维码登录
 		if credential, err = p.client.QRCodeLoginWithApp(session, driver115.LoginApp(p.QRCodeSource)); err != nil {
-			return errors.Wrap(err, "二维码登录失败")
+			return errs.Wrap(err, "二维码登录失败")
 		}
 
 		// 登录成功后，更新Cookie并清除二维码令牌
@@ -71,14 +72,14 @@ func (p *Pan115) login() error {
 	} else if p.Cookie != "" {
 		// 使用Cookie登录
 		if err = credential.FromCookie(p.Cookie); err != nil {
-			return errors.Wrap(err, "从Cookie导入凭证失败")
+			return errs.Wrap(err, "从Cookie导入凭证失败")
 		}
 
 		// 导入凭证到客户端
 		p.client.ImportCredential(credential)
 	} else {
 		// 未提供任何登录方式
-		return errors.New("缺少Cookie或二维码令牌")
+		return errs.New("缺少Cookie或二维码令牌")
 	}
 
 	// 检查登录状态
@@ -103,7 +104,7 @@ func (p *Pan115) getFiles(fileId string) ([]FileObj, error) {
 	// 获取文件列表
 	files, err := p.client.ListWithLimit(fileId, p.PageSize, driver115.WithMultiUrls())
 	if err != nil {
-		return nil, errors.Wrap(err, "获取文件列表失败")
+		return nil, errs.Wrap(err, "获取文件列表失败")
 	}
 
 	// 转换为自定义文件对象
@@ -124,7 +125,7 @@ func (p *Pan115) getFiles(fileId string) ([]FileObj, error) {
 func (p *Pan115) getNewFile(fileId string) (*FileObj, error) {
 	file, err := p.client.GetFile(fileId)
 	if err != nil {
-		return nil, errors.Wrap(err, "获取文件信息失败")
+		return nil, errs.Wrap(err, "获取文件信息失败")
 	}
 	return &FileObj{*file}, nil
 }
@@ -151,12 +152,12 @@ func (p *Pan115) getNewFileByPickCode(pickCode string) (*FileObj, error) {
 
 	// 检查错误
 	if err = driver115.CheckErr(err, &result, resp); err != nil {
-		return nil, errors.Wrap(err, "获取文件信息失败")
+		return nil, errs.Wrap(err, "获取文件信息失败")
 	}
 
 	// 检查响应中是否包含文件信息
 	if len(result.Files) == 0 {
-		return nil, errors.New("未获取到文件信息")
+		return nil, errs.New("未获取到文件信息")
 	}
 
 	// 获取第一个文件信息
@@ -194,7 +195,7 @@ func (p *Pan115) DownloadWithUA(pickCode, ua string) (*driver115.DownloadInfo, e
 	// 准备请求参数
 	params, err := utils.JSONTool.Marshal(map[string]string{"pick_code": pickCode})
 	if err != nil {
-		return nil, errors.Wrap(err, "序列化请求参数失败")
+		return nil, errs.Wrap(err, "序列化请求参数失败")
 	}
 
 	// 加密请求数据
@@ -213,18 +214,18 @@ func (p *Pan115) DownloadWithUA(pickCode, ua string) (*driver115.DownloadInfo, e
 		Post(reqUrl)
 
 	if err != nil {
-		return nil, errors.Wrap(err, "发送下载请求失败")
+		return nil, errs.Wrap(err, "发送下载请求失败")
 	}
 
 	// 检查响应错误
 	if err = result.Err(resp.String()); err != nil {
-		return nil, errors.Wrap(err, "下载请求返回错误")
+		return nil, errs.Wrap(err, "下载请求返回错误")
 	}
 
 	// 解密响应数据
 	decodedData, err := crypto.Decode(string(result.EncodedData), key)
 	if err != nil {
-		return nil, errors.Wrap(err, "解密响应数据失败")
+		return nil, errs.Wrap(err, "解密响应数据失败")
 	}
 
 	// 构建下载信息
@@ -291,7 +292,7 @@ func (p *Pan115) rapidUpload(fileSize int64, fileName, dirID, preID, fileID stri
 
 	// 创建ECDH加密器
 	if ecdhCipher, err = cipher.NewEcdhCipher(); err != nil {
-		return nil, errors.Wrap(err, "创建ECDH加密器失败")
+		return nil, errs.Wrap(err, "创建ECDH加密器失败")
 	}
 
 	// 获取用户ID
@@ -318,7 +319,7 @@ func (p *Pan115) rapidUpload(fileSize int64, fileName, dirID, preID, fileID stri
 
 		// 编码令牌
 		if encodedToken, err = ecdhCipher.EncodeToken(timestamp.ToInt64()); err != nil {
-			return nil, errors.Wrap(err, "编码令牌失败")
+			return nil, errs.Wrap(err, "编码令牌失败")
 		}
 
 		// 准备查询参数
@@ -338,7 +339,7 @@ func (p *Pan115) rapidUpload(fileSize int64, fileName, dirID, preID, fileID stri
 
 		// 加密表单数据
 		if encrypted, err = ecdhCipher.Encrypt([]byte(form.Encode())); err != nil {
-			return nil, errors.Wrap(err, "加密表单数据失败")
+			return nil, errs.Wrap(err, "加密表单数据失败")
 		}
 
 		// 创建请求
@@ -350,17 +351,17 @@ func (p *Pan115) rapidUpload(fileSize int64, fileName, dirID, preID, fileID stri
 		// 发送请求
 		resp, err := req.Post(driver115.ApiUploadInit)
 		if err != nil {
-			return nil, errors.Wrap(err, "发送秒传初始化请求失败")
+			return nil, errs.Wrap(err, "发送秒传初始化请求失败")
 		}
 
 		// 解密响应
 		if decrypted, err = ecdhCipher.Decrypt(resp.Body()); err != nil {
-			return nil, errors.Wrap(err, "解密响应失败")
+			return nil, errs.Wrap(err, "解密响应失败")
 		}
 
 		// 解析响应
 		if err = driver115.CheckErr(utils.JSONTool.Unmarshal(decrypted, &result), &result, resp); err != nil {
-			return nil, errors.Wrap(err, "解析响应失败")
+			return nil, errs.Wrap(err, "解析响应失败")
 		}
 
 		// 处理签名验证
@@ -369,7 +370,7 @@ func (p *Pan115) rapidUpload(fileSize int64, fileName, dirID, preID, fileID stri
 			signKey = result.SignKey
 			signVal, err = UploadDigestRange(stream, result.SignCheck)
 			if err != nil {
-				return nil, errors.Wrap(err, "计算签名值失败")
+				return nil, errs.Wrap(err, "计算签名值失败")
 			}
 		} else {
 			// 不需要继续重试
@@ -396,7 +397,7 @@ func UploadDigestRange(stream model.FileStreamer, rangeSpec string) (result stri
 
 	// 解析范围规范
 	if _, err = fmt.Sscanf(rangeSpec, "%d-%d", &start, &end); err != nil {
-		return "", errors.Wrap(err, "解析范围规范失败")
+		return "", errs.Wrap(err, "解析范围规范失败")
 	}
 
 	// 计算长度
@@ -405,13 +406,13 @@ func UploadDigestRange(stream model.FileStreamer, rangeSpec string) (result stri
 	// 读取指定范围的数据
 	reader, err := stream.RangeRead(http_range.Range{Start: start, Length: length})
 	if err != nil {
-		return "", errors.Wrap(err, "读取文件范围失败")
+		return "", errs.Wrap(err, "读取文件范围失败")
 	}
 
 	// 计算SHA1哈希
 	hashStr, err := utils.HashReader(utils.SHA1, reader)
 	if err != nil {
-		return "", errors.Wrap(err, "计算哈希失败")
+		return "", errs.Wrap(err, "计算哈希失败")
 	}
 
 	// 转换为大写
@@ -434,19 +435,19 @@ func (p *Pan115) UploadByOSS(ctx context.Context, params *driver115.UploadOSSPar
 	// 获取OSS令牌
 	ossToken, err := p.client.GetOSSToken()
 	if err != nil {
-		return nil, errors.Wrap(err, "获取OSS令牌失败")
+		return nil, errs.Wrap(err, "获取OSS令牌失败")
 	}
 
 	// 创建OSS客户端
 	ossClient, err := oss.New(driver115.OSSEndpoint, ossToken.AccessKeyID, ossToken.AccessKeySecret)
 	if err != nil {
-		return nil, errors.Wrap(err, "创建OSS客户端失败")
+		return nil, errs.Wrap(err, "创建OSS客户端失败")
 	}
 
 	// 获取存储桶
 	bucket, err := ossClient.Bucket(params.Bucket)
 	if err != nil {
-		return nil, errors.Wrap(err, "获取存储桶失败")
+		return nil, errs.Wrap(err, "获取存储桶失败")
 	}
 
 	// 用于存储回调结果
@@ -465,18 +466,18 @@ func (p *Pan115) UploadByOSS(ctx context.Context, params *driver115.UploadOSSPar
 	)...)
 
 	if err != nil {
-		return nil, errors.Wrap(err, "上传文件失败")
+		return nil, errs.Wrap(err, "上传文件失败")
 	}
 
 	// 解析上传结果
 	var uploadResult UploadResult
 	if err = utils.JSONTool.Unmarshal(bodyBytes, &uploadResult); err != nil {
-		return nil, errors.Wrap(err, "解析上传结果失败")
+		return nil, errs.Wrap(err, "解析上传结果失败")
 	}
 
 	// 检查上传结果中的错误
 	if err = uploadResult.Err(string(bodyBytes)); err != nil {
-		return nil, errors.Wrap(err, "上传结果包含错误")
+		return nil, errs.Wrap(err, "上传结果包含错误")
 	}
 
 	return &uploadResult, nil
@@ -511,7 +512,7 @@ func (p *Pan115) UploadByMultipart(ctx context.Context, params *driver115.Upload
 	// 将文件缓存到临时文件中，以便分片读取
 	tmpF, err := s.CacheFullInTempFile()
 	if err != nil {
-		return nil, errors.Wrap(err, "缓存文件到临时文件失败")
+		return nil, errs.Wrap(err, "缓存文件到临时文件失败")
 	}
 
 	// 应用上传选项
@@ -526,17 +527,17 @@ func (p *Pan115) UploadByMultipart(ctx context.Context, params *driver115.Upload
 
 	// 获取OSS令牌
 	if ossToken, err = p.client.GetOSSToken(); err != nil {
-		return nil, errors.Wrap(err, "获取OSS令牌失败")
+		return nil, errs.Wrap(err, "获取OSS令牌失败")
 	}
 
 	// 创建OSS客户端，启用MD5和CRC校验
 	if ossClient, err = oss.New(driver115.OSSEndpoint, ossToken.AccessKeyID, ossToken.AccessKeySecret, oss.EnableMD5(true), oss.EnableCRC(true)); err != nil {
-		return nil, errors.Wrap(err, "创建OSS客户端失败")
+		return nil, errs.Wrap(err, "创建OSS客户端失败")
 	}
 
 	// 获取存储桶
 	if bucket, err = ossClient.Bucket(params.Bucket); err != nil {
-		return nil, errors.Wrap(err, "获取存储桶失败")
+		return nil, errs.Wrap(err, "获取存储桶失败")
 	}
 
 	// OSS令牌一小时后会失效，每50分钟重新获取一次
@@ -549,7 +550,7 @@ func (p *Pan115) UploadByMultipart(ctx context.Context, params *driver115.Upload
 
 	// 计算文件分片
 	if chunks, err = SplitFile(fileSize); err != nil {
-		return nil, errors.Wrap(err, "计算文件分片失败")
+		return nil, errs.Wrap(err, "计算文件分片失败")
 	}
 
 	// 初始化分片上传
@@ -558,7 +559,7 @@ func (p *Pan115) UploadByMultipart(ctx context.Context, params *driver115.Upload
 		oss.UserAgentHeader(driver115.OSSUserAgent),
 		oss.EnableSha1(), oss.Sequential(),
 	); err != nil {
-		return nil, errors.Wrap(err, "初始化分片上传失败")
+		return nil, errs.Wrap(err, "初始化分片上传失败")
 	}
 
 	// 同步等待所有分片上传完成
@@ -589,7 +590,7 @@ func (p *Pan115) UploadByMultipart(ctx context.Context, params *driver115.Upload
 			// 捕获panic
 			defer func() {
 				if r := recover(); r != nil {
-					errCh <- errors.Errorf("recovered in %v", r)
+					errCh <- errs.Errorf("recovered in %v", r)
 				}
 			}()
 
@@ -604,14 +605,14 @@ func (p *Pan115) UploadByMultipart(ctx context.Context, params *driver115.Upload
 					case <-ticker.C:
 						// 刷新OSS令牌
 						if ossToken, err = p.client.GetOSSToken(); err != nil {
-							errCh <- errors.Wrap(err, "刷新令牌时出现错误")
+							errCh <- errs.Wrap(err, "刷新令牌时出现错误")
 						}
 					default:
 					}
 
 					// 读取分片数据
 					buf := make([]byte, chunk.Size)
-					if _, err = tmpF.ReadAt(buf, chunk.Offset); err != nil && !errors.Is(err, io.EOF) {
+					if _, err = tmpF.ReadAt(buf, chunk.Offset); err != nil && !errs.Is(err, io.EOF) {
 						continue
 					}
 
@@ -624,7 +625,7 @@ func (p *Pan115) UploadByMultipart(ctx context.Context, params *driver115.Upload
 
 				// 处理上传错误
 				if err != nil {
-					errCh <- errors.Wrap(err, fmt.Sprintf("上传 %s 的第%d个分片时出现错误：%v", s.GetName(), chunk.Number, err))
+					errCh <- errs.Wrap(err, fmt.Sprintf("上传 %s 的第%d个分片时出现错误：%v", s.GetName(), chunk.Number, err))
 				} else {
 					// 更新进度
 					num := completedNum.Add(1)
@@ -652,7 +653,7 @@ LOOP:
 		case <-ticker.C:
 			// 刷新OSS令牌
 			if ossToken, err = p.client.GetOSSToken(); err != nil {
-				return nil, errors.Wrap(err, "刷新令牌失败")
+				return nil, errs.Wrap(err, "刷新令牌失败")
 			}
 		case <-quit:
 			// 所有分片上传完成
@@ -662,7 +663,7 @@ LOOP:
 			return nil, err
 		case <-timeout.C:
 			// 上传超时
-			return nil, errors.New("上传超时")
+			return nil, errs.New("上传超时")
 		}
 	}
 
@@ -673,18 +674,18 @@ LOOP:
 		driver115.OssOption(params, ossToken),
 		oss.CallbackResult(&bodyBytes),
 	)...); err != nil {
-		return nil, errors.Wrap(err, "完成分片上传失败")
+		return nil, errs.Wrap(err, "完成分片上传失败")
 	}
 
 	// 解析上传结果
 	var uploadResult UploadResult
 	if err = utils.JSONTool.Unmarshal(bodyBytes, &uploadResult); err != nil {
-		return nil, errors.Wrap(err, "解析上传结果失败")
+		return nil, errs.Wrap(err, "解析上传结果失败")
 	}
 
 	// 检查上传结果中的错误
 	if err = uploadResult.Err(string(bodyBytes)); err != nil {
-		return nil, errors.Wrap(err, "上传结果包含错误")
+		return nil, errs.Wrap(err, "上传结果包含错误")
 	}
 
 	return &uploadResult, nil
@@ -712,7 +713,7 @@ func SplitFile(fileSize int64) (chunks []oss.FileChunk, err error) {
 	for i := int64(1); i < 10; i++ {
 		if fileSize < i*utils.GB { // 文件大小小于i GB时分为i*1000片
 			if chunks, err = SplitFileByPartNum(fileSize, int(i*1000)); err != nil {
-				return nil, errors.Wrap(err, "按分片数量拆分文件失败")
+				return nil, errs.Wrap(err, "按分片数量拆分文件失败")
 			}
 			break
 		}
@@ -721,14 +722,14 @@ func SplitFile(fileSize int64) (chunks []oss.FileChunk, err error) {
 	// 文件大小大于9GB时分为10000片
 	if fileSize > 9*utils.GB {
 		if chunks, err = SplitFileByPartNum(fileSize, 10000); err != nil {
-			return nil, errors.Wrap(err, "按分片数量拆分大文件失败")
+			return nil, errs.Wrap(err, "按分片数量拆分大文件失败")
 		}
 	}
 
 	// 确保单个分片大小不小于100KB
 	if len(chunks) > 0 && chunks[0].Size < 100*utils.KB {
 		if chunks, err = SplitFileByPartSize(fileSize, 100*utils.KB); err != nil {
-			return nil, errors.Wrap(err, "按分片大小重新拆分文件失败")
+			return nil, errs.Wrap(err, "按分片大小重新拆分文件失败")
 		}
 	}
 
@@ -746,12 +747,12 @@ func SplitFile(fileSize int64) (chunks []oss.FileChunk, err error) {
 func SplitFileByPartNum(fileSize int64, chunkNum int) ([]oss.FileChunk, error) {
 	// 验证分片数量范围
 	if chunkNum <= 0 || chunkNum > 10000 {
-		return nil, errors.New("分片数量无效")
+		return nil, errs.New("分片数量无效")
 	}
 
 	// 确保分片数量不超过文件大小
 	if int64(chunkNum) > fileSize {
-		return nil, errors.New("分片数量超过文件大小")
+		return nil, errs.New("分片数量超过文件大小")
 	}
 
 	chunks := make([]oss.FileChunk, 0, chunkNum)
@@ -787,7 +788,7 @@ func SplitFileByPartNum(fileSize int64, chunkNum int) ([]oss.FileChunk, error) {
 func SplitFileByPartSize(fileSize int64, chunkSize int64) ([]oss.FileChunk, error) {
 	// 验证分片大小
 	if chunkSize <= 0 {
-		return nil, errors.New("分片大小无效")
+		return nil, errs.New("分片大小无效")
 	}
 
 	// 计算分片数量
@@ -795,7 +796,7 @@ func SplitFileByPartSize(fileSize int64, chunkSize int64) ([]oss.FileChunk, erro
 
 	// 验证分片数量不超过限制
 	if chunkN >= 10000 {
-		return nil, errors.New("分片数量过多，请增加分片大小")
+		return nil, errs.New("分片数量过多，请增加分片大小")
 	}
 
 	// 预分配分片列表
@@ -837,7 +838,7 @@ func checkErr(err error, result driver115.ResultWithErr, restyResp *resty.Respon
 
 	// 返回错误或nil
 	if err != nil {
-		return errors.Wrap(err, "API请求失败")
+		return errs.Wrap(err, "API请求失败")
 	}
 
 	return nil

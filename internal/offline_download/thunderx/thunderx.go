@@ -4,7 +4,7 @@ import (
 	"context"
 	"strconv"
 
-	"github.com/pkg/errors"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/drivers/thunderx"
@@ -12,7 +12,6 @@ import (
 	"github.com/dongdio/OpenList/v4/internal/offline_download/tool"
 	"github.com/dongdio/OpenList/v4/internal/op"
 	"github.com/dongdio/OpenList/v4/internal/setting"
-	"github.com/dongdio/OpenList/v4/utility/errs"
 )
 
 type ThunderX struct {
@@ -56,7 +55,7 @@ func (t *ThunderX) AddURL(args *tool.AddURLLinkArgs) (string, error) {
 	}
 	thunderXDriver, ok := storage.(*thunderx.ThunderX)
 	if !ok {
-		return "", errors.New("unsupported storage driver for offline download, only ThunderX is supported")
+		return "", errs.New("unsupported storage driver for offline download, only ThunderX is supported")
 	}
 
 	ctx := context.Background()
@@ -69,7 +68,7 @@ func (t *ThunderX) AddURL(args *tool.AddURLLinkArgs) (string, error) {
 	}
 	task, err := thunderXDriver.OfflineDownload(ctx, args.URL, parentDir, "")
 	if err != nil {
-		return "", errors.Wrap(err, "failed to add offline download task")
+		return "", errs.Wrap(err, "failed to add offline download task")
 	}
 	return task.ID, nil
 }
@@ -81,11 +80,11 @@ func (t *ThunderX) Remove(task *tool.DownloadTask) error {
 	}
 	thunderXDriver, ok := storage.(*thunderx.ThunderX)
 	if !ok {
-		return errors.New("unsupported storage driver for offline download, only ThunderX is supported")
+		return errs.New("unsupported storage driver for offline download, only ThunderX is supported")
 	}
 	ctx := context.Background()
 	err = thunderXDriver.DeleteOfflineTasks(ctx, []string{task.GID}, false)
-	return errors.Wrap(err, "failed to remove storage")
+	return errs.Wrap(err, "failed to remove storage")
 }
 
 func (t *ThunderX) Status(task *tool.DownloadTask) (*tool.Status, error) {
@@ -95,7 +94,7 @@ func (t *ThunderX) Status(task *tool.DownloadTask) (*tool.Status, error) {
 	}
 	thunderXDriver, ok := storage.(*thunderx.ThunderX)
 	if !ok {
-		return nil, errors.New("unsupported storage driver for offline download, only ThunderX is supported")
+		return nil, errs.New("unsupported storage driver for offline download, only ThunderX is supported")
 	}
 	tasks, err := t.GetTasks(thunderXDriver)
 	if err != nil {
@@ -118,12 +117,12 @@ func (t *ThunderX) Status(task *tool.DownloadTask) (*tool.Status, error) {
 				s.TotalBytes = 0
 			}
 			if t.Phase == "PHASE_TYPE_ERROR" {
-				s.Err = errors.New(t.Message)
+				s.Err = errs.New(t.Message)
 			}
 			return s, nil
 		}
 	}
-	s.Err = errors.New("the task has been deleted")
+	s.Err = errs.New("the task has been deleted")
 	return s, nil
 }
 

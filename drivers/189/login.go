@@ -3,8 +3,9 @@ package _189
 import (
 	"strconv"
 
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/utility/utils"
@@ -52,7 +53,7 @@ func (d *Cloud189) newLogin() error {
 	// 访问登录URL，检查是否已登录
 	res, err := base.RestyClient.R().SetHeaders(d.header).Get(_loginUrl)
 	if err != nil {
-		return errors.Wrap(err, "访问登录页面失败")
+		return errs.Wrap(err, "访问登录页面失败")
 	}
 
 	// 检查是否已登录
@@ -86,12 +87,12 @@ func (d *Cloud189) newLogin() error {
 		Post(_appConf)
 
 	if err != nil {
-		return errors.Wrap(err, "获取应用配置失败")
+		return errs.Wrap(err, "获取应用配置失败")
 	}
 
 	log.Debugf("189云盘应用配置响应: %s", res.String())
 	if appConf.Result != "0" {
-		return errors.Errorf("应用配置获取失败: %s", appConf.Msg)
+		return errs.Errorf("应用配置获取失败: %s", appConf.Msg)
 	}
 
 	// 获取加密配置
@@ -104,17 +105,17 @@ func (d *Cloud189) newLogin() error {
 		Post(_encryptConf)
 
 	if err != nil {
-		return errors.Wrap(err, "获取加密配置失败")
+		return errs.Wrap(err, "获取加密配置失败")
 	}
 
 	err = utils.JSONTool.Unmarshal(res.Bytes(), &encryptConf)
 	if err != nil {
-		return errors.Wrap(err, "解析加密配置失败")
+		return errs.Wrap(err, "解析加密配置失败")
 	}
 
 	log.Debugf("189云盘加密配置响应: %s\n%+v", res.String(), encryptConf)
 	if encryptConf.Result != 0 {
-		return errors.Errorf("获取加密配置失败: %s", res.String())
+		return errs.Errorf("获取加密配置失败: %s", res.String())
 	}
 
 	// TODO: 实现验证码处理逻辑
@@ -150,7 +151,7 @@ func (d *Cloud189) newLogin() error {
 		SetFormData(loginData).
 		Post(_loginSubmit)
 	if err != nil {
-		return errors.Wrap(err, "提交登录请求失败")
+		return errs.Wrap(err, "提交登录请求失败")
 	}
 
 	log.Debugf("189云盘登录响应: %s", res.String())
@@ -158,7 +159,7 @@ func (d *Cloud189) newLogin() error {
 	// 检查登录结果
 	loginResult := utils.GetBytes(res.Bytes(), "result").Int()
 	if loginResult != 0 {
-		return errors.Errorf("登录失败: %s", utils.GetBytes(res.Bytes(), "msg").String())
+		return errs.Errorf("登录失败: %s", utils.GetBytes(res.Bytes(), "msg").String())
 	}
 	return nil
 }

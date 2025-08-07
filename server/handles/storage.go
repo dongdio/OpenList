@@ -70,7 +70,7 @@ func DeleteStorage(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	if err = op.DeleteStorageByID(c.Request.Context(), uint(id)); err != nil {
+	if err = op.DeleteStorageById(c.Request.Context(), uint(id)); err != nil {
 		common.ErrorResp(c, err, 500, true)
 		return
 	}

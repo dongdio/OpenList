@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/pkg/errors"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
@@ -12,7 +12,7 @@ import (
 )
 
 // ErrLinkFailed 链接生成失败错误
-var ErrLinkFailed = errors.New("failed to generate link")
+var ErrLinkFailed = errs.New("failed to generate link")
 
 // link 生成文件链接
 // 参数:
@@ -27,19 +27,19 @@ var ErrLinkFailed = errors.New("failed to generate link")
 func link(ctx context.Context, path string, args model.LinkArgs) (*model.Link, model.Obj, error) {
 	// 参数验证
 	if path == "" {
-		return nil, nil, errors.WithStack(ErrInvalidPath)
+		return nil, nil, errs.WithStack(ErrInvalidPath)
 	}
 
 	// 获取存储驱动和实际路径
 	storage, actualPath, err := getStorageWithCache(path)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed get storage")
+		return nil, nil, errs.Wrap(err, "failed get storage")
 	}
 
 	// 生成链接
 	l, obj, err := op.Link(ctx, storage, actualPath, args)
 	if err != nil {
-		return nil, nil, errors.Wrap(ErrLinkFailed, err.Error())
+		return nil, nil, errs.Wrap(ErrLinkFailed, err.Error())
 	}
 
 	// 处理相对URL，确保完整的URL路径

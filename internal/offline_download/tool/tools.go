@@ -3,7 +3,7 @@ package tool
 import (
 	"sort"
 
-	"github.com/pkg/errors"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/internal/model"
 )
@@ -16,7 +16,7 @@ func (t ToolsManager) Get(name string) (Tool, error) {
 	if tool, ok := t[name]; ok {
 		return tool, nil
 	}
-	return nil, errors.New("tool " + name + " not found")
+	return nil, errs.New("tool " + name + " not found")
 }
 
 func (t ToolsManager) Add(tool Tool) {

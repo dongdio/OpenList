@@ -12,8 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/pkg/errors"
 	"resty.dev/v3"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/driver"
@@ -658,7 +659,7 @@ func (xc *XunLeiBrowserCommon) Request(url string, method string, callback base.
 			}
 		}
 
-		return nil, errors.New(errResp.ErrorMsg)
+		return nil, errs.New(errResp.ErrorMsg)
 	default:
 		// 处理未捕获到的验证码错误
 		if errResp.ErrorMsg == "captcha_invalid" {
@@ -690,7 +691,7 @@ func (xc *XunLeiBrowserCommon) RefreshToken(refreshToken string) (*TokenResp, er
 	}
 
 	if resp.RefreshToken == "" {
-		return nil, errors.New("refresh token is empty")
+		return nil, errs.New("refresh token is empty")
 	}
 	return &resp, nil
 }
@@ -709,7 +710,7 @@ func (xc *XunLeiBrowserCommon) GetSafeAccessToken(safePassword string) (string, 
 	}
 
 	if resp.Token == "" {
-		return "", errors.New("SafePassword is incorrect ")
+		return "", errs.New("SafePassword is incorrect ")
 	}
 	return resp.Token, nil
 }
@@ -833,7 +834,7 @@ func (xc *XunLeiBrowserCommon) OfflineList(ctx context.Context, nextPageToken st
 	}, &resp)
 
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get offline list")
+		return nil, errs.Wrap(err, "failed to get offline list")
 	}
 	res = append(res, resp.Tasks...)
 
@@ -854,7 +855,7 @@ func (xc *XunLeiBrowserCommon) DeleteOfflineTasks(ctx context.Context, taskIDs [
 			SetQueryParams(queryParams)
 	}, nil)
 	if err != nil {
-		return errors.Errorf("failed to delete tasks %v: %w", taskIDs, err)
+		return errs.Errorf("failed to delete tasks %v: %w", taskIDs, err)
 	}
 
 	return nil

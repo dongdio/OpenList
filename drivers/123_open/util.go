@@ -1,7 +1,6 @@
 package _123_open
 
 import (
-	"errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/op"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
@@ -74,7 +74,7 @@ func (d *Open123) Request(apiInfo *ApiInfo, method string, callback base.ReqCall
 			time.Sleep(500 * time.Millisecond)
 			log.Warningf("API: %s, QPS: %d, 请求太频繁，对应API提示过多请减小QPS", apiInfo.url, apiInfo.qps)
 		} else {
-			return nil, errors.New(baseResp.Message)
+			return nil, errs.New(baseResp.Message)
 		}
 	}
 }

@@ -8,8 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
 	"resty.dev/v3"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
@@ -104,7 +105,7 @@ func (d *KodBox) MakeDir(ctx context.Context, parentDir model.Obj, dirName strin
 	}
 	code := resp.Code.(bool)
 	if !code {
-		return nil, errors.Errorf("%s", resp.Data)
+		return nil, errs.Errorf("%s", resp.Data)
 	}
 
 	return &model.ObjThumb{
@@ -133,7 +134,7 @@ func (d *KodBox) Move(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj,
 	}
 	code := resp.Code.(bool)
 	if !code {
-		return nil, errors.Errorf("%s", resp.Data)
+		return nil, errs.Errorf("%s", resp.Data)
 	}
 
 	return &model.ObjThumb{
@@ -160,7 +161,7 @@ func (d *KodBox) Rename(ctx context.Context, srcObj model.Obj, newName string) (
 	}
 	code := resp.Code.(bool)
 	if !code {
-		return nil, errors.Errorf("%s", resp.Data)
+		return nil, errs.Errorf("%s", resp.Data)
 	}
 	return &model.ObjThumb{
 		Object: model.Object{
@@ -188,7 +189,7 @@ func (d *KodBox) Copy(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj,
 	}
 	code := resp.Code.(bool)
 	if !code {
-		return nil, errors.Errorf("%s", resp.Data)
+		return nil, errs.Errorf("%s", resp.Data)
 	}
 
 	path := resp.Info.([]any)[0].(string)
@@ -222,7 +223,7 @@ func (d *KodBox) Remove(ctx context.Context, obj model.Obj) error {
 	}
 	code := resp.Code.(bool)
 	if !code {
-		return errors.Errorf("%s", resp.Data)
+		return errs.Errorf("%s", resp.Data)
 	}
 	return nil
 }
@@ -246,7 +247,7 @@ func (d *KodBox) Put(ctx context.Context, dstDir model.Obj, s model.FileStreamer
 	}
 	code := resp.Code.(bool)
 	if !code {
-		return nil, errors.Errorf("%s", resp.Data)
+		return nil, errs.Errorf("%s", resp.Data)
 	}
 	return &model.ObjThumb{
 		Object: model.Object{
@@ -271,7 +272,7 @@ func (d *KodBox) getFileOrFolderName(ctx context.Context, path string) (*string,
 	}
 	code := resp.Code.(bool)
 	if !code {
-		return nil, errors.Errorf("%s", resp.Data)
+		return nil, errs.Errorf("%s", resp.Data)
 	}
 	folderOrFileName := resp.Data.(map[string]any)["name"].(string)
 	return &folderOrFileName, nil
