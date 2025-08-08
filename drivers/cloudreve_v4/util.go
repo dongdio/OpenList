@@ -133,7 +133,7 @@ func (d *CloudreveV4) doLogin(needCaptcha bool) error {
 			return err
 		}
 		if configResp.CaptchaType != "normal" {
-			return fmt.Errorf("captcha type %s not support", configResp.CaptchaType)
+			return errs.Errorf("captcha type %s not support", configResp.CaptchaType)
 		}
 		var captcha CaptchaResp
 		err = d.request(http.MethodGet, "/site/captcha", nil, &captcha)
@@ -178,7 +178,7 @@ func (d *CloudreveV4) refreshToken() error {
 		if d.Username != "" {
 			err := d.login()
 			if err != nil {
-				return fmt.Errorf("cannot login to get refresh token, error: %s", err)
+				return errs.Wrap(err, "cannot login to get refresh token")
 			}
 		}
 		return nil
@@ -290,7 +290,7 @@ func (d *CloudreveV4) upRemote(ctx context.Context, file model.FileStreamer, u F
 				}
 				defer res.Body.Close()
 				if res.StatusCode != 200 {
-					return fmt.Errorf("server error: %d", res.StatusCode)
+					return errs.Errorf("server error: %d", res.StatusCode)
 				}
 				body, err := io.ReadAll(res.Body)
 				if err != nil {
@@ -358,7 +358,7 @@ func (d *CloudreveV4) upOneDrive(ctx context.Context, file model.FileStreamer, u
 				// https://learn.microsoft.com/zh-cn/onedrive/developer/rest-api/api/driveitem_createuploadsession
 				switch {
 				case res.StatusCode >= 500 && res.StatusCode <= 504:
-					return fmt.Errorf("server error: %d", res.StatusCode)
+					return errs.Errorf("server error: %d", res.StatusCode)
 				case res.StatusCode != 201 && res.StatusCode != 202 && res.StatusCode != 200:
 					data, _ := io.ReadAll(res.Body)
 					return errs.New(string(data))
@@ -420,7 +420,7 @@ func (d *CloudreveV4) upS3(ctx context.Context, file model.FileStreamer, u FileU
 				res.Body.Close()
 				switch {
 				case res.StatusCode != 200:
-					return fmt.Errorf("server error: %d", res.StatusCode)
+					return errs.Errorf("server error: %d", res.StatusCode)
 				case etag == "":
 					return errs.New("failed to get ETag from header")
 				default:
@@ -469,7 +469,7 @@ func (d *CloudreveV4) upS3(ctx context.Context, file model.FileStreamer, u FileU
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(res.Body)
-		return fmt.Errorf("up status: %d, error: %s", res.StatusCode, string(body))
+		return errs.Errorf("up status: %d, error: %s", res.StatusCode, string(body))
 	}
 
 	// 上传成功发送回调请求

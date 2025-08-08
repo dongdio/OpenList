@@ -13,12 +13,11 @@ import (
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
 
-	"github.com/dongdio/OpenList/v4/utility/errs"
-
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/global"
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 	streamPkg "github.com/dongdio/OpenList/v4/utility/stream"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 	"github.com/dongdio/OpenList/v4/utility/utils/random"
@@ -57,7 +56,7 @@ func (d *Yun139) GetAddition() driver.Additional {
 func (d *Yun139) Init(ctx context.Context) error {
 	if d.ref == nil {
 		if len(d.Authorization) == 0 {
-			return errs.Errorf("authorization is empty")
+			return errs.New("authorization is empty")
 		}
 		err := d.refreshToken()
 		if err != nil {
@@ -83,7 +82,7 @@ func (d *Yun139) Init(ctx context.Context) error {
 			}
 		}
 		if len(d.PersonalCloudHost) == 0 {
-			return errs.Errorf("PersonalCloudHost is empty")
+			return errs.New("PersonalCloudHost is empty")
 		}
 
 		d.cronEntryId, err = global.CronConfig.AddFunc("0 */12 * * *", func() {
@@ -441,7 +440,7 @@ func (d *Yun139) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 			"toParentFileId": dstDir.GetID(),
 		}
 		pathname := "/file/batchCopy"
-		_, err := d.personalPost(pathname, data, nil)
+		_, err = d.personalPost(pathname, data, nil)
 		return err
 	case MetaPersonal:
 		var contentInfoList []string

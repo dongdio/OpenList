@@ -646,7 +646,7 @@ func Put(ctx context.Context, storage driver.Driver, dstDirPath string, file mod
 	if storage.Config().NoOverwriteUpload && fi != nil && fi.GetSize() > 0 {
 		if err != nil {
 			// upload failed, recover old obj
-			err := Rename(ctx, storage, tempPath, file.GetName())
+			err = Rename(ctx, storage, tempPath, file.GetName())
 			if err != nil {
 				log.Errorf("failed recover old obj: %+v", err)
 			}

@@ -14,11 +14,10 @@ import (
 	log "github.com/sirupsen/logrus"
 	"resty.dev/v3"
 
-	"github.com/dongdio/OpenList/v4/utility/errs"
-
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
@@ -91,7 +90,7 @@ func (d *LanZou) _post(url string, callback base.ReqCallback, resp any, up bool)
 		if info == "" {
 			info = utils.GetBytes(data, "info").String()
 		}
-		return data, errs.Errorf(info)
+		return data, errs.New(info)
 	}
 }
 
@@ -128,8 +127,7 @@ func (d *LanZou) request(url string, method string, callback base.ReqCallback, u
 }
 
 func (d *LanZou) Login() ([]*http.Cookie, error) {
-	resp, err := base.NewRestyClient().
-		SetRedirectPolicy(resty.NoRedirectPolicy()).
+	resp, err := base.NoRedirectClient.
 		R().SetFormData(map[string]string{
 		"task":         "3",
 		"uid":          d.Account,
@@ -173,7 +171,7 @@ func (d *LanZou) GetAllFiles(folderID string) ([]model.Obj, error) {
 	), nil
 }
 
-// 通过ID获取文件夹
+// GetFolders 通过ID获取文件夹
 func (d *LanZou) GetFolders(folderID string) ([]FileOrFolder, error) {
 	var resp RespText[[]FileOrFolder]
 	_, err := d.doupload(func(req *resty.Request) {
@@ -188,7 +186,7 @@ func (d *LanZou) GetFolders(folderID string) ([]FileOrFolder, error) {
 	return resp.Text, nil
 }
 
-// 通过ID获取文件
+// GetFiles 通过ID获取文件
 func (d *LanZou) GetFiles(folderID string) ([]FileOrFolder, error) {
 	files := make([]FileOrFolder, 0)
 	for pg := 1; ; pg++ {
@@ -356,17 +354,17 @@ func (d *LanZou) getFilesByShareUrl(shareID, pwd string, sharePageData string) (
 
 	// 需要密码
 	if strings.Contains(sharePageData, "pwdload") || strings.Contains(sharePageData, "passwddiv") {
-		sharePageData, err := getJSFunctionByName(sharePageData, "down_p")
+		sharePage, err := getJSFunctionByName(sharePageData, "down_p")
 		if err != nil {
 			return nil, err
 		}
-		param, err := htmlJsonToMap(sharePageData)
+		param, err := htmlJsonToMap(sharePage)
 		if err != nil {
 			return nil, err
 		}
 		param["p"] = pwd
 
-		fileIDs := findFileIDReg.FindStringSubmatch(sharePageData)
+		fileIDs := findFileIDReg.FindStringSubmatch(sharePage)
 		var fileID string
 		if len(fileIDs) > 1 {
 			fileID = fileIDs[1]
@@ -432,9 +430,10 @@ func (d *LanZou) getFilesByShareUrl(shareID, pwd string, sharePageData string) (
 	file.Time = timeFindReg.FindString(sharePageData)
 
 	// 重定向获取真实链接
-	res, err := base.NoRedirectClient.R().SetHeaders(map[string]string{
-		"accept-language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
-	}).Get(downloadUrl)
+	res, err := base.NoRedirectClient.R().
+		SetHeaders(map[string]string{
+			"accept-language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
+		}).Get(downloadUrl)
 	if err != nil {
 		return nil, err
 	}
@@ -461,7 +460,7 @@ func (d *LanZou) getFilesByShareUrl(shareID, pwd string, sharePageData string) (
 	return &file, nil
 }
 
-// 通过分享链接获取文件夹
+// GetFolderByShareUrl 通过分享链接获取文件夹
 // 似乎子目录和文件不会加密
 // 参考 https://github.com/zaxtyson/LanZouCloud-API/blob/ab2e9ec715d1919bf432210fc16b91c6775fbb99/lanzou/api/core.py#L1089
 func (d *LanZou) GetFolderByShareUrl(shareID, pwd string) ([]FileOrFolderByShareUrl, error) {
@@ -497,7 +496,7 @@ func (d *LanZou) getFolderByShareUrl(pwd string, sharePageData string) ([]FileOr
 	for page := 1; ; page++ {
 		from["pg"] = strconv.Itoa(page)
 		var resp FileOrFolderByShareUrlResp
-		_, err := d.post(d.ShareUrl+"/filemoreajax.php", func(req *resty.Request) { req.SetFormData(from) }, &resp)
+		_, err = d.post(d.ShareUrl+"/filemoreajax.php", func(req *resty.Request) { req.SetFormData(from) }, &resp)
 		if err != nil {
 			return nil, err
 		}
@@ -520,9 +519,9 @@ func (d *LanZou) getFileRealInfo(downURL string) (*int64, *time.Time) {
 	if res == nil {
 		return nil, nil
 	}
-	time, _ := http.ParseTime(res.Header().Get("Last-Modified"))
+	t, _ := http.ParseTime(res.Header().Get("Last-Modified"))
 	size, _ := strconv.ParseInt(res.Header().Get("Content-Length"), 10, 64)
-	return &size, &time
+	return &size, &t
 }
 
 func (d *LanZou) getVeiAndUid() (vei string, uid string, err error) {

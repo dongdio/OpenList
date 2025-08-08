@@ -474,7 +474,7 @@ func (d *downloader) tryDownloadChunk(params *HTTPRequestParams, ch *chunk) (int
 		return n, &errNeedRetry{err: err}
 	}
 	if n != ch.size {
-		err = fmt.Errorf("chunk download size incorrect, expected=%d, got=%d", ch.size, n)
+		err = errs.Errorf("chunk download size incorrect, expected=%d, got=%d", ch.size, n)
 		return n, &errNeedRetry{err: err}
 	}
 

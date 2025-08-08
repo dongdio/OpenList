@@ -12,11 +12,10 @@ import (
 	mapset "github.com/deckarep/golang-set/v2"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/dongdio/OpenList/v4/utility/errs"
-
 	"github.com/dongdio/OpenList/v4/internal/db"
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/generic_sync"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
@@ -122,11 +121,11 @@ func initStorage(ctx context.Context, storage model.Storage, storageDriver drive
 				var refStorage driver.Driver
 				refStorage, err = GetStorageByMountPath(refMountPath)
 				if err != nil {
-					err = fmt.Errorf("ref: %w", err)
+					err = errs.Wrap(err, "ref")
 				} else {
 					err = ref.InitReference(refStorage)
 					if err != nil && errs.IsNotSupportError(err) {
-						err = fmt.Errorf("ref: storage is not %s", storageDriver.Config().Name)
+						err = errs.Errorf("ref: storage is not %s", storageDriver.Config().Name)
 					}
 				}
 			}

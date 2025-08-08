@@ -2,8 +2,6 @@ package local
 
 import (
 	"bytes"
-	"encoding/json"
-	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -13,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/disintegration/imaging"
+	"github.com/spf13/cast"
 	ffmpeg "github.com/u2takey/ffmpeg-go"
 
 	"github.com/dongdio/OpenList/v4/consts"
@@ -39,7 +38,7 @@ func isSymlinkDir(f fs.FileInfo, path string) bool {
 	return false
 }
 
-// Get the snapshot of the video
+// GetSnapshot the snapshot of the video
 func (d *Local) GetSnapshot(videoPath string) (imgData *bytes.Buffer, err error) {
 	// Run ffprobe to get the video duration
 	jsonOutput, err := ffmpeg.Probe(videoPath)
@@ -54,7 +53,7 @@ func (d *Local) GetSnapshot(videoPath string) (imgData *bytes.Buffer, err error)
 		Format probeFormat `json:"format"`
 	}
 	var probe probeData
-	err = json.Unmarshal([]byte(jsonOutput), &probe)
+	err = utils.JSONTool.Unmarshal([]byte(jsonOutput), &probe)
 	if err != nil {
 		return nil, err
 	}
@@ -65,13 +64,13 @@ func (d *Local) GetSnapshot(videoPath string) (imgData *bytes.Buffer, err error)
 
 	var ss string
 	if d.videoThumbPosIsPercentage {
-		ss = fmt.Sprintf("%f", totalDuration*d.videoThumbPos)
+		ss = cast.ToString(totalDuration * d.videoThumbPos)
 	} else {
 		// If the value is greater than the total duration, use the total duration
 		if d.videoThumbPos > totalDuration {
-			ss = fmt.Sprintf("%f", totalDuration)
+			ss = cast.ToString(totalDuration)
 		} else {
-			ss = fmt.Sprintf("%f", d.videoThumbPos)
+			ss = cast.ToString(d.videoThumbPos)
 		}
 	}
 

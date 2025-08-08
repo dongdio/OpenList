@@ -277,8 +277,9 @@ func (y *Cloud189PC) login() (err error) {
 		y.loginParam = nil
 		// 遇到错误，重新加载登陆参数(刷新验证码)
 		if err != nil && y.NoUseOcr {
+			err = errs.WithMessage(err, "登录189pc时遇到错误")
 			if err1 := y.initLoginParam(); err1 != nil {
-				err = fmt.Errorf("err1: %s \nerr2: %s", err, err1)
+				err = errs.WithMessage(err1, "重新加载登陆参数失败(刷新验证码)")
 			}
 		}
 	}()
@@ -313,7 +314,7 @@ func (y *Cloud189PC) login() (err error) {
 		return err
 	}
 	if loginresp.ToUrl == "" {
-		return fmt.Errorf("login failed,No toUrl obtained, msg: %s", loginresp.Msg)
+		return errs.Errorf("login failed,No toUrl obtained, msg: %s", loginresp.Msg)
 	}
 
 	// 获取Session
@@ -332,7 +333,7 @@ func (y *Cloud189PC) login() (err error) {
 		return &erron
 	}
 	if tokenInfo.ResCode != 0 {
-		err = fmt.Errorf(tokenInfo.ResMessage)
+		err = errs.New(tokenInfo.ResMessage)
 		return
 	}
 	y.tokenInfo = &tokenInfo
@@ -403,11 +404,11 @@ func (y *Cloud189PC) initLoginParam() error {
 		SetQueryParams(map[string]string{
 			"token": param.CaptchaToken,
 			"REQID": param.ReqID,
-			"rnd":   fmt.Sprint(timestamp()),
+			"rnd":   cast.ToString(timestamp()),
 		}).
 		Get(AUTH_URL + "/api/logbox/oauth2/picCaptcha.do")
 	if err != nil {
-		return fmt.Errorf("failed to obtain verification code")
+		return errs.New("failed to obtain verification code")
 	}
 	if imgRes.Size() <= 20 {
 		return nil
@@ -426,7 +427,7 @@ func (y *Cloud189PC) initLoginParam() error {
 	}
 
 	// 返回验证码图片给前端
-	return fmt.Errorf(`need img validate code: <img src="data:image/png;base64,%s"/>`, base64.StdEncoding.EncodeToString(imgRes.Bytes()))
+	return errs.Errorf(`need img validate code: <img src="data:image/png;base64,%s"/>`, base64.StdEncoding.EncodeToString(imgRes.Bytes()))
 }
 
 // 刷新会话

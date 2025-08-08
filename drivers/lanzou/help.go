@@ -19,7 +19,7 @@ const DAY time.Duration = 84600000000000
 // 解析时间
 var timeSplitReg = regexp.MustCompile("([0-9.]*)\\s*([\u4e00-\u9fa5]+)")
 
-// 如果解析失败,则返回当前时间
+// MustParseTime 如果解析失败,则返回当前时间
 func MustParseTime(str string) time.Time {
 	lastOpTime, err := time.ParseInLocation("2006-01-02 -07", str+" +08", time.Local)
 	if err != nil {
@@ -50,7 +50,7 @@ func MustParseTime(str string) time.Time {
 // 解析大小
 var sizeSplitReg = regexp.MustCompile(`(?i)([0-9.]+)\s*([bkm]+)`)
 
-// 解析失败返回0
+// SizeStrToInt64 解析失败返回0
 func SizeStrToInt64(size string) int64 {
 	strs := sizeSplitReg.FindStringSubmatch(size)
 	if len(strs) < 3 {
@@ -69,7 +69,7 @@ func SizeStrToInt64(size string) int64 {
 	return 0
 }
 
-// 移除注释
+// RemoveNotes 移除注释
 func RemoveNotes(html string) string {
 	return regexp.MustCompile(`<!--.*?-->|[^:]//.*|/\*.*?\*/`).ReplaceAllStringFunc(html, func(b string) string {
 		if b[1:3] == "//" {
@@ -79,7 +79,7 @@ func RemoveNotes(html string) string {
 	})
 }
 
-// 清理JS注释
+// RemoveJSComment 清理JS注释
 func RemoveJSComment(data string) string {
 	var result strings.Builder
 	inComment := false
@@ -121,7 +121,7 @@ func RemoveJSComment(data string) string {
 
 var findAcwScV2Reg = regexp.MustCompile(`arg1='([0-9A-Z]+)'`)
 
-// 在页面被过多访问或其他情况下，有时候会先返回一个加密的页面，其执行计算出一个acw_sc__v2后放入页面后再重新访问页面才能获得正常页面
+// CalcAcwScV2 在页面被过多访问或其他情况下，有时候会先返回一个加密的页面，其执行计算出一个acw_sc__v2后放入页面后再重新访问页面才能获得正常页面
 // 若该页面进行了js加密，则进行解密，计算acw_sc__v2，并加入cookie
 func CalcAcwScV2(html string) (string, error) {
 	log.Debugln("acw_sc__v2", html)
@@ -250,7 +250,7 @@ func htmlJsonToMap2(html string) (map[string]string, error) {
 		}
 	}
 	if sData == "" {
-		return nil, errs.Errorf("not find data")
+		return nil, errs.New("not find data")
 	}
 	return jsonToMap(sData, html), nil
 }
@@ -293,7 +293,7 @@ var findFromReg = regexp.MustCompile(`data : '(.+?)'`) // 查找from字符串
 func htmlFormToMap(html string) (map[string]string, error) {
 	forms := findFromReg.FindStringSubmatch(html)
 	if len(forms) != 2 {
-		return nil, errs.Errorf("not find file sgin")
+		return nil, errs.New("not find file sgin")
 	}
 	return formToMap(forms[1]), nil
 }
@@ -301,8 +301,8 @@ func htmlFormToMap(html string) (map[string]string, error) {
 func formToMap(from string) map[string]string {
 	var param = make(map[string]string)
 	for _, kv := range strings.Split(from, "&") {
-		kv := strings.SplitN(kv, "=", 2)[:2]
-		param[kv[0]] = kv[1]
+		arr := strings.SplitN(kv, "=", 2)[:2]
+		param[arr[0]] = arr[1]
 	}
 	return param
 }

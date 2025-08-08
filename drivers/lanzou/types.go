@@ -86,8 +86,8 @@ func (f *FileOrFolder) GetSize() int64 {
 func (f *FileOrFolder) IsDir() bool { return f.FolID != "" }
 func (f *FileOrFolder) ModTime() time.Time {
 	if f.time == nil {
-		time := MustParseTime(f.Time)
-		f.time = &time
+		t := MustParseTime(f.Time)
+		f.time = &t
 	}
 	return *f.time
 }
@@ -139,9 +139,9 @@ type FileOrFolderByShareUrl struct {
 	Pwd string `json:"-"`
 
 	// 缓存字段
-	size       *int64     `json:"-"`
-	time       *time.Time `json:"-"`
-	repairFlag bool       `json:"-"`
+	size       *int64
+	time       *time.Time
+	repairFlag bool
 }
 
 func (f *FileOrFolderByShareUrl) CreateTime() time.Time {
@@ -165,13 +165,13 @@ func (f *FileOrFolderByShareUrl) GetSize() int64 {
 func (f *FileOrFolderByShareUrl) IsDir() bool { return f.IsFloder }
 func (f *FileOrFolderByShareUrl) ModTime() time.Time {
 	if f.time == nil {
-		time := MustParseTime(f.Time)
-		f.time = &time
+		t := MustParseTime(f.Time)
+		f.time = &t
 	}
 	return *f.time
 }
 
-// 获取下载链接的响应
+// FileShareInfoAndUrlResp 获取下载链接的响应
 type FileShareInfoAndUrlResp[T string | int] struct {
 	Dom string `json:"dom"`
 	URL string `json:"url"`

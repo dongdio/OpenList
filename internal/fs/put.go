@@ -18,12 +18,6 @@ import (
 	"github.com/dongdio/OpenList/v4/utility/task"
 )
 
-// 自定义错误类型
-var (
-	ErrUploadFailed = errs.New("upload failed")
-)
-
-// UploadTask 上传任务结构
 type UploadTask struct {
 	task.TaskExtension
 	storage          driver.Driver
@@ -31,47 +25,29 @@ type UploadTask struct {
 	file             model.FileStreamer
 }
 
-// GetName 获取任务名称
-// 返回:
-//   - string: 任务名称
 func (t *UploadTask) GetName() string {
 	return fmt.Sprintf("upload %s to [%s](%s)", t.file.GetName(), t.storage.GetStorage().MountPath, t.dstDirActualPath)
 }
 
-// GetStatus 获取任务状态
-// 返回:
-//   - string: 任务状态
 func (t *UploadTask) GetStatus() string {
 	return "uploading"
 }
 
-// Run 执行任务
-// 返回:
-//   - error: 错误信息
 func (t *UploadTask) Run() error {
-	// 初始化任务时间
 	t.ClearEndTime()
 	t.SetStartTime(time.Now())
 	defer func() { t.SetEndTime(time.Now()) }()
-
-	// 执行上传操作
 	return op.Put(t.Ctx(), t.storage, t.dstDirActualPath, t.file, t.SetProgress, true)
 }
 
-// OnSucceeded 任务成功回调
 func (t *UploadTask) OnSucceeded() {
 	task_group.TransferCoordinator.Done(stdpath.Join(t.storage.GetStorage().MountPath, t.dstDirActualPath), true)
 }
 
-// OnFailed 任务失败回调
 func (t *UploadTask) OnFailed() {
 	task_group.TransferCoordinator.Done(stdpath.Join(t.storage.GetStorage().MountPath, t.dstDirActualPath), false)
 }
 
-// SetRetry 设置重试
-// 参数:
-//   - retry: 当前重试次数
-//   - maxRetry: 最大重试次数
 func (t *UploadTask) SetRetry(retry int, maxRetry int) {
 	t.TaskExtension.SetRetry(retry, maxRetry)
 	if retry == 0 &&
@@ -80,51 +56,26 @@ func (t *UploadTask) SetRetry(retry int, maxRetry int) {
 	}
 }
 
-// UploadTaskManager 上传任务管理器
 var UploadTaskManager *tache.Manager[*UploadTask]
 
-// putAsTask 添加上传任务并立即返回
-// 参数:
-//   - ctx: 上下文
-//   - dstDirPath: 目标目录路径
-//   - file: 文件流
-//
-// 返回:
-//   - task.TaskExtensionInfo: 任务信息
-//   - error: 错误信息
+// putAsTask add as a put task and return immediately
 func putAsTask(ctx context.Context, dstDirPath string, file model.FileStreamer) (task.TaskExtensionInfo, error) {
-	// 参数验证
-	if dstDirPath == "" {
-		return nil, errs.WithStack(ErrInvalidPath)
-	}
-
-	if file == nil {
-		return nil, errs.New("file cannot be nil")
-	}
-
-	// 获取存储驱动和实际路径
-	storage, dstDirActualPath, err := getStorageWithCache(dstDirPath)
+	storage, dstDirActualPath, err := op.GetStorageAndActualPath(dstDirPath)
 	if err != nil {
 		return nil, errs.WithMessage(err, "failed get storage")
 	}
-
-	// 检查存储是否支持上传
 	if storage.Config().NoUpload {
 		return nil, errs.WithStack(errs.UploadNotSupported)
 	}
-
-	// 如果文件需要缓存，先创建临时文件
 	if file.NeedStore() {
-		_, err := file.CacheFullInTempFile()
+		_, err = file.CacheFullInTempFile()
 		if err != nil {
-			return nil, errs.Wrapf(err, "failed to create temp file")
+			return nil, errs.Wrap(err, "failed to create temp file")
 		}
+		// file.SetReader(tempFile)
+		// file.SetTmpFile(tempFile)
 	}
-
-	// 获取任务创建者
 	taskCreator, _ := ctx.Value(consts.UserKey).(*model.User) // taskCreator is nil when convert failed
-
-	// 创建上传任务
 	t := &UploadTask{
 		TaskExtension: task.TaskExtension{
 			Creator: taskCreator,
@@ -134,55 +85,22 @@ func putAsTask(ctx context.Context, dstDirPath string, file model.FileStreamer) 
 		dstDirActualPath: dstDirActualPath,
 		file:             file,
 	}
-
-	// 设置总字节数
 	t.SetTotalBytes(file.GetSize())
-
-	// 添加任务
 	task_group.TransferCoordinator.AddTask(dstDirPath, nil)
 	UploadTaskManager.Add(t)
-
 	return t, nil
 }
 
-// putDirectly 直接上传文件并在完成后返回
-// 参数:
-//   - ctx: 上下文
-//   - dstDirPath: 目标目录路径
-//   - file: 文件流
-//   - lazyCache: 是否延迟缓存
-//
-// 返回:
-//   - error: 错误信息
+// putDirect put the file and return after finish
 func putDirectly(ctx context.Context, dstDirPath string, file model.FileStreamer, lazyCache ...bool) error {
-	// 参数验证
-	if dstDirPath == "" {
-		_ = file.Close()
-		return errs.WithStack(ErrInvalidPath)
-	}
-
-	if file == nil {
-		return errs.New("file cannot be nil")
-	}
-
-	// 获取存储驱动和实际路径
-	storage, dstDirActualPath, err := getStorageWithCache(dstDirPath)
+	storage, dstDirActualPath, err := op.GetStorageAndActualPath(dstDirPath)
 	if err != nil {
 		_ = file.Close()
 		return errs.WithMessage(err, "failed get storage")
 	}
-
-	// 检查存储是否支持上传
 	if storage.Config().NoUpload {
 		_ = file.Close()
 		return errs.WithStack(errs.UploadNotSupported)
 	}
-
-	// 执行上传操作
-	err = op.Put(ctx, storage, dstDirActualPath, file, nil, lazyCache...)
-	if err != nil {
-		return errs.Wrap(ErrUploadFailed, err.Error())
-	}
-
-	return nil
+	return op.Put(ctx, storage, dstDirActualPath, file, nil, lazyCache...)
 }

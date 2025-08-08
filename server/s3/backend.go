@@ -1,11 +1,9 @@
-// Credits: https://pkg.go.dev/github.com/rclone/rclone@v1.65.2/cmd/serve/s3
 // Package s3 implements a fake s3 server for openlist
 package s3
 
 import (
 	"context"
 	"encoding/hex"
-	"fmt"
 	"io"
 	"path"
 	"strings"
@@ -16,12 +14,11 @@ import (
 	"github.com/ncw/swift/v2"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/dongdio/OpenList/v4/utility/errs"
-
 	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/fs"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/http_range"
 	"github.com/dongdio/OpenList/v4/utility/stream"
 	"github.com/dongdio/OpenList/v4/utility/utils"
@@ -182,7 +179,7 @@ func (b *s3Backend) GetObject(ctx context.Context, bucketName, objectName string
 
 	rrf, err := stream.GetRangeReaderFromLink(size, link)
 	if err != nil {
-		return nil, fmt.Errorf("the remote storage driver need to be enhanced to support s3")
+		return nil, errs.New("the remote storage driver need to be enhanced to support s3")
 	}
 
 	var rd io.Reader

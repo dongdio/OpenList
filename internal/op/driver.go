@@ -16,7 +16,6 @@ var driverMap = map[string]DriverConstructor{}
 var driverInfoMap = map[string]driver.Info{}
 
 func RegisterDriver(driver DriverConstructor) {
-	// log.Infof("register driver: [%s]", config.Name)
 	tempDriver := driver()
 	tempConfig := tempDriver.Config()
 	registerDriverItems(tempConfig, tempDriver.GetAddition())

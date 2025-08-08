@@ -5,10 +5,9 @@ import (
 
 	"github.com/meilisearch/meilisearch-go"
 
-	"github.com/dongdio/OpenList/v4/utility/errs"
-
 	"github.com/dongdio/OpenList/v4/internal/conf"
 	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 	searcher2 "github.com/dongdio/OpenList/v4/utility/search/searcher"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )

@@ -274,7 +274,7 @@ func (d *Cloudreve) upRemote(ctx context.Context, stream model.FileStreamer, u U
 				}
 				defer res.Body.Close()
 				if res.StatusCode != 200 {
-					return fmt.Errorf("server error: %d", res.StatusCode)
+					return errs.Errorf("server error: %d", res.StatusCode)
 				}
 				body, err := io.ReadAll(res.Body)
 				if err != nil {
@@ -342,7 +342,7 @@ func (d *Cloudreve) upOneDrive(ctx context.Context, stream model.FileStreamer, u
 				// https://learn.microsoft.com/zh-cn/onedrive/developer/rest-api/api/driveitem_createuploadsession
 				switch {
 				case res.StatusCode >= 500 && res.StatusCode <= 504:
-					return fmt.Errorf("server error: %d", res.StatusCode)
+					return errs.Errorf("server error: %d", res.StatusCode)
 				case res.StatusCode != 201 && res.StatusCode != 202 && res.StatusCode != 200:
 					data, _ := io.ReadAll(res.Body)
 					return errs.New(string(data))
@@ -404,7 +404,7 @@ func (d *Cloudreve) upS3(ctx context.Context, stream model.FileStreamer, u Uploa
 				res.Body.Close()
 				switch {
 				case res.StatusCode != 200:
-					return fmt.Errorf("server error: %d", res.StatusCode)
+					return errs.Errorf("server error: %d", res.StatusCode)
 				case etag == "":
 					return errs.New("failed to get ETag from header")
 				default:
@@ -452,7 +452,7 @@ func (d *Cloudreve) upS3(ctx context.Context, stream model.FileStreamer, u Uploa
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(res.Body)
-		return fmt.Errorf("up status: %d, error: %s", res.StatusCode, string(body))
+		return errs.Errorf("up status: %d, error: %s", res.StatusCode, body)
 	}
 
 	// 上传成功发送回调请求

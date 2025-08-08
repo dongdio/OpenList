@@ -3,142 +3,46 @@ package fs
 import (
 	"context"
 
-	"github.com/dongdio/OpenList/v4/utility/errs"
-
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/task"
 )
 
-// 自定义错误类型
-var (
-	ErrMakeDirFailed = errs.New("failed to make directory")
-	ErrRenameFailed  = errs.New("failed to rename object")
-	ErrRemoveFailed  = errs.New("failed to remove object")
-	ErrOtherFailed   = errs.New("operation failed")
-)
-
-// makeDir 创建目录
-// 参数:
-//   - ctx: 上下文
-//   - path: 目录路径
-//   - lazyCache: 是否延迟缓存
-//
-// 返回:
-//   - error: 错误信息
 func makeDir(ctx context.Context, path string, lazyCache ...bool) error {
-	// 参数验证
-	if path == "" {
-		return errs.WithStack(ErrInvalidPath)
-	}
-
-	// 获取存储驱动和实际路径
-	storage, actualPath, err := getStorageWithCache(path)
+	storage, actualPath, err := op.GetStorageAndActualPath(path)
 	if err != nil {
-		return errs.WithMessage(err, "failed get storage")
+		return errs.Wrap(err, "failed get storage")
 	}
-
-	// 创建目录
-	err = op.MakeDir(ctx, storage, actualPath, lazyCache...)
-	if err != nil {
-		return errs.Wrap(ErrMakeDirFailed, err.Error())
-	}
-
-	return nil
+	return op.MakeDir(ctx, storage, actualPath, lazyCache...)
 }
 
-// rename 重命名对象
-// 参数:
-//   - ctx: 上下文
-//   - srcPath: 源路径
-//   - dstName: 目标名称
-//   - lazyCache: 是否延迟缓存
-//
-// 返回:
-//   - error: 错误信息
 func rename(ctx context.Context, srcPath, dstName string, lazyCache ...bool) error {
-	// 参数验证
-	if srcPath == "" || dstName == "" {
-		return errs.WithStack(ErrInvalidPath)
-	}
-
-	// 获取存储驱动和实际路径
-	storage, srcActualPath, err := getStorageWithCache(srcPath)
+	storage, srcActualPath, err := op.GetStorageAndActualPath(srcPath)
 	if err != nil {
-		return errs.WithMessage(err, "failed get storage")
+		return errs.Wrap(err, "failed get storage")
 	}
-
-	// 重命名对象
-	err = op.Rename(ctx, storage, srcActualPath, dstName, lazyCache...)
-	if err != nil {
-		return errs.Wrap(ErrRenameFailed, err.Error())
-	}
-
-	return nil
+	return op.Rename(ctx, storage, srcActualPath, dstName, lazyCache...)
 }
 
-// remove 删除对象
-// 参数:
-//   - ctx: 上下文
-//   - path: 对象路径
-//
-// 返回:
-//   - error: 错误信息
 func remove(ctx context.Context, path string) error {
-	// 参数验证
-	if path == "" {
-		return errs.WithStack(ErrInvalidPath)
-	}
-
-	// 获取存储驱动和实际路径
-	storage, actualPath, err := getStorageWithCache(path)
+	storage, actualPath, err := op.GetStorageAndActualPath(path)
 	if err != nil {
-		return errs.WithMessage(err, "failed get storage")
+		return errs.Wrap(err, "failed get storage")
 	}
-
-	// 删除对象
-	err = op.Remove(ctx, storage, actualPath)
-	if err != nil {
-		return errs.Wrap(ErrRemoveFailed, err.Error())
-	}
-
-	return nil
+	return op.Remove(ctx, storage, actualPath)
 }
 
-// other 执行其他操作
-// 参数:
-//   - ctx: 上下文
-//   - args: 操作参数
-//
-// 返回:
-//   - any: 操作结果
-//   - error: 错误信息
-func other(ctx context.Context, args model.FsOtherArgs) (any, error) {
-	// 参数验证
-	if args.Path == "" {
-		return nil, errs.WithStack(ErrInvalidPath)
-	}
-
-	// 获取存储驱动和实际路径
-	storage, actualPath, err := getStorageWithCache(args.Path)
+func other(ctx context.Context, args model.FsOtherArgs) (interface{}, error) {
+	storage, actualPath, err := op.GetStorageAndActualPath(args.Path)
 	if err != nil {
-		return nil, errs.WithMessage(err, "failed get storage")
+		return nil, errs.Wrap(err, "failed get storage")
 	}
-
-	// 更新路径
 	args.Path = actualPath
-
-	// 执行操作
-	result, err := op.Other(ctx, storage, args)
-	if err != nil {
-		return nil, errs.Wrap(ErrOtherFailed, err.Error())
-	}
-
-	return result, nil
+	return op.Other(ctx, storage, args)
 }
 
-// TaskData 任务数据结构
 type TaskData struct {
 	task.TaskExtension
 	Status        string        `json:"-"` // don't save status to save space
@@ -150,9 +54,6 @@ type TaskData struct {
 	DstStorageMp  string        `json:"dst_storage_mp"`
 }
 
-// GetStatus 获取任务状态
-// 返回:
-//   - string: 任务状态
 func (t *TaskData) GetStatus() string {
 	return t.Status
 }

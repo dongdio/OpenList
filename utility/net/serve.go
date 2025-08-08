@@ -259,7 +259,7 @@ func RequestHTTP(ctx context.Context, method string, headerOverride http.Header,
 		_ = res.Body.Close()
 		msg := string(all)
 		log.Debugln(msg)
-		return nil, fmt.Errorf("http request [%s] failure,status: %w response:%s", URL, ErrorHTTPStatusCode(res.StatusCode), msg)
+		return nil, errs.Errorf("http request [%s] failure,status: %w response:%s", URL, ErrorHTTPStatusCode(res.StatusCode), msg)
 	}
 	return res, nil
 }

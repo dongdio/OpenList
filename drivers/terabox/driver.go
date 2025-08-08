@@ -5,7 +5,6 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/hex"
-	"fmt"
 	"io"
 	"math"
 	stdpath "path"
@@ -14,11 +13,10 @@ import (
 	"github.com/avast/retry-go"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/dongdio/OpenList/v4/utility/errs"
-
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 
@@ -238,7 +236,7 @@ func (d *Terabox) Put(ctx context.Context, dstDir model.Obj, stream model.FileSt
 				rspmd5 := utils.GetBytes(res, "md5").String()
 				if localMD5 != rspmd5 {
 					log.Debugf("MD5 mismatch, our MD5: %s, server: %s", localMD5, rspmd5)
-					return fmt.Errorf("MD5 mismatch")
+					return errs.New("MD5 mismatch")
 				}
 				return nil
 			},

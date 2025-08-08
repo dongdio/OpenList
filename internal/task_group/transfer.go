@@ -2,16 +2,14 @@ package task_group
 
 import (
 	"context"
-	"fmt"
 	"path"
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/dongdio/OpenList/v4/utility/errs"
-
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 )
 
 type SrcPathToRemove string
@@ -70,7 +68,7 @@ func verifyAndRemove(ctx context.Context, srcStorage, dstStorage driver.Driver, 
 	if !dstObj.IsDir() {
 		err = op.Remove(ctx, srcStorage, srcPath)
 		if err != nil {
-			return fmt.Errorf("failed remove %s: %+v", path.Join(srcStorage.GetStorage().MountPath, srcPath), err)
+			return errs.Wrapf(err, "failed remove %s", path.Join(srcStorage.GetStorage().MountPath, srcPath))
 		}
 		return nil
 	}
@@ -98,7 +96,7 @@ func verifyAndRemove(ctx context.Context, srcStorage, dstStorage driver.Driver, 
 	}
 	err = op.Remove(ctx, srcStorage, srcPath)
 	if err != nil {
-		return fmt.Errorf("failed remove %s: %+v", path.Join(srcStorage.GetStorage().MountPath, srcPath), err)
+		return errs.Wrapf(err, "failed remove %s", path.Join(srcStorage.GetStorage().MountPath, srcPath))
 	}
 	return nil
 }

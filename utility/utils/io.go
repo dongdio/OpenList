@@ -3,7 +3,6 @@ package utils
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"io"
 	"math"
 	"sync"
@@ -150,7 +149,7 @@ func Retry(attempts int, sleep time.Duration, f func() error) (err error) {
 			return nil
 		}
 	}
-	return fmt.Errorf("after %d attempts, last error: %s", attempts, err)
+	return errs.Wrapf(err, "after %d attempts, last error", attempts)
 }
 
 type ClosersIF interface {

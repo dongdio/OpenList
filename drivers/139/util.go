@@ -13,11 +13,10 @@ import (
 
 	"resty.dev/v3"
 
-	"github.com/dongdio/OpenList/v4/utility/errs"
-
 	"github.com/dongdio/OpenList/v4/drivers/base"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 	"github.com/dongdio/OpenList/v4/utility/utils/random"
 )
@@ -83,16 +82,16 @@ func (d *Yun139) refreshToken() error {
 	authStr := string(decodedAuth)
 	authParts := strings.Split(authStr, ":")
 	if len(authParts) < 3 {
-		return errs.Errorf("authorization is invalid, splits < 3")
+		return errs.New("authorization is invalid, splits < 3")
 	}
 	d.Account = authParts[1]
 	tokenParts := strings.Split(authParts[2], "|")
 	if len(tokenParts) < 4 {
-		return errs.Errorf("authorization is invalid, strs < 4")
+		return errs.New("authorization is invalid, strs < 4")
 	}
 	expirationTime, err := strconv.ParseInt(tokenParts[3], 10, 64)
 	if err != nil {
-		return errs.Errorf("authorization is invalid")
+		return errs.New("authorization is invalid")
 	}
 	timeRemaining := expirationTime - time.Now().UnixMilli()
 	if timeRemaining > 1000*60*60*24*15 {
@@ -100,7 +99,7 @@ func (d *Yun139) refreshToken() error {
 		return nil
 	}
 	if timeRemaining < 0 {
-		return errs.Errorf("authorization has expired")
+		return errs.New("authorization has expired")
 	}
 
 	link := "https://aas.caiyun.feixin.10086.cn:443/tellin/authTokenRefresh.do"

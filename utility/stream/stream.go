@@ -3,7 +3,6 @@ package stream
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"io"
 	"math"
 	"os"
@@ -127,7 +126,7 @@ func (f *FileStream) RangeRead(httpRange http_range.Range) (io.Reader, error) {
 		buf := make([]byte, bufSize)
 		n, err := io.ReadFull(f.Reader, buf)
 		if err != nil {
-			return nil, fmt.Errorf("failed to read all data: (expect =%d, actual =%d) %w", bufSize, n, err)
+			return nil, errs.Wrapf(err, "failed to read all data: (expect =%d, actual =%d)", bufSize, n)
 		}
 		f.peekBuff = bytes.NewReader(buf)
 		f.Reader = io.MultiReader(f.peekBuff, f.Reader)
@@ -193,7 +192,7 @@ func NewSeekableStream(fs *FileStream, link *model.Link) (*SeekableStream, error
 		fs.Add(rrc)
 		return &SeekableStream{FileStream: fs, rangeReadCloser: rrc, size: size}, nil
 	}
-	return nil, fmt.Errorf("illegal seekableStream")
+	return nil, errs.New("illegal seekableStream")
 }
 
 func (ss *SeekableStream) GetSize() int64 {
@@ -219,7 +218,7 @@ func (ss *SeekableStream) RangeRead(httpRange http_range.Range) (io.Reader, erro
 func (ss *SeekableStream) Read(p []byte) (n int, err error) {
 	if ss.Reader == nil {
 		if ss.rangeReadCloser == nil {
-			return 0, fmt.Errorf("illegal seekableStream")
+			return 0, errs.New("illegal seekableStream")
 		}
 		rc, err := ss.rangeReadCloser.RangeRead(ss.Ctx, http_range.Range{Length: -1})
 		if err != nil {

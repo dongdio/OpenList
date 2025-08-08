@@ -276,7 +276,7 @@ func (d *Onedrive) upBig(ctx context.Context, dstDir model.Obj, stream model.Fil
 				// https://learn.microsoft.com/zh-cn/onedrive/developer/rest-api/api/driveitem_createuploadsession
 				switch {
 				case res.StatusCode >= 500 && res.StatusCode <= 504:
-					return fmt.Errorf("server error: %d", res.StatusCode)
+					return errs.Errorf("server error: %d", res.StatusCode)
 				case res.StatusCode != 201 && res.StatusCode != 202 && res.StatusCode != 200:
 					data, _ := io.ReadAll(res.Body)
 					return errs.New(string(data))

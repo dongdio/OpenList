@@ -2,71 +2,70 @@ package errs
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 )
 
 var (
-	EmptyToken = errors.New("empty token")
+	EmptyToken = New("empty token")
 )
 
 var (
-	NotImplement = errors.New("not implement")
-	NotSupport   = errors.New("not support")
-	RelativePath = errors.New("using relative path is not allowed")
+	NotImplement = New("not implement")
+	NotSupport   = New("not support")
+	RelativePath = New("using relative path is not allowed")
 
-	MoveBetweenTwoStorages = errors.New("can't move files between two storages, try to copy")
-	UploadNotSupported     = errors.New("upload not supported")
+	MoveBetweenTwoStorages = New("can't move files between two storages, try to copy")
+	UploadNotSupported     = New("upload not supported")
 
-	MetaNotFound     = errors.New("meta not found")
-	StorageNotFound  = errors.New("storage not found")
-	StreamIncomplete = errors.New("upload/download stream incomplete, possible network issue")
-	StreamPeekFail   = errors.New("StreamPeekFail")
+	MetaNotFound     = New("meta not found")
+	StorageNotFound  = New("storage not found")
+	StreamIncomplete = New("upload/download stream incomplete, possible network issue")
+	StreamPeekFail   = New("StreamPeekFail")
 
-	UnknownArchiveFormat      = errors.New("unknown archive format")
-	WrongArchivePassword      = errors.New("wrong archive password")
-	DriverExtractNotSupported = errors.New("driver extraction not supported")
+	UnknownArchiveFormat      = New("unknown archive format")
+	WrongArchivePassword      = New("wrong archive password")
+	DriverExtractNotSupported = New("driver extraction not supported")
 )
 
 var (
-	ObjectNotFound = errors.New("object not found")
-	NotFolder      = errors.New("not a folder")
-	NotFile        = errors.New("not a file")
+	ObjectNotFound = New("object not found")
+	NotFolder      = New("not a folder")
+	NotFile        = New("not a file")
 )
 
 var (
-	PermissionDenied = errors.New("permission denied")
+	PermissionDenied = New("permission denied")
 )
 
 var (
-	SearchNotAvailable  = errors.Errorf("search not available")
-	BuildIndexIsRunning = errors.Errorf("build index is running, please try later")
+	SearchNotAvailable  = Errorf("search not available")
+	BuildIndexIsRunning = Errorf("build index is running, please try later")
 )
 
 var (
-	EmptyUsername      = errors.New("username is empty")
-	EmptyPassword      = errors.New("password is empty")
-	WrongPassword      = errors.New("password is incorrect")
-	DeleteAdminOrGuest = errors.New("cannot delete admin or guest")
+	EmptyUsername      = New("username is empty")
+	EmptyPassword      = New("password is empty")
+	WrongPassword      = New("password is incorrect")
+	DeleteAdminOrGuest = New("cannot delete admin or guest")
 )
 
 // NewErr wrap constant error with an extra message
-// use errors.Is(err1, StorageNotFound) to check if err belongs to any internal error
+// use Is(err1, StorageNotFound) to check if err belongs to any internal error
 func NewErr(err error, format string, a ...any) error {
-	return errors.Errorf("%v; %s", err, fmt.Sprintf(format, a...))
+	return Errorf("%v; %s", err, fmt.Sprintf(format, a...))
 }
 
 func IsNotFoundError(err error) bool {
-	return errors.Is(errors.Cause(err), ObjectNotFound) || errors.Is(errors.Cause(err), StorageNotFound)
+	return Is(Cause(err), ObjectNotFound) || Is(Cause(err), StorageNotFound)
 }
 
 func IsObjectNotFound(err error) bool {
-	return errors.Is(errors.Cause(err), ObjectNotFound)
+	return Is(Cause(err), ObjectNotFound)
 }
 
 func IsNotSupportError(err error) bool {
-	return errors.Is(errors.Cause(err), NotSupport)
+	return Is(Cause(err), NotSupport)
 }
 
 func IsNotImplement(err error) bool {
-	return errors.Is(errors.Cause(err), NotImplement)
+	return Is(Cause(err), NotImplement)
 }

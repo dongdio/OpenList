@@ -2,11 +2,12 @@ package errgroup
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"sync/atomic"
 
 	"github.com/avast/retry-go"
+
+	"github.com/dongdio/OpenList/v4/utility/errs"
 )
 
 type token struct{}
@@ -127,7 +128,7 @@ func (g *Group) TryGo(f func(ctx context.Context) error) bool {
 
 func (g *Group) SetLimit(n int) *Group {
 	if len(g.sem) != 0 {
-		panic(fmt.Errorf("errgroup: modify limit while %v goroutines in the group are still active", len(g.sem)))
+		panic(errs.Errorf("errgroup: modify limit while %v goroutines in the group are still active", len(g.sem)))
 	}
 	if n > 0 {
 		g.sem = make(chan token, n)

@@ -8,13 +8,12 @@ import (
 
 	"github.com/OpenListTeam/tache"
 
-	"github.com/dongdio/OpenList/v4/utility/errs"
-
 	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/internal/op"
 	"github.com/dongdio/OpenList/v4/internal/task_group"
 	"github.com/dongdio/OpenList/v4/server/common"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/stream"
 	"github.com/dongdio/OpenList/v4/utility/task"
 	"github.com/dongdio/OpenList/v4/utility/utils"
@@ -31,8 +30,8 @@ func (t taskType) String() string {
 }
 
 const (
-	copy taskType = iota
-	move
+	copyType taskType = iota
+	moveType
 )
 
 type FileTransferTask struct {
@@ -55,7 +54,7 @@ func (t *FileTransferTask) Run() error {
 	return t.RunWithNextTaskCallback(func(nextTask *FileTransferTask) error {
 		nextTask.groupID = t.groupID
 		task_group.TransferCoordinator.AddTask(t.groupID, nil)
-		if t.TaskType == copy {
+		if t.TaskType == copyType {
 			CopyTaskManager.Add(nextTask)
 		} else {
 			MoveTaskManager.Add(nextTask)
@@ -79,7 +78,7 @@ func (t *FileTransferTask) SetRetry(retry int, maxRetry int) {
 			(t.GetErr() == nil && t.GetState() != tache.StatePending)) { // 手动重试
 		t.groupID = stdpath.Join(t.DstStorageMp, t.DstActualPath)
 		var payload any
-		if t.TaskType == move {
+		if t.TaskType == moveType {
 			payload = task_group.SrcPathToRemove(stdpath.Join(t.SrcStorageMp, t.SrcActualPath))
 		}
 		task_group.TransferCoordinator.AddTask(t.groupID, payload)
@@ -97,7 +96,7 @@ func transfer(ctx context.Context, taskType taskType, srcObjPath, dstDirPath str
 	}
 
 	if srcStorage.GetStorage() == dstStorage.GetStorage() {
-		if taskType == copy {
+		if taskType == copyType {
 			err = op.Copy(ctx, srcStorage, srcObjActualPath, dstDirActualPath, lazyCache...)
 			if !errs.Is(err, errs.NotImplement) && !errs.Is(err, errs.NotSupport) {
 				return nil, err
@@ -137,7 +136,7 @@ func transfer(ctx context.Context, taskType taskType, srcObjPath, dstDirPath str
 		t.Base.SetCtx(ctx)
 		err = t.RunWithNextTaskCallback(callback)
 		if hasSuccess || err == nil {
-			if taskType == move {
+			if taskType == moveType {
 				task_group.RefreshAndRemove(dstDirPath, task_group.SrcPathToRemove(srcObjPath))
 			} else {
 				op.DeleteCache(t.DstStorage, dstDirActualPath)
@@ -149,7 +148,7 @@ func transfer(ctx context.Context, taskType taskType, srcObjPath, dstDirPath str
 	t.Creator, _ = ctx.Value(consts.UserKey).(*model.User)
 	t.ApiUrl = common.GetApiURL(ctx)
 	t.groupID = dstDirPath
-	if taskType == copy {
+	if taskType == copyType {
 		task_group.TransferCoordinator.AddTask(dstDirPath, nil)
 		CopyTaskManager.Add(t)
 	} else {
@@ -163,16 +162,16 @@ func (t *FileTransferTask) RunWithNextTaskCallback(f func(nextTask *FileTransfer
 	t.Status = "getting src object"
 	srcObj, err := op.Get(t.Ctx(), t.SrcStorage, t.SrcActualPath)
 	if err != nil {
-		return errs.WithMessagef(err, "failed get src [%s] file", t.SrcActualPath)
+		return errs.Wrapf(err, "failed get src [%s] file", t.SrcActualPath)
 	}
 	if srcObj.IsDir() {
 		t.Status = "src object is dir, listing objs"
 		objs, err := op.List(t.Ctx(), t.SrcStorage, t.SrcActualPath, model.ListArgs{})
 		if err != nil {
-			return errs.WithMessagef(err, "failed list src [%s] objs", t.SrcActualPath)
+			return errs.Wrapf(err, "failed list src [%s] objs", t.SrcActualPath)
 		}
 		dstActualPath := stdpath.Join(t.DstActualPath, srcObj.GetName())
-		if t.TaskType == copy {
+		if t.TaskType == copyType {
 			if t.Ctx().Value(consts.NoTaskKey) != nil {
 				defer op.DeleteCache(t.DstStorage, dstActualPath)
 			} else {
@@ -208,7 +207,7 @@ func (t *FileTransferTask) RunWithNextTaskCallback(f func(nextTask *FileTransfer
 
 	link, _, err := op.Link(t.Ctx(), t.SrcStorage, t.SrcActualPath, model.LinkArgs{})
 	if err != nil {
-		return errs.WithMessagef(err, "failed get [%s] link", t.SrcActualPath)
+		return errs.Wrapf(err, "failed get [%s] link", t.SrcActualPath)
 	}
 	// any link provided is seekable
 	ss, err := stream.NewSeekableStream(&stream.FileStream{
@@ -217,7 +216,7 @@ func (t *FileTransferTask) RunWithNextTaskCallback(f func(nextTask *FileTransfer
 	}, link)
 	if err != nil {
 		_ = link.Close()
-		return errs.WithMessagef(err, "failed get [%s] stream", t.SrcActualPath)
+		return errs.Wrapf(err, "failed get [%s] stream", t.SrcActualPath)
 	}
 	t.SetTotalBytes(ss.GetSize())
 	t.Status = "uploading"

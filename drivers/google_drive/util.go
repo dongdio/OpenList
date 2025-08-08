@@ -292,7 +292,7 @@ func (d *GoogleDrive) chunkUpload(ctx context.Context, file model.FileStreamer, 
 			defer res.Body.Close()
 			bytes, _ := io.ReadAll(res.Body)
 			var e Error
-			utils.JSONTool.Unmarshal(bytes, &e)
+			_ = utils.JSONTool.Unmarshal(bytes, &e)
 			if e.Error.Code != 0 {
 				if e.Error.Code == 401 {
 					err = d.refreshToken()
@@ -300,7 +300,8 @@ func (d *GoogleDrive) chunkUpload(ctx context.Context, file model.FileStreamer, 
 						return err
 					}
 				}
-				return fmt.Errorf("%s: %v", e.Error.Message, e.Error.errs)
+				errMsg, _ := utils.JSONTool.Marshal(e.Error)
+				return errs.New(string(errMsg))
 			}
 			return nil
 		},

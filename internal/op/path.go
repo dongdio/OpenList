@@ -19,10 +19,10 @@ func GetStorageAndActualPath(rawPath string) (storage driver.Driver, actualPath 
 	storage = GetBalancedStorage(rawPath)
 	if storage == nil {
 		if rawPath == "/" {
-			err = errs.NewErr(errs.StorageNotFound, "please add a storage first")
+			err = errs.Wrap(errs.StorageNotFound, "please add a storage first")
 			return
 		}
-		err = errs.NewErr(errs.StorageNotFound, "rawPath: %s", rawPath)
+		err = errs.Wrapf(errs.StorageNotFound, "rawPath: %s", rawPath)
 		return
 	}
 	log.Debugln("use storage: ", storage.GetStorage().MountPath)

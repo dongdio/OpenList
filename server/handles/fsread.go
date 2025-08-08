@@ -8,8 +8,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/dongdio/OpenList/v4/utility/errs"
-
 	"github.com/dongdio/OpenList/v4/consts"
 	"github.com/dongdio/OpenList/v4/internal/fs"
 	"github.com/dongdio/OpenList/v4/internal/model"
@@ -17,6 +15,7 @@ import (
 	"github.com/dongdio/OpenList/v4/internal/setting"
 	"github.com/dongdio/OpenList/v4/internal/sign"
 	"github.com/dongdio/OpenList/v4/server/common"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/utils"
 )
 

@@ -27,11 +27,11 @@ func InitClient() {
 	NoRedirectClient = resty.New().
 		SetRetryCount(3).
 		SetTimeout(DefaultTimeout).
-		SetRetryWaitTime(2 * time.Second).
-		SetRetryMaxWaitTime(3 * time.Second).
+		SetRetryWaitTime(2*time.Second).
+		SetRetryMaxWaitTime(3*time.Second).
 		SetRedirectPolicy(resty.NoRedirectPolicy()).
+		SetHeader("User-Agent", UserAgent).
 		SetTLSClientConfig(&tls.Config{InsecureSkipVerify: conf.Conf.TLSInsecureSkipVerify})
-	NoRedirectClient.SetHeader("User-Agent", UserAgent)
 
 	RestyClient = NewRestyClient()
 	HttpClient = net.NewHTTPClient()

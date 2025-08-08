@@ -55,7 +55,7 @@ func (d *LanZou) Drop(ctx context.Context) error {
 	return nil
 }
 
-// 获取的大小和时间不准确
+// List 获取的大小和时间不准确
 func (d *LanZou) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
 	if d.IsCookie() || d.IsAccount() {
 		return d.GetAllFiles(dir.GetID())

@@ -15,6 +15,7 @@ import (
 	"github.com/dongdio/OpenList/v4/internal/driver"
 	"github.com/dongdio/OpenList/v4/internal/model"
 	"github.com/dongdio/OpenList/v4/utility/errgroup"
+	"github.com/dongdio/OpenList/v4/utility/errs"
 	"github.com/dongdio/OpenList/v4/utility/singleflight"
 	"github.com/dongdio/OpenList/v4/utility/stream"
 	"github.com/dongdio/OpenList/v4/utility/utils"
@@ -142,7 +143,7 @@ func (d *Pan123) newUpload(ctx context.Context, upReq *UploadResp, file model.Fi
 					reader.Seek(0, io.SeekStart)
 					uploadUrl := s3PreSignedUrls.Data.PreSignedUrls[strconv.Itoa(cur)]
 					if uploadUrl == "" {
-						return fmt.Errorf("upload url is empty, s3PreSignedUrls: %+v", s3PreSignedUrls)
+						return errs.Errorf("upload url is empty, s3PreSignedUrls: %+v", s3PreSignedUrls)
 					}
 					reader.Seek(0, io.SeekStart)
 					req, err := http.NewRequestWithContext(ctx, http.MethodPut, uploadUrl, rateLimitedRd)
@@ -168,14 +169,14 @@ func (d *Pan123) newUpload(ctx context.Context, upReq *UploadResp, file model.Fi
 						if err != nil {
 							return err
 						}
-						return fmt.Errorf("upload s3 chunk %d failed, status code: %d", cur, res.StatusCode)
+						return errs.Errorf("upload s3 chunk %d failed, status code: %d", cur, res.StatusCode)
 					}
 					if res.StatusCode != http.StatusOK {
 						body, err := io.ReadAll(res.Body)
 						if err != nil {
 							return err
 						}
-						return fmt.Errorf("upload s3 chunk %d failed, status code: %d, body: %s", cur, res.StatusCode, body)
+						return errs.Errorf("upload s3 chunk %d failed, status code: %d, body: %s", cur, res.StatusCode, body)
 					}
 					progress := 10.0 + 85.0*float64(threadG.Success())/float64(chunkCount)
 					up(progress)

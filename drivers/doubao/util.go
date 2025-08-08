@@ -190,7 +190,7 @@ func (d *Doubao) signRequest(req *resty.Request, method, tokenType, uploadUrl st
 	if req.Body != nil {
 		bodyBytes, ok := req.Body.([]byte)
 		if !ok {
-			return fmt.Errorf("request body must be []byte")
+			return errs.New("request body must be []byte")
 		}
 
 		bodyHash = hashSHA256(string(bodyBytes))
@@ -739,7 +739,7 @@ func (d *Doubao) initMultipartUpload(config *UploadConfig, uploadUrl string, sto
 	}
 
 	if uploadResp.Code != 2000 {
-		return uploadId, fmt.Errorf("init upload failed: %s", uploadResp.Message)
+		return uploadId, errs.Errorf("init upload failed: %s", uploadResp.Message)
 	}
 
 	return uploadResp.Data.UploadId, nil

@@ -121,7 +121,7 @@ func (d *S3) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*mo
 			parsedURL, parseErr := url.Parse(link.URL)
 			if parseErr != nil {
 				log.Errorf("Failed to parse URL for bucket removal: %v, URL: %s", parseErr, link.URL)
-				return nil, fmt.Errorf("failed to parse URL for bucket removal: %w", parseErr)
+				return nil, errs.Wrap(parseErr, "failed to parse URL for bucket removal")
 			}
 			path = parsedURL.Path
 			bucketPrefix := "/" + d.Bucket
